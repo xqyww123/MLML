@@ -1,3 +1,4 @@
+#!/bin/bash
 pip install -q gdown
 
 if [ ! -d "./Isabelle2024" ]; then
@@ -22,3 +23,4 @@ NPROC=$(nproc)
 
 echo "Building AFP-DEP1. This can take 30+ hours"
 isabelle build -b -D ./Build_AFP_Image/AFP-DEP1 -o threads=$NPROC AFP-DEP1
+
