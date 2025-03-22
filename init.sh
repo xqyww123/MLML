@@ -5,6 +5,12 @@ pip install -q gdown
 mkdir -p ./cache/downloads
 mkdir -p ./translation/results
 
+# Check if current directory is in PYTHONPATH and add if not
+if [[ ":$PYTHONPATH:" != *":$(pwd):"* ]]; then
+    export PYTHONPATH="$PYTHONPATH:$(pwd)"
+fi
+
+
 if [ ! -d "./contrib/Isabelle2024" ]; then
     echo "Downloading Isabelle2024"
     gdown --fuzzy https://drive.google.com/file/d/1-cdF3SZoqtlhWTbqlgMT9h4S5T8LRvLK/view?usp=sharing -O ./cache/downloads/Isabelle2024_linux.tar.gz
