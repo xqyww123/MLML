@@ -3,6 +3,7 @@
 git submodule update --init --recursive
 pip install -q gdown
 mkdir -p ./cache/downloads
+mkdir -p ./translation/results
 
 if [ ! -d "./contrib/Isabelle2024" ]; then
     echo "Downloading Isabelle2024"
