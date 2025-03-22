@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tarskis_Geometry/Miscellany.thy", "lemma real2_orthogonal_dep2: fixes u v x :: \"real^2\" assumes \"x \\<noteq> 0\" and \"u \\<bullet> x = 0\" and \"v \\<bullet> x = 0\" shows \"dep2 u v\""]]

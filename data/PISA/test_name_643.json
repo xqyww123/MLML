@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Matrices_for_ODEs/SQ_MTX.thy", "lemma sq_mtx_diag_vec_mult: \"(\\<d>\\<i>\\<a>\\<g> i. f i) *\\<^sub>V s = (\\<chi> i. f i * s$i)\""]]

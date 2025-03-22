@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Encodability_Process_Calculi/SimulationRelations.thy", "lemma strong_barbed_simulation_impl_weak_preservation_of_barbs: fixes Rel :: \"('proc \\<times> 'proc) set\" and CWB :: \"('proc, 'barbs) calculusWithBarbs\" assumes simulation: \"strong_barbed_simulation Rel CWB\" shows \"rel_weakly_preserves_barbs Rel CWB\""]]

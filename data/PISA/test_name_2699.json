@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Determinant.thy", "lemma det_rows_mul: assumes a: \"a \\<in> {0..<n} \\<rightarrow> carrier_vec n\" shows \"det(mat\\<^sub>r n n (\\<lambda> i. c i \\<cdot>\\<^sub>v a i)) = prod c {0..<n} * det(mat\\<^sub>r n n (\\<lambda> i. a i))\""]]

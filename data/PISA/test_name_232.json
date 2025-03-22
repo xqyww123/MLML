@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Skip_Lists/Skip_List.thy", "lemma steps_empty [simp]: \"steps {} f l up left = 0\""]]

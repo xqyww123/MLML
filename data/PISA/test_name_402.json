@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Selection_Heap_Sort/RemoveMax.thy", "lemma sorted_ssort': assumes \"inv l\" \"sorted sl \\<and> (\\<forall> x \\<in> set l. (\\<forall> y \\<in> List.set sl. x \\<le> y))\" shows \"sorted (ssort' l sl)\""]]

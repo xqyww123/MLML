@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Landau_Symbols/Landau_Real_Products.thy", "lemma landau_function_family_pair_trans: assumes \"landau_function_family_pair Ftr F G f\" assumes \"landau_function_family_pair Ftr G H g\" shows \"landau_function_family_pair Ftr F (G*H) f\""]]

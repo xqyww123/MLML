@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/KD_Tree/Nearest_Neighbors.thy", "theorem set_nearest_neighbors: \"set (nearest_neighbors n p kdt) \\<subseteq> set_kdt kdt\""]]

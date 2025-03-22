@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Algebraic_Numbers/Algebraic_Numbers.thy", "lemma ipoly_poly_div_nonzero: fixes x y :: \"'a :: field_char_0\" assumes \"p \\<noteq> 0\" and \"q \\<noteq> 0\" and \"ipoly p x = 0\" and \"ipoly q y = 0\" and \"poly p 0 \\<noteq> 0 \\<or> poly q 0 \\<noteq> 0\" shows \"poly_div p q \\<noteq> 0\""]]

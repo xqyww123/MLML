@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DynamicArchitectures/Configuration_Traces.thy", "lemma untilI[intro]: fixes n assumes \"\\<exists>n''\\<ge>n. \\<gamma> t n'' \\<and> (\\<forall>n'\\<ge>n. n'<n'' \\<longrightarrow> \\<gamma>' t n')\" shows \"(\\<gamma>' \\<UU>\\<^sub>c \\<gamma>) t n\""]]

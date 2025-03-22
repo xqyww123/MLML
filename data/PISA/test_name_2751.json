@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Incredible_Proof_Machine/Incredible_Completeness.thy", "lemma iwf_it: assumes \"c \\<in> set conclusions\" shows \"plain_iwf (it' c) (fst (root (ts c)))\""]]

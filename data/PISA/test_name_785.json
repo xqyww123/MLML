@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Word_Lemmas.thy", "lemma shift_then_mask_eq_shift_low_bits: \"x \\<le> mask (low_bits + high_bits) \\<Longrightarrow> (x >> low_bits) && mask high_bits = x >> low_bits\""]]

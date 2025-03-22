@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Launchbury/Nominal-Utils.thy", "lemma set_fv_list[simp]: \"set (fv_list e) = (fv e :: ('b::at_base) set)\""]]

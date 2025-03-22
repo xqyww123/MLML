@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/J/SmallStep.thy", "lemma reds_preserves_tconf: \"\\<lbrakk> extTA,P,t \\<turnstile> \\<langle>es, s\\<rangle> [-ta\\<rightarrow>] \\<langle>es', s'\\<rangle>; P,hp s \\<turnstile> t \\<surd>t \\<rbrakk> \\<Longrightarrow> P,hp s' \\<turnstile> t \\<surd>t\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Safe_OCL/OCL_Types.thy", "lemma type_less_x_OrderedSet [elim!]: assumes \"\\<tau> < OrderedSet \\<sigma>\" and \"\\<And>\\<rho>. \\<tau> = OrderedSet \\<rho> \\<Longrightarrow> \\<rho> < \\<sigma> \\<Longrightarrow> P\" shows \"P\""]]

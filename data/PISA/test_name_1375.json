@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Huffman/Huffman.thy", "lemma consistent_mergeSibling[simp]: \"consistent t \\<Longrightarrow> consistent (mergeSibling t a)\""]]

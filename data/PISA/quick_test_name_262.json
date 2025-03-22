@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Planarity_Certificates/Planarity/Graph_Genus.thy", "lemma tail_edge_succ[simp]: \"tail G (edge_succ M a) = tail G a\""]]

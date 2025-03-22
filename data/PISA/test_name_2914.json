@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SPARCv8/lib/wp/DetMonadLemmas.thy", "lemma exec_gets: \"(gets f >>= m) s = m (f s) s\""]]

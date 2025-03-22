@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Planarity_Certificates/Verification/Check_Planarity_Verification.thy", "lemma es_eq_im: \"a \\<in> arcs (mk_graph iG) \\<Longrightarrow> edge_succ (mk_map (mk_graph iG) iM) a = im_succ iM a\""]]

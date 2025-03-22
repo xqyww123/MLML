@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Echelon_Form/Echelon_Form.thy", "lemma echelon_form_echelon_form_of: fixes A::\"'a::{bezout_domain}^'cols::{mod_type}^'rows::{mod_type}\" assumes ib: \"is_bezout_ext bezout\" shows \"echelon_form (echelon_form_of A bezout)\""]]

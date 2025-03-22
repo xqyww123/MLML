@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Statecharts/HAOps.thy", "lemma PseudoHA_HAStates [simp]: \"HAStates (PseudoHA SA D) = (States SA)\""]]

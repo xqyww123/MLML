@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Clean/src/Seq_MonadSE.thy", "lemma mbind'_unit [simp]: \"mbind' [] f = (result [])\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List_Update/Move_to_Front.thy", "lemma before_in_mtf: assumes \"z \\<in> set xs\" shows \"x < y in mtf z xs \\<longleftrightarrow> (y \\<noteq> z \\<and> (if x=z then y \\<in> set xs else x < y in xs))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Kleene_Algebra/Dioid.thy", "lemma phl_export2: assumes \"z \\<cdot> w \\<le> w \\<cdot> z \\<cdot> w\" and \"x \\<cdot> y \\<le> y \\<cdot> z\" shows \"x \\<cdot> (y \\<cdot> w) \\<le> y \\<cdot> w \\<cdot> (z \\<cdot> w)\""]]

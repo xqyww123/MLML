@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Network_Security_Policy_Verification/TopoS_Stateful_Policy.thy", "lemma filternew_flows_state_alt2: \"filternew_flows_state \\<T> = {e \\<in> flows_state \\<T>. e \\<notin> backflows (flows_fix \\<T>)}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/IICF/Impl/IICF_List_Mset.thy", "lemma mset_list_remove1[simp]: \"mset (list_remove1 x l) = mset l - {#x#}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/ConcurrentGC/TSO.thy", "lemma (in sys) tso_gc_writes_inv[intro]: \"\\<lbrace> LSTP tso_writes_inv \\<rbrace> sys\""]]

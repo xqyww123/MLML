@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nested_Multisets_Ordinals/Syntactic_Ordinal_Bridge.thy", "lemma insort_bot[simp]: \"insort bot xs = bot # xs\" for xs :: \"'a::{order_bot,linorder} list\""]]

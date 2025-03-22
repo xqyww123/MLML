@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOL-CSP/Hide.thy", "lemma cont_hiding_base[simp] : \"finite A \\<Longrightarrow> cont (\\<lambda>x. x \\\\ A)\""]]

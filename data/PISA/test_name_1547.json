@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Markov_Models/Classifying_Markov_Chain_States.thy", "lemma summable_gf_U': assumes z: \"norm z < 1\" shows \"summable (\\<lambda>n. u x y n * Suc n * z ^ n)\""]]

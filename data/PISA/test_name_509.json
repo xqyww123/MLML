@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stone_Relation_Algebras/Relation_Algebras.thy", "lemma pp_arc_expanded: \"pp_arc x \\<longleftrightarrow> x * top * x\\<^sup>T \\<le> 1 \\<and> x\\<^sup>T * top * x \\<le> 1 \\<and> top * --x * top = top\""]]

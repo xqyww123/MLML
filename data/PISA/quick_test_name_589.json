@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Verified_SAT_Based_AI_Planning/STRIPS_Semantics.thy", "lemma effect_to_assignments_i: assumes \"as = effect_to_assignments op\" shows \"as = (map (\\<lambda>v. (v, True)) (add_effects_of op) @ map (\\<lambda>v. (v, False)) (delete_effects_of op))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Unique_Factorization_Poly.thy", "lemma range_coeffs_to_fract: assumes \"set (coeffs p) \\<subseteq> range to_fract\" shows \"\\<exists> m. coeff p i = to_fract m\""]]

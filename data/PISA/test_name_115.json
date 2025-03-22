@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/Lib/Diff_Array.thy", "lemma array_get_new_array [simp]: \"i < n \\<Longrightarrow> array_get (new_array a n) i = a\""]]

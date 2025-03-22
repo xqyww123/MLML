@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Hensel_Lifting_Type_Based.thy", "lemma rebase_poly_eq_0_iff: \"(#p :: 'a :: nontriv mod_ring poly) = 0 \\<longleftrightarrow> (\\<forall>i. (@coeff p i :: 'a mod_ring) = 0)\" (is \"?l \\<longleftrightarrow> ?r\")"]]

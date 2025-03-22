@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PseudoHoops/PseudoHoopFilters.thy", "lemma lemma_3_11_i: \"H \\<in> normalfilters \\<Longrightarrow> filterof (H \\<union> {x}) = {a . \\<exists> n h . h \\<in> H \\<and> h * x ^ n \\<le> a}\""]]

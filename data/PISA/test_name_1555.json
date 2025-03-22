@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Sturm_Tarski/Sturm_Tarski.thy", "lemma sign_r_pos_minus: fixes p:: \"real poly\" assumes \"p\\<noteq>0\" shows \"sign_r_pos p x = (\\<not> sign_r_pos (-p) x)\""]]

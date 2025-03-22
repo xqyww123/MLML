@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Partial_Order_Reduction/Traces.thy", "lemma eq_inf_le_inf_transp[intro, trans]: assumes \"w\\<^sub>1 =\\<^sub>I w\\<^sub>2\" \"w\\<^sub>2 \\<preceq>\\<^sub>I w\\<^sub>3\" shows \"w\\<^sub>1 \\<preceq>\\<^sub>I w\\<^sub>3\""]]

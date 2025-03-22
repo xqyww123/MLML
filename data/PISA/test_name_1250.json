@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LocalLexing/Ladder.thy", "lemma ladder_stepdown_ix: assumes length_L_greater_1: \"length L > 1\" assumes L': \"L' = ladder_stepdown L\" assumes index_lower_bound: \"0 < index\" assumes index_upper_bound: \"index < length L'\" shows \"ladder_ix L' index = ladder_ix L (Suc index)\""]]

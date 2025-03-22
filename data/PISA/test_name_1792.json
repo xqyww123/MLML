@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Menger/DisjointPaths.thy", "lemma paths_with_new_path: \"xs \\<in> paths_with_new \\<Longrightarrow> path xs\""]]

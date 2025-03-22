@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Quaternions/Quaternions.thy", "lemma Re_tendsto_lowerbound: \"\\<lbrakk>(f \\<longlongrightarrow> l) net; \\<forall>\\<^sub>F x in net. b \\<le> quat.Re (f x); net \\<noteq> bot\\<rbrakk> \\<Longrightarrow> b \\<le> Re l\""]]

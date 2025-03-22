@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Constructive_Cryptography/Converter.thy", "lemma converter_of_callee_parametric [transfer_rule]: includes lifting_syntax shows \"((S ===> A ===> rel_gpv'' (rel_prod B S) C R) ===> S ===> rel_converter A B C R) converter_of_callee converter_of_callee\""]]

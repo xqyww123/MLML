@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buildings/Algebra.thy", "lemma reduced_word_for_genby_sym_arg_min: assumes \"uminus ` A \\<subseteq> A\" \"a\\<in>\\<langle>A\\<rangle>\" shows \"reduced_word_for A a (arg_min length (word_for A a))\""]]

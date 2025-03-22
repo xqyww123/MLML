@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Poincare_Disc/Poincare_Lines_Ideal_Points.thy", "lemma calc_ideal_point2_on_circline: assumes \"(z1, z2) = calc_ideal_point2_cvec A B\" \"is_real A\" \"(cmod B)\\<^sup>2 > (cmod A)\\<^sup>2\" shows \"A*z1*cnj z1 + B*cnj z1*z2 + cnj B*z1*cnj z2 + A*z2*cnj z2 = 0\" (is \"?lhs = 0\")"]]

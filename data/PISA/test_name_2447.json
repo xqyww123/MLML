@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Syntax_Independent_Logic/Deduction.thy", "lemma prv_ldsj_eqv: assumes \"set \\<phi>1s \\<subseteq> fmla\" and \"set \\<phi>2s = set \\<phi>1s\" shows \"prv (eqv (ldsj \\<phi>1s) (ldsj \\<phi>2s))\""]]

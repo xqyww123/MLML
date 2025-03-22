@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/pGCL/Transformers.thy", "lemma sublinear_sub_conj: fixes t::\"('s \\<Rightarrow> real) \\<Rightarrow> 's \\<Rightarrow> real\" assumes slt: \"sublinear t\" shows \"sub_conj t\""]]

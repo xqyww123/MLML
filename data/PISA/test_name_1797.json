@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Possibilistic_Noninterference/After_Execution.thy", "lemma WbisT_transT[consumes 3, case_names Match]: assumes 0: \"c \\<approx>wT d\" and \"s \\<approx> t\" and \"(c,s) \\<rightarrow>t s'\" obtains t' where \"(d,t) \\<rightarrow>*t t'\" and \"s' \\<approx> t'\""]]

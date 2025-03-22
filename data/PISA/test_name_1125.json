@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automated_Stateful_Protocol_Verification/Transactions.thy", "lemma transaction_proj_member: assumes \"T \\<in> set P\" shows \"transaction_proj n T \\<in> set (map (transaction_proj n) P)\""]]

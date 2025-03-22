@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LambdaAuth/Semantics.thy", "lemma judge_weak_subst[intro]: assumes \"\\<Gamma>(a $$:= \\<tau>') \\<turnstile>\\<^sub>W e : \\<tau>\" \"{$$} \\<turnstile>\\<^sub>W e' : \\<tau>'\" shows \"\\<Gamma> \\<turnstile>\\<^sub>W e[e' / a] : \\<tau>\""]]

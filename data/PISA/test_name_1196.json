@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambert_W/Lambert_W.thy", "lemma Lambert_W'_times_exp_self: assumes \"x \\<in> {-exp (-1)..<0}\" shows \"Lambert_W' x * exp (Lambert_W' x) = x\""]]

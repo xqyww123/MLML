@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra5.thy", "lemma (in PolynRg) pol_deg_le_n1:\"\\<lbrakk>p \\<in> carrier R; pol_coeff S c; k \\<le> (fst c); p = polyn_expr R X k c\\<rbrakk> \\<Longrightarrow> deg_n R S X p \\<le> k\""]]

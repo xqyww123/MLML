@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Psi_Calculi/Weakening.thy", "lemma statImpTauDerivative: fixes \\<Psi> :: 'b and P :: \"('a, 'b, 'c) psi\" and P' :: \"('a, 'b, 'c) psi\" assumes \"\\<Psi> \\<rhd> P \\<longmapsto>\\<tau> \\<prec> P'\" shows \"insertAssertion (extractFrame P) \\<Psi> \\<hookrightarrow>\\<^sub>F insertAssertion (extractFrame P') \\<Psi>\""]]

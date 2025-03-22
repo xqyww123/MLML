@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Propositional_Proof_Systems/LSC.thy", "lemma LHCut: assumes \"F,\\<Gamma> \\<Rightarrow>\\<^sub>n\" \"\\<^bold>\\<not>F, \\<Gamma> \\<Rightarrow>\\<^sub>n\" shows \"\\<Gamma> \\<Rightarrow>\\<^sub>n\""]]

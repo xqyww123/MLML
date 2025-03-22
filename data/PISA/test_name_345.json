@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Statecharts/HA.thy", "lemma SAStates_ChiPlus_ChiRel_trans [rule_format]: \"\\<lbrakk> (S,U) \\<in> (ChiPlus A); (U,T) \\<in> (ChiRel A); S \\<in> States SA; SA \\<in> SAs A \\<rbrakk> \\<Longrightarrow> T \\<notin> States SA\""]]

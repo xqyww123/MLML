@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Vickrey_Clarke_Groves/Universes.thy", "lemma bridgingInjection: assumes \"card N > 0\" \"distinct G\" shows \"\\<forall>l \\<in> set (all_partitions_list G). set (injections_alg l N) = injections (set l) N\""]]

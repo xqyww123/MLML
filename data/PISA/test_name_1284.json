@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/Language.thy", "lemma strip_guards_whileAnnoG [simp]: \"strip_guards F (whileAnnoG gs b I V c) = whileAnnoG (filter (\\<lambda>(f,g). f \\<notin> F) gs) b I V (strip_guards F c)\""]]

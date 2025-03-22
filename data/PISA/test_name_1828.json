@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PseudoHoops/Examples.thy", "lemma F_def2: \"K \\<in> normal \\<Longrightarrow> F K = {a:: 'a G . - Rep_G a + (u::'a::lgroup_with_const) \\<in> K}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_RPOs/Lambda_Free_Term.thy", "lemma ground_heads_arity: \"f \\<in> ground_heads \\<zeta> \\<Longrightarrow> arity_sym f \\<ge> arity_hd \\<zeta>\""]]

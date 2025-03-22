@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinary_Differential_Equations/ODE_Auxiliarities.thy", "lemma those_eq_None_set_iff: \"those xs = None \\<longleftrightarrow> None \\<in> set xs\""]]

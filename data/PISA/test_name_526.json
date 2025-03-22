@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Syntax_Independent_Logic/Deduction.thy", "lemma cnj_compat_eqvL: assumes \"\\<phi>1 \\<in> fmla\" and \"\\<phi>2 \\<in> fmla\" and \"\\<chi> \\<in> fmla\" assumes \"prv (eqv \\<phi>1 \\<phi>2)\" shows \"prv (eqv (cnj \\<phi>1 \\<chi>) (cnj \\<phi>2 \\<chi>))\""]]

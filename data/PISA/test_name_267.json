@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Universal_Turing_Machine/Abacus_Mopup.thy", "lemma mopup_aft_erase_b_via_c[simp]: assumes \"mopup_aft_erase_c (2 * n + 4, l, Oc # xs) lm n ires\" shows \"mopup_aft_erase_b (Suc (Suc (Suc (2 * n))), l, Bk # xs) lm n ires\""]]

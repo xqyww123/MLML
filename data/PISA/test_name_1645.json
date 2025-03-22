@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QR_Decomposition/Least_Squares_Approximation.thy", "lemma in_set_least_squares_approximation_eq: fixes A::\"real^'cols::{finite,wellorder}^'rows\" shows \"(x \\<in> set_least_squares_approximation A b) = (transpose A ** A *v x = transpose A *v b)\""]]

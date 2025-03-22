@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinary_Differential_Equations/IVP/Initial_Value_Problem.thy", "lemma clamp_ge[simp]: \"a \\<le> b \\<Longrightarrow> b \\<le> x \\<Longrightarrow> clamp a b x = b\" for x::\"'a::ordered_euclidean_space\""]]

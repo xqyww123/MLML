@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machine_Inference/Code_Generation.thy", "lemma [code]: \"guardMatch t1 t2 = guardMatch_code (Guards t1) (Guards t2)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_Master_Theorem/Logical_Characterization/After.thy", "lemma af_ite_simps[simp]: \"af (if P then true\\<^sub>n else false\\<^sub>n) w = (if P then true\\<^sub>n else false\\<^sub>n)\" \"af (if P then false\\<^sub>n else true\\<^sub>n) w = (if P then false\\<^sub>n else true\\<^sub>n)\""]]

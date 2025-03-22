@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Valuation/Valuation1.thy", "lemma (in Corps) val_poss_n_val_poss:\"\\<lbrakk>valuation K v; x \\<in> carrier K\\<rbrakk> \\<Longrightarrow> (0 < v x) = (0 < n_val K v x)\""]]

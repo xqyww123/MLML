@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HereditarilyFinite/HF.thy", "lemma HSigma_iff [simp]: \"\\<langle>a,b\\<rangle> \\<^bold>\\<in> HSigma A B \\<longleftrightarrow> a \\<^bold>\\<in> A \\<and> b \\<^bold>\\<in> B(a)\""]]

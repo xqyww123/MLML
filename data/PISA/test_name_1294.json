@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Statecharts/HA.thy", "lemma ChiPlus_ChiRel_NoCycle_1 [rule_format]: \"\\<lbrakk> (T,S) \\<in> ChiPlus A\\<rbrakk> \\<Longrightarrow> (insert S (insert T ({U. (T,U) \\<in> ChiPlus A \\<and> (U,S) \\<in> ChiPlus A}))) \\<inter> (ChiRel A `` {T}) \\<noteq> {}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/Coinductive_List.thy", "lemma LNil_transfer [transfer_rule]: \"llist_all2 P LNil LNil\""]]

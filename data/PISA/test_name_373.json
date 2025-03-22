@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machines/examples/Drinks_Machine.thy", "lemma apply_updates_vend: \"apply_updates (Updates vend) (join_ir [] r) r = r\""]]

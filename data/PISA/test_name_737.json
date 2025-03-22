@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Separation_Logic_Imperative_HOL/Examples/Array_Map_Impl.thy", "lemma iam_lookup_abs1: \"k<length l \\<Longrightarrow> iam_of_list l k = l!k\""]]

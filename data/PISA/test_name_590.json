@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tarskis_Geometry/Hyperbolic_Tarski.thy", "lemma perp_foot_hyp2: assumes \"a \\<in> hyp2\" and \"proj2_incident a l\" and \"b \\<in> hyp2\" shows \"perp_foot b l \\<in> hyp2\""]]

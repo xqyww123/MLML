@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Factored_Transition_System_Bounding/ActionSeqProcess.thy", "lemma rem_effectless_works_14: fixes PROB as shows \"exec_plan s as = exec_plan s (rem_effectless_act as)\""]]

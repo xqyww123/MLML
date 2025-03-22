@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra6.thy", "lemma (in PolynRg) polyn_deg_add5:\"\\<lbrakk>p \\<in> carrier R; q \\<in> carrier R; (deg R S X p) \\<le> a; (deg R S X q) \\<le> a\\<rbrakk> \\<Longrightarrow> deg R S X (p \\<plusminus> q) \\<le> a\""]]

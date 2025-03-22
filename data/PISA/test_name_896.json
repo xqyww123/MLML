@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/MPoly_Type_Class_OAlist.thy", "lemma keys_shift_map_keys_subset: \"keys (MP_oalist (shift_map_keys t ((*) c) xs)) \\<subseteq> ((\\<oplus>) t) ` keys (MP_oalist xs)\" (is \"?l \\<subseteq> ?r\")"]]

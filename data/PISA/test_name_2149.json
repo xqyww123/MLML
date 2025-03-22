@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FLP/FLPTheorem.thy", "theorem ConsensusFails: assumes Termination: \"\\<And> fe ft . (fairInfiniteExecution fe ft \\<Longrightarrow> terminationFLP fe ft)\" and Validity: \"\\<forall> i c . validity i c\" and Agreement: \"\\<forall> i c . agreementInit i c\" shows \"False\""]]

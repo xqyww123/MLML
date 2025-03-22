@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_to_DRA/af.thy", "lemma af_G_letter_sat_core: \"Only_G \\<G> \\<Longrightarrow> \\<G> \\<Turnstile>\\<^sub>P \\<phi> \\<Longrightarrow> \\<G> \\<Turnstile>\\<^sub>P af_G_letter \\<phi> \\<nu>\""]]

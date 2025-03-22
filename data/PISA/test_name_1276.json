@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SIFPL/VDM_OBJ.thy", "lemma VDM_Sound_n: \"G \\<rhd> c: A \\<Longrightarrow> (\\<forall> n. G \\<Turnstile>\\<^sub>n c:A)\""]]

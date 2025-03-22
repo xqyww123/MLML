@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Finite_Field_Record_Based.thy", "lemma urel32_minus: assumes \"urel32 x y\" \"urel32 x' y'\" shows \"urel32 (minus_p32 pp x x') (minus_p p y y')\""]]

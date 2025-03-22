@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AODV/variants/a_norreqid/A_Aodv.thy", "lemma clear_locals_sip_not_ip [simp]: \"\\<not>(sip (clear_locals \\<xi>) = ip \\<xi>)\""]]

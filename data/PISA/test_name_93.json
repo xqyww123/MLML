@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Abstract-Rewriting/Abstract_Rewriting.thy", "lemma first_step: assumes C: \"C = A \\<union> B\" and steps: \"(x, y) \\<in> C\\<^sup>*\" and Bstep: \"(y, z) \\<in> B\" shows \"\\<exists>y. (x, y) \\<in> A\\<^sup>* O B\""]]

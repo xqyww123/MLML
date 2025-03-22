@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Network_Security_Policy_Verification/attic.thy", "lemma (in wf_graph) path_split_set': assumes \"is_path v p v'\" and \"v'\\<in>W\" obtains p1 p2 u where \"p=p1@p2\" and \"is_path v p1 u\" and \"is_path u p2 v'\" and \"int_vertices p1 \\<subseteq> -W\" and \"u\\<in>W\""]]

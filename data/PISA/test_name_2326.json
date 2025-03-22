@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Concurrent_Ref_Alg/Conjunctive_Iteration.thy", "lemma iter_leapfrog: \"c;(d;c)\\<^sup>\\<omega> = (c;d)\\<^sup>\\<omega>;c\""]]

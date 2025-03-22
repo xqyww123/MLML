@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category2/SetCat.thy", "lemma HomFtorMapsTo: \"\\<lbrakk>LSCategory C ; X \\<in> obj\\<^bsub>C \\<^esub>; f \\<in> mor\\<^bsub>C \\<^esub>\\<rbrakk> \\<Longrightarrow> Hom\\<^bsub>C\\<^esub>[X,f] maps\\<^bsub>SET\\<^esub> Hom\\<^bsub>C \\<^esub>X (dom\\<^bsub>C\\<^esub> f) to Hom\\<^bsub>C \\<^esub>X (cod\\<^bsub>C\\<^esub> f)\""]]

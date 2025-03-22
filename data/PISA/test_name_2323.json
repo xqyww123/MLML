@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Square_Free_Factorization_Int.thy", "lemma gcd_rat_to_gcd_int: \"gcd (of_int_poly f :: rat poly) (of_int_poly g) = smult (inverse (of_int (lead_coeff (gcd f g)))) (of_int_poly (gcd f g))\""]]

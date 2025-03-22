@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Missing_Multiset2.thy", "lemma ex_mset_zip_right: assumes \"length xs = length ys\" \"mset ys' = mset ys\" shows \"\\<exists>xs'. length ys' = length xs' \\<and> mset (zip xs' ys') = mset (zip xs ys)\""]]

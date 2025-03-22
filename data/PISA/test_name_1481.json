@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Regular-Sets/Equivalence_Checking2.thy", "theorem closure_sound: assumes result: \"closure as ([(r,s)],[]) = Some([],ps)\" and atoms: \"atoms r \\<union> atoms s \\<subseteq> set as\" shows \"lang (set as) r = lang (set as) s\""]]

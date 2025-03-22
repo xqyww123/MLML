@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Propositional_Proof_Systems/Resolution_Compl.thy", "lemma Resolution_complete_standalone_finite: assumes ns: \"\\<forall>\\<A>. \\<not>cnf_semantics \\<A> S\" assumes fin: \"finite (atoms_of_cnf S)\" shows \"S \\<turnstile> \\<box>\""]]

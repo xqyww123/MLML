@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra3.thy", "lemma inducedHom:\"\\<lbrakk>Group F; Group G; f \\<in> gHom F G\\<rbrakk> \\<Longrightarrow> (f\\<dieresis>\\<^bsub>F,G\\<^esub>) \\<in> gHom (F/(gker\\<^bsub>F,G\\<^esub> f)) G\""]]

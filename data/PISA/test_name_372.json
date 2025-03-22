@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Containers/RBT_Mapping2.thy", "lemma is_rbt_impl_of [simp, intro]: fixes t :: \"('a, 'b) mapping_rbt\" shows \"ord.is_rbt cless (impl_of t)\""]]

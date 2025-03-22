@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Word_Lemmas.thy", "lemma ucast_scast_3: \"\\<lbrakk> is_down (scast :: 'a word \\<Rightarrow> 'c word); is_down (ucast :: 'b word \\<Rightarrow> 'c word) \\<rbrakk> \\<Longrightarrow> (ucast (scast (a :: 'a::len word) :: 'b::len word) :: 'c::len word) = scast a\""]]

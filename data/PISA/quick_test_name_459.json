@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FocusStreamsCaseStudies/Gateway_proof_aux.thy", "lemma streamValue11: assumes h1:\"\\<forall>j\\<le>2 * d + (4 + k). lose (t + j) = x\" and h2:\"j\\<le>Suc d\" shows \"lose (t + 2 + k + j) = x\""]]

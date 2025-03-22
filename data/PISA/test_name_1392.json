@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Iptables_Semantics/Common/Negation_Type.thy", "lemma getNeg_id: \"getNeg (map Neg xs) = xs\""]]

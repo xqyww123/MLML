@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Verified_SAT_Based_AI_Planning/AST_SAS_Plus_Equivalence.thy", "lemma rem_implicit_pres_ops_numVars[simp]: \"ast_problem.numVars (rem_implicit_pres_ops prob) = ast_problem.numVars prob\""]]

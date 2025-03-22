@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Signature_Groebner/Signature_Groebner.thy", "lemma sig_red_tail_rtrancl_lc_rep_list: assumes \"(sig_red sing_reg (\\<prec>) F)\\<^sup>*\\<^sup>* p q\" shows \"punit.lc (rep_list q) = punit.lc (rep_list p)\""]]

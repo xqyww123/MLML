@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/pGCL/Misc.thy", "lemma tminus_nle[simp]: \"\\<not>b \\<le> a \\<Longrightarrow> a \\<ominus> b = 0\""]]

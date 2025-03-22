@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Subresultants/Dichotomous_Lazard.thy", "lemma to_fract_power_le: fixes a :: \"'a :: factorial_ring_gcd fract\" assumes no_fract: \"a * b ^ e \\<in> range to_fract\" and a: \"a \\<in> range to_fract\" and le: \"f \\<le> e\" shows \"a * b ^ f \\<in> range to_fract\""]]

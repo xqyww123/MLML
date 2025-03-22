@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Iptables_Semantics/Common/Negation_Type_DNF.thy", "lemma dnf_and_symmetric: \"dnf_to_bool \\<gamma> (dnf_and d1 d2) \\<longleftrightarrow> dnf_to_bool \\<gamma> (dnf_and d2 d1)\""]]

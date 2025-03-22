@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Transition_Systems_and_Automata/Automata/DRA/DRA_Translate.thy", "lemma drae_image_param[param]: \"(drae_image, drae_image) \\<in> (S \\<rightarrow> T) \\<rightarrow> \\<langle>L, S\\<rangle> drae_rel \\<rightarrow> \\<langle>L, T\\<rangle> drae_rel\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Order_Lattice_Props/Representations.thy", "lemma map_ds_map_SSup_inv: \"map_ds \\<circ> map_SSup = (id::('a::complete_lattice downset \\<Rightarrow> 'b::complete_lattice downset) \\<Rightarrow> ('a downset \\<Rightarrow> 'b downset))\""]]

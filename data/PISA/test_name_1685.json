@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/Refine_Basic.thy", "lemma rhs_step_bind_RES: assumes \"x'\\<in>X'\" assumes \"m \\<le> \\<Down>R (f' x')\" shows \"m \\<le> \\<Down>R (RES X' \\<bind> f')\""]]

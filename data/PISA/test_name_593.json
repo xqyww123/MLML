@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HereditarilyFinite/Ordinal.thy", "lemma succ_neq_hpair [simp]: \"succ k \\<noteq> \\<langle>x,y\\<rangle> \""]]

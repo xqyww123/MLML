@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Universal_Turing_Machine/Abacus.thy", "lemma append_append_fetch: \"\\<lbrakk>length tp1 mod 2 = 0; length tp mod 2 = 0; length tp1 div 2 < a \\<and> a \\<le> length tp1 div 2 + length tp div 2\\<rbrakk> \\<Longrightarrow>fetch (tp1 @ tp @ tp2) a b = fetch tp (a - length tp1 div 2) b \""]]

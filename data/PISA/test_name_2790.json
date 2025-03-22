@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Discrete_Summation/Discrete_Summation.thy", "lemma \\<Sigma>_positive: \"j < l \\<Longrightarrow> \\<Sigma> f j l = sum (f \\<circ> of_int) {j..<l}\""]]

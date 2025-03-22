@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/LTS.thy", "lemma silent_move_iff: \"silent_move = (\\<lambda>s s'. (\\<exists>tl. trsys s tl s' \\<and> \\<tau>move s tl s'))\""]]

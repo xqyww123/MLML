@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HRB-Slicing/StaticInter/WeakSimulation.thy", "lemma eq_obs_intra_in_rv: assumes obs_eq:\"obs_intra (parent_node n) \\<lfloor>HRB_slice S\\<rfloor>\\<^bsub>CFG\\<^esub> = obs_intra (parent_node n') \\<lfloor>HRB_slice S\\<rfloor>\\<^bsub>CFG\\<^esub>\" and \"x \\<in> rv S n\" shows \"x \\<in> rv S n'\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Secondary_Sylow/GroupAction.thy", "lemma same_orbit_char: assumes \"m \\<in> M\" \"n \\<in> M\" shows \"(m, n) \\<in> same_orbit_rel = (\\<exists>g \\<in> carrier G. ((\\<phi> g) n = m))\""]]

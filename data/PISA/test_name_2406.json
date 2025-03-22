@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LLL_Factorization/LLL_Factorization.thy", "lemma upper_triangular_factorization_lattice: fixes u :: \"'a :: semidom poly\" and d :: nat assumes d: \"d \\<le> n\" and du: \"d = degree u\" shows \"upper_triangular (mat_of_rows n (factorization_lattice u (n-d) k))\" (is \"upper_triangular ?M\")"]]

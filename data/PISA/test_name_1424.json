@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gauss_Jordan/Rref.thy", "lemma rref_condition4: assumes r: \"reduced_row_echelon_form A\" shows \" (\\<forall>i. \\<not> (is_zero_row i A) \\<longrightarrow> (\\<forall>j. i \\<noteq> j \\<longrightarrow> A $ j $ (LEAST n. A $ i $ n \\<noteq> 0) = 0))\""]]

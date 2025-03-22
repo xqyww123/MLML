@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/CommonSet/SetIntervalStep.thy", "lemma inext_nth_card_append_eq3: \" \\<lbrakk> finite A; B \\<noteq> {}; Max A < iMin B \\<rbrakk> \\<Longrightarrow> (A \\<union> B) \\<rightarrow> (card A) = iMin B\""]]

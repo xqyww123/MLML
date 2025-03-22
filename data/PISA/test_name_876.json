@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Determinant.thy", "lemma det_zero_imp_zero_row: assumes A: \"(A :: 'a :: field mat) \\<in> carrier_mat n n\" and det: \"det A = 0\" shows \"\\<exists> P. P \\<in> Units (ring_mat TYPE('a) n b) \\<and> row (P * A) (n - 1) = 0\\<^sub>v n \\<and> 0 < n \\<and> row_echelon_form (P * A)\""]]

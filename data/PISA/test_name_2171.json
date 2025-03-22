@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/Power_Products.thy", "lemma in_Keys: \"s \\<in> Keys F \\<longleftrightarrow> (\\<exists>f\\<in>F. s \\<in> keys f)\""]]

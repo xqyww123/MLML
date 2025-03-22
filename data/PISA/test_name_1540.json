@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Karatsuba_Multiplication.thy", "lemma karatsuba_main: \"karatsuba_main f n g m = poly_of_list f * poly_of_list g\""]]

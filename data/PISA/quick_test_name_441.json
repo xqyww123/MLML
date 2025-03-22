@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/IICF/Impl/IICF_Array_Matrix.thy", "lemma mtx_tabulate_rl[sep_heap_rules]: assumes NONZ: \"mtx_nonzero c \\<subseteq> {0..<N}\\<times>{0..<M}\" shows \"<emp> mtx_tabulate N M c <IICF_Array_Matrix.is_amtx N M c>\""]]

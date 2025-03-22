@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomial_Interpolation/Missing_Unsorted.thy", "lemma prod_list_filter: \"prod_list (filter f xs) * prod_list (filter (\\<lambda> x. \\<not> f x) xs) = prod_list xs\""]]

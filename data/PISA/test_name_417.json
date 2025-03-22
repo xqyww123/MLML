@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AWN/AWN_Invariants.thy", "lemma onllD [dest]: assumes \"onll \\<Gamma> P ((\\<xi>, p), a, (\\<xi>', p'))\" shows \"\\<forall>l\\<in>labels \\<Gamma> p. \\<forall>l'\\<in>labels \\<Gamma> p'. P ((\\<xi>, l), a, (\\<xi>', l'))\""]]

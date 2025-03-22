@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tree-Automata/Ta.thy", "theorem rtl_union_closed: \"\\<lbrakk> L1\\<in>regular_languages A; L2\\<in>regular_languages A \\<rbrakk> \\<Longrightarrow> L1\\<union>L2 \\<in> regular_languages A\""]]

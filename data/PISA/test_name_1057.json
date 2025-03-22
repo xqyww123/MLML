@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Executable_Euclidean_Space.thy", "lemma index_zip_replicate1[simp]: \"index (zip (replicate d a) bs) (a, b) = index bs b\" if \"d = length bs\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOL-CSP/Mndet.thy", "lemma mndet_distrib : \"A \\<noteq>{} \\<Longrightarrow> B \\<noteq>{} \\<Longrightarrow> (\\<sqinter> x \\<in> A\\<union>B \\<rightarrow> P x) = ((\\<sqinter> x \\<in> A \\<rightarrow> P x) \\<sqinter> (\\<sqinter> x \\<in> B \\<rightarrow> P x))\""]]

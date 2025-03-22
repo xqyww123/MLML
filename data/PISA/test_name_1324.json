@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Linear_Inequalities/Mixed_Integer_Solutions.thy", "lemma floor_less: \"x \\<notin> \\<int> \\<Longrightarrow> of_int \\<lfloor>x\\<rfloor> < x\""]]

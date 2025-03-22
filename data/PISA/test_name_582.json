@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/ICF/gen_algo/MapGA.thy", "lemma map_rev_iterator_linord_is_it: \"map_iterator_rev_linord m it \\<Longrightarrow> map_iterator m it\""]]

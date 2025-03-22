@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Case_Labeling/Examples/Conditionals.thy", "lemma DC_final: assumes \"V\\<langle>(''g'',inp,[]), ct: a\\<rangle>\" shows \"C\\<langle>inp,ct,Suc inp: a\\<rangle>\""]]

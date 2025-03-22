@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Launchbury/Pointwise.thy", "lemma pointwiseI[intro]: \"(\\<And> x. P (m x) (m' x)) \\<Longrightarrow> pointwise P m m'\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Matrices_for_ODEs/MTX_Norms.thy", "lemma op_norm_matrix_matrix_mult_le: \"\\<parallel>A ** B\\<parallel>\\<^sub>o\\<^sub>p \\<le> (\\<parallel>A\\<parallel>\\<^sub>o\\<^sub>p) * (\\<parallel>B\\<parallel>\\<^sub>o\\<^sub>p)\""]]

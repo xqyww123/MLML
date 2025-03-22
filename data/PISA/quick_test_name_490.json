@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Mahler_Measure.thy", "lemma mset_mult_add_2: assumes \"mset a = mset b + mset c\" shows \"prod_list (map i a::'b::field list) = prod_list (map i b) * prod_list (map i c)\""]]

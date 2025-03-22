@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PseudoHoops/PseudoHoopFilters.thy", "lemma cong_l_symmetric: \"F \\<in> filters \\<Longrightarrow> (cong_l F a b) = (cong_l F b a)\""]]

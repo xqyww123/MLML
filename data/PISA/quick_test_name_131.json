@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_EPO/Embeddings.thy", "lemma no_position_replicate_num_args: \"\\<not> position_of t (replicate (num_args t) Left @ [d])\""]]

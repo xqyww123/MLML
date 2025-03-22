@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Smooth_Manifolds/Analysis_More.thy", "lemma support_on_nonneg_sum_subset': \"support_on X (\\<lambda>x. \\<Sum>i\\<in>S x. f i x) \\<subseteq> (\\<Union>x\\<in>X. (\\<Union>i\\<in>S x. support_on X (f i)))\" for f::\"_\\<Rightarrow>_\\<Rightarrow>_::ordered_comm_monoid_add\""]]

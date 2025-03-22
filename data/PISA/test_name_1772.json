@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Approximation_Algorithms/Approx_BP_Hoare.thy", "lemma bpE: assumes \"bp P\" shows \"pairwise disjnt P\" \"{} \\<notin> P\" \"\\<Union>P = U\" \"\\<forall>B \\<in> P. W(B) \\<le> c\""]]

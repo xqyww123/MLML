@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptHOL/Misc_CryptHOL.thy", "lemma if_cong_then: \"\\<lbrakk> b = b'; b' \\<Longrightarrow> t = t'; e = e' \\<rbrakk> \\<Longrightarrow> If b t e = If b' t' e'\""]]

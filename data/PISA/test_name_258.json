@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Macaulay/Cone_Decomposition.thy", "lemma \\<b>_one: assumes \"valid_decomp X ps\" and \"standard_decomp k ps\" shows \"\\<b> ps (Suc 0) = (if ps\\<^sub>+ = [] then 0 else Suc (Max (poly_deg ` fst ` set (ps\\<^sub>+))))\""]]

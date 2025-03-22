@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CoreC++/WellForm.thy", "lemma isSubobj_Subobjs_rev: assumes subo:\"is_subobj P ((C,C'#rev Cs'))\" and wf:\"wf_prog wf_md P\" shows \"Subobjs P C (C'#rev Cs')\""]]

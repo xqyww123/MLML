@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CakeML/Big_Step_Clocked.thy", "lemma top_clocked_min_counter: assumes \"evaluate_top ck env s tp (s',r)\" \"ck\" shows \"evaluate_top ck env (s \\<lparr> clock := clock s - clock s' \\<rparr>) tp (s' \\<lparr> clock := 0 \\<rparr>,r)\""]]

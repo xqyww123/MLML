@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DynamicArchitectures/Configuration_Traces.thy", "lemma impI[intro!]: fixes t n assumes \"\\<gamma> t n \\<Longrightarrow> \\<gamma>' t n\" shows \"(\\<gamma> \\<longrightarrow>\\<^sup>c \\<gamma>') t n\""]]

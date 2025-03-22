@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Laplace_Transform/Laplace_Transform_Library.thy", "lemma has_integral_improperE: fixes f::\"real \\<Rightarrow> 'a::euclidean_space\" assumes I: \"(f has_integral I) {a..}\" assumes ai: \"f absolutely_integrable_on {a..}\" obtains J where \"\\<And>k. (f has_integral J k) {a..k}\" \"(J \\<longlongrightarrow> I) at_top\""]]

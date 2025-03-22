@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AODV/variants/c_gtobcast/C_Fresher.thy", "lemma nsqnr_r_flag_pred [simp, intro]: fixes dsn dsk flag hops nhip assumes \"P (nsqn\\<^sub>r (dsn, dsk, val, hops, nhip))\" and \"P (nsqn\\<^sub>r (dsn, dsk, inv, hops, nhip))\" shows \"P (nsqn\\<^sub>r (dsn, dsk, flag, hops, nhip))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/InfPathElimination/SubExt.thy", "lemma (in wf_sub_rel) extends_imp_wf_sub_rel : assumes \"extends g subs sub subs'\" shows \"wf_sub_rel subs'\""]]

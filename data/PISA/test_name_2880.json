@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/Abstract_Substitution.thy", "lemma strict_subset_subst_strictly_subsumes: assumes c\\<eta>_sub: \"C \\<cdot> \\<eta> \\<subset># D\" shows \"strictly_subsumes C D\""]]

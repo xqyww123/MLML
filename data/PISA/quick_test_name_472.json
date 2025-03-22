@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Incompleteness/Predicates.thy", "lemma Subset_trans: \"H \\<turnstile> a SUBS b \\<Longrightarrow> H \\<turnstile> b SUBS c \\<Longrightarrow> H \\<turnstile> a SUBS c\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stateful_Protocol_Composition_and_Typing/Messages.thy", "lemma subtermeqI''[intro]: \"t \\<in> set T \\<Longrightarrow> t \\<sqsubseteq> Fun f T\""]]

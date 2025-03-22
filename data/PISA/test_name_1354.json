@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/First_Order_Terms/Matching.thy", "lemma match_sound: assumes \"match t p = Some \\<sigma>\" shows \"\\<sigma> \\<in> matchers {(p, t)}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AVL-Trees/AVL.thy", "theorem set_of_delete: \"\\<lbrakk> avl t; is_ord t \\<rbrakk> \\<Longrightarrow> set_of (delete x t) = (set_of t) - {x}\""]]

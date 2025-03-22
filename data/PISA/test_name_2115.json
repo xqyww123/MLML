@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Incompleteness/SyntaxN.thy", "lemma cut3: \"\\<lbrakk>{A,B,C} \\<turnstile> D; H \\<turnstile> A; H \\<turnstile> B; H \\<turnstile> C\\<rbrakk> \\<Longrightarrow> H \\<turnstile> D\""]]

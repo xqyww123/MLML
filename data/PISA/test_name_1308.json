@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Timed_Automata/DBM.thy", "lemma DBM_val_bounded_len'1: fixes v assumes \"DBM_val_bounded v u m n\" \"0 \\<notin> set vs\" \"v c \\<le> n\" \"\\<forall> k \\<in> set vs. k > 0 \\<longrightarrow> k \\<le> n \\<and> (\\<exists> c. v c = k)\" shows \"dbm_entry_val u (Some c) None (len m (v c) 0 vs)\""]]

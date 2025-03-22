@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Valuation/Valuation2.thy", "lemma (in Corps) ring_n_exp_K_exp:\"\\<lbrakk>distinct_pds K n P; x \\<in> carrier (O\\<^bsub>K P n\\<^esub>)\\<rbrakk> \\<Longrightarrow> x^\\<^bsup>K m\\<^esup> = x^\\<^bsup>(O\\<^bsub>K P n\\<^esub>) m\\<^esup>\""]]

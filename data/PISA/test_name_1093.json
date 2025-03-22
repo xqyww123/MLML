@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Treaps/Random_Treap.thy", "lemma measurable_less_count_space [measurable (raw)]: assumes \"countable A\" assumes [measurable]: \"a \\<in> B \\<rightarrow>\\<^sub>M count_space A\" assumes [measurable]: \"b \\<in> B \\<rightarrow>\\<^sub>M count_space A\" shows \"Measurable.pred B (\\<lambda>x. a x < b x)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinal_Partitions/Partitions.thy", "lemma lemma_2_5: assumes \"infinite N\" obtains X where \"X \\<subseteq> UU\" \"ordertype X pair_less = \\<omega>\\<up>2\" \"\\<And>u. u \\<in> [X]\\<^bsup>2\\<^esup> \\<Longrightarrow> (\\<exists>k<4. form u k) \\<and> scheme u \\<subseteq> N\""]]

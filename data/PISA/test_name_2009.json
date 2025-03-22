@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Planarity_Certificates/Verification/Check_Non_Planarity_Verification.thy", "lemma is_K33_colorize_step: fixes G u i blue assumes colorize: \"is_K33_colorize_inv G u k blue\" shows \" is_K33_colorize_inv G u (Suc k) (blue (ig_opposite G (ig_in_out_arcs G u ! k) u := True))\""]]

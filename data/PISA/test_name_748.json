@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LatticeProperties/Conj_Disj.thy", "lemma inf_Disj: \"(\\<lambda> (x::'a::complete_distrib_lattice) . inf x y) \\<in> Apply.Disjunctive\""]]

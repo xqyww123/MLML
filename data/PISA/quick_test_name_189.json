@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FOL_Seq_Calc1/Tableau.thy", "theorem tableau_completeness: fixes G :: \\<open>(nat, nat) form list\\<close> assumes \\<open>\\<forall>(e :: nat \\<Rightarrow> nat hterm) f g. list_all (eval e f g) G \\<longrightarrow> eval e f g p\\<close> shows \\<open>tableauproof G p\\<close>"]]

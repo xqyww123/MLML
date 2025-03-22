@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Menger/DisjointPaths.thy", "lemma second_vertices_first_edge: \"\\<lbrakk> xs \\<in> paths; first_edge_of_walk xs = (v,w) \\<rbrakk> \\<Longrightarrow> w \\<in> second_vertices\""]]

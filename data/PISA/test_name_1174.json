@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binomial-Heaps/SkewBinomialHeap.thy", "lemma ins_mset: \"\\<lbrakk>tree_invar t; queue_invar q\\<rbrakk> \\<Longrightarrow> queue_to_multiset (ins t q) = tree_to_multiset t + queue_to_multiset q\""]]

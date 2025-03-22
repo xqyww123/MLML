@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_KBOs/Lambda_Free_TKBO_Coefs.thy", "lemma sum_coefs_ge_num_args_if_\\<delta>\\<^sub>h_eq_0: assumes legal: \"legal_passign A\" and \\<delta>_eq_0: \"\\<delta>\\<^sub>h = 0\" and wary_s: \"wary s\" shows \"sum_coefs (eval_tpoly A (wt s)) \\<ge> num_args s\""]]

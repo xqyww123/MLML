@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MFOTL_Monitor/Table.thy", "lemma self_join1: \"join1 (xs, ys) \\<noteq> Some xs \\<Longrightarrow> join1 (zs, ys) \\<noteq> Some xs\""]]

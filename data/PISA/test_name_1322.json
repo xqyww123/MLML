@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Markov_Models/Markov_Decision_Process.thy", "lemma P_inf_INF: fixes P :: \"nat \\<Rightarrow> 's stream \\<Rightarrow> bool\" assumes \"decseq P\" and P[measurable]: \"\\<And>i. Measurable.pred St (P i)\" shows \"P_inf s (\\<lambda>x. \\<forall>i. P i x) = (\\<Sqinter>i. P_inf s (P i))\""]]

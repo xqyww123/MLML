@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category3/Category.thy", "lemma cod_dom: assumes \"arr f\" shows \"cod (dom f) = dom f\""]]

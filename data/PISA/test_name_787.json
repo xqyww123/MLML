@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gaussian_Integers/Gaussian_Integers.thy", "lemma gcd_of_nat_gauss_int: \"gcd (of_nat a :: gauss_int) (of_nat b) = of_nat (gcd a b)\""]]

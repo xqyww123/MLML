@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Program-Conflict-Analysis/Flowgraph.thy", "lemma (in flowgraph) entry_return_same_proc[simp]: \"entry fg p = return fg p' \\<Longrightarrow> p=p'\""]]

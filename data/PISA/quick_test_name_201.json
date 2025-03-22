@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Native_Word/Uint8.thy", "lemma integer_of_uint8_code [code]: \"integer_of_uint8 n = (if n !! 7 then integer_of_uint8_signed (n AND 0x7F) OR 0x80 else integer_of_uint8_signed n)\""]]

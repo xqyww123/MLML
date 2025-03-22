@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Poly_Mod.thy", "lemma plus_Mp[simp]: \"Mp (Mp f + g) = Mp (f + g)\" \"Mp (f + Mp g) = Mp (f + g)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiscretePricing/Infinite_Coin_Toss_Space.thy", "lemma stoch_proc_filt_space: shows \"space (stoch_proc_filt M X N n) = space M\""]]

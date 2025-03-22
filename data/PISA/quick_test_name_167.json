@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automated_Stateful_Protocol_Verification/Term_Implication.thy", "lemma timpl_closure_fv_eq: assumes \"s \\<in> timpl_closure t T\" shows \"fv s = fv t\""]]

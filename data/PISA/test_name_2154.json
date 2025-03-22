@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/pGCL/Tutorial/Primitives.thy", "lemma Puniform_in: \"x \\<in> S \\<Longrightarrow> Puniform S x = 1 / card S\""]]

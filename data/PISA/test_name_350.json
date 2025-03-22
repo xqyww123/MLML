@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Network_Security_Policy_Verification/TopoS_Stateful_Policy.thy", "lemma E_state_validD: assumes \"(v,v') \\<in> flows_state \\<T>\" shows \"v \\<in> hosts \\<T>\" \"v' \\<in> hosts \\<T>\""]]

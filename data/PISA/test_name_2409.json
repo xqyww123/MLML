@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Parity_Game/Strategy.thy", "lemma path_conforms_with_strategy_irrelevant_deadend: assumes \"path_conforms_with_strategy p P \\<sigma>\" \"deadend v \\<or> v \\<notin> VV p\" \"valid_path P\" shows \"path_conforms_with_strategy p P (\\<sigma>(v := w))\""]]

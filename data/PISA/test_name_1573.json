@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Auto2_Imperative_HOL/Functional/Union_Find.thy", "lemma ufa_\\<alpha>_memD [forward]: \"(x, y) \\<in> ufa_\\<alpha> l \\<Longrightarrow> x < length l \\<and> y < length l \\<and> rep_of l x = rep_of l y\""]]

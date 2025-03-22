@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buildings/Building.thy", "theorem apartments_are_coxeter: \"A\\<in>\\<A> \\<Longrightarrow> \\<exists>S::'a permutation set. ( CoxeterComplex S \\<and> (\\<exists>\\<psi>. ChamberComplexIsomorphism A (CoxeterComplex.TheComplex S) \\<psi>) )\""]]

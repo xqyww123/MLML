@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/HoarePartialProps.thy", "lemma assumes deriv: \"\\<Gamma>,{} \\<turnstile>\\<^bsub>/F\\<^esub> P c Q,A\" shows \"\\<Gamma>,{}\\<turnstile>\\<^bsub>/F\\<^esub> {s. s=Z \\<and> s \\<in> P} c {t. Z \\<in> P \\<longrightarrow> t \\<in> Q},{t. Z \\<in> P \\<longrightarrow> t \\<in> A}\""]]

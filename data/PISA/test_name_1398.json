@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Poincare_Bendixson/Periodic_Orbit.thy", "lemma closed_orbit_\\<alpha>_limit_set: assumes \"closed_orbit x\" shows \"flow0 x ` UNIV = \\<alpha>_limit_set x\""]]

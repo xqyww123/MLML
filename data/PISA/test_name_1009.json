@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Green/Paths.thy", "lemma line_integral_exists_rec_join_cons: assumes \"line_integral_exists F basis (rec_join ((1,\\<gamma>) # l))\" \"(\\<And>k' \\<gamma>'. (k', \\<gamma>') \\<in> set ((1,\\<gamma>) # l) \\<Longrightarrow> valid_path \\<gamma>')\" \"finite basis\" shows \"line_integral_exists F basis (\\<gamma> +++ (rec_join l))\""]]

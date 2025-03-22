@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UPF_Firewall/FWNormalisation/NormalisationIPPProofs.thy", "lemma nMRtoNone[rule_format]: \"p \\<noteq> [] \\<longrightarrow> applied_rule_rev Cp x p = None \\<longrightarrow> Cp (list2FWpolicy p) x = None\""]]

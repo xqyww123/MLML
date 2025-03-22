@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stateful_Protocol_Composition_and_Typing/Stateful_Strands.thy", "lemma bvars\\<^sub>s\\<^sub>s\\<^sub>t_append[simp]: \"bvars\\<^sub>s\\<^sub>s\\<^sub>t (A@B) = bvars\\<^sub>s\\<^sub>s\\<^sub>t A \\<union> bvars\\<^sub>s\\<^sub>s\\<^sub>t B\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/Coinductive_List.thy", "lemma ltake_eq_LNil_iff: \"ltake n xs = LNil \\<longleftrightarrow> xs = LNil \\<or> n = 0\""]]

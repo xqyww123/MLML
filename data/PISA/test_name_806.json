@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/TESL_Language/Stuttering.thy", "lemma atomic_sub: assumes \\<open>sub \\<lless> r\\<close> and \\<open>sub \\<in> \\<lbrakk> \\<phi> \\<rbrakk>\\<^sub>T\\<^sub>E\\<^sub>S\\<^sub>L\\<close> shows \\<open>r \\<in> \\<lbrakk> \\<phi> \\<rbrakk>\\<^sub>T\\<^sub>E\\<^sub>S\\<^sub>L\\<close>"]]

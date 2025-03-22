@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Prim_Dijkstra_Simple/Common.thy", "lemma inter_same_diff[simp]: \"A\\<inter>(A-S) = A-S\""]]

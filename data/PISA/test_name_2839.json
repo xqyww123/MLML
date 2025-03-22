@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/CommonSet/SetInterval2.thy", "lemma strict_mono_on_imp_inj_on: \" strict_mono_on f (A::'a::linorder set) \\<Longrightarrow> inj_on f A\""]]

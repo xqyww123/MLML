@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Markov_Models/Classifying_Markov_Chain_States.thy", "lemma convergence_norm_U: fixes z :: \"_ :: real_normed_div_algebra\" assumes z: \"convergence_G x y z\" shows \"summable (\\<lambda>n. u x y n * norm z ^ Suc n)\""]]

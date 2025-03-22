@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FocusStreamsCaseStudies/ListExtras.thy", "lemma list_nth_append3: assumes h1:\"\\<not> i < Suc (length x)\" and \"i - Suc (length x) < Suc (length y)\" shows \"(a # y) ! (i - Suc (length x)) = (b # x @ a # y) ! i\""]]

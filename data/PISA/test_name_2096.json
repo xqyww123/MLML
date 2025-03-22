@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FocusStreamsCaseStudies/stream.thy", "lemma length_inf_drop_hint2: \"(s 0 \\<noteq> [] \\<longrightarrow> length (inf_drop 0 s 0) < Suc i \\<longrightarrow> Suc i - length (inf_drop 0 s 0) < Suc i)\""]]

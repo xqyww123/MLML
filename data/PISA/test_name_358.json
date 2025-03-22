@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Randomised_Social_Choice/Order_Predicates.thy", "lemma is_weak_ranking_iff: \"is_weak_ranking xs \\<longleftrightarrow> distinct xs \\<and> disjoint (set xs) \\<and> {} \\<notin> set xs\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Featherweight_OCL/collection_types/UML_Bag.thy", "lemma OclNotEmpty_has_elt : \"\\<tau> \\<Turnstile> \\<delta> X \\<Longrightarrow> \\<tau> \\<Turnstile> X->notEmpty\\<^sub>B\\<^sub>a\\<^sub>g() \\<Longrightarrow> \\<exists>e. e \\<in> (Rep_Bag_base X \\<tau>)\""]]

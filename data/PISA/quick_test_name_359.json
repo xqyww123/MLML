@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CakeML/Big_Step_Unclocked.thy", "lemma unclocked_determ: \"evaluate_list env s es r2a \\<Longrightarrow> evaluate_list env s es r2b \\<Longrightarrow> r2a = r2b\" \"evaluate env s e r3a \\<Longrightarrow> evaluate env s e r3b \\<Longrightarrow> r3a = r3b\""]]

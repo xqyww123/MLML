@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Perron_Frobenius/Perron_Frobenius_Irreducible.thy", "lemma le_vec_trans: \"le_vec x y \\<Longrightarrow> le_vec y u \\<Longrightarrow> le_vec x u\""]]

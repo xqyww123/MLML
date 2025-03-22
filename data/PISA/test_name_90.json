@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Algebraic_Numbers/Interval_Arithmetic.thy", "lemma uminus_in_interval: fixes x :: \"'a :: ordered_ab_group_add\" shows \"x \\<in>\\<^sub>i X \\<Longrightarrow> -x \\<in>\\<^sub>i -X\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Aligned.thy", "lemma is_aligned_get_word_bits: fixes p :: \"'a::len word\" shows \"\\<lbrakk> is_aligned p n; \\<lbrakk> is_aligned p n; n < LENGTH('a) \\<rbrakk> \\<Longrightarrow> P; \\<lbrakk> p = 0; n \\<ge> LENGTH('a) \\<rbrakk> \\<Longrightarrow> P \\<rbrakk> \\<Longrightarrow> P\""]]

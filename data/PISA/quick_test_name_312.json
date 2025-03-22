@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automated_Stateful_Protocol_Verification/Term_Implication.thy", "lemma timpl_closure_Fu_inv: assumes \"t \\<in> timpl_closure (Fun (Fu f) T) TI\" shows \"\\<exists>S. length S = length T \\<and> t = Fun (Fu f) S\""]]

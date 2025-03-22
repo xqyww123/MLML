@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOLCF-Prelude/Data_List.thy", "lemma length_replicate [simp]: assumes \"0 \\<le> n\" shows \"length\\<cdot>(replicate\\<cdot>(MkI\\<cdot>n)\\<cdot>x) = MkI\\<cdot>n\""]]

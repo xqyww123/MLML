@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QHLProver/Partial_State.thy", "lemma ptensor_mat_mult_vec: assumes \"m1 \\<in> carrier_mat d1 d1\" and \"v1 \\<in> carrier_vec d1\" and \"m2 \\<in> carrier_mat d2 d2\" and \"v2 \\<in> carrier_vec d2\" shows \"ptensor_vec (m1 *\\<^sub>v v1) (m2 *\\<^sub>v v2) = ptensor_mat m1 m2 *\\<^sub>v ptensor_vec v1 v2\""]]

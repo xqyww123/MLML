@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FOL-Fitting/FOL_Fitting.thy", "lemma new_subc [simp]: \\<open>new_term d s \\<Longrightarrow> new d p \\<Longrightarrow> new d (subc c s p)\\<close>"]]

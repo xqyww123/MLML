@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/IEEE_Floating_Point/IEEE_Properties.thy", "lemma is_finite_nonempty: \"{a. is_finite a} \\<noteq> {}\""]]

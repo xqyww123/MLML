@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/Refine_Det.thy", "lemma dres_monad1[simp]: \"dbind (dRETURN x) f = f x\""]]

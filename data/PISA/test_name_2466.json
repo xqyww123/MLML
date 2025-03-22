@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Topological_Semantics/topo_operators_derivative.thy", "lemma PK7: \"Kh_3 \\<phi> \\<Longrightarrow> \\<forall>A. \\<phi>(\\<phi>(\\<^bold>\\<midarrow>(\\<phi> A))) \\<^bold>\\<approx> \\<phi>(\\<^bold>\\<midarrow>(\\<phi>(\\<phi>\\<^sup>d A)))\""]]

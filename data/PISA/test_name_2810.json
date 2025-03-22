@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Incompleteness/Predicates.thy", "lemma All2_Subset: \"\\<lbrakk>H \\<turnstile> All2 l k P; H \\<turnstile> k' SUBS k; {P} \\<turnstile> P'; atom l \\<sharp> (k', k)\\<rbrakk> \\<Longrightarrow> H \\<turnstile> All2 l k' P'\""]]

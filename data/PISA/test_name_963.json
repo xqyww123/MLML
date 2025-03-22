@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stone_Relation_Algebras/Fixpoints.thy", "lemma nu_fusion_equal_4: assumes \"galois l u\" and \"isotone h\" and \"has_greatest_postfixpoint g\" and \"has_greatest_postfixpoint h\" and \"h \\<circ> u = u \\<circ> g\" shows \"p\\<nu> h = u (p\\<nu> g)\" and \"\\<nu> h = u (p\\<nu> g)\""]]

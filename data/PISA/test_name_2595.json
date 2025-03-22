@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Differential_Dynamic_Logic/Denotational_Semantics.thy", "lemma seq_semI':\"(\\<nu> \\<in> fml_sem I (foldr And \\<Gamma> TT) \\<Longrightarrow> \\<nu> \\<in> fml_sem I (foldr Or \\<Delta> FF)) \\<Longrightarrow> \\<nu> \\<in> seq_sem I (\\<Gamma>,\\<Delta>)\""]]

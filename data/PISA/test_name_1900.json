@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Compiler/J0.thy", "lemma \\<tau>red0r_dom_lcl: assumes wwf: \"wwf_J_prog P\" shows \"\\<tau>red0r extTA P t h (e, xs) (e', xs') \\<Longrightarrow> dom xs' \\<subseteq> dom xs \\<union> fv e\""]]

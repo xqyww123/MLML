@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Planarity_Certificates/Planarity/Planar_Subgraph.thy", "lemma (in pre_digraph) ends_del_arc: \"arc_to_ends (del_arc u) = arc_to_ends G\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stateful_Protocol_Composition_and_Typing/More_Unification.thy", "lemma mgu_subst_range_vars: assumes \"mgu s t = Some \\<sigma>\" shows \"range_vars \\<sigma> \\<subseteq> vars_term s \\<union> vars_term t\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_RPOs/Extension_Orders.thy", "lemma msetext_dersh_mono_strong: \"(\\<forall>y \\<in> set ys. \\<forall>x \\<in> set xs. gt y x \\<longrightarrow> gt' y x) \\<Longrightarrow> msetext_dersh gt ys xs \\<Longrightarrow> msetext_dersh gt' ys xs\""]]

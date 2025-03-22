@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL/LTL.thy", "lemma ltlr_expand_Release: \"\\<xi> \\<Turnstile>\\<^sub>r \\<phi> R\\<^sub>r \\<psi> \\<longleftrightarrow> (\\<xi> \\<Turnstile>\\<^sub>r \\<psi> and\\<^sub>r (\\<phi> or\\<^sub>r (X\\<^sub>r (\\<phi> R\\<^sub>r \\<psi>))))\""]]

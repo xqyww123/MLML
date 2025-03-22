@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MSO_Regex_Equivalence/WS1S.thy", "lemma enc_alt: \"wf_interp w I \\<Longrightarrow> x \\<in> enc (w, I) \\<longleftrightarrow> x @- sconst ((any, replicate (length I) False)) = stream_enc (w, I)\""]]

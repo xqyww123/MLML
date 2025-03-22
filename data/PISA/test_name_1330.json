@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Incompleteness/Sigma.thy", "lemma ex_eval_fm_iff_exists_tm: \"eval_fm e (Ex k A) \\<longleftrightarrow> (\\<exists>t. eval_fm e (A(k::=t)) \\<and> ground t)\""]]

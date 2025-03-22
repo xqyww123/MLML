@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tarskis_Geometry/Hyperbolic_Tarski.thy", "lemma perp_up_non_degenerate_in_S_at_end: assumes \"a \\<in> hyp2\" and \"b \\<in> hyp2\" and \"proj2_incident b l\" and \"\\<not> proj2_incident a l\" shows \"perp_up a l \\<in> S\" and \"B\\<^sub>\\<real> (cart2_pt (perp_foot a l)) (cart2_pt a) (cart2_pt (perp_up a l))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptHOL/GPV_Applicative.thy", "lemma exec_gpv_ap: \"exec_gpv callee (f \\<diamondop> x) \\<sigma> = exec_gpv callee f \\<sigma> \\<bind> (\\<lambda>(f', \\<sigma>'). pure_spmf (\\<lambda>(x', \\<sigma>''). (f' x', \\<sigma>'')) \\<diamondop> exec_gpv callee x \\<sigma>')\""]]

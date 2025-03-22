@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/Utils.thy", "lemma fun_prod_commute: assumes \"f 1 = 1\" and \"\\<And>x y. f (x * y) = f x * f y\" shows \"f (prod g A) = (\\<Prod>a\\<in>A. f (g a))\""]]

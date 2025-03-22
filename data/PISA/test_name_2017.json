@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/Coinductive_List.thy", "lemma [partial_function_mono]: \"mono_llist F \\<Longrightarrow> mono_llist (\\<lambda>f. lmap g (F f))\""]]

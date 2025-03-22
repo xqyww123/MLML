@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Matrices_for_ODEs/MTX_Examples.thy", "lemma exp_mtx_cnst_acc: \"exp (t *\\<^sub>R K) = ((t *\\<^sub>R K)\\<^sup>2/\\<^sub>R 2) + (t *\\<^sub>R K) + 1\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UTP/utp/utp_pred_laws.thy", "lemma UINF_conj_UINF [simp]: \"((\\<Sqinter> i\\<in>I \\<bullet> P(i)) \\<or> (\\<Sqinter> i\\<in>I \\<bullet> Q(i))) = (\\<Sqinter> i\\<in>I \\<bullet> P(i) \\<or> Q(i))\""]]

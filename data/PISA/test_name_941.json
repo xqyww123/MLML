@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiskPaxos/DiskPaxos_Inv5.thy", "lemma HPhase1or2Write_HInv5_1: assumes act: \"HPhase1or2Write s s' p d\" and inv5_1: \"maxBalInp s (bal(dblock s q)) (inp(dblock s q))\" shows \"maxBalInp s' (bal(dblock s' q)) (inp(dblock s' q))\""]]

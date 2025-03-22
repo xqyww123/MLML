@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buildings/Coxeter.thy", "lemma special_subgroup_int_S: assumes \"T \\<in> Pow S\" shows \"\\<langle>T\\<rangle> \\<inter> S = T\""]]

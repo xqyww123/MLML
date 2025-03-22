@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MSO_Regex_Equivalence/Pi_Equivalence_Checking.thy", "lemma step_invariant_mono: assumes \"step_invariant (ws, ps, N) = (ws', ps', N')\" shows \"snd ` set ws \\<union> set ps \\<subseteq> snd ` set ws' \\<union> set ps'\""]]

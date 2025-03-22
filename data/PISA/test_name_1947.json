@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Prim_Dijkstra_Simple/Prim_Abstract.thy", "lemma not_invar2_ctd_init: \"prim_invar2_init Q \\<pi> \\<Longrightarrow> \\<not>prim_invar2_ctd Q \\<pi>\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Compiler/J0.thy", "lemma Red_Suspend_is_call: \"\\<lbrakk> P,t \\<turnstile>0 \\<langle>e/exs, h\\<rangle> -ta\\<rightarrow> \\<langle>e'/exs', h'\\<rangle>; Suspend w \\<in> set \\<lbrace>ta\\<rbrace>\\<^bsub>w\\<^esub> \\<rbrakk> \\<Longrightarrow> is_call e'\""]]

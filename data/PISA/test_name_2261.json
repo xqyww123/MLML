@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_RPOs/Lambda_Free_Util.thy", "lemma size_filter_unsat_elem: assumes \"x \\<in># M\" and \"\\<not> P x\" shows \"size {#x \\<in># M. P x#} < size M\""]]

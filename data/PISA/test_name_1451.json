@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/ZFC_in_HOL/ZFC_in_HOL.thy", "lemma Sup_least: fixes z::V shows \"(\\<And>x. x \\<in> A \\<Longrightarrow> x \\<le> z) \\<Longrightarrow> \\<Squnion>A \\<le> z\""]]

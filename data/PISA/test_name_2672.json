@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Mahler_Measure.thy", "lemma reconstruct_poly_monic_defines_mset: assumes \"(\\<Prod>a\\<leftarrow>as. [:- a, 1:]) = (\\<Prod>a\\<leftarrow>bs. [:- a, 1::'a::field:])\" shows \"mset as = mset bs\""]]

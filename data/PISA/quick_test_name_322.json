@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Key_Agreement_Strong_Adversaries/dhlvl2.thy", "lemma l2_inv8_trans [iff]: \"{l2_inv8 \\<inter> l2_inv1 \\<inter> l2_inv2 \\<inter> l2_inv3 \\<inter> l2_inv4 \\<inter> l2_inv4'} trans l2 {> l2_inv8}\""]]

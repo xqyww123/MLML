@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/Coinductive_List.thy", "lemma wlog_linorder_le [consumes 0, case_names le symmetry]: assumes le: \"\\<And>a b :: 'a :: linorder. a \\<le> b \\<Longrightarrow> P a b\" and sym: \"P b a \\<Longrightarrow> P a b\" shows \"P a b\""]]

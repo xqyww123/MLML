@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Locally-Nameless-Sigma/Sigma/Sigma.thy", "lemma FV_and_cofinite: \"\\<lbrakk> \\<forall>x. x \\<notin> L \\<longrightarrow> P x; finite L \\<rbrakk> \\<Longrightarrow> \\<exists>L'. (finite L' \\<and> FV t \\<subseteq> L' \\<and> (\\<forall> x. x \\<notin> L' \\<longrightarrow> P x))\""]]

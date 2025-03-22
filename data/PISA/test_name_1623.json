@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Symmetric_Polynomials/Symmetric_Polynomials.thy", "lemma lead_monom_diff: \"lead_monom (p - q) \\<le> max (lead_monom p) (lead_monom q)\""]]

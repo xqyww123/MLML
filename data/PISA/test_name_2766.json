@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Optics/Lens_Symmetric.thy", "lemma psym_lens_compl [simp]: \"psym_lens a \\<Longrightarrow> psym_lens (-\\<^sub>L a)\""]]

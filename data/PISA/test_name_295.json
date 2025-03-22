@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Timed_Automata/Closure.thy", "lemma closure_involutive_aux: \"U \\<subseteq> \\<R> \\<Longrightarrow> Closure\\<^sub>\\<alpha> \\<Union> U = \\<Union> U\""]]

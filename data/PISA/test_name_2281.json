@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category3/Adjunction.thy", "lemma \\<psi>_G_char: assumes \"\\<guillemotleft>f: x \\<rightarrow>\\<^sub>C x'\\<guillemotright>\" shows \"\\<psi> x' (G f) = f \\<cdot>\\<^sub>C \\<epsilon>o x\""]]

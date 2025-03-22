@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Modular_Assembly_Kit_Security/Basics/Projection.thy", "lemma projection_split_first: \"\\<lbrakk> (\\<tau> \\<upharpoonleft> X) = x # xs \\<rbrakk> \\<Longrightarrow> \\<exists> \\<alpha> \\<beta>. (\\<tau> = \\<alpha> @ [x] @ \\<beta> \\<and> \\<alpha> \\<upharpoonleft> X = [])\""]]

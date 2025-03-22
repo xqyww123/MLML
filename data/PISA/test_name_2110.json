@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Possibilistic_Noninterference/Language_Semantics.thy", "lemma mustT_transC: assumes \"mustT c s\" and \"(c,s) \\<rightarrow>c (c',s')\" shows \"mustT c' s'\""]]

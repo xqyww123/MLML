@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List_Update/List_Factoring.thy", "lemma before_in_index1: fixes l assumes \"set l = {x,y}\" and \"length l = 2\" and \"x\\<noteq>y\" shows \"(if (x < y in l) then 0 else 1) = index l x\""]]

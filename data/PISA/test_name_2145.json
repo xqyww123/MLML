@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Elliptic_Curves_Group_Law/Elliptic_Locale.thy", "lemma (in ell_field) pdouble_closed: assumes \"a \\<in> carrier R\" \"b \\<in> carrier R\" \"on_curvep a b p\" shows \"on_curvep a b (pdouble a p)\""]]

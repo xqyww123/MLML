@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Algebraic_Numbers/Real_Algebraic_Numbers.thy", "lemma compare_2: assumes rc: \"invariant_2 x\" \"invariant_2 y\" shows \"compare_2 x y = compare (real_of_2 x) (real_of_2 y)\""]]

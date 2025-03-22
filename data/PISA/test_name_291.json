@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AutoFocus-Stream/AF_Stream.thy", "lemma i_shrink_assoc: \"f \\<div>\\<^sub>i a \\<div>\\<^sub>i b = f \\<div>\\<^sub>i (a * b)\""]]

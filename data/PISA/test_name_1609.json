@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Zeta_3_Irrational/Zeta_3_Irrational.thy", "lemma beukers_integral3_integrable: \"set_integrable lborel D' (\\<lambda>(w,x,y). (x*(1-x)*y*(1-y)*w*(1-w))^n / (1-(1-x*y)*w)^(n+1))\""]]

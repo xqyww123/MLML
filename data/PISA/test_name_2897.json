@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Card_Number_Partitions/Card_Number_Partitions.thy", "lemma card_number_partitions_with_only_parts_1_eq_1: assumes \"n \\<le> x\" shows \"card {N. (\\<forall>n. n\\<in># N \\<longrightarrow> n = 1) \\<and> number_partition n N \\<and> size N \\<le> x} = 1\" (is \"card ?N = _\")"]]

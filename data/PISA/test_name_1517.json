@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Transition_QuasiTerms_Terms.thy", "lemma termsOf_preserves_good[simp]: assumes \"goodPar P\" and \"X : termsOf P\" shows \"good X\""]]

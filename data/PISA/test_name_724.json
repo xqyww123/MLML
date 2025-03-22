@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machines/GExp.thy", "lemma max_input_list_cons: \"max_input_list (a # G) = max (max_input a) (max_input_list G)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Macaulay/Binomial_Int.thy", "lemma binomial_ineq_1: \"2 * ((n + i) choose k) \\<le> n choose k + ((n + 2 * i) choose k)\""]]

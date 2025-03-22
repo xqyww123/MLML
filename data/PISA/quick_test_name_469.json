@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HereditarilyFinite/Ordinal.thy", "lemma Ord_trans2: \"\\<lbrakk>i2 \\<^bold>\\<in> i; i \\<^bold>\\<in> j; j \\<^bold>\\<in> k; Ord k\\<rbrakk> \\<Longrightarrow> i2\\<^bold>\\<in>k\""]]

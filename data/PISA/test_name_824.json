@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/OpSets/Interleaving.thy", "lemma list_order_insert_ref: assumes \"insert_ops (ops @ [(oid, Some ref)])\" and \"ref \\<in> set (interp_ins ops)\" shows \"list_order (ops @ [(oid, Some ref)]) ref oid\""]]

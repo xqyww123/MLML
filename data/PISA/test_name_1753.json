@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Abstract-Rewriting/SN_Orders.thy", "lemma plus_gt_right_mono: \"x \\<succ> y \\<Longrightarrow> a + x \\<succ> a + y\""]]

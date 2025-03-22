@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Flow_Networks/Graph.thy", "lemma isPath_append[split_path_simps]: \"isPath u (p1 @ p2) v \\<longleftrightarrow> (\\<exists>w. isPath u p1 w \\<and> isPath w p2 v)\""]]

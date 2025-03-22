@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Pi_Calculus/Strong_Late_Axiomatisation.thy", "lemma SumPres': fixes P :: pi and P' :: pi and Q :: pi and Q' :: pi assumes PeqP': \"P \\<equiv>\\<^sub>e P'\" and QeqQ': \"Q \\<equiv>\\<^sub>e Q'\" shows \"P \\<oplus> Q \\<equiv>\\<^sub>e P' \\<oplus> Q'\""]]

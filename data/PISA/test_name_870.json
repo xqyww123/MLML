@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Noninterference_Ipurge_Unwinding/IpurgeUnwinding.thy", "lemma traces_failures: \"xs \\<in> traces P \\<Longrightarrow> (xs, {}) \\<in> failures P\""]]

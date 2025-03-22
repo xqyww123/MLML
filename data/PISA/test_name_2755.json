@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machines/examples/Drinks_Machine.thy", "lemma purchase_coke: \"observe_execution drinks 0 <> [(STR ''select'', [Str ''coke'']), (STR ''coin'', [Num 50]), (STR ''coin'', [Num 50]), (STR ''vend'', [])] = [[], [Some (Num 50)], [Some (Num 100)], [Some (Str ''coke'')]]\""]]

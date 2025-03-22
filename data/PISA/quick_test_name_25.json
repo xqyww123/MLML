@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/MPoly_PM.thy", "lemma power_lookup_not_one_subset_keys: \"{x. f x ^ (lookup t x) \\<noteq> 1} \\<subseteq> keys t\""]]

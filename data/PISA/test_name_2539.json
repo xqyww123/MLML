@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Goedel_Incompleteness/Goedel_Formula.thy", "lemma bprv_\\<phi>G_eqv_all_not_PPf: \"bprv (eqv \\<phi>G (all yy (neg (PPf (Var yy) \\<langle>\\<phi>G\\<rangle>))))\""]]

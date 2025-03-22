@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Verified_SAT_Based_AI_Planning/SAS_Plus_Semantics.thy", "lemma trace_parallel_plan_sas_plus_step_effect_is: assumes \"k < length (trace_parallel_plan_sas_plus I \\<psi>) - 1\" shows \"trace_parallel_plan_sas_plus I \\<psi> ! Suc k = execute_parallel_operator_sas_plus (trace_parallel_plan_sas_plus I \\<psi> ! k) (\\<psi> ! k)\""]]

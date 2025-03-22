@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Euler_MacLaurin/Euler_MacLaurin_Landau.thy", "lemma harm_expansion_bigo_simple1: \"(\\<lambda>n. harm n - (ln n + euler_mascheroni + 1 / (2 * n))) \\<in> O(\\<lambda>n. 1 / n ^ 2)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UTP/utp/utp_pred_laws.thy", "lemma not_all_not: \"\\<not> (\\<forall> x \\<bullet> \\<not> P) = (\\<exists> x \\<bullet> P)\""]]

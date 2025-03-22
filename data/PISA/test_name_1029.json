@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tycon/Monad.thy", "lemma join_fmap_fmap: \"join\\<cdot>(fmap\\<cdot>(fmap\\<cdot>f)\\<cdot>xss) = fmap\\<cdot>f\\<cdot>(join\\<cdot>xss)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/IICF/Intf/IICF_Map.thy", "lemma map_rel_Id[simp]: \"\\<langle>Id,Id\\<rangle>map_rel = Id\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Inference/Partial_Recursive.thy", "lemma Mn_free_imp_total [intro]: assumes \"wellf f\" and \"Mn_free f\" shows \"total f\""]]

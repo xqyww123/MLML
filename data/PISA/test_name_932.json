@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gromov_Hyperbolicity/Gromov_Hyperbolicity.thy", "lemma hyperb_ineq [mono_intros]: \"Gromov_product_at (e::'a) x z \\<ge> min (Gromov_product_at e x y) (Gromov_product_at e y z) - deltaG(TYPE('a))\""]]

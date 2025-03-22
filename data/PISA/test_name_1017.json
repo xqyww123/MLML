@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Recursion-Theory-I/PRecFun2.thy", "theorem nat_to_sch_srj: \"nat_to_sch (sch_to_nat sch) = sch\""]]

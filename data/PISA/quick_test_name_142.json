@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/RSAPSS/Word.thy", "lemma fast_bv_to_nat_def: \"bv_to_nat (\\<one> # bs) == numeral (fast_bv_to_nat_helper bs Num.One)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Common/ConformThreaded.thy", "lemma thread_conf_hext: \"\\<lbrakk> thread_conf P ts h; h \\<unlhd> h' \\<rbrakk> \\<Longrightarrow> thread_conf P ts h'\""]]

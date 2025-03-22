@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Universal_Turing_Machine/Abacus.thy", "lemma inv_locate_b_no_Bk[simp]: \"inv_locate_b (as, lm) (n, [], Bk # list) ires = False\""]]

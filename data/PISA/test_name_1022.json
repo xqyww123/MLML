@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machines/EFSM.thy", "lemma one_outgoing_transition: defines \"outgoing s \\<equiv> (\\<lambda>((origin, dest), t). origin = s)\" assumes prem: \"size (ffilter (outgoing s) e) = 1\" shows \"size (possible_steps e s r l i) \\<le> 1\""]]

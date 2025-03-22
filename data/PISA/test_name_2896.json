@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/Oriented_Circlines.thy", "lemma pos_oriented_opposite_ocircline_cmat [simp]: assumes \"hermitean H \\<and> H \\<noteq> mat_zero\" shows \"pos_oriented_cmat (opposite_ocircline_cmat H) \\<longleftrightarrow> \\<not> pos_oriented_cmat H\""]]

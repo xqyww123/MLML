@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Matrices_for_ODEs/SQ_MTX.thy", "lemma sq_mtx_uminus_eq: \"- A = to_mtx (\\<chi> i j. - A$$i$j)\""]]

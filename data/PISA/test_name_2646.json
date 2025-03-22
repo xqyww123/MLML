@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buildings/Simplicial.thy", "lemma iso_codim_map: \"x \\<in> X \\<Longrightarrow> y \\<in> X \\<Longrightarrow> card (f`x - f`y) = card (x-y)\""]]

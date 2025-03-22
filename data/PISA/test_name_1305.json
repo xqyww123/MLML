@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LLL_Basis_Reduction/Missing_Lemmas.thy", "lemma rev_upt_rec: \"[i>..j] = (if i>j then [i>..Suc j] @ [j] else [])\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/BytecodeLogicJmlTypes/AssocLists.thy", "lemma AL_update3: \"\\<lbrakk>(L::('a, 'b) AssList)[a\\<mapsto>v]\\<down>b = X; a \\<noteq> b\\<rbrakk> \\<Longrightarrow> L\\<down>b=X\""]]

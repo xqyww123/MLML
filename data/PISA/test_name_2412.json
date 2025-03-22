@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/FWLock.thy", "lemma has_locks_unlock_lock_conv [simp]: \"has_lock l t \\<Longrightarrow> has_locks (unlock_lock l) t = has_locks l t - 1\""]]

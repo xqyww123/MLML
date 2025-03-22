@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SIFPL/HuntSands.thy", "lemma varDMonotoneInAssertion[rule_format]: \"(b, A, s, t) \\<in> varD \\<Longrightarrow> (\\<forall>s t. A s t \\<longrightarrow> B s t) \\<longrightarrow> (b, B, s, t) \\<in> varD\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_Master_Theorem/LTL_to_DRA/DRA_Construction.thy", "lemma list_prod_mono: \"f \\<le> g \\<Longrightarrow> (\\<Prod>x\\<leftarrow>xs. f x) \\<le> (\\<Prod>x\\<leftarrow>xs. g x)\" for f g :: \"'a \\<Rightarrow> nat\""]]

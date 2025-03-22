@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CakeML/Big_Step_Total.thy", "lemma evaluate_list_total: \"\\<exists>s' r. evaluate_list True env s es (s', r)\""]]

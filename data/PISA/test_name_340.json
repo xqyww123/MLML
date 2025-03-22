@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Compiler/ListIndex.thy", "lemma index_size_conv[simp]: \"(index xs x = size xs) = (x \\<notin> set xs)\""]]

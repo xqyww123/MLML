@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QHLProver/Partial_State.thy", "lemma encode1_lt [simp]: assumes \"i < d\" shows \"encode1 i < d1\""]]

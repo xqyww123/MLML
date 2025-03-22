@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automatic_Refinement/Lib/Misc.thy", "lemma sorted_wrt_quicksort_by_rel: fixes R:: \"'x \\<Rightarrow> 'x \\<Rightarrow> bool\" assumes lin : \"\\<And>x y. (R x y) \\<or> (R y x)\" and trans_R: \"\\<And>x y z. R x y \\<Longrightarrow> R y z \\<Longrightarrow> R x z\" shows \"sorted_wrt R (quicksort_by_rel R [] xs)\""]]

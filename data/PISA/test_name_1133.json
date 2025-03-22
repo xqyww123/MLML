@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Matrix.thy", "lemma dim_col_mat[simp]: \"dim_col (mat nr nc f) = nc\" \"dim_col (mat\\<^sub>r nr nc g) = nc\""]]

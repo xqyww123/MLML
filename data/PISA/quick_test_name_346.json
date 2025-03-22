@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Smith_Normal_Form/Elementary_Divisor_Rings.thy", "lemma admits_diagonal_reduction_imp_exists_algorithm_is_SNF_all: assumes \"(\\<forall>(A::'a::comm_ring_1 mat) \\<in> carrier_mat m n. admits_diagonal_reduction A)\" shows\" (\\<exists>algorithm. \\<forall>(A::'a mat) \\<in> carrier_mat m n. is_SNF A (algorithm A))\""]]

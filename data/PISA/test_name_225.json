@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Constructive_Cryptography/More_CryptHOL.thy", "lemma rel_gpv''_mono' [mono]: assumes \"\\<And>x y. A x y \\<longrightarrow> A' x y\" and \"\\<And>x y. C x y \\<longrightarrow> C' x y\" and \"\\<And>x y. R' x y \\<longrightarrow> R x y\" shows \"rel_gpv'' A C R gpv gpv' \\<longrightarrow> rel_gpv'' A' C' R' gpv gpv'\""]]

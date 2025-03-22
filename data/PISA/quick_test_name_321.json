@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Poincare_Bendixson/Poincare_Bendixson.thy", "lemma rot_scaleR[simp]: shows \"rot ( u *\\<^sub>R v) = u *\\<^sub>R (rot v)\""]]

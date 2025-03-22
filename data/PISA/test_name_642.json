@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOL-CSP/Ndet.thy", "lemma Rep_Abs_ND: \"Rep_process(Abs_process(F P \\<union> F Q , D P \\<union> D Q)) = (F P \\<union> F Q , D P \\<union> D Q)\""]]

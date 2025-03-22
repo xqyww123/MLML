@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/KAD/Domain_Semiring.thy", "lemma kat_equivalence_greatest: \"d x \\<le> d y \\<longleftrightarrow> x \\<le> d y \\<cdot> \\<top>\""]]

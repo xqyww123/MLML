@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Markov_Models/ex/MDP_RP.thy", "lemma r_inj: \"s \\<notin> F \\<or> t \\<notin> F \\<Longrightarrow> r s = r t \\<longleftrightarrow> s = t\""]]

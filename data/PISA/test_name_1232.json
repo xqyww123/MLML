@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List_Inversions/List_Inversions.thy", "lemma inversion_number_between_Cons_Cons: assumes \"sorted_wrt less_eq (x # xs)\" and \"sorted_wrt less_eq (y # ys)\" shows \"inversion_number_between (x # xs) (y # ys) = (if \\<not>less y x then inversion_number_between xs (y # ys) else inversion_number_between (x # xs) ys + length (x # xs))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Key_Agreement_Strong_Adversaries/pfslvl1.thy", "lemma l1_refines_a0i [iff]: \"refines (R01ia \\<inter> (reach a0i \\<times> (l1_inv1 \\<inter> l1_inv2))) med01ia a0i l1\""]]

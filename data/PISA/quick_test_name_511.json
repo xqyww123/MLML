@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Key_Agreement_Strong_Adversaries/IK.thy", "lemma ik_trans_synth_analz_ik_increasing: \"(s, s') \\<in> ik_trans \\<Longrightarrow> synth (analz (ik s)) \\<subseteq> synth (analz (ik s'))\""]]

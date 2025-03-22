@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automatic_Refinement/Lib/Misc.thy", "lemma set_mergesort_by_rel_merge [simp]: \"set (mergesort_by_rel_merge R xs ys) = set xs \\<union> set ys\""]]

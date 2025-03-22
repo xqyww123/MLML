@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/TLList.thy", "lemma tmap_eq_TNil_conv: \"tmap f g xs = TNil y \\<longleftrightarrow> (\\<exists>y'. xs = TNil y' \\<and> g y' = y)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Relational_Minimum_Spanning_Trees/Prim.thy", "lemma prim_exists_minimal_spanning: assumes \"prim_precondition g r\" shows \"\\<exists>t . minimum_spanning_tree t g r\""]]

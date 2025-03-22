@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra7.thy", "lemma (in Module) submodule_pOp_closed:\"\\<lbrakk>submodule R M H; h \\<in> H; k \\<in> H\\<rbrakk> \\<Longrightarrow> h \\<plusminus> k \\<in> H\""]]

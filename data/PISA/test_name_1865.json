@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CakeML_Codegen/Rewriting/Big_Step_Value_ML.thy", "lemma sconsts_list_comb: \"consts (list_comb f xs) |\\<subseteq>| S \\<longleftrightarrow> consts f |\\<subseteq>| S \\<and> list_all (\\<lambda>x. consts x |\\<subseteq>| S) xs\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/IICF/Impl/IICF_Array_List.thy", "lemma arl_butlast_hnr_aux: \"(arl_butlast,RETURN o op_list_butlast) \\<in> [pre_list_butlast]\\<^sub>a is_array_list\\<^sup>d \\<rightarrow> is_array_list\""]]

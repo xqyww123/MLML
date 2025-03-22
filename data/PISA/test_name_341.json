@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Vickrey_Clarke_Groves/Universes.thy", "lemma lm017: \"possible_allocations_rel G N \\<supseteq> injectionsUniverse \\<inter> {a. Domain a \\<in> all_partitions G & Range a \\<subseteq> N}\""]]

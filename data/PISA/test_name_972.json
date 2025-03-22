@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buchi_Complementation/Complementation_Implement.thy", "lemma bounds_3_update: \"bounds_3 A a (f (p \\<mapsto> s)) = override_on (bounds_3 A a f) (Some \\<circ> merge_5 s \\<circ> bounds_3 A a (f (p := None))) (transition A a p)\""]]

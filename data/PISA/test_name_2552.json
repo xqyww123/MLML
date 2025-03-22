@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Neumann_Morgenstern_Utility/Neumann_Morgenstern_Utility_Theorem.thy", "lemma mix_pmf_strict_preferred_independence: assumes \"r \\<in> \\<P>\" and \"\\<alpha> \\<in> {0<..1}\" assumes \"p \\<succ>[\\<R>] q\" shows \"mix_pmf \\<alpha> p r \\<succ>[\\<R>] mix_pmf \\<alpha> q r\""]]

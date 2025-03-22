@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Impossible_Geometry/Impossible_Geometry.thy", "lemma finite_order_radicals: \"radicals e \\<noteq> {} \\<Longrightarrow> finite (radicals e) \\<Longrightarrow> order_radicals (radicals e) \\<noteq> {} \\<and> finite (order_radicals (radicals e))\""]]

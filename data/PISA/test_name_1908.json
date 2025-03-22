@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/KAT_and_DRA/TwoSorted/DRAT2.thy", "lemma test_iteration_sim: \"`p\\<cdot>x \\<le> x\\<cdot>p` \\<Longrightarrow> `p\\<cdot>x\\<^sup>\\<infinity> \\<le> x\\<^sup>\\<infinity>\\<cdot>p`\""]]

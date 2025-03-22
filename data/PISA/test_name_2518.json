@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Huffman/Huffman.thy", "lemma height_gt_0_in_alphabet_imp_sibling_left[simp]: \"\\<lbrakk>height t\\<^sub>1 > 0; a \\<in> alphabet t\\<^sub>1\\<rbrakk> \\<Longrightarrow> sibling (Node w t\\<^sub>1 t\\<^sub>2) a = sibling t\\<^sub>1 a\""]]

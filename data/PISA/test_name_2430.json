@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Encodability_Process_Calculi/FullAbstraction.thy", "lemma (in encoding) inj_enc_is_fully_abstract_wrt_identities: assumes injectivity: \"\\<forall>S1 S2. \\<lbrakk>S1\\<rbrakk> = \\<lbrakk>S2\\<rbrakk> \\<longrightarrow> S1 = S2\" shows \"fully_abstract {(S1, S2). S1 = S2} {(T1, T2). T1 = T2}\""]]

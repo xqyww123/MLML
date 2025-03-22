@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/MPoly_PM.thy", "lemma poly_deg_map_indets_le: \"poly_deg (map_indets f p) \\<le> poly_deg p\""]]

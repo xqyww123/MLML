@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Presburger-Automata/Presburger_Automata.thy", "lemma bdd_all_is_node_subsetbdd: assumes \"list_all (bdd_all (nfa_is_node A)) (fst A)\" and \"nfa_is_node A q\" shows \"bdd_all (nfa_is_node A) (subsetbdd (fst A) q (nfa_emptybdd (length q)))\""]]

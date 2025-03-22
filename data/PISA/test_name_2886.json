@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/IMP2/lib/IMP2_Aux_Lemmas.thy", "lemma intvs_ii_incdec: fixes l h :: int shows \"l\\<le>h+1 \\<Longrightarrow> {l..h+1} = insert (h+1) {l..h}\" and \"l-1\\<le>h \\<Longrightarrow> {l-1..h} = insert (l-1) {l..h}\" and \"{l+1..h} = {l..h} - {l}\" and \"{l..h-1} = {l..h} - {h}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/J/Threaded.thy", "lemma redT_preserves_lock_ok: assumes wf: \"wf_J_prog P\" and \"P \\<turnstile> s -t\\<triangleright>ta\\<rightarrow> s'\" and \"lock_ok (locks s) (thr s)\" and \"sync_es_ok (thr s) (shr s)\" shows \"lock_ok (locks s') (thr s')\""]]

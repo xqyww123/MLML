@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stone_Algebras/Stone_Construction.thy", "lemma rho_char: \"up_filter (rho x y) = phi x \\<sqinter> up_filter y\""]]

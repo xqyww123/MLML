@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/Generic/RefineG_Recursion.thy", "lemma trimono_alt: \"trimono B \\<longleftrightarrow> (\\<forall>ord\\<in>fun_ord`triords. monotone ord ord B)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Safe_Distance/Safe_Distance_Reaction.thy", "theorem cond_3r_1'_2: assumes \"s\\<^sub>o - s\\<^sub>e \\<le> distance0_2\" assumes \"\\<delta> > other.t_stop\" shows \"collision_react {0 .. \\<delta>}\""]]

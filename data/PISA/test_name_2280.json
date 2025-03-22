@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PAC_Checker/PAC_Checker_Init.thy", "lemma string_rel_order_map: \\<open>(x, a) \\<in> string_rel \\<Longrightarrow> (y, aa) \\<in> string_rel \\<Longrightarrow> x \\<le> y \\<longleftrightarrow> a \\<le> aa\\<close>"]]

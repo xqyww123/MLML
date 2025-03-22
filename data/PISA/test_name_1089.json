@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Preliminaries.thy", "lemma tl_last[simp]: assumes \"tl L \\<noteq> []\" shows \"last (tl L) = last L\""]]

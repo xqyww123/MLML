@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Adaptive_State_Counting/FSM/FSM_Product.thy", "lemma sequence_to_failure_reaches_FAIL_ob : assumes \"sequence_to_failure M1 M2 io\" and \"OFSM M1\" and \"OFSM M2\" and \"productF M2 M1 FAIL PM\" shows \"io_targets PM (initial PM) io = {FAIL}\""]]

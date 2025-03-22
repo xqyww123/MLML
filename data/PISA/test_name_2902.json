@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category3/Adjunction.thy", "lemma \\<epsilon>_is_natural_transformation: shows \"natural_transformation C C FG.map C.map \\<epsilon>\""]]

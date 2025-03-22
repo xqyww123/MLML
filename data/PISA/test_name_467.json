@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CakeML_Codegen/Rewriting/Rewriting_Sterm.thy", "lemma srelated_subst: assumes \"srelated.P_env penv senv\" shows \"subst (sterm_to_pterm t) penv = sterm_to_pterm (subst t senv)\""]]

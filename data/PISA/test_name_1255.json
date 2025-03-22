@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Random_Graph_Subgraph_Threshold/Ugraph_Lemmas.thy", "lemma subgraph_has_max_density: assumes \"finite_graph G\" and \"nonempty_graph G\" and \"uwellformed G\" shows \"\\<exists>G'. density G' = max_density G \\<and> subgraph G' G \\<and> nonempty_graph G' \\<and> finite_graph G' \\<and> uwellformed G'\""]]

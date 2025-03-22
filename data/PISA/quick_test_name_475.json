@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Pi_Calculus/Weak_Early_Cong_Subst.thy", "lemma weakCongWeakEq: fixes P :: pi and Q :: pi assumes \"P \\<simeq>\\<^sup>s Q\" shows \"P \\<simeq> Q\""]]

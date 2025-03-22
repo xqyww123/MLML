@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Macaulay/Cone_Decomposition.thy", "lemma cone_decomp_exact_aux: assumes \"valid_decomp X qs\" and \"standard_decomp k qs\" and \"exact_decomp m qs\" and \"cone_decomp T qs\" shows \"cone_decomp T (exact_aux k m qs)\""]]

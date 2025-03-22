@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Statecharts/HA.thy", "lemma Chi_range_disjoint: \"\\<lbrakk> S \\<noteq> T; T \\<in> HAStates A; S \\<in> HAStates A; U \\<in> Chi A S \\<rbrakk> \\<Longrightarrow> U \\<notin> Chi A T\""]]

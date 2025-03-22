@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SATSolverVerification/CNF.thy", "lemma val2formOfSingleLiteralValuation: assumes \"length v = 1\" shows \"val2form v = [[hd v]]\""]]

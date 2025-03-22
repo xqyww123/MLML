@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra3.thy", "lemma (in Group) im_d_gchainTr1_1: \"\\<lbrakk>d_gchain G n f; \\<exists> i. f i \\<in> (f ` {i. i \\<le> n}) - {f 0}\\<rbrakk> \\<Longrightarrow> f (LEAST j. f j \\<in> ((f ` {i. i \\<le> n}) - {f 0})) \\<in> ((f` {i. i \\<le> n}) - {f 0})\""]]

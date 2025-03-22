@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_Master_Theorem/Logical_Characterization/Advice.thy", "lemma GF_advice_af_2: \"w \\<Turnstile>\\<^sub>n \\<phi>[X]\\<^sub>\\<nu> \\<Longrightarrow> suffix i w \\<Turnstile>\\<^sub>n (af \\<phi> (prefix i w))[X]\\<^sub>\\<nu>\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/KBPs/Kripke.thy", "lemma sim_trc_commute: assumes M: \"kripke M\" and s: \"sim M M' f\" and t: \"t \\<in> worlds M\" shows \"f ` ((\\<Union>a. relations M a)\\<^sup>* `` {t}) = (\\<Union>a. relations M' a)\\<^sup>* `` {f t}\" (is \"?lhs = ?rhs\")"]]

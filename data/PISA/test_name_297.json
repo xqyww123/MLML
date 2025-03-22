@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MSO_Regex_Equivalence/Init_Normalization.thy", "lemma lang_inPlus[simp]: \"\\<lbrakk>wf n r; wf n s\\<rbrakk> \\<Longrightarrow> lang n (inPlus r s) = lang n (Plus r s)\""]]

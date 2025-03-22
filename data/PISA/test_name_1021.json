@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Password_Authentication_Protocol/Propaedeutics.thy", "lemma synth_simp_intro: \"X \\<in> synth H \\<Longrightarrow> X \\<in> range Nonce \\<union> range Key \\<union> range Passwd \\<union> range Pri_AgrK \\<union> range Pub_AgrK \\<Longrightarrow> X \\<in> H\""]]

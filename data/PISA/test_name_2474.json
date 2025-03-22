@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/LTS.thy", "lemma inf_step_silent_move2_into_\\<tau>diverge: \"trsys.inf_step silent_move2 s tls \\<Longrightarrow> s -\\<tau>\\<rightarrow> \\<infinity>\""]]

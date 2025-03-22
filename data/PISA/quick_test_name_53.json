@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SuperCalc/equational_clausal_logic.thy", "lemma subst_eq_lit : assumes \"subst_eq \\<sigma> \\<eta>\" shows \"subst_lit l \\<sigma> = subst_lit l \\<eta>\""]]

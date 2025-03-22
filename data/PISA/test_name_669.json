@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nat-Interval-Logic/IL_IntervalOperators.thy", "lemma iT_Mult_iprev: \"iprev (n * k) (I \\<otimes> k) = (iprev n I) * k\""]]

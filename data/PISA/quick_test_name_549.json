@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinary_Differential_Equations/IVP/Flow.thy", "lemma eventually_at_snd: assumes \"eventually P (at (snd x))\" assumes \"P (snd x)\" shows \"eventually (\\<lambda>h. P (snd h)) (at x)\""]]

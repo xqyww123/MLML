@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiscretePricing/Infinite_Coin_Toss_Space.thy", "lemma (in infinite_coin_toss_space) bernoulli_stream_pseudo_prob_rec': fixes x assumes \"pseudo_proj_True n x = x\" shows \"measure M (pseudo_proj_True (Suc n) -`{x}) = (measure M (pseudo_proj_True n-`{x}) * prob_component p x n)\""]]

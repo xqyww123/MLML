@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Transition_Systems_and_Automata/Automata/Nondeterministic.thy", "lemma product_run: assumes \"length rs = length AA\" \"length ps = length AA\" assumes \"b.run (product AA) (w ||| stranspose rs) ps\" shows \"k < length AA \\<Longrightarrow> a.run (AA ! k) (w ||| rs ! k) (ps ! k)\""]]

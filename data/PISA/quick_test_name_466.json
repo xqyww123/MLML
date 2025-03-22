@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nat-Interval-Logic/IL_Interval.thy", "lemma iMODb_subset_conv: \"\\<lbrakk> 0 < m'; 0 < c' \\<rbrakk> \\<Longrightarrow> ([r', mod m', c'] \\<subseteq> [r, mod m, c]) = (r' mod m = r mod m \\<and> r \\<le> r' \\<and> m' mod m = 0 \\<and> r' + m' * c' \\<le> r + m * c)\""]]

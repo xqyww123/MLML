@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/UserGuide.thy", "lemma (in Fac_impl) shows \"\\<forall>n. \\<Gamma>\\<turnstile> \\<lbrace>\\<acute>N = n\\<rbrace> \\<acute>R :== PROC Fac(\\<acute>N) \\<lbrace>\\<acute>R = fac n\\<rbrace>\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Real_Impl/Real_Impl.thy", "lemma ma_plus: \"(real_of r1 + real_of r2) = (if ma_compatible r1 r2 then real_of (ma_plus r1 r2) else Code.abort (STR ''different base'') (\\<lambda> _. real_of r1 + real_of r2))\""]]

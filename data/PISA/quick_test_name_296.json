@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Valuation/Valuation1.thy", "lemma nsetTr1:\"\\<lbrakk>j \\<in> nset a b; j \\<noteq> a\\<rbrakk> \\<Longrightarrow> j \\<in> nset (Suc a) b\""]]

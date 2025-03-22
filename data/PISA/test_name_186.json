@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/pGCL/StructuredReasoning.thy", "lemma wlp_Seq: assumes ent_a: \"P \\<tturnstile> wlp a Q\" and ent_b: \"Q \\<tturnstile> wlp b R\" and wa: \"well_def a\" and wb: \"well_def b\" and u_Q: \"unitary Q\" and u_R: \"unitary R\" shows \"P \\<tturnstile> wlp (a ;; b) R\""]]

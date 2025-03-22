@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Quantales/Quantale_Left_Sided.thy", "lemma Fix_lsu_iff [simp]: \"(x \\<in> Fix \\<nu>\\<^sup>\\<natural>) = (\\<nu>\\<^sup>\\<natural> x = x)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Containers/RBT_ext.thy", "lemma alist_product_code [code]: \"alist_product xs ys = rev (fold (\\<lambda>(a, b). fold (\\<lambda>(c, d) rest. ((a, c), f a b c d) # rest) ys) xs [])\""]]

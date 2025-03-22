@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Statecharts/HAOps.thy", "lemma FAddSA_NoCycles: \"\\<lbrakk> (States SA \\<inter> dom G) = {}; S \\<in> dom G; dom G = \\<Union>(States ` F); NoCycles F G \\<rbrakk> \\<Longrightarrow> NoCycles (insert SA F) (G [f+] (S,SA))\""]]

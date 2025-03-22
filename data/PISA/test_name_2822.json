@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/VectorSpace/LinearCombinations.thy", "lemma (in module) supset_ld_is_ld: fixes A B assumes ld: \"lin_dep A\" and sub: \"A \\<subseteq> B\" shows \"lin_dep B\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Smith_Normal_Form/Cauchy_Binet.thy", "lemma pick_insert: assumes a_notin_I: \"a \\<notin> I\" and i2: \"i < card I\" and a_def: \"pick (insert a I) a' = a\" (*Alternative: index (insort a (sorted_list_of_set I)) a = a'*) and ia': \"i < a'\" (*Case 1*) and a'_card: \"a' < card I + 1\" shows \"pick (insert a I) i = pick I i\""]]

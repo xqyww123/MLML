@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CAVA_Automata/Automata.thy", "lemma acc_eq_limit: assumes FIN: \"finite (range r)\" shows \"is_acc r \\<longleftrightarrow> (\\<forall>A\\<in>F. limit r \\<inter> A \\<noteq> {})\""]]

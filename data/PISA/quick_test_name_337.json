@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hermite/Hermite.thy", "lemma invertible_Hermite_of: fixes A::\"'a::{bezout_ring_div,normalization_semidom,unique_euclidean_ring}^'cols::{mod_type}^'rows::{mod_type}\" assumes a: \"ass_function ass\" and b: \"is_bezout_ext bezout\" shows \"\\<exists>P. invertible P \\<and> Hermite_of A ass res bezout = P ** A\""]]

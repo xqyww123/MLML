@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinary_Differential_Equations/IVP/Cones.thy", "lemma conefield_rightI: assumes ij: \"i \\<in> Basis\" \"j \\<in> Basis\" and ij_neq: \"i \\<noteq> j\" assumes \"y \\<in> {y1 .. y2}\" shows \"(i + y *\\<^sub>R j) \\<in> conefield (i + y1 *\\<^sub>R j) (i + y2 *\\<^sub>R j)\""]]

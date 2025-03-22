@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomial_Factorization/Missing_List.thy", "lemma nth_drop_0: \"0 < length ss \\<Longrightarrow> (ss!0)#drop (Suc 0) ss = ss\""]]

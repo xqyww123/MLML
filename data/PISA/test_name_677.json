@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Farkas/Matrix_Farkas.thy", "lemma lec_rec_constraints_of_mat_vec: \"lec_rel ` constraints_of_mat_vec A b \\<subseteq> {Leq_Rel}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Affine_Approximation.thy", "lemma aform_vals_pdevs_vals: \"aform_vals e X = map (\\<lambda>(x, y). x + y) (zip (map fst X) (pdevs_vals e (map snd X)))\""]]

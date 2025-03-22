@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Compiler/Correctness1Threaded.thy", "lemma if_Red1_mthr_imp_if_Red1_mthr': assumes lok: \"if_lock_oks1 (locks s) (thr s)\" and elo: \"ts_ok (init_fin_lift (\\<lambda>t exexs h. el_loc_ok1 exexs)) (thr s) (shr s)\" and Red: \"Red1_mthr.if.redT uf P s tta s'\" shows \"Red1_mthr.if.redT (\\<not> uf) P s tta s'\""]]

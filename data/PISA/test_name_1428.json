@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QHLProver/Grover.thy", "lemma norm_ket_k_lt_K: \"k < K \\<Longrightarrow> inner_prod (ket_k k) (ket_k k) = 1\""]]

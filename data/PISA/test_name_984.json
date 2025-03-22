@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SenSocialChoice/RPRs.thy", "lemma indifferent_prefD[dest]: \"x \\<^bsub>r\\<^esub>\\<approx> y \\<Longrightarrow> x \\<^bsub>r\\<^esub>\\<preceq> y \\<and> y \\<^bsub>r\\<^esub>\\<preceq> x\""]]

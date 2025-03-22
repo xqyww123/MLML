@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Circus/CSP_Processes.thy", "lemma t_or_f_a: \"P(a, b) \\<Longrightarrow> ((P(a, b\\<lparr>ok := True\\<rparr>)) \\<or> (P(a, b\\<lparr>ok := False\\<rparr>)))\""]]

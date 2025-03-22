@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra3.thy", "theorem homomthm1:\"\\<lbrakk>Group F; Group G; f \\<in> gHom F G \\<rbrakk> \\<Longrightarrow> gbij\\<^bsub>(F/ (gkernel F G f)), (Gimage F G f)\\<^esub> (f\\<dieresis>\\<^bsub>F, (Gimage F G f)\\<^esub>)\""]]

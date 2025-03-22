@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_to_DRA/Mojmir.thy", "lemma configuration_token_squats: \"\\<lbrakk>x \\<in> configuration q n; y \\<in> configuration q n\\<rbrakk> \\<Longrightarrow> token_squats x = token_squats y\""]]

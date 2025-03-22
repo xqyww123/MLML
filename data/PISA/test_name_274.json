@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Word_EqI.thy", "lemma word_power_increasing: assumes x: \"2 ^ x < (2 ^ y::'a::len word)\" \"x < LENGTH('a::len)\" \"y < LENGTH('a::len)\" shows \"x < y\""]]

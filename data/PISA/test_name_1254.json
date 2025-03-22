@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Preliminaries.thy", "lemma lift2_preserves_sameDom: assumes \"sameDom inp' inp1'\" and \"sameDom inp inp1\" shows \"sameDom (lift2 f inp' inp) (lift2 g inp1' inp1)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/Refine_While.thy", "lemma rwof_FAIL_imp_WHILE_FAIL: assumes RW: \"rwof m0 cond step s\" and C: \"cond s\" and S: \"step s = FAIL\" shows \"m0 \\<bind> WHILE cond step = FAIL\""]]

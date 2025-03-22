@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Cayley_Hamilton/Square_Matrix.thy", "lemma smult_mult1: fixes a :: \"'a::comm_ring_1\" shows \"a *\\<^sub>S (A * B) = (a *\\<^sub>S A) * B\""]]

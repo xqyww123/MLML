@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambert_W/Lambert_W.thy", "lemma Lambert_W_nonneg_iff [simp]: \"Lambert_W x \\<ge> 0 \\<longleftrightarrow> x \\<ge> 0\""]]

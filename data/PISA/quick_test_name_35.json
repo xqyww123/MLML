@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buildings/Chamber.thy", "lemma restrict_endo: assumes \"ChamberSubcomplex Y\" \"f\\<turnstile>Y \\<subseteq> Y\" shows \"ChamberComplexEndomorphism Y (restrict1 f (\\<Union>Y))\""]]

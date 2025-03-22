@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Finger-Trees/FingerTree.thy", "lemma viewR_correct_nonEmpty: assumes \"ft_invar t\" \"t \\<noteq> Empty\" obtains a s where \"viewR t = Some (a, s)\" \"ft_invar s \\<and> toList t = toList s @ [a]\""]]

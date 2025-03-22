@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiscretePricing/Disc_Cond_Expect.thy", "lemma expl_cond_exp_diff: assumes \"integrable M X\" and \"integrable M Z\" shows \"\\<forall>w\\<in> space M. expl_cond_expect M Y (\\<lambda>x. X x - Z x) w = expl_cond_expect M Y X w - expl_cond_expect M Y Z w\""]]

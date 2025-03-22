@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nat-Interval-Logic/IL_IntervalOperators.thy", "lemma iT_Mult_cut_ge: \" 0 < k \\<Longrightarrow> (I \\<otimes> k) \\<down>\\<ge> t = (if t mod k = 0 then (I \\<down>\\<ge> (t div k)) else I \\<down>\\<ge> Suc (t div k)) \\<otimes> k\""]]

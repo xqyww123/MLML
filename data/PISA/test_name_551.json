@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tarskis_Geometry/Hyperbolic_Tarski.thy", "lemma K2_isometry_cosh_dist: assumes \"a \\<in> hyp2\" and \"b \\<in> hyp2\" and \"is_K2_isometry J\" shows \"cosh_dist (apply_cltn2 a J) (apply_cltn2 b J) = cosh_dist a b\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Syntax_Independent_Logic/Deduction.thy", "lemma prv_subst_scnj: assumes \"F \\<subseteq> fmla\" \"finite F\" \"t \\<in> trm\" \"x \\<in> var\" shows \"prv (eqv (subst (scnj F) t x) (scnj ((\\<lambda>\\<phi>. subst \\<phi> t x) ` F)))\""]]

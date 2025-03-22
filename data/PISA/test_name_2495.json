@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/ArrowImpossibilityGS/Thys/GS.thy", "lemma nonmanip: \"P:Prof \\<Longrightarrow> L:Lin \\<Longrightarrow> f(P(i := L)) \\<noteq> f P \\<Longrightarrow> (f(P(i := L)), f P) : P i \\<and> (f P, f(P(i := L))) : L\""]]

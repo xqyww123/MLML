@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Menger/MengerInduction.thy", "lemma y_eq_v1_implies_P_k_neq_P_new: assumes \"y = v1\" shows \"P_k \\<noteq> P_new\""]]

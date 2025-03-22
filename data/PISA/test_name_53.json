@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hermite/Hermite.thy", "lemma Hermite_of_upt_row_preserves_zero_rows_ge: assumes i: \"is_zero_row i A\" and k: \"k \\<le> nrows A\" and ik: \"to_nat i\\<ge>k\" shows \"is_zero_row i (Hermite_of_upt_row_i A k ass res)\""]]

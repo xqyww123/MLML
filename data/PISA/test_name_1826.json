@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Iptables_Semantics/Semantics_Ternary/Normalized_Matches.thy", "lemma normalize_match_empty: \"normalize_match m = [] \\<Longrightarrow> \\<not> matches \\<gamma> m a p\""]]

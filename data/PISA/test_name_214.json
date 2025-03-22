@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Affine_Approximation.thy", "lemma uminus_aform_uminus_aform[simp]: \"uminus_aform (uminus_aform z) = (z::'a::real_vector aform)\""]]

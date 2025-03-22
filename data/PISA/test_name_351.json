@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra6.thy", "lemma (in PolynRg) monomial_P_mod_mod:\"\\<lbrakk>ideal S I; c \\<in> carrier S; p = c \\<cdot>\\<^sub>r (X^\\<^bsup>R d\\<^esup>)\\<rbrakk> \\<Longrightarrow> (c \\<in> I) = (P_mod R S X I p)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ergodic_Theory/Fekete.thy", "lemma subadditive_of_superadditive: assumes \"superadditive u\" shows \"subadditive (\\<lambda>n. -u n)\""]]

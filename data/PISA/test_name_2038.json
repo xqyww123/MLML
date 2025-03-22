@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Signature_Groebner/Signature_Groebner.thy", "lemma (in gd_term) lt_spoly_less_lcs: assumes \"p \\<noteq> 0\" and \"q \\<noteq> 0\" and \"spoly p q \\<noteq> 0\" shows \"lt (spoly p q) \\<prec>\\<^sub>t term_of_pair (lcs (lp p) (lp q), component_of_term (lt p))\""]]

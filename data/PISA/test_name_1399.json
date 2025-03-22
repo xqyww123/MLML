@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Algebraic_Numbers/Complex_Algebraic_Numbers.thy", "lemma real_of_tighten_bounds_many[simp]: \"real_of_3 ((tighten_bounds_3 ^^ i) x) = real_of_3 x\""]]

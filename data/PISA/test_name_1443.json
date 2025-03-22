@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PAC_Checker/PAC_Misc.thy", "lemma in_set_remove1D: \\<open>a \\<in> set (remove1 x xs) \\<Longrightarrow> a \\<in> set xs\\<close>"]]

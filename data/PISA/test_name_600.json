@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/Sepref_Intf_Util.thy", "lemma vcg_of_SPEC: assumes \"f \\<equiv> do { ASSERT pre; SPEC post }\" shows \"\\<lbrakk>pre; SPEC post \\<le> m\\<rbrakk> \\<Longrightarrow> f \\<le> m\" and \"\\<lbrakk>pre \\<Longrightarrow> SPEC post \\<le>\\<^sub>n m\\<rbrakk> \\<Longrightarrow> f \\<le>\\<^sub>n m\""]]

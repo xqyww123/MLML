@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Transition_QuasiTerms_Terms.thy", "lemma qFreshBinp_preserves_alphaBinp_aux: assumes good: \"qGoodBinp qbinp \\<or> qGoodBinp qbinp'\" and alpha: \"qbinp %%= qbinp'\" and fresh: \"qFreshBinp xs x qbinp\" shows \"qFreshBinp xs x qbinp'\""]]

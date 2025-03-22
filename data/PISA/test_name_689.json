@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Intersection.thy", "lemma nlex_half_segments_of_aform: \"(a, b) \\<in> set (half_segments_of_aform X) \\<Longrightarrow> lex b a\""]]

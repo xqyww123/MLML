@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/CommonArith/Util_Nat.thy", "lemma le_diff_swap: \"\\<lbrakk> i \\<le> (k::nat); j \\<le> k \\<rbrakk> \\<Longrightarrow> (k - j \\<le> i) = (k - i \\<le> j)\""]]

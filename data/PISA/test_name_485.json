@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Spectral_Radius.thy", "lemma spectral_radius_mem_max: assumes A: \"A \\<in> carrier_mat n n\" and n: \"n > 0\" shows \"spectral_radius A \\<in> norm ` spectrum A\" (is ?one) \"a \\<in> norm ` spectrum A \\<Longrightarrow> a \\<le> spectral_radius A\""]]

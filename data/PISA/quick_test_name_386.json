@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Launchbury/Nominal-Utils.thy", "lemma Projl_permute: assumes a: \"\\<exists>y. f = Inl y\" shows \"(p \\<bullet> (Sum_Type.projl f)) = Sum_Type.projl (p \\<bullet> f)\""]]

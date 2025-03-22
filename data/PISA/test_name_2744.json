@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AODV/variants/e_all_abcd/E_Aodv_Data.thy", "lemma nhop_update_unk_val [simp]: \"\\<And>rt dip ip dsn hops. the (nhop (update rt dip (dsn, unk, val, hops, ip)) dip) = ip\""]]

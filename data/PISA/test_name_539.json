@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Constructive_Cryptography/Converter.thy", "lemma map_converter_of_callee: \"map_converter f g h k (converter_of_callee callee s) = converter_of_callee (map_fun id (map_fun f (map_gpv' (map_prod g id) h k)) callee) s\""]]

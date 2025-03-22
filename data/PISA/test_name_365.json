@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Density_Compiler/Density_Predicates.thy", "lemma has_subprob_densityI: \"\\<lbrakk>f \\<in> borel_measurable N; M = density N f; subprob_space M\\<rbrakk> \\<Longrightarrow> has_subprob_density M N f\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Call_Arity/SestoftConf.thy", "lemma heap_upds_ok_to_heap: \"heap_upds_ok (\\<Gamma>, Upd x # S) \\<Longrightarrow> heap_upds_ok ((x,e) # \\<Gamma>, S)\""]]

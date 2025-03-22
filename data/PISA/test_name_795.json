@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiscretePricing/Infinite_Coin_Toss_Space.thy", "lemma (in infinite_coin_toss_space) pseudo_proj_True_Suc_False_proj: shows \"pseudo_proj_True (Suc n) (pseudo_proj_False n w) = pseudo_proj_False n w\""]]

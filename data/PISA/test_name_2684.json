@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/examples/Breadth_First_Search.thy", "lemma min_dist_z_iff[simp]: \"conn v v' \\<Longrightarrow> min_dist v v' = 0 \\<longleftrightarrow> v'=v\""]]

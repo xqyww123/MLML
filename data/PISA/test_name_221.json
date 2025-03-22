@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machines/EFSM.thy", "lemma deterministic_alt: \"deterministic e = ( \\<forall>s r l i. possible_steps e s r l i = {||} \\<or> (\\<exists>s' t. ffilter (\\<lambda>((origin, dest), t). origin = s \\<and> (Label t) = l \\<and> (length i) = (Arity t) \\<and> apply_guards (Guards t) (join_ir i r)) e = {|((s, s'), t)|}) )\""]]

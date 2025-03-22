@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Pi_Calculus/Strong_Late_Bisim_SC.thy", "lemma parAssoc: fixes P :: pi and Q :: pi and R :: pi shows \"(P \\<parallel> Q) \\<parallel> R \\<sim> P \\<parallel> (Q \\<parallel> R)\""]]

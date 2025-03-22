@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/CommonSet/InfiniteSet2.thy", "lemma icard_1_imp_singleton: \"icard A = eSuc 0 \\<Longrightarrow> \\<exists>a. A = {a}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/BinarySearchTree/BinaryTree.thy", "lemma tlookup_none: \"sortedTree h t & (tlookup h k t = None) --> (\\<forall>x\\<in>setOf t. h x ~= k)\""]]

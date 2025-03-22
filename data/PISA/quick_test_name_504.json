@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Bases/Reduction.thy", "lemma dgrad_p_set_closed_red_single: assumes \"dickson_grading d\" and \"p \\<in> dgrad_p_set d m\" and \"f \\<in> dgrad_p_set d m\" and \"red_single p q f t\" shows \"q \\<in> dgrad_p_set d m\""]]

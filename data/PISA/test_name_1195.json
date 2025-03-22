@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_RPOs/Lambda_Free_Term.thy", "lemma finite_vars[simp]: \"finite (vars s)\" and finite_syms[simp]: \"finite (syms s)\""]]

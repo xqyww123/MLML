@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/Moebius.thy", "lemma three_fixed_points: assumes \"z1 \\<noteq> z2\" and \"z1 \\<noteq> z3\" and \"z2 \\<noteq> z3\" assumes \"moebius_pt M z1 = z1\" and \"moebius_pt M z2 = z2\" and \"moebius_pt M z3 = z3\" shows \"M = id_moebius\""]]

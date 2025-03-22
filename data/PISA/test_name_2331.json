@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UTP/utp/utp_concurrency.thy", "lemma right_uvar_mwb [simp]: \"mwb_lens x \\<Longrightarrow> mwb_lens (right_uvar x)\""]]

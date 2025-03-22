@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Confidentiality/DolevYao/Event.thy", "lemma knows_Spy_Says [simp]: \"knows Spy (Says A B X # evs) = insert X (knows Spy evs)\""]]

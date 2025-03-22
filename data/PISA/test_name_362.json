@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Universal_Turing_Machine/Abacus.thy", "lemma repeat_Bk[simp]: \"(\\<exists>rna. Bk \\<up> rn = Bk # Bk \\<up> rna) \\<or> rn = 0\""]]

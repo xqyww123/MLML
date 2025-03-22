@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Free-Groups/Generators.thy", "lemma (in monoid) nat_pow_mult1l: assumes x: \"x \\<in> carrier G\" shows \"x \\<otimes> x [^] n = x [^] Suc n\""]]

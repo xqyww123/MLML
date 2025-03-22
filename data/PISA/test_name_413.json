@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/DFA/Err.thy", "lemma closed_err_Union_lift2I: \"\\<lbrakk> \\<forall>A\\<in>AS. closed (err A) (lift2 f); AS \\<noteq> {}; \\<forall>A\\<in>AS.\\<forall>B\\<in>AS. A\\<noteq>B \\<longrightarrow> (\\<forall>a\\<in>A.\\<forall>b\\<in>B. a \\<squnion>\\<^sub>f b = Err) \\<rbrakk> \\<Longrightarrow> closed (err(Union AS)) (lift2 f)\""]]

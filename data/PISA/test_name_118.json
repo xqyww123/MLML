@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CCS/Weak_Cong_Sim_Pres.thy", "lemma bangPres: fixes P :: ccs and Q :: ccs and Rel :: \"(ccs \\<times> ccs) set\" and Rel' :: \"(ccs \\<times> ccs) set\" assumes \"(P, Q) \\<in> Rel\" and C1: \"\\<And>R S. (R, S) \\<in> Rel \\<Longrightarrow> R \\<leadsto><Rel'> S\" and C2: \"Rel \\<subseteq> Rel'\" shows \"!P \\<leadsto><bangRel Rel'> !Q\""]]

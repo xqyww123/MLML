@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Universal_Turing_Machine/Abacus.thy", "lemma inv_on_left_moving_no_empty[simp]: \"inv_on_left_moving (as, lm) (s, l, []) ires = False\""]]

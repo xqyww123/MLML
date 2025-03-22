@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra9.thy", "lemma (in Ring) bilinear_l_lin:\"\\<lbrakk>R module M1; R module M2; R module N; m1 \\<in> carrier M1; m2 \\<in> carrier M2; r \\<in> carrier R; bilinear_map f R M1 M2 N\\<rbrakk> \\<Longrightarrow> f (r \\<cdot>\\<^sub>s\\<^bsub>M1\\<^esub> m1, m2) = r \\<cdot>\\<^sub>s\\<^bsub>N\\<^esub> (f (m1, m2))\""]]

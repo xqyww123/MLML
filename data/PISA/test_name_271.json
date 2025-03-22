@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/MM/SC_Collections.thy", "lemma sc_oconf_hext: \"P,h \\<turnstile>sc obj \\<surd> \\<Longrightarrow> h \\<unlhd>sc h' \\<Longrightarrow> P,h' \\<turnstile>sc obj \\<surd>\""]]

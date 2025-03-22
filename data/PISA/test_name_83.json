@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gromov_Hyperbolicity/Isometries.thy", "lemma proj_set_geodesic_same_basepoint: assumes \"p \\<in> proj_set x A\" \"geodesic_segment_between G p x\" \"y \\<in> G\" shows \"p \\<in> proj_set y A\""]]

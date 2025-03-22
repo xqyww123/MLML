@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Randomised_BSTs/Randomised_BSTs.thy", "theorem mrbst_union_correct: assumes \"finite A\" \"finite B\" shows \"do {t1 \\<leftarrow> random_bst A; t2 \\<leftarrow> random_bst B; mrbst_union t1 t2} = random_bst (A \\<union> B)\""]]

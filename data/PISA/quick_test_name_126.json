@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stateful_Protocol_Composition_and_Typing/Typed_Model.thy", "lemma fun_type_arg_cong: assumes \"f \\<in> \\<Sigma>\\<^sub>f\" \"g \\<in> \\<Sigma>\\<^sub>f\" \"\\<Gamma> (Fun f (x#X)) = \\<Gamma> (Fun g (y#Y))\" shows \"\\<Gamma> x = \\<Gamma> y\" \"\\<Gamma> (Fun f X) = \\<Gamma> (Fun g Y)\""]]

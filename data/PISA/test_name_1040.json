@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Confidentiality/GeneralAttacker/Knowledge.thy", "theorem noprishr_parts_knowledge_equiv: \" \\<lbrakk> X \\<notin> {Key (priEK A), Key (priSK A), Key (shrK A)}; X \\<in> parts(knows A evs) \\<rbrakk> \\<Longrightarrow> X \\<in> parts(knows B evs) \\<union> parts({X. Notes A X \\<in> set evs})\""]]

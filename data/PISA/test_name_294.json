@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/FWLocking.thy", "lemma may_acquire_allI [intro]: \"\\<And>ln. (\\<And>l. ln $ l > 0 \\<Longrightarrow> may_lock (ls $ l) t) \\<Longrightarrow> may_acquire_all ls t ln\""]]

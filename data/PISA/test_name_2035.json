@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Prim_Dijkstra_Simple/Undirected_Graph.thy", "lemma simple_append[simp]: \"simple (p\\<^sub>1@p\\<^sub>2) \\<longleftrightarrow> simple p\\<^sub>1 \\<and> simple p\\<^sub>2 \\<and> uedge ` set p\\<^sub>1 \\<inter> uedge ` set p\\<^sub>2 = {}\""]]

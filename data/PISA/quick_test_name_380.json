@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Transitive-Closure-II/RTrancl.thy", "lemma mk_rtrancl_sound: \"mk_rtrancl init \\<subseteq> R^* `` set_of init\""]]

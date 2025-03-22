@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Decreasing-Diagrams-II/Decreasing_Diagrams_II_Aux.thy", "lemma list_splits_map: \"list_splits (map f xs) = map (\\<lambda>(xs, x, ys). (map f xs, f x, map f ys)) (list_splits xs)\""]]

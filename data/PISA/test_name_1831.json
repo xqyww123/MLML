@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/ICF/spec/MapSpec.thy", "lemma max_Some: \"\\<lbrakk> invar s; max s P = Some (k,v) \\<rbrakk> \\<Longrightarrow> (k,v)\\<in>rel_of (\\<alpha> s) P\" \"\\<lbrakk> invar s; max s P = Some (k,v); (k',v')\\<in>rel_of (\\<alpha> s) P \\<rbrakk> \\<Longrightarrow> k\\<ge>k'\""]]

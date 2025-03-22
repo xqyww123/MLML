@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gaussian_Integers/Gaussian_Integers.thy", "lemma gauss_cnj_dvd_self_iff: \"gauss_cnj z dvd z \\<longleftrightarrow> ReZ z = 0 \\<or> ImZ z = 0 \\<or> \\<bar>ReZ z\\<bar> = \\<bar>ImZ z\\<bar>\""]]

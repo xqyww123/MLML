@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/QuasiTerms_PickFresh_Alpha.thy", "lemma qFresh_preserves_alpha: assumes \"qGood X \\<or> qGood X'\" and \"X #= X'\" shows \"qFresh zs z X \\<longleftrightarrow> qFresh zs z X'\""]]

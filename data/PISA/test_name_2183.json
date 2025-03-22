@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Formal_SSA/SSA_CFG_code.thy", "lemma lookup_useNodes_of: \"Mapping.lookup (useNodes_of g) v = (if (\\<exists>n \\<in> set (\\<alpha>n g). v \\<in> uses g n) then Some {n \\<in> set (\\<alpha>n g). v \\<in> uses g n} else None)\""]]

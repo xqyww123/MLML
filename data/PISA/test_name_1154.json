@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Syntax_Independent_Logic/Deduction_Q.thy", "lemma consistent_prv_LLq_Num_leq: assumes consistent \"prv (LLq (Num m) (Num n))\" shows \"m \\<le> n\""]]

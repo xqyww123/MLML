@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Topological_Semantics/topo_strict_implication.thy", "lemma DTw2: \"Fr_2 \\<F> \\<Longrightarrow> Fr_3 \\<F> \\<Longrightarrow> \\<forall>a b. a \\<^bold>\\<preceq> b \\<longrightarrow> a \\<^bold>\\<Rightarrow> b \\<^bold>\\<approx> \\<^bold>\\<top>\""]]

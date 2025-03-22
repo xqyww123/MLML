@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gabow_SCC/Gabow_GBG.thy", "lemma goBrk_refine: \"(s,s')\\<in>goGS_rel \\<Longrightarrow> (goBrk_impl s, goBrk s')\\<in>Id\""]]

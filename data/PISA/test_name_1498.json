@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Randomised_Social_Choice/Preference_Profiles.thy", "lemma eval_Collect_of_weak_ranking: \"Collect (of_weak_ranking xs x) = of_weak_ranking_Collect_ge (rev xs) x\""]]

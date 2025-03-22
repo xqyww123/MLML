@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Order_Lattice_Props/Order_Lattice_Props.thy", "lemma lat_filters: \"X \\<in> filters = (X \\<noteq> {} \\<and> X \\<in> upsets \\<and> (\\<forall>x \\<in> X. \\<forall> y \\<in> X. x \\<sqinter> y \\<in> X))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Differential_Dynamic_Logic/Denotational_Semantics.thy", "lemma agree_UNIV_snd:\"\\<And>\\<nu> \\<omega>. Vagree \\<nu> \\<omega> (Inr ` UNIV) \\<Longrightarrow> (snd \\<nu>) = (snd \\<omega>)\""]]

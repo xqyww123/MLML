@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PLM/TAO_5_MetaSolver.thy", "lemma ImplI[meta_intro]: \"([\\<phi> in v] \\<Longrightarrow> [\\<psi> in v]) \\<Longrightarrow> ([\\<phi> \\<^bold>\\<rightarrow> \\<psi> in v])\""]]

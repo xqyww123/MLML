@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Adaptive_State_Counting/FSM/FSM.thy", "lemma target_in_states : assumes \"length io = length tr\" and \"length io > 0\" shows \"last (states (io || tr) q) = target (io || tr) q\""]]

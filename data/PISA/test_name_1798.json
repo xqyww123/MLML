@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Verified_SAT_Based_AI_Planning/SAS_Plus_STRIPS.thy", "lemma strips_state_to_state_inverse_is_i: assumes \"is_valid_problem_sas_plus \\<Psi>\" and \"v \\<in> set ((\\<Psi>)\\<^sub>\\<V>\\<^sub>+)\" and \"s v \\<noteq> None\" and \"a \\<in> \\<R>\\<^sub>+ \\<Psi> v\" shows \"(\\<phi>\\<^sub>S \\<Psi> s) (v, a) = Some (the (s v) = a)\""]]

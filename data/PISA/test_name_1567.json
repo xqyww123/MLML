@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Transformer_Semantics/Powerset_Monad.thy", "lemma sleq_trans: \"sleq x y \\<Longrightarrow> sleq y z \\<Longrightarrow> sleq x z\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Markov_Models/Discrete_Time_Markov_Process.thy", "lemma step_C: assumes x: \"x \\<in> space M\" shows \"Ionescu_Tulcea.C (K' x) (\\<lambda>_. M) 0 1 (\\<lambda>_. undefined) \\<bind> Ionescu_Tulcea.C (K' x) (\\<lambda>_. M) 1 n = K x \\<bind> (\\<lambda>y. Ionescu_Tulcea.C (K' x) (\\<lambda>_. M) 1 n (case_nat y (\\<lambda>_. undefined)))\""]]

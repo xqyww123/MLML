@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List_Update/RExp_Var.thy", "lemma subst_w2rexp: \"lang (subst (w2rexp (xs @ ys)) \\<sigma>) = lang (subst (w2rexp xs) \\<sigma>) @@ lang (subst (w2rexp ys) \\<sigma>)\""]]

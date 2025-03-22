@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/MPoly_Type_Class_Ordered.thy", "lemma poly_mapping_neqE: assumes \"p \\<noteq> q\" obtains v where \"v \\<in> keys p \\<union> keys q\" and \"lookup p v \\<noteq> lookup q v\" and \"\\<And>u. v \\<prec>\\<^sub>t u \\<Longrightarrow> lookup p u = lookup q u\""]]

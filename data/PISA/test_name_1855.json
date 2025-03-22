@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Akra_Bazzi/Akra_Bazzi_Asymptotics.thy", "lemma asymptotics4: \"eventually (\\<lambda>x. (1 - (ln x powr (-e/2))) * 2 \\<ge> 1) at_top\" (is \"eventually (\\<lambda>x. ?f x \\<ge> 1) _\")"]]

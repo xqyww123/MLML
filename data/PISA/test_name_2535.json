@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CRDT/RGA.thy", "lemma (in rga) allowed_delete: assumes \"Broadcast (i, Delete x) \\<in> set (history j)\" shows \"\\<exists>i' n' v b. Deliver (i', Insert (x, v, b) n') \\<sqsubset>\\<^sup>j Broadcast (i, Delete x)\""]]

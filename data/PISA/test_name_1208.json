@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/MM/JMM_Spec.thy", "lemma weakly_justified_write_seen_hb_read_committed: assumes J: \"P \\<turnstile> (E, ws) weakly_justified_by J\" and r: \"r \\<in> read_actions (justifying_exec (J n))\" \"r \\<in> committed (J n)\" shows \"ws (action_translation (J n) r) \\<in> action_translation (J n) ` committed (J n)\""]]

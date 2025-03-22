@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Deep_Learning/Tensor.thy", "lemma assumes \"length v = prod_list d\" shows dims_tensor[simp]: \"dims (tensor_from_vec d v) = d\" and vec_tensor[simp]: \"vec (tensor_from_vec d v) = v\""]]

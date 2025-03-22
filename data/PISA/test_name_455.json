@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gauss_Jordan/Linear_Maps.thy", "lemma dim_image_invertible_mat: fixes P::\"'a::{field}^'m^'m\" assumes inv_P: \"invertible P\" and sub_W: \"vec.subspace W\" shows \"vec.dim ((\\<lambda>x. P *v x)` W) = vec.dim W\""]]

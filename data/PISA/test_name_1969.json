@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JiveDataStoreModel/Isabelle_Store/StoreProperties.thy", "lemma xeq4: assumes not_new: \"x \\<noteq> new s t\" shows \"s \\<equiv>[x] s\\<langle>t\\<rangle>\""]]

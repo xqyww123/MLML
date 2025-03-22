@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Twelvefold_Way/Twelvefold_Way_Entry9.thy", "lemma card_partitions_of: assumes \"F \\<in> (A \\<rightarrow>\\<^sub>E B) // range_permutation A B\" assumes \"univ (\\<lambda>f. f ` A = B) F\" shows \"card (partitions_of A B F) = card B\""]]

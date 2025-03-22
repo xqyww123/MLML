@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/DFA/LBVSpec.thy", "lemma cert_okD4 [intro?]: \"cert_ok c n T B A \\<Longrightarrow> pc < n \\<Longrightarrow> c!pc \\<noteq> T\""]]

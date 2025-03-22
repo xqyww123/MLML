@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptHOL/Negligible.thy", "lemma negligible_times_poly: assumes f: \"negligible f\" and g: \"g \\<in> O(\\<lambda>x. x powr n)\" shows \"negligible (\\<lambda>x. f x * g x)\""]]

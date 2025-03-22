@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra5.thy", "lemma (in Ring) prime_ideal_cont1Tr:\"ideal R A \\<Longrightarrow> \\<forall>P. ((P \\<in> {j. j \\<le> (n::nat)} \\<rightarrow> {X. prime_ideal R X}) \\<and> (A \\<subseteq> \\<Union> (P ` {j. j \\<le> n}))) \\<longrightarrow> (\\<exists>i\\<le> n. A \\<subseteq> (P i))\""]]

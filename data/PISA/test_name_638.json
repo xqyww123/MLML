@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptoBasedCompositionalProperties/KnowledgeKeysSecrets.thy", "lemma know_composition2: assumes \"m \\<notin> specKeysSecrets P\" and \"m \\<notin> specKeysSecrets Q\" and \"know Q m\" and \"subcomponents PQ = {P,Q}\" and \"correctCompositionIn PQ\" and \"correctCompositionKS PQ\" shows \"know PQ m\""]]

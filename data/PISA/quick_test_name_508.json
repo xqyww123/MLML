@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Statecharts/HA.thy", "lemma HARootStates_Range_ChiPlus2 [simp]: \"\\<lbrakk> S \\<in> States (HARoot A) \\<rbrakk> \\<Longrightarrow> (x,S) \\<notin> (ChiPlus A)\""]]

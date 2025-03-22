@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Word_Lemmas.thy", "lemma sbintrunc_eq_in_range: \"(sbintrunc n x = x) = (x \\<in> range (sbintrunc n))\" \"(x = sbintrunc n x) = (x \\<in> range (sbintrunc n))\""]]

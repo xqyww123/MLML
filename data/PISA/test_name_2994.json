@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Word_Lemmas.thy", "lemma and_mask_shiftl_comm: \"m+n \\<le> size w \\<Longrightarrow> (w && mask m) << n = (w << n) && mask (m+n)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Floatarith_Expression.thy", "lemma isDERIV_fold_const_fa_minus[intro!]: assumes \"isDERIV x (fold_const_fa fa) vs\" shows \"isDERIV x (fold_const_fa (Minus fa)) vs\""]]

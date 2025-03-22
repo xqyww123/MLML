@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Differential_Game_Logic/Coincidence.thy", "lemma select_nonBV: \"x\\<notin>BVG(\\<alpha>) \\<Longrightarrow> selectlike (game_sem I \\<alpha> (selectlike X \\<omega> {x})) \\<omega> {x} = selectlike (game_sem I \\<alpha> X) \\<omega> {x}\""]]

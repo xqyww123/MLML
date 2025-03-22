@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Modular_Assembly_Kit_Security/Verification/Basics/BSPTaxonomy.thy", "lemma BSI_implies_BSIA: \"BSI \\<V> Tr\\<^bsub>ES\\<^esub> \\<Longrightarrow> BSIA \\<rho> \\<V> Tr\\<^bsub>ES\\<^esub>\""]]

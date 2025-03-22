@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ergodic_Theory/Ergodicity.thy", "theorem (in ergodic_pmpt) birkhoff_theorem_L1: fixes f::\"'a \\<Rightarrow> real\" assumes [measurable]: \"integrable M f\" shows \"(\\<lambda>n. \\<integral>\\<^sup>+x. norm(birkhoff_sum f n x / n - (\\<integral> x. f x \\<partial>M)) \\<partial>M) \\<longlonglongrightarrow> 0\""]]

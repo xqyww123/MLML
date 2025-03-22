@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/ex/Compose.thy", "lemma rename_DynCom: \"(rename h c = DynCom rc) = (\\<exists>C. c=DynCom C \\<and> rc = (\\<lambda>s. rename h (C s)))\""]]

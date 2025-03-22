@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Deep_Learning/DL_Deep_Model.thy", "lemma witness_is_deep_model: \"remove_weights (witness Y r rs) = deep_model Y r rs\""]]

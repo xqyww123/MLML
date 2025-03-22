@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Missing_VectorSpace.thy", "lemma surj_imp_imT_carrier: assumes surj: \"T` (carrier V) = carrier W\" shows \"(imT) = carrier W\""]]

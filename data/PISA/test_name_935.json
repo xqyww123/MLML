@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/Term_Order.thy", "lemma nat_term_order_eq_sym: \"nat_term_order_eq to1 to2 dg ps \\<longleftrightarrow> nat_term_order_eq to2 to1 dg ps\""]]

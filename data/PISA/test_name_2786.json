@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stream_Fusion_Code/Stream_Fusion_LList.thy", "lemma inf_llist_prod_fusion [stream_fusion]: \"lunstream' (inf_llist_prod f) 0 = inf_llist f\""]]

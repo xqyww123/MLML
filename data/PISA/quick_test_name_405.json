@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Program-Conflict-Analysis/Interleave.thy", "lemma interleave_rev_append2: \"w\\<in>a\\<otimes>b \\<Longrightarrow> w@w' \\<in> a \\<otimes> b@w'\""]]

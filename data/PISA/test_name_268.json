@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DFS_Framework/Invars/DFS_Invars_Basic.thy", "lemma parenthesis_impl_tree_path: assumes \"v \\<in> dom (finished s)\" \"w \\<in> dom (finished s)\" and \"\\<delta> s v < \\<delta> s w\" \"\\<phi> s v > \\<phi> s w\" shows \"(v,w) \\<in> (tree_edges s)\\<^sup>+\""]]

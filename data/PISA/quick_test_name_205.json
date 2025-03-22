@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/OpSets/RGA.thy", "lemma insert_rga_preserves_order: assumes \"i = None \\<or> (\\<exists>i'. i = Some i' \\<and> i' \\<in> set xs)\" and \"distinct xs\" shows \"\\<exists>pre suf. xs = pre @ suf \\<and> insert_rga xs (e, i) = pre @ e # suf\""]]

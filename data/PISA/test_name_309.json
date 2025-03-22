@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/TLList.thy", "lemma thd_tllist_of_llist [simp]: \"thd (tllist_of_llist b xs) = lhd xs\""]]

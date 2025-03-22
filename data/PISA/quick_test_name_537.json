@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Call_Arity/SestoftConf.thy", "lemma upds_restr_stack[simp]: \"upds (restr_stack V S) = upds S \\<inter> V\""]]

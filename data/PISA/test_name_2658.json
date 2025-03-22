@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/ADS_Functor/ADS_Construction.thy", "lemma blinding_of_tree_hash: assumes \"bo \\<le> vimage2p h h (=)\" shows \"blinding_of_tree h bo \\<le> vimage2p (hash_tree h) (hash_tree h) (=)\""]]

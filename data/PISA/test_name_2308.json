@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stone_Relation_Algebras/Relation_Algebras.thy", "lemma coreflexive_comp_top_inf: \"coreflexive x \\<Longrightarrow> x * top \\<sqinter> y = x * y\""]]

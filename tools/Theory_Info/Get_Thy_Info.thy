@@ -5,7 +5,7 @@ begin
 ML \<open>
 
 fun dump () =
-  let val sf = BinIO.openOut "./cache/sessions.msgpack"
+  let val sf = BinIO.openOut "./sessions.msgpack"
       val (sinfo, tinfo) = Lazy.force REPL_Aux.session_theory_infos
       open MessagePackBinIO.Pack
 
@@ -15,7 +15,7 @@ fun dump () =
       val _ = spacker sinfo (BinIO.getOutstream sf)
       val _ = BinIO.closeOut sf
 
-      val tf = BinIO.openOut "./cache/theories.msgpack"
+      val tf = BinIO.openOut "./theories.msgpack"
       fun pack_header {name, imports, ...} =
           packPair (packString, packList packString) (fst name, map fst imports)
       val tpacker = packPairList (packString, packPair (pack_header, packString o Path.implode)) o Symtab.dest

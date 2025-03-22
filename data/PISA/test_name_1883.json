@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QHLProver/Matrix_Limit.thy", "lemma minus_mat_limit: fixes X :: \"nat \\<Rightarrow> complex mat\" and A :: \"complex mat\" and m :: nat and B :: \"complex mat\" assumes dimB: \"B \\<in> carrier_mat m m\" and limX: \"limit_mat X A m\" shows \"limit_mat (mat_seq_minus X B) (A - B) m\""]]

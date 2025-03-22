@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Noninterference_Concurrent_Composition/ConcurrentComposition.thy", "theorem con_comp_secure_no_fake: assumes A: \"range p \\<union> range q = UNIV\" and B: \"consistent_maps D E p q\" and C: \"secure P I D\" and D: \"secure Q I E\" shows \"secure (P \\<parallel> Q <p, q>) I (the \\<circ> con_comp_map D E p q)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Monomorphic_Monad/Monomorphic_Monad.thy", "lemma run_bind_state [simp]: \"run_state (bind_state x f) s = bind (run_state x s) (\\<lambda>(a, s'). run_state (f a) s')\""]]

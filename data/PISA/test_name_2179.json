@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HereditarilyFinite/OrdArith.thy", "lemma BuildSeq2_exI: \"B t t' \\<Longrightarrow> \\<exists>s k. BuildSeq2 B C s k t t'\""]]

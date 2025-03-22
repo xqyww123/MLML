@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/MM/JMM_Spec.thy", "lemma most_recent_write_for_fun: \"\\<lbrakk> P,E \\<turnstile> ra \\<leadsto>mrw wa; P,E \\<turnstile> ra \\<leadsto>mrw wa' \\<rbrakk> \\<Longrightarrow> wa = wa'\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machines/examples/Drinks_Machine_2.thy", "lemma drinks2_end: \"possible_steps drinks2 3 r a b = {||}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Sigma_Commit_Crypto/Xor.thy", "lemma compl_le_swap1: assumes \"y \\<sqsubseteq> \\<^bold>- x\" \"x \\<in> carrier L\" \"y \\<in> carrier L\" shows \"x \\<sqsubseteq> \\<^bold>- y\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Finite_Automata_HF/Finite_Automata_HF.thy", "lemma nxt_inv_into: \"q \\<in> states N \\<Longrightarrow> nxt N q x = h (nxt M (inv_into (states M) h q) x)\""]]

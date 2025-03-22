@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Valuation/Valuation2.thy", "lemma (in Corps) ring_n_pd_pOp_K_pOp:\"\\<lbrakk>distinct_pds K n P; x\\<in>carrier (O\\<^bsub>K P n\\<^esub>); y \\<in> carrier (O\\<^bsub>K P n\\<^esub>)\\<rbrakk> \\<Longrightarrow> x \\<plusminus>\\<^bsub>(O\\<^bsub>K P n\\<^esub>)\\<^esub> y = x \\<plusminus> y\""]]

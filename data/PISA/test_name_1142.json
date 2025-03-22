@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Certification_Monads/Parser_Monad.thy", "lemma bind_cong [fundef_cong]: fixes m1 :: \"('t, 'a) gen_parser\" assumes \"m1 ts2 = m2 ts2\" and \"\\<And> y ts. m2 ts2 = Inr (y, ts) \\<Longrightarrow> f1 y ts = f2 y ts\" and \"ts1 = ts2\" shows \"((m1 \\<bind> f1) ts1) = ((m2 \\<bind> f2) ts2)\""]]

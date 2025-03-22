@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive_Languages/Coinductive_Language.thy", "theorem Plus_assoc: \"Plus (Plus r s) t = Plus r (Plus s t)\""]]

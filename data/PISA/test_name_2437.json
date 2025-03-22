@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FocusStreamsCaseStudies/Gateway_proof.thy", "lemma aux4lose1: assumes h1:\"\\<forall>j\\<le>2 * d + (4 + k). lose (t + j) = [False]\" and h2:\"j \\<le> k\" shows \"lose (t + (2::nat) + j) = [False]\""]]

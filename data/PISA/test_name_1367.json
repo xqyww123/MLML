@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Resolution_FOL/Tree.thy", "lemma infpath_length: assumes \"wf_infpath f\" shows \"length (f n) = n\""]]

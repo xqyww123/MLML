@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SIFUM_Type_Systems/LocallySoundModeUse.thy", "lemma cxt_eval: \"\\<lbrakk> \\<langle>cxt_to_stmt [] c, mds, mem\\<rangle> \\<leadsto> \\<langle>cxt_to_stmt [] c', mds', mem'\\<rangle> \\<rbrakk> \\<Longrightarrow> \\<langle>c, mds, mem\\<rangle> \\<leadsto> \\<langle>c', mds', mem'\\<rangle>\""]]

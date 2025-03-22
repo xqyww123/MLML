@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Factored_Transition_System_Bounding/FactoredSystem.thy", "lemma exec_as_proj_valid_2: fixes a assumes \"a \\<in> PROB\" shows \"(action_dom (fst a) (snd a) \\<subseteq> prob_dom PROB)\""]]

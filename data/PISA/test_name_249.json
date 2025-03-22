@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Depth-First-Search/DFS.thy", "lemma nexts_set: \"y \\<in> set (nexts g x) = ((x,y) \\<in> set g)\""]]

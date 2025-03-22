@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Inference/Standard_Results.thy", "lemma index_set_closed_in: assumes \"index_set I\" and \"i \\<in> I\" and \"\\<forall>x. eval r_phi [i, x] = eval r_phi [j, x]\" shows \"j \\<in> I\""]]

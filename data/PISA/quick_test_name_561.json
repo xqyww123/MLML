@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Topology/LList_Topology.thy", "lemma (in trace_top) suff_nhd_base: assumes unhd: \"u \\<in> nhds t\" and H: \"\\<And>r. \\<lbrakk> r \\<in> finpref A t; suff A r \\<subseteq> u \\<rbrakk> \\<Longrightarrow> R\" shows \"R\""]]

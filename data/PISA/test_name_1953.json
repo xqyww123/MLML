@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra4.thy", "lemma (in Ring) ideal_nsum_closed:\"\\<lbrakk>ideal R I; \\<forall>j \\<le> n. f j \\<in> I\\<rbrakk> \\<Longrightarrow> nsum R f n \\<in> I\""]]

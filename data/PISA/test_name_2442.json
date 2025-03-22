@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Transition_Systems_and_Automata/Automata/NBA/NGBA_Refine.thy", "lemma gen_param[param]: \"(gen, gen) \\<in> (A \\<rightarrow> B \\<rightarrow> bool_rel) \\<rightarrow> \\<langle>A\\<rangle> list_rel \\<rightarrow> B \\<rightarrow> bool_rel\""]]

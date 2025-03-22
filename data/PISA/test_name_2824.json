@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LLL_Basis_Reduction/Norms.thy", "lemma sq_norm_poly_ge_0 [intro!]: fixes p :: \"'a :: conjugatable_ordered_ring poly\" shows \"\\<parallel>p\\<parallel>\\<^sup>2 \\<ge> 0\""]]

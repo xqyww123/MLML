@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Abstract-Hoare-Logics/While/Hoare.thy", "theorem hoare_sound: \"\\<turnstile> {P}c{Q} \\<Longrightarrow> \\<Turnstile> {P}c{Q}\""]]

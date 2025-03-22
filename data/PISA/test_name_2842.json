@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Dependent_SIFUM_Type_Systems/Compositionality.thy", "lemma apply_adaptation_not_in_dom: \"x \\<notin> dom A \\<Longrightarrow> apply_adaptation b blah A x = blah x\""]]

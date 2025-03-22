@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Elliptic_Curves_Group_Law/Elliptic_Axclass.thy", "lemma add_closed: assumes \"on_curve a b p\\<^sub>1\" and \"on_curve a b p\\<^sub>2\" shows \"on_curve a b (add a p\\<^sub>1 p\\<^sub>2)\""]]

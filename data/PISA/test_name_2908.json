@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinary_Differential_Equations/Numerics/One_Step_Method.thy", "lemma max_step_r: assumes \"t j \\<le> t1\" shows \"max_stepsize j \\<le> root p (\\<bar>r\\<bar> * L / B / (exp (L * (t1 - t 0) + 1) - 1))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CakeML_Codegen/Utils/Compiler_Utils.thy", "lemma distinct_sorted_list_of_fset[simp, intro]: \"distinct (sorted_list_of_fset S)\""]]

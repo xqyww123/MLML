@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Monomorphic_Monad/Monad_Overloading.thy", "lemma run_return_optionT [simp]: \"run_option (return x :: ('a, 'm) optionT) = return (Some x)\" for x :: 'a"]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Probabilistic_While/Fast_Dice_Roll.thy", "lemma fast_dice_roll_alt_conv_while: \"fdr_alt v c = map_spmf snd (bind_spmf (fdr_step v c) (loop_spmf.while (\\<lambda>(v, c). n \\<le> c) (\\<lambda>(v, c). fdr_step (v - n) (c - n))))\""]]

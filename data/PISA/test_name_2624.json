@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/Language.thy", "lemma mark_guards_whileAnnoG [simp]: \"mark_guards f (whileAnnoG gs b I V c) = whileAnnoG (map (\\<lambda>(f',g). (f,g)) gs) b I V (mark_guards f c)\""]]

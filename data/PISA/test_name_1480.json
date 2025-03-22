@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Encodability_Process_Calculi/SourceTargetRelation.thy", "lemma (in encoding) indRelLTPO_impl_TRel_is_weak_reduction_bisimulation: fixes TRel :: \"('procT \\<times> 'procT) set\" assumes bisim: \"weak_reduction_bisimulation (indRelLTPO TRel) (STCal Source Target)\" shows \"weak_reduction_bisimulation (TRel\\<^sup>+) Target\""]]

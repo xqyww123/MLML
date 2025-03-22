@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QHLProver/Partial_State.thy", "lemma ind_in_set_bij: \"bij_betw (ind_in_set vars0) ({0..<length dims} \\<inter> vars0) {0..<card ({0..<length dims} \\<inter> vars0)}\""]]

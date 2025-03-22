@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptHOL/Misc_CryptHOL.thy", "lemma map_le_Some1D: \"\\<lbrakk> m \\<subseteq>\\<^sub>m m'; m x = Some y \\<rbrakk> \\<Longrightarrow> m' x = Some y\""]]

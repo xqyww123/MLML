@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Featherweight_OCL/UML_Logic.thy", "lemma OclAnd_null2[simp]: \"\\<And>\\<tau>. X \\<tau> \\<noteq> false \\<tau> \\<Longrightarrow> X \\<tau> \\<noteq> bot \\<tau> \\<Longrightarrow> (X and null) \\<tau> = null \\<tau>\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stable_Matching/Contracts.thy", "lemma stable: shows \"StableNoDecomp.stable X \\<longleftrightarrow> X = {Xd1, Xd2} \\<or> X = {Xd1', Xd2'}\" (*<*) (is \"?lhs = ?rhs\")"]]

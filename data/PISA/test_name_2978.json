@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Prim_Dijkstra_Simple/Directed_Graph_Specs.thy", "lemma valid_graph_rep_code[code]: \"valid_graph_rep l \\<longleftrightarrow> distinct (map (\\<lambda>(u,v,_). (u,v)) l)\""]]

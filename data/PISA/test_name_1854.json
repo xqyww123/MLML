@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category2/MonadicEquationalTheory.thy", "lemma (in Interpretation) Bool: \"L\\<lbrakk>\\<phi>\\<rbrakk> \\<rightarrow> (IBool i) \\<Longrightarrow> \\<exists> A B e d . \\<phi> = (Vx : A \\<turnstile> e \\<equiv> d : B)\""]]

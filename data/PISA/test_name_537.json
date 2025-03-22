@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/FWBisimulation.thy", "lemma FWbisimulation_flip_simps [flip_simps]: \"FWbisimulation final2 r2 final1 r1 (\\<lambda>t. flip (bisim t)) = FWbisimulation final1 r1 final2 r2 bisim\""]]

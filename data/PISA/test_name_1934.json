@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Sigma_Commit_Crypto/Cyclic_Group_Ext.thy", "lemma pow_gen_mod_mult: shows\"(\\<^bold>g [^] (a::nat) \\<otimes> \\<^bold>g [^] (b::nat)) [^] ((c::int)*int (d::nat)) = (\\<^bold>g [^] a \\<otimes> \\<^bold>g [^] b) [^] ((c*int d) mod (order G))\""]]

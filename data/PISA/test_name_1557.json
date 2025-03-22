@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Recursion-Theory-I/PRecFun2.thy", "lemma pair_by_index_inj: \"pair_by_index x1 y1 = pair_by_index x2 y2 \\<Longrightarrow> x1=x2 \\<and> y1=y2\""]]

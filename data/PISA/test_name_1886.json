@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Featherweight_OCL/collection_types/UML_Bag.thy", "lemma OclIncludes_valid_args_valid''[simp,code_unfold]: \"\\<upsilon>(X->includes\\<^sub>B\\<^sub>a\\<^sub>g(x)) = ((\\<delta> X) and (\\<upsilon> x))\""]]

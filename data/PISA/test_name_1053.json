@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Constructive_Cryptography/Converter.thy", "lemma conv_callee_plus_id_left: \"converter_of_callee (plus_intercept id_oracle callee) s = parallel_converter id_converter (converter_of_callee callee s) \""]]

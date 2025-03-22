@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/MPoly_PM.thy", "lemma restrict_indets_pp_except_None [simp]: \"restrict_indets_pp (except t {None}) = restrict_indets_pp t\""]]

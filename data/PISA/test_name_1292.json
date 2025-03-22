@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Key_Agreement_Strong_Adversaries/pfslvl2.thy", "lemma l2_step2_refines_step2: \"{R12s \\<inter> UNIV \\<times> (l2_inv1 \\<inter> l2_inv2 \\<inter> l2_inv7)} l1_step2 Rb A B KE, l2_step2 Rb A B KE {>R12s}\""]]

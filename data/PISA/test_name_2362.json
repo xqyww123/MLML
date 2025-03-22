@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category3/EpiMonoIso.thy", "lemma sections_compose [intro]: assumes \"section m\" and \"section m'\" and \"seq m' m\" shows \"section (m' \\<cdot> m)\""]]

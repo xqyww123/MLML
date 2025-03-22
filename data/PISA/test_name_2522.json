@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/Homogeneous_Coordinates.thy", "lemma mult_noteq_inf: assumes \"z \\<noteq> \\<infinity>\\<^sub>h\" and \"w \\<noteq> \\<infinity>\\<^sub>h\" shows \"z *\\<^sub>h w \\<noteq> \\<infinity>\\<^sub>h\""]]

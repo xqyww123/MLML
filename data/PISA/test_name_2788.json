@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/Unit_Circle_Preserving_Moebius.thy", "lemma blaschke_real_preserve_x_axis [simp]: assumes \"is_real a\" and \"cmod a < 1\" shows \"moebius_pt (blaschke a) z \\<in> circline_set x_axis \\<longleftrightarrow> z \\<in> circline_set x_axis\""]]

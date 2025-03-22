@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Priority_Queue_Braun/Priority_Queue_Braun.thy", "lemma size_del_min: assumes \"braun t\" shows \"size(del_min t) = size t - 1\""]]

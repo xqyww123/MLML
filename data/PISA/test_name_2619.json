@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiscretePricing/CRR_Model.thy", "lemma (in infinite_coin_toss_space) nat_filtration_from_eq_sets: assumes \"N = bernoulli_stream q\" and \"0 < q\" and \"q < 1\" shows \"sets (infinite_coin_toss_space.nat_filtration N n) = sets (nat_filtration n)\""]]

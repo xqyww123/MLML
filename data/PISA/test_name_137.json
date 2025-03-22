@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/Refine_Basic.thy", "lemma lhs_step_RES: \"\\<lbrakk> \\<And>x. x\\<in>X \\<Longrightarrow> RETURN x \\<le> m \\<rbrakk> \\<Longrightarrow> RES X \\<le> m\""]]

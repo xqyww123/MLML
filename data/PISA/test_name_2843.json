@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Monad_Memo_DP/heap_monad/Memory_Heap.thy", "lemma succes_init_state[intro]: \"success (init_state k1 k2) heap\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/Generic/RefineG_While.thy", "lemma mono_prover_monoI[refine_mono]: \"monotone (fun_ord (\\<le>)) (fun_ord (\\<le>)) B \\<Longrightarrow> mono B\""]]

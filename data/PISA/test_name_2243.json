@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Word_Lemmas.thy", "lemma upto_enum_set_conv2: fixes a :: \"'a::len word\" shows \"set [a .e. b] = {a .. b}\""]]

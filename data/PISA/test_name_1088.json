@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Signature_Groebner/Signature_Groebner.thy", "lemma is_canon_rewriterI_eq_sig: assumes \"rb_aux_inv1 bs\" and \"b \\<in> set bs\" shows \"is_canon_rewriter rword (set bs) (lt b) b\""]]

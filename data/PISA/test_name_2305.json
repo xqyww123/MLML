@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/CommonSet/SetInterval2.thy", "lemma MaxI2: \"\\<lbrakk> k \\<in> A; \\<And>x. x \\<in> A \\<Longrightarrow> P x; finite A \\<rbrakk> \\<Longrightarrow> P (Max A)\""]]

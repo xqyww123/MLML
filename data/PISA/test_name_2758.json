@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/Lazy_LList.thy", "lemma ldistinct_Lazy_llist [code]: \"ldistinct (Lazy_llist xs) = (case xs () of None \\<Rightarrow> True | Some (x, ys) \\<Rightarrow> x \\<notin> lset ys \\<and> ldistinct ys)\""]]

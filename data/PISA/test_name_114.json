@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gauss_Jordan/System_Of_Equations.thy", "lemma dim_solution_set_not_zero_imp_infinite_solutions_no_homogeneous: fixes A::\"'a::{field, semiring_char_0}^'n::{mod_type}^'rows::{mod_type}\" assumes dim_not_0: \"vec.dim (solution_set A 0) > 0\" and con: \"consistent A b\" shows \"infinite (solution_set A b)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Confidentiality/DolevYao/ConfidentialityDY.thy", "lemma NS_Spy_analz_staticSecret: \"\\<lbrakk>m \\<in> staticSecret A; evs \\<in> ns_public\\<rbrakk> \\<Longrightarrow> m \\<in> analz (knows Spy evs) = (A \\<in> bad)\""]]

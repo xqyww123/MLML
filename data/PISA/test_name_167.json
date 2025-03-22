@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Psi_Calculi/Chain.thy", "lemma subsetClosed'[simp]: fixes p :: \"name prm\" and xvec :: \"name list\" and P :: \"'a::fs_name\" shows \"(set (p \\<bullet> xvec) \\<subseteq> supp (p \\<bullet> P)) = (set xvec \\<subseteq> supp P)\""]]

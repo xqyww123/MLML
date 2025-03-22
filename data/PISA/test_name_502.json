@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomial_Interpolation/Neville_Aitken_Interpolation.thy", "lemma neville_aitken_impl: \"xs = map (\\<lambda> i. (x i, x i, [:f i:])) [0 ..< Suc k] \\<Longrightarrow> neville_aitken_impl_main xs = neville_aitken k\""]]

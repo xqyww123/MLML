@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Iteration.thy", "lemma eOp_simp4[simp]: assumes \"\\<not> liftAll (\\<lambda> eX. eX \\<noteq> ERR) einp\" shows \"eOp MOD delta einp ebinp = ERR\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Probabilistic_Noninterference/Compositionality.thy", "lemma UNpart1_cases[elim, consumes 1, case_names Local]: assumes \"II \\<in> UNpart1 cl dl P\" \"\\<And> n I. \\<lbrakk>n \\<in> theNFTBoth cl dl; I \\<in> P n; II = shift cl n I\\<rbrakk> \\<Longrightarrow> phi\" shows phi"]]

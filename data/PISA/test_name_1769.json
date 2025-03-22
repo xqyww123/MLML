@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Consensus_Refined/MRU/New_Algorithm_Proofs.thy", "lemma step2_ref: \"{new_algo_ref_rel} (\\<Union>r dec_f. majorities.opt_mru_step2 r dec_f), New_Algo_trans_step HOs HOs crds next2 send2 2 {> new_algo_ref_rel}\""]]

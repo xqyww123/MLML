@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/IEEE_Floating_Point/IEEE_Properties.thy", "lemma float_neg_sign1: \"sign a = sign (- b) \\<longleftrightarrow> sign a \\<noteq> sign b\""]]

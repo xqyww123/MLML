@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Flyspeck-Tame/EnumeratorProps.thy", "lemma enumerator_bound2: \"ls \\<in> set (enumerator m nmax) \\<Longrightarrow> 1 < nmax \\<Longrightarrow> x \\<in> set (butlast ls) \\<Longrightarrow> x < nmax - Suc 0\""]]

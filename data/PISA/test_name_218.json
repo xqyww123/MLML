@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinary_Differential_Equations/Library/Vector_Derivative_On.thy", "lemma has_vderiv_on_union: assumes \"(f has_vderiv_on g) (s \\<union> closure s \\<inter> closure t)\" assumes \"(f has_vderiv_on g) (t \\<union> closure s \\<inter> closure t)\" shows \"(f has_vderiv_on g) (s \\<union> t)\""]]

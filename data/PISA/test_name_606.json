@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Linear_Recurrences/Rational_FPS_Asymptotics.thy", "lemma \"fps_nth (fps_of_poly f / fps_of_poly [:5, 4, 3, 2, 1 :: complex:]) \\<in> O(\\<lambda>n. of_nat n ^ 0 * complex_of_real 0.69202 ^ n)\""]]

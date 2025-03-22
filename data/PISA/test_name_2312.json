@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Circus/CSP_Processes.thy", "lemma CSP1_is_R1_H1_b: \"(P = (R \\<circ> R1 \\<circ> H1 \\<circ> H2) P) = (P = (R \\<circ> CSP1 \\<circ> H2) P)\""]]

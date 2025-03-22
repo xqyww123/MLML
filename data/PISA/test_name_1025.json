@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machines/Value.thy", "lemma value_plus_never_string: \"value_plus a b \\<noteq> Some (Str x)\""]]

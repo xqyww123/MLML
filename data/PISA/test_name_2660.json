@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Certification_Monads/Check_Monad.thy", "lemma or_is_or: \"isOK (or_ok a b) = isOK a \\<or> isOK b\""]]

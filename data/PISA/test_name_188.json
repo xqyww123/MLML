@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/Sepref_Translate.thy", "lemma pure_hn_refineI: assumes \"Q \\<longrightarrow> (c,a)\\<in>R\" shows \"hn_refine (\\<up>Q) (return c) (\\<up>Q) (pure R) (RETURN a)\""]]

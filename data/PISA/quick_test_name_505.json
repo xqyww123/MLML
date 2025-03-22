@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Source_Coding_Theorem/Source_Coding_Theorem.thy", "lemma entropy_rw: \"\\<H>(X) = -(\\<Sum>i \\<in> L. fi i * log b (fi i))\""]]

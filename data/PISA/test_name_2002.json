@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Timed_Automata/Misc.thy", "lemma non_empty_set_has_least': \"S \\<subseteq> T \\<Longrightarrow> S \\<noteq> {} \\<Longrightarrow> \\<exists> x \\<in> S. \\<forall> y \\<in> S. x \\<noteq> y \\<longrightarrow> \\<not> y \\<prec> x\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Iptables_Semantics/Call_Return_Unfolding.thy", "lemma process_call_split: \"process_call \\<Gamma> (rs1 @ rs2) = process_call \\<Gamma> rs1 @ process_call \\<Gamma> rs2\""]]

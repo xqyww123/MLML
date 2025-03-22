@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/Sepref_Basic.thy", "lemma hn_admissible': assumes PREC: \"precise Ry\" assumes E: \"\\<forall>f\\<in>A. nofail (f x) \\<longrightarrow> <P> c <\\<lambda>r. hn_rel Ry (f x) r * F>\\<^sub>t\" assumes NF: \"nofail (INF f\\<in>A. f x)\" shows \"<P> c <\\<lambda>r. hn_rel Ry (INF f\\<in>A. f x) r * F>\\<^sub>t\""]]

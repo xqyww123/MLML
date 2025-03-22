@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FocusStreamsCaseStudies/FR_proof.thy", "lemma fr_nGet2a: assumes h1:\"FlexRayController (nReturn k) recv (nC k) (nStore k) (nSend k) (nGet k)\" and h2:\"\\<not> (t mod cycleLength (nC k) mem schedule (nC k))\" shows \"nGet k t = []\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Multi_Party_Computation/ETP_RSA_OT.thy", "lemma rsa_bij_betw: assumes \"coprime e ((P - 1)*(Q - 1))\" and \"prime P\" and \"prime Q\" and \"P \\<noteq> Q\" shows \"bij_betw (F ((P * Q), e)) (range ((P * Q), e)) (range ((P * Q), e))\""]]

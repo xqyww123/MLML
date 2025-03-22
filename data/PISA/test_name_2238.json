@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Vickrey_Clarke_Groves/MiscTools.thy", "lemma lm114: assumes \"\\<exists> n \\<in> {0..<size l}. P (l!n)\" shows \"[n. n \\<leftarrow> [0..<size l], P (l!n)] \\<noteq> []\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binomial-Queues/PQ_Implementation.thy", "lemma bts_dfs_rev_distinct: \"distinct (bts_dfs f ts) \\<Longrightarrow> distinct (bts_dfs f (rev ts))\""]]

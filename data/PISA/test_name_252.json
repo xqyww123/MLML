@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Higher_Order_Terms/Term_Class.thy", "lemma matchs_alt_def: assumes \"length ps = length vs\" shows \"matchs ps vs = map_option (foldl (++\\<^sub>f) fmempty) (those (map2 match ps vs))\""]]

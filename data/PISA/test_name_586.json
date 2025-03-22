@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Decl_Sem_Fun_PL/DenotEqualitiesFSet.thy", "theorem eval_ifz[simp]: assumes e1: \"E e1 = E(ENat 0)\" shows \"E(EIf e1 e2 e3) = E(e3)\""]]

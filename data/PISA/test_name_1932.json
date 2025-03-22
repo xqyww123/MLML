@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simple_Firewall/SimpleFw_Semantics.thy", "lemma simple_ports_conjunct_correct: \"simple_match_port p1 pkt \\<and> simple_match_port p2 pkt \\<longleftrightarrow> simple_match_port (simpl_ports_conjunct p1 p2) pkt\""]]

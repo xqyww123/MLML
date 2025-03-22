@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Circus/Denotational_Semantics.thy", "lemma rd_assign_is_action: \"(R (true \\<turnstile> \\<lambda>(A, A'). ref A' = ref A \\<and> tr A' = tr A \\<and> \\<not>wait A' \\<and> more A' = s)) \\<in> {p. is_CSP_process p}\""]]

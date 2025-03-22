@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gauss_Jordan/Rref.thy", "lemma is_zero_row_utp_0': shows \"\\<forall>m. is_zero_row_upt_k m 0 A\""]]

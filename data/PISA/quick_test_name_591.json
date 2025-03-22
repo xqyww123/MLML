@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QR_Decomposition/Generalizations2.thy", "lemma Cauchy_Schwarz_ineq: \"real_of (cnj (inner x y) * inner x y) \\<le> real_of (inner x x) * real_of (inner y y)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Universal_Turing_Machine/Abacus.thy", "lemma start_of_Suc3: \"\\<lbrakk>ly = layout_of ap; abc_fetch as ap = Some (Goto n)\\<rbrakk> \\<Longrightarrow> start_of ly (Suc as) = start_of ly as + 1\""]]

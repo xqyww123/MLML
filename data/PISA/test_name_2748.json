@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Show/Show_Instances.thy", "lemma show_law_prod [show_law_intros]: \"(\\<And>x. x \\<in> Basic_BNFs.fsts y \\<Longrightarrow> show_law s1 x) \\<Longrightarrow> (\\<And>x. x \\<in> Basic_BNFs.snds y \\<Longrightarrow> show_law s2 x) \\<Longrightarrow> show_law (showsp_prod s1 s2) y\""]]

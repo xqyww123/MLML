@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DynamicArchitectures/Configuration_Traces.thy", "lemma p2c_mono_c2p: assumes \"n \\<ge> \\<langle>c \\<and> t\\<rangle>\" and \"n' \\<ge> \\<^bsub>c\\<^esub>\\<down>\\<^bsub>t\\<^esub>(n)\" shows \"\\<^bsub>c\\<^esub>\\<up>\\<^bsub>t\\<^esub>(n') \\<ge> n\""]]

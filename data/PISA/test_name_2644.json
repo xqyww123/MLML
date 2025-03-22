@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Preliminaries.thy", "lemma sameDom_lift2_simp1[simp]: assumes \"sameDom inp1' inp1\" shows \"sameDom inp (lift2 f inp1' inp1) = sameDom inp inp1'\""]]

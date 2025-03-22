@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Regex_Equivalence/Before2.thy", "lemma ok3_fin1_final1[simp]: \"ok3 r \\<Longrightarrow> fin1 r = Collect (final1 (strip3 r))\""]]

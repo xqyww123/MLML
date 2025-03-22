@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stable_Matching/Contracts.thy", "lemma mem_Ch_CH: assumes \"x \\<in> Ch h X\" shows \"x \\<in> CH X\""]]

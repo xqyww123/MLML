@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/MM/JMM_Spec.thy", "lemma action_order_is_new_actionD: \"\\<lbrakk> E \\<turnstile> a \\<le>a a'; is_new_action (action_obs E a') \\<rbrakk> \\<Longrightarrow> is_new_action (action_obs E a)\""]]

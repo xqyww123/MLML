@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Planarity_Certificates/l4v/lib/OptionMonad.thy", "lemma option_while'_inj_step: \"\\<lbrakk> C s; B s = Some s'; (Some s, t) \\<in> option_while' C B ; (Some s', t') \\<in> option_while' C B \\<rbrakk> \\<Longrightarrow> t = t'\""]]

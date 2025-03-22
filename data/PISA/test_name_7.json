@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Store_Buffer_Reduction/PIMP.thy", "lemma sbh_load_tmps_fresh_prog_step: assumes step: \"\\<theta>\\<turnstile>(s,t) \\<rightarrow>\\<^sub>s ((s',t'),is')\" assumes tmps_le: \"\\<forall>i \\<in> dom \\<theta>. i < t\" shows \"load_tmps is' \\<inter> dom \\<theta> = {}\""]]

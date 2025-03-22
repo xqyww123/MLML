@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PseudoHoops/Examples.thy", "lemma [simp]: \"inf (Rep_G (b::'a G) - Rep_G a + u) u \\<in> G\""]]

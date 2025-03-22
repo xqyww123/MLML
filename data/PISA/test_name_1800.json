@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category2/Functors.thy", "lemma (in Functor) CodFunctor: \"f \\<in> mor\\<^bsub>CatDom F\\<^esub> \\<Longrightarrow> cod\\<^bsub>CatCod F\\<^esub> (F ## f) = F @@ (cod\\<^bsub>CatDom F\\<^esub> f)\""]]

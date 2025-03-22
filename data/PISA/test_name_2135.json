@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MFOTL_Monitor/Monitor.thy", "lemma cInf_restrict_nat: fixes x :: nat assumes \"x \\<in> A\" shows \"Inf A = Inf {y \\<in> A. y \\<le> x}\""]]

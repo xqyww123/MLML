@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Well_Sorted_Terms.thy", "theorem wls_Abs_subst_Var_fresh[simp]: assumes \"wls s X\" and \"fresh xs x' X\" shows \"Abs xs x' (subst xs (Var xs x') x X) = Abs xs x X\""]]

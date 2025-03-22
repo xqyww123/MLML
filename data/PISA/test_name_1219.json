@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Pi_Calculus/Strong_Late_Bisim_Subst_SC.thy", "lemma mismatchNil: fixes a :: name and P :: pi shows \"[a\\<noteq>a]P \\<sim>\\<^sup>s \\<zero>\""]]

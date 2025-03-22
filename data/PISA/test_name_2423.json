@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Topology/Topology.thy", "lemma (in carrier) carrierE [elim]: \"\\<lbrakk> x \\<in> carrier; \\<And>t. \\<lbrakk> t open; x \\<in> t \\<rbrakk> \\<Longrightarrow> R \\<rbrakk> \\<Longrightarrow> R\""]]

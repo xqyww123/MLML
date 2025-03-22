@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/DFA/LBVCorrect.thy", "theorem (in lbvs) wtl_sound: assumes wtl: \"wtl ins c 0 s\\<^sub>0 \\<noteq> \\<top>\" and s\\<^sub>0: \"s\\<^sub>0 \\<in> A\" shows \"\\<exists>\\<tau>s. wt_step r \\<top> step \\<tau>s\""]]

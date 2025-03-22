@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Bicategory/CanonicalIsos.thy", "lemma can_in_hom [intro]: assumes \"Ide t\" and \"Ide u\" and \"\\<^bold>\\<lfloor>t\\<^bold>\\<rfloor> = \\<^bold>\\<lfloor>u\\<^bold>\\<rfloor>\" shows \"\\<guillemotleft>can u t : \\<lbrace>t\\<rbrace> \\<Rightarrow> \\<lbrace>u\\<rbrace>\\<guillemotright>\""]]

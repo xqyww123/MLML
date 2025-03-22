@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Factored_Transition_System_Bounding/SystemAbstraction.thy", "lemma DISJ_PROJ_NDEP_IMP_NDEP: fixes PROB vs vs' vs'' assumes \"(disjnt vs vs'')\" \"disjnt vs vs'\" \"\\<not>(dep_var_set (prob_proj PROB (prob_dom PROB - vs)) vs' vs'')\" shows \"\\<not>(dep_var_set PROB vs' vs'')\""]]

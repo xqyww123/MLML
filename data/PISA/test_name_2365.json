@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Macaulay/Cone_Decomposition.thy", "lemma cone_decomp_map_times: assumes \"cone_decomp T ps\" shows \"cone_decomp ((*) s ` T) (map (apfst ((*) (s::_ \\<Rightarrow>\\<^sub>0 _::{comm_ring_1,ring_no_zero_divisors}))) ps)\""]]

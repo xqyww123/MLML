@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/FO_Ordered_Resolution.thy", "lemma ord_resolve_rename_unique: assumes \"ord_resolve_rename CAs DA AAs As \\<sigma> E\" and \"ord_resolve_rename CAs DA AAs As \\<sigma>' E'\" shows \"\\<sigma> = \\<sigma>' \\<and> E = E'\""]]

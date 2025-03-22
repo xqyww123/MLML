@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Slicing/StaticIntra/Slice.thy", "lemma observable_moves_preds_transfers_path: \"S,f \\<turnstile> (n,s) =as\\<Rightarrow> (n',s') \\<Longrightarrow> preds (map f as) s \\<and> transfers (map f as) s = s' \\<and> n -as\\<rightarrow>* n'\""]]

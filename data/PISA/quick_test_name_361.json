@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Gauss_Jordan_Elimination.thy", "lemma gauss_jordan_carrier: assumes A: \"(A :: 'a :: field mat) \\<in> carrier_mat nr nc\" and B: \"B \\<in> carrier_mat nr nc'\" and res: \"gauss_jordan A B = (A',B')\" shows \"A' \\<in> carrier_mat nr nc\" \"B' \\<in> carrier_mat nr nc'\""]]

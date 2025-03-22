@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/OAlist_Poly_Mapping.thy", "lemma compute_min_key_val_ko_ntm [code]: \"min_key_val_ko_ntm ko (xs, ox) = (if ko = ox then hd else min_list_param (\\<lambda>x y. (le_of_nat_term_order ko) (fst y) (fst x))) xs\""]]

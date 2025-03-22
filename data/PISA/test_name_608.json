@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/Abstract_Substitution.thy", "lemma subst_atm_mset_union[simp]: \"(AA + BB) \\<cdot>am \\<sigma> = AA \\<cdot>am \\<sigma> + BB \\<cdot>am \\<sigma>\""]]

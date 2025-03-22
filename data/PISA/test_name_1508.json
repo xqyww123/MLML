@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Matroids/Matroid.thy", "lemma indep_in_iff_rank_of: assumes \"X \\<subseteq> \\<E>\" shows \"indep_in \\<E> X \\<longleftrightarrow> rank_of X = card X\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/Refine_While.thy", "lemma WHILE_eq_I_rwof: \"m \\<bind> WHILE c f = m \\<bind> WHILEI (rwof m c f) c f\""]]

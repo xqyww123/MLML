@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Transformer_Semantics/Kleisli_Transformers.thy", "lemma ifd_ibb_dual: \"Sup_pres \\<phi> \\<Longrightarrow> fd\\<^sup>-\\<^sub>\\<R> \\<phi> = ((\\<smile>) \\<circ> bb\\<^sup>-\\<^sub>\\<R> \\<circ> \\<partial>\\<^sub>F) \\<phi>\""]]

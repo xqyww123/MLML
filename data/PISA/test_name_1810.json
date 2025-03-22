@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Timed_Automata/Timed_Automata.thy", "lemma steps_z_sound: \"A \\<turnstile> \\<langle>l, Z\\<rangle> \\<leadsto>* \\<langle>l', Z'\\<rangle> \\<Longrightarrow> u' \\<in> Z' \\<Longrightarrow> \\<exists> u \\<in> Z. A \\<turnstile> \\<langle>l, u\\<rangle> \\<rightarrow>* \\<langle>l', u'\\<rangle>\""]]

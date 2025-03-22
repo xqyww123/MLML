@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/Hoare.thy", "lemma all_imp_eq_triv: \"(\\<forall>x. x = k \\<longrightarrow> Q) = Q\" \"(\\<forall>x. k = x \\<longrightarrow> Q) = Q\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Graph_Theory/Kuratowski.thy", "lemma (in pre_digraph) inner_verts_empty[simp]: assumes \"length p < 2\" shows \"inner_verts p = []\""]]

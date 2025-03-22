@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/MPoly_PM.thy", "lemma in_indetsE: assumes \"x \\<in> indets p\" obtains t where \"t \\<in> keys p\" and \"x \\<in> keys t\""]]

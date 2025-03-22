@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Signature_Groebner/Signature_Groebner.thy", "lemma is_sig_red_singletonI: assumes \"is_sig_red sing_reg top_tail F r\" obtains f where \"f \\<in> F\" and \"is_sig_red sing_reg top_tail {f} r\""]]

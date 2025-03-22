@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Relational_Paths/Paths.thy", "lemma many_strongly_connected_iff_10_eq: assumes \"is_p_fun x\" shows \"many_strongly_connected x \\<longleftrightarrow> x;x\\<^sup>T;x\\<^sup>\\<star> = x\\<^sup>+\""]]

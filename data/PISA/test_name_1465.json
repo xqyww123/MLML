@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automatic_Refinement/Lib/Misc.thy", "lemma neq_Nil_rev_conv: \"l\\<noteq>[] \\<longleftrightarrow> (\\<exists>xs x. l = xs@[x])\""]]

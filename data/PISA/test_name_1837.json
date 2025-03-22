@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nash_Williams/Nash_Williams.thy", "lemma decides_subset: \"\\<lbrakk>decides \\<F> S M; N \\<subseteq> M\\<rbrakk> \\<Longrightarrow> decides \\<F> S N\""]]

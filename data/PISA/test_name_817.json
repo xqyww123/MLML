@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/KAT_and_DRA/TwoSorted/KAT2.thy", "lemma hoare_mult [vcg]: \"`\\<lbrace>p\\<rbrace> x \\<lbrace>r\\<rbrace>` \\<Longrightarrow> `\\<lbrace>r\\<rbrace> y \\<lbrace>q\\<rbrace>` \\<Longrightarrow> `\\<lbrace>p\\<rbrace> x\\<cdot>y \\<lbrace>q\\<rbrace>`\""]]

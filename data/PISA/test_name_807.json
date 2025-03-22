@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hybrid_Logic/Hybrid_Logic.thy", "lemma rev_nth_mapi_branch: assumes \\<open>branch !. v = Some (ps, a)\\<close> shows \\<open>(mapi (f v) ps, a) \\<in>. mapi_branch f branch\\<close>"]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Special_Function_Bounds/Sqrt_Bounds.thy", "lemma sqrtl_2_eq: \"sqrtl x 2 = 8*x*(x + 1)*(x^2 + 6*x + 1) / (x^4 + 28*x^3 + 70*x^2 + 28*x + 1)\""]]

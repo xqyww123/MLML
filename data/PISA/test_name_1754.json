@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ergodic_Theory/Kingman.thy", "lemma subcocycle_max: assumes \"subcocycle u\" \"subcocycle v\" shows \"subcocycle (\\<lambda>n x. max (u n x) (v n x))\""]]

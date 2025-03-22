@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra6.thy", "lemma (in PolynRg) cf_h_len2:\"\\<lbrakk>PolynRg A B Y; f \\<in> pHom R S X, A B Y; pol_coeff S c\\<rbrakk> \\<Longrightarrow> fst (cf_h f c) = fst c\""]]

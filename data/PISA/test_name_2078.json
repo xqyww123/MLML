@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jacobson_Basic_Algebra/Set_Theory.thy", "lemma right_closed [intro]: (* inefficient as a simp rule *) \"(a, b) \\<in> E \\<Longrightarrow> b \\<in> S\""]]

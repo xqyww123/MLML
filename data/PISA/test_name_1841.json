@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AWN/AWN_Cterms.thy", "lemma dtermsl_in_branch [elim]: \"\\<lbrakk>p \\<in> dtermsl (p1 \\<oplus> p2); p \\<in> dtermsl p1 \\<Longrightarrow> P; p \\<in> dtermsl p2 \\<Longrightarrow> P\\<rbrakk> \\<Longrightarrow> P\""]]

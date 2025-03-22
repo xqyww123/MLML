@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/Iterator/Proper_Iterator.thy", "lemma (in linorder) map_it_to_list_rev_linord_correct: assumes A: \"map_iterator_rev_linord (it s) m\" shows \"map_of (it_to_list it s) = m \\<and> distinct (map fst (it_to_list it s)) \\<and> sorted (rev (map fst (it_to_list it s)))\""]]

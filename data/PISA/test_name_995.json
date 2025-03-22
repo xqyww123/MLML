@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/ListInf/List2.thy", "lemma map2_Cons_not_empty: \" xs \\<noteq> [] \\<Longrightarrow> map2 f xs (y # ys) = (f (hd xs) y) # map2 f (tl xs) ys\""]]

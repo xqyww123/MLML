@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Noninterference_Sequential_Composition/Propaedeutics.thy", "lemma ipurge_tr_aux_append: \"ipurge_tr_aux I D U (xs @ ys) = ipurge_tr_aux I D U xs @ ipurge_tr_aux I D (sinks_aux I D U xs) ys\""]]

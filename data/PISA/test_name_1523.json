@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/Semantic.thy", "lemma noFault_def': \"\\<Gamma>\\<turnstile>\\<langle>c,s\\<rangle> \\<Rightarrow>\\<notin>{Fault f} = (\\<not>\\<Gamma>\\<turnstile>\\<langle>c,s\\<rangle> \\<Rightarrow> Fault f)\""]]

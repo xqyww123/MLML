@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Optics/Scenes.thy", "lemma state_eq_iff: \"idem_scene S \\<Longrightarrow> x = y \\<longleftrightarrow> (x, y) \\<in> region S \\<and> (x, y) \\<in> coregion S\""]]

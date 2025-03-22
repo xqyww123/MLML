@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Projective_Geometry/Desargues_Property.thy", "lemma meet_comm: assumes \"meet_in l m P\" shows \"meet_in m l P\""]]

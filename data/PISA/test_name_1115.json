@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Determinant.thy", "lemma det_four_block_mat_lower_right_zero_col: assumes A1: \"A1 \\<in> carrier_mat 1 n\" and A2: \"A2 \\<in> carrier_mat 1 1\" and A3: \"A3 \\<in> carrier_mat n n\" and A40: \"A4 = (0\\<^sub>m n 1)\" shows \"det (four_block_mat A1 A2 A3 A4) = (-1)^n * det A2 * det A3\" (is \"det ?A = _\")"]]

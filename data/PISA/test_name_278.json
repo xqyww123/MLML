@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/POPLmark-deBruijn/POPLmarkRecord.thy", "lemma wfE_weaken: \"\\<Delta> @ \\<Gamma> \\<turnstile>\\<^sub>w\\<^sub>f \\<Longrightarrow> \\<Gamma> \\<turnstile>\\<^sub>w\\<^sub>f\\<^sub>B B \\<Longrightarrow> \\<up>\\<^sub>e (Suc 0) 0 \\<Delta> @ B \\<Colon> \\<Gamma> \\<turnstile>\\<^sub>w\\<^sub>f\""]]

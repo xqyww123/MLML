@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Graph_Theory/Funpow.thy", "lemma inj_on_funpow_dist1: assumes \"y \\<in> orbit f x\" shows \"inj_on (\\<lambda>n. (f ^^ n) x) {0..<funpow_dist1 f x y}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Formal_SSA/Construct_SSA.thy", "lemma allDefs'_disjoint: \" n \\<in> set (\\<alpha>n g) \\<Longrightarrow> m \\<in> set (\\<alpha>n g) \\<Longrightarrow> n \\<noteq> m \\<Longrightarrow> (defs' g n \\<union> {v. (n, v) \\<in> dom (phis' g)}) \\<inter> (defs' g m \\<union> {v. (m, v) \\<in> dom (phis' g)}) = {}\""]]

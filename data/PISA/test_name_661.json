@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL/Disjunctive_Normal_Form.thy", "lemma min_set_min_product_helper: \"x \\<in> (min_set A) \\<otimes>\\<^sub>m B \\<longleftrightarrow> x \\<in> A \\<otimes>\\<^sub>m B\""]]

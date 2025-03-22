@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QR_Decomposition/QR_Efficient.thy", "lemma sum_list_remdups: assumes \"!!i j. i<length xs \\<and> j<length xs \\<and> i \\<noteq> j \\<and> xs ! i = xs ! j \\<longrightarrow> xs ! i = 0 \\<and> xs ! j = 0\" shows \"sum_list (remdups xs) = sum_list xs\""]]

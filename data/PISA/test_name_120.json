@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_RPOs/Lambda_Free_Util.thy", "lemma prod_list_nonneg: fixes xs :: \"('a :: {ordered_semiring_0,linordered_nonzero_semiring}) list\" assumes \"\\<And>x. x \\<in> set xs \\<Longrightarrow> x \\<ge> 0\" shows \"prod_list xs \\<ge> 0\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simplex/Linear_Poly_Maps.thy", "lemma lookup_add_monom: \"get_var_coeff lp v + c \\<noteq> 0 \\<Longrightarrow> fmlookup (add_monom c v lp) v = Some (get_var_coeff lp v + c)\" \"get_var_coeff lp v + c = 0 \\<Longrightarrow> fmlookup (add_monom c v lp) v = None\" \"x \\<noteq> v \\<Longrightarrow> fmlookup (add_monom c v lp) x = fmlookup lp x\""]]

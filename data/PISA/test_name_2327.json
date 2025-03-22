@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/MM/JMM_Heap.thy", "lemma vs_confI: \"(\\<And>ad al v. v \\<in> vs (ad, al) \\<Longrightarrow> \\<exists>T. P,h \\<turnstile> ad@al : T \\<and> P,h \\<turnstile> v :\\<le> T) \\<Longrightarrow> vs_conf P h vs\""]]

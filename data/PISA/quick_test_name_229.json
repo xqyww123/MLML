@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Probabilistic_Timed_Automata/library/Finiteness.thy", "lemma collect_pair_finite[finite]: assumes \"finite {x. P x}\" \"finite {x. Q x}\" shows \"finite {(x, y) . P x \\<and> Q y \\<and> R x y}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Determinant.thy", "lemma mat_det_left_def: assumes A: \"A \\<in> carrier_mat n n\" shows \"det A = (\\<Sum>p\\<in>{p. p permutes {0..<dim_row A}}. signof p * (\\<Prod>i = 0 ..< dim_row A. A $$ (p i, i)))\""]]

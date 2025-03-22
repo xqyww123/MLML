@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Valuation/Valuation3.thy", "lemma (in Corps) Pseq_decompos:\"\\<lbrakk>valuation K v; PolynRg R (Vr K v) X; F n \\<in> carrier R; deg R (Vr K v) X (F n) \\<le> an (Suc d)\\<rbrakk> \\<Longrightarrow> F n = ((Pseql\\<^bsub>R X K v d\\<^esub> F) n) \\<plusminus>\\<^bsub>R\\<^esub> ((Pseqh\\<^bsub>R X K v d\\<^esub> F) n)\""]]

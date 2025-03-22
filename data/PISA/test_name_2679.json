@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra4.thy", "lemma (in Ring) rMulZeroDiv: \"\\<lbrakk> x \\<in> carrier R; y \\<in> carrier R; x = \\<zero> \\<or> y = \\<zero> \\<rbrakk> \\<Longrightarrow> x \\<cdot>\\<^sub>r y = \\<zero>\""]]

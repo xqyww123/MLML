@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Noninterference_Concurrent_Composition/ConcurrentComposition.thy", "lemma con_comp_prop_2: \"(xs @ [x], X) \\<in> con_comp_failures P Q p q \\<Longrightarrow> (xs, {}) \\<in> con_comp_failures P Q p q\""]]

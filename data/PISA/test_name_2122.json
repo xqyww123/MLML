@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Symmetric_Polynomials/Symmetric_Polynomials.thy", "lemma lead_monom_sym_mpoly: assumes \"sorted xs\" \"distinct xs\" \"k \\<le> length xs\" shows \"lead_monom (sym_mpoly (set xs) k :: 'a :: zero_neq_one mpoly) = monom_of_set (set (take k xs))\" (is \"lead_monom ?p = _\")"]]

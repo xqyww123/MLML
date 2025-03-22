@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/OAlist.thy", "lemma prod_ord_pairI: assumes \"oalist_inv_raw xs\" and \"oalist_inv_raw ys\" and \"\\<And>k. k \\<in> fst ` set xs \\<union> fst ` set ys \\<Longrightarrow> P k (lookup_pair xs k) (lookup_pair ys k)\" shows \"prod_ord_pair P xs ys\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/TESL_Language/Corecursive_Prop.thy", "lemma TESL_interpretation_stepwise_zero': \\<open>\\<lbrakk>\\<lbrakk> \\<Phi> \\<rbrakk>\\<rbrakk>\\<^sub>T\\<^sub>E\\<^sub>S\\<^sub>L = \\<lbrakk>\\<lbrakk> \\<Phi> \\<rbrakk>\\<rbrakk>\\<^sub>T\\<^sub>E\\<^sub>S\\<^sub>L\\<^bsup>\\<ge> 0\\<^esup>\\<close>"]]

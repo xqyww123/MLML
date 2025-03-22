@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Differential_Dynamic_Logic/Proof_Checker.thy", "lemma subst_imp_simp:\"Fsubst (Implies p q) \\<sigma> = (Implies (Fsubst p \\<sigma>) (Fsubst q \\<sigma>))\""]]

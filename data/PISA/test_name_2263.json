@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/Bisimulation.thy", "lemma simulation_silents2: \"\\<lbrakk> s1 \\<approx> s2; s2 -\\<tau>2\\<rightarrow>* s2' \\<rbrakk> \\<Longrightarrow> \\<exists>s1'. s1 -\\<tau>1\\<rightarrow>* s1' \\<and> s1' \\<approx> s2'\""]]

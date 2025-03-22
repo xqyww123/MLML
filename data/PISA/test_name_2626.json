@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Efficient-Mergesort/Efficient_Sort.thy", "lemma shows length_sequences: \"length (sequences xs) \\<le> length xs\" and length_asc: \"ascP f \\<Longrightarrow> length (asc a f ys) \\<le> 1 + length ys\" and length_desc: \"length (desc a xs ys) \\<le> 1 + length ys\""]]

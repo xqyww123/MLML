@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Call_Arity/CoCallGraph-TTree.thy", "lemma ccApprox_mono: \"paths t \\<subseteq> paths t' \\<Longrightarrow> ccApprox t \\<sqsubseteq> ccApprox t'\""]]

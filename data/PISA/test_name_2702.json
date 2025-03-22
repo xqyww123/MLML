@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Clean/src/Hoare_MonadSE.thy", "lemma assert_conseq: \"Collect P \\<subseteq> Collect Q \\<Longrightarrow> \\<lbrace>P\\<rbrace> assert\\<^sub>S\\<^sub>E Q \\<lbrace>\\<lambda> _ _. True\\<rbrace>\""]]

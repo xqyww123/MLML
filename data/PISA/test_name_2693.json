@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hybrid_Systems_VCs/ModalKleeneAlgebra/HS_VC_MKA_ndfun.thy", "lemma dI: assumes \"\\<lceil>P\\<rceil> \\<le> \\<lceil>I\\<rceil>\" and \"diff_invariant I f UNIV UNIV 0 G\" and \"\\<lceil>I\\<rceil> \\<le> \\<lceil>Q\\<rceil>\" shows \"\\<lceil>P\\<rceil> \\<le> wp (x\\<acute>= f & G) \\<lceil>Q\\<rceil>\""]]

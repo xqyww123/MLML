@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Formal_SSA/Construct_SSA.thy", "lemma lookupDef_looksup'': assumes \"n \\<in> set (\\<alpha>n g)\" obtains n' \"def\" where \"lookupDef g n v = (v,n',def)\""]]

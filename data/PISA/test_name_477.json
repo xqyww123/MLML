@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stateful_Protocol_Composition_and_Typing/More_Unification.thy", "lemma subst_idem_comp: \"subst_idem r \\<Longrightarrow> Unifier s (t \\<cdot> r) (u \\<cdot> r) \\<Longrightarrow> (\\<And>q. Unifier q (t \\<cdot> r) (u \\<cdot> r) \\<Longrightarrow> s \\<circ>\\<^sub>s q = q) \\<Longrightarrow> subst_idem (r \\<circ>\\<^sub>s s)\""]]

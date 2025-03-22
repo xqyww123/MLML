@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Count_Complex_Roots/Extended_Sturm.thy", "lemma sgn_power: fixes x::\"'a::linordered_idom\" shows \"sgn (x^n) = (if n=0 then 1 else if even n then \\<bar>sgn x\\<bar> else sgn x)\""]]

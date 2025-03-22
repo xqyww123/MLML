@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_to_DRA/af.thy", "lemma af_decompose: \"af (\\<phi> and \\<psi>) w = (af \\<phi> w) and (af \\<psi> w)\" \"af (\\<phi> or \\<psi>) w = (af \\<phi> w) or (af \\<psi> w)\""]]

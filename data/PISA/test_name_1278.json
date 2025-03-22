@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gabow_SCC/Gabow_SCC.thy", "lemma seg_set_impl_aux: fixes l u shows \"\\<lbrakk>l<u; u\\<le>length S; distinct S\\<rbrakk> \\<Longrightarrow> seg_set_impl l u \\<le> SPEC (\\<lambda>r. r = {S!j | j. l\\<le>j \\<and> j<u})\""]]

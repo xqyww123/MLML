@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nominal2/Atoms.thy", "lemma fixes a b::\"name2\" shows \"(a \\<leftrightarrow> b) \\<bullet> (a, b) = (b, a)\""]]

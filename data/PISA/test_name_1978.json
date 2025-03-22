@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Graph_Theory/Arc_Walk.thy", "lemma set_awalk_verts_not_Nil: assumes \"awalk u p v\" \"p \\<noteq> []\" shows \"set (awalk_verts u p) = set (map (tail G) p) \\<union> set (map (head G) p)\""]]

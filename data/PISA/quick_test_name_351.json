@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/BNF_CC/Fixpoints.thy", "lemma corec_U_parametric: \"((A ===> rel_G (rel_sum (rel_U L1 Co1 Co2 Contra1 Contra2) A) L1 Co1 Co2 Contra1 Contra2) ===> A ===> rel_U L1 Co1 Co2 Contra1 Contra2) corec_U corec_U\""]]

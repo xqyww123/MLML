@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Modal_Logics_for_NTS/S_Transform.thy", "lemma S_transform_Tree_eqvt [eqvt]: \"p \\<bullet> S_transform_Tree t = S_transform_Tree (p \\<bullet> t)\""]]

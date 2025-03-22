@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gromov_Hyperbolicity/Gromov_Hyperbolicity.thy", "lemma Gromov_product_at_continuous: assumes \"(u \\<longlongrightarrow> x) F\" \"(v \\<longlongrightarrow> y) F\" \"(w \\<longlongrightarrow> z) F\" shows \"((\\<lambda>n. Gromov_product_at (u n) (v n) (w n)) \\<longlongrightarrow> Gromov_product_at x y z) F\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/QuasiTerms_Environments_Substitution.thy", "lemma qPsubstAbs_preserves_alphaAbs: assumes \"qGoodAbs A \\<or> qGoodAbs A'\" and \"qGoodEnv rho\" and \"qGoodEnv rho'\" and \"A $= A'\" and \"rho &= rho'\" shows \"(A $[[rho]]) $= (A' $[[rho']])\""]]

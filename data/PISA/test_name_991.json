@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Formula_Derivatives/WS1S_Prelim.thy", "lemma max_Length_fMax[simp]: \"x |\\<in>| m1\\<^bsup>\\<AA>\\<^esup>k \\<Longrightarrow> max (Length \\<AA>) (fMax (m1\\<^bsup>\\<AA>\\<^esup>k)) = Length \\<AA>\""]]

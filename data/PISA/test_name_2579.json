@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LocalLexing/TheoremD8.thy", "lemma \\<P>_0_0_Gen: \"Gen (\\<P> 0 0) = { x . wellformed_item x \\<and> item_origin x = 0 \\<and> item_end x = 0 \\<and> derives (item_\\<alpha> x) [] \\<and> (\\<exists> \\<gamma>. is_derivation ([item_nonterminal x] @ \\<gamma>)) }\""]]

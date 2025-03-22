@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Routing/Routing_Table.thy", "lemma rpm_m_dup_simp: \"rg \\<inter> fst (ipset_prefix_match (routing_match r) rg) = fst (ipset_prefix_match (routing_match r) rg)\""]]

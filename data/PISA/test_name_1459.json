@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Compiler/J0J1Bisim.thy", "lemma assumes fin: \"final e'\" shows unmod_inline_call: \"unmod (inline_call e' e) V \\<longleftrightarrow> unmod e V\" and unmods_inline_calls: \"unmods (inline_calls e' es) V \\<longleftrightarrow> unmods es V\""]]

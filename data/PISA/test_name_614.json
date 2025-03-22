@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automated_Stateful_Protocol_Verification/Term_Implication.thy", "lemma timpl_closure_set_absc_subset_in: defines \"absc \\<equiv> \\<lambda>a. Fun (Abs a) []\" assumes A: \"timpl_closure_set (absc ` A) TI \\<subseteq> absc ` A\" and a: \"a \\<in> A\" \"(a,b) \\<in> TI\\<^sup>+\" shows \"b \\<in> A\""]]

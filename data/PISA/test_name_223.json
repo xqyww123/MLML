@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra3.thy", "lemma (in Group) ex_W_cmpserTr0m:\"\\<forall>f. w_cmpser G m f \\<longrightarrow> (\\<exists>g. (W_cmpser G (card (f `{i. i \\<le> m}) - 1) g \\<and> g `{i. i \\<le> (card (f `{i. i \\<le> m}) - 1)} = f `{i. i \\<le> m}))\""]]

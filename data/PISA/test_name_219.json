@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Matrix.thy", "lemma smult_smult_assoc: \"a \\<cdot>\\<^sub>v (b \\<cdot>\\<^sub>v v) = (a * b::'a::ring) \\<cdot>\\<^sub>v v\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jinja/Common/TypeRel.thy", "lemma Method_code [code_pred_intro]: \"\\<lbrakk> P \\<turnstile> C sees_methods Mm; Mm M = \\<lfloor>((Ts, T, m), D)\\<rfloor> \\<rbrakk> \\<Longrightarrow> P \\<turnstile> C sees M: Ts\\<rightarrow>T = m in D\""]]

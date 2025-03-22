@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Flow_Networks/Graph.thy", "lemma adjacent_edges_not_on_path: assumes PATH: \"isPath s p t\" assumes VNV: \"v\\<notin>set (pathVertices_fwd s p)\" shows \"adjacent v \\<inter> set p = {}\""]]

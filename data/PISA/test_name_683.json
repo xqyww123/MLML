@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Dirichlet_Series/Dirichlet_Series.thy", "lemma fds_converges_scale [simp]: fixes z :: \"'a :: {banach, nat_power_field, real_normed_field}\" assumes c: \"c > 0\" shows \"fds_converges (fds_scale c f) z \\<longleftrightarrow> fds_converges f (of_nat c * z)\""]]

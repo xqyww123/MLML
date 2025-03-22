@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Containers/DList_Set.thy", "lemma dlist_ex_conv_member: \"dlist_ex P dxs \\<longleftrightarrow> (\\<exists>x :: 'a. member dxs x \\<and> P x)\""]]

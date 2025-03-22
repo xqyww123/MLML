@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Akra_Bazzi/Akra_Bazzi_Library.thy", "lemma smallo_1_tendsto_0: \"(f \\<longlongrightarrow> 0) at_top \\<Longrightarrow> f \\<in> o(\\<lambda>x. 1 :: real)\""]]

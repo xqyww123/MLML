@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Constructive_Cryptography/Wiring.thy", "lemma rsuml_lsumr_parallel_converter2: \"map_converter id id rsuml lsumr ((conv1 |\\<^sub>= conv2) |\\<^sub>= conv3) = map_converter rsuml lsumr id id (conv1 |\\<^sub>= conv2 |\\<^sub>= conv3)\""]]

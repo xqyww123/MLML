@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UpDown_Scheme/Grid.thy", "lemma grid_child_without_parent: assumes grid: \"p \\<in> grid (child b dir d) ds\" (is \"p \\<in> grid ?c ds\") and \"d < length b\" shows \"p \\<noteq> b\""]]

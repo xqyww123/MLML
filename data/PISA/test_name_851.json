@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/ICF/gen_algo/PrioUniqueByAnnotatedList.thy", "lemma p_less_eq_lem1: \"\\<lbrakk>\\<not> (x::('e::linorder,'a::linorder) LP) \\<le> z; (x + y) \\<le> z\\<rbrakk> \\<Longrightarrow> y \\<le> z \""]]

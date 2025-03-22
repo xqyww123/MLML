@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Zeta_Function/Zeta_Laurent_Expansion.thy", "lemma sums_stieltjes_gamma: \"(\\<lambda>k. ln (k+1) ^ n / (k+1) - (ln (k+2) ^ (n+1) - ln (k+1) ^ (n + 1)) / (n + 1)) sums stieltjes_gamma n\""]]

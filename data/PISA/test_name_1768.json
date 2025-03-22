@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Relational_Paths/Paths.thy", "lemma forward_terminating_path_end_points_1: assumes \"forward_terminating_path x\" shows \"x \\<le> x\\<^sup>+;end_points x\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Derivation_Bound.thy", "lemma deriv_bound_steps: assumes \"(a, b) \\<in> r ^^ n\" and \"deriv_bound r a m\" shows \"n \\<le> m\""]]

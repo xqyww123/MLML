@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_Normal_Form/Normal_Form.thy", "lemma flatten_pi_2_intersection: \"N \\<inter> subformulas\\<^sub>\\<nu> \\<phi> \\<subseteq> S \\<Longrightarrow> \\<phi>[N \\<inter> S]\\<^sub>\\<Pi>\\<^sub>2 = \\<phi>[N]\\<^sub>\\<Pi>\\<^sub>2\""]]

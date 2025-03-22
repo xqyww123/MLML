@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stateful_Protocol_Composition_and_Typing/Miscellaneous.thy", "lemma preordered_finite_set_has_maxima: assumes \"finite A\" \"A \\<noteq> {}\" shows \"\\<exists>a::'a::{preorder} \\<in> A. \\<forall>b \\<in> A. \\<not>(a < b)\""]]

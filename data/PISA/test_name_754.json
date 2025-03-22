@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jacobson_Basic_Algebra/Group_Theory.thy", "lemma mem_UnitsI: \"\\<lbrakk> invertible u; u \\<in> M \\<rbrakk> \\<Longrightarrow> u \\<in> Units\""]]

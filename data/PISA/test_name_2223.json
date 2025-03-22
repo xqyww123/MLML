@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/J/DefAss.thy", "lemma sqSub_mem_lem [elim]: \"\\<lbrakk> A \\<sqsubseteq> A'; a \\<in>\\<in> A \\<rbrakk> \\<Longrightarrow> a \\<in>\\<in> A'\""]]

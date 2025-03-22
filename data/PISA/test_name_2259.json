@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tarskis_Geometry/Linear_Algebra2.thy", "lemma basis_finite: fixes B :: \"(real^'n) set\" assumes \"is_basis B\" shows \"finite B\""]]

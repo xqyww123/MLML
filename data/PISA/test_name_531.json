@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CakeML_Codegen/Rewriting/Rewriting_Nterm.thy", "lemma consts_of_heads: \"fst |`| consts_of rs = heads_of rs\""]]

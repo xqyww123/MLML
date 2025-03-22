@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Featherweight_OCL/collection_types/UML_Set.thy", "lemma OclSelect_invalid[simp,code_unfold]:\"invalid->select\\<^sub>S\\<^sub>e\\<^sub>t(a | P a) = invalid\""]]

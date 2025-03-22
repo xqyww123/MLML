@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Rank_Nullity_Theorem/Miscellaneous.thy", "lemma span_0_imp_set_empty_or_0: assumes \"span A = {0}\" shows \"A = {} \\<or> A = {0}\""]]

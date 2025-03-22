@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buildings/Coxeter.thy", "lemma maxsimp_singleton: assumes \"w\\<in>W\" shows \"SimplicialComplex.maxsimp \\<Sigma> (smap {w})\""]]

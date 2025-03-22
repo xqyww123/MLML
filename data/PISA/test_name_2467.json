@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Winding_Number_Eval/Missing_Algebraic.thy", "lemma poly_divide_tendsto_aux: fixes p::\"'a::real_normed_field poly\" shows \"((\\<lambda>x. poly p x/x^(degree p)) \\<longlongrightarrow> lead_coeff p) at_infinity\""]]

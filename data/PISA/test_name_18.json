@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/WOOT_Strong_Eventual_Consistency/StrongConvergence.thy", "lemma (in dist_execution) new_messages_keep_consistency: assumes \"consistent M\" assumes \"event_at i (Send m)\" assumes \"set (received_messages i) \\<subseteq> M\" assumes \"i \\<notin> I ` insert_messages M\" shows \"consistent (insert m M)\""]]

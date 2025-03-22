@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/BDD/LevellistProof.thy", "lemma (in Levellist_impl) Levellist_modifies: shows \"\\<forall>\\<sigma>. \\<Gamma>\\<turnstile>{\\<sigma>} \\<acute>levellist :== PROC Levellist (\\<acute>p, \\<acute>m, \\<acute>levellist) {t. t may_only_modify_globals \\<sigma> in [mark,next]}\""]]

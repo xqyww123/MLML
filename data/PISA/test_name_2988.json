@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra7.thy", "lemma (in Module) mr_cospOpTr:\"\\<lbrakk>submodule R M H; m \\<in> carrier M; n \\<in> carrier M\\<rbrakk> \\<Longrightarrow> mr_cospOp M H (m \\<uplus>\\<^bsub>M\\<^esub> H) (n \\<uplus>\\<^bsub>M\\<^esub> H) = (m \\<plusminus> n) \\<uplus>\\<^bsub>M\\<^esub> H\""]]

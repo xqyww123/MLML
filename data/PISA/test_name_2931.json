@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Pi_Calculus/Strong_Late_Bisim_Subst.thy", "lemma symmetric: fixes P :: pi and Q :: pi assumes \"P \\<sim>\\<^sup>s Q\" shows \"Q \\<sim>\\<^sup>s P\""]]

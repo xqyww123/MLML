@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nullstellensatz/Lex_Order_PP.thy", "lemma lex_pm_except_max: assumes \"lex_pm s t\" and \"keys s \\<union> keys t \\<subseteq> {..x}\" shows \"lex_pm (except s {x}) (except t {x})\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tarskis_Geometry/Linear_Algebra2.thy", "lemma non_zero_mult_invertible_non_zero: fixes M :: \"real^'n^'n\" assumes \"v \\<noteq> 0\" and \"invertible M\" shows \"v v* M \\<noteq> 0\""]]

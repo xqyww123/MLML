@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Deep_Learning/DL_Concrete_Matrices.thy", "lemma row_id_matrix: assumes \"i < nr\" shows \"row (id_matrix nr nc) i = unit_vec nc i\""]]

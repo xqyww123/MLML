@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Trie/Tries.thy", "lemma in_set_lookup_of_listD: \"v \\<in> set(lookup_tries (tries_of_list f vs) xs) \\<Longrightarrow> v \\<in> set vs\""]]

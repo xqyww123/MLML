@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automatic_Refinement/Lib/Misc.thy", "lemma fst_foldl: \"fst (foldl (\\<lambda>(a, b) x. (f a x, g a b x)) (a, b) xs) = foldl f a xs\""]]

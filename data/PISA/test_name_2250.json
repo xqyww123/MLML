@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Taylor_Models/Taylor_Models.thy", "lemma tm_norm_range: assumes \"x \\<in>\\<^sub>i range_tm e t\" \"develops_at_within e a I\" \"num_params (tm_poly t) \\<le> length I\" shows \"x \\<in>\\<^sub>i range_tm e (tm_norm prec ord I a t)\""]]

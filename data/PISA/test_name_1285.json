@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Compiler/Correctness1Threaded.thy", "lemma Red1'_Red1_bisim_into_weak: assumes wf: \"wf_J1_prog P\" shows \"bisimulation_into_delay (Red1_mthr.redT False P) (Red1_mthr.redT True P) mbisim_Red1'_Red1 (=) (Red1_mthr.m\\<tau>move P) (Red1_mthr.m\\<tau>move P)\""]]

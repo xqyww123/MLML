@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Inference/Partial_Recursive.thy", "lemma r_dummy_append: assumes \"recfn (length xs) f\" and \"length ys = n\" shows \"eval (r_dummy n f) (xs @ ys) = eval f xs\""]]

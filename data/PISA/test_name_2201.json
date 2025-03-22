@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Akra_Bazzi/Akra_Bazzi_Library.thy", "lemma filterlim_at_right: \"filterlim f (at_right a) F \\<longleftrightarrow> eventually (\\<lambda>x. f x > a) F \\<and> filterlim f (nhds a) F\""]]

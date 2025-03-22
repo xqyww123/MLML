@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/OAlist.thy", "lemma OAlist_tc_lex_ord_EqD: \"OAlist_tc_lex_ord f xs ys = Some Eq \\<Longrightarrow> k \\<in> fst ` set (list_of_oalist_tc xs) \\<union> fst ` set (list_of_oalist_tc ys) \\<Longrightarrow> f k (OAlist_tc_lookup xs k) (OAlist_tc_lookup ys k) = Some Eq\""]]

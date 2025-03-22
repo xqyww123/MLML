@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Transition_Systems_and_Automata/Automata/Nondeterministic.thy", "lemma reachable_transition[intro]: assumes \"a \\<in> alphabet A\" \"q \\<in> reachable A p\" \"r \\<in> transition A a q\" shows \"r \\<in> reachable A p\""]]

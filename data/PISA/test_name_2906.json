@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LLL_Basis_Reduction/Gram_Schmidt_2.thy", "lemma upper_triangular_imp_lin_indpt_list: assumes A: \"A \\<in> carrier_mat n n\" and tri: \"upper_triangular A\" and diag: \"0 \\<notin> set (diag_mat A)\" shows \"lin_indpt_list (rows A)\""]]

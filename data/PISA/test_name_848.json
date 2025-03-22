@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Transition_QuasiTerms_Terms.thy", "lemma asAbs_qSwapAbs_swapAbs: assumes \"qGoodAbs qA\" shows \"asAbs (qA $[[x1 \\<and> x2]]_xs) = ((asAbs qA) $[x1 \\<and> x2]_xs)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Finite_Field_Record_Based.thy", "lemma urel32_power: \"urel32 x x' \\<Longrightarrow> urel32 y (int y') \\<Longrightarrow> urel32 (power_p32 pp x y) (power_p p x' y')\""]]

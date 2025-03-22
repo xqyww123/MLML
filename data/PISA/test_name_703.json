@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/Examples/Resumption.thy", "lemma Eq_RESUMPTION_implies_ntrunc_equality: \"Eq_RESUMPTION r r' \\<Longrightarrow> ntrunc k r = ntrunc k r'\""]]

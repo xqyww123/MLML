@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/MM/JMM_Spec.thy", "lemma program_orderE: assumes \"E \\<turnstile> a \\<le>po a'\" obtains t obs obs' where \"E \\<turnstile> a \\<le>a a'\" and \"action_tid E a = t\" \"action_obs E a = obs\" and \"action_tid E a' = t\" \"action_obs E a' = obs'\""]]

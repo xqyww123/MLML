@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DFS_Framework/Examples/Feedback_Arcs.thy", "lemma is_fas_join: \"is_fas G (F1 \\<union> F2) \\<longleftrightarrow> is_fas \\<lparr> g_V = g_V G, g_E = g_E G - F2, g_V0 = (g_E G)\\<^sup>* `` g_V0 G \\<rparr> F1\""]]

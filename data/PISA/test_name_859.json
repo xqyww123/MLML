@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Inference/Partial_Recursive.thy", "lemma tuple_encode_decode' [simp]: \"tuple_encode n (tuple_decode n i) = i\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Akra_Bazzi/Akra_Bazzi.thy", "lemma akra_bazzi_term_imp_less: assumes \"akra_bazzi_term x\\<^sub>0 x\\<^sub>1 b t\" \"x \\<ge> x\\<^sub>1\" shows \"t x < x\""]]

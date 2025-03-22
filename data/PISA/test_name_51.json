@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra5.thy", "lemma (in Ring) ideal_prod_assocTr0:\"\\<lbrakk>ideal R A; ideal R B; ideal R C; y \\<in> C; z \\<in> set_mult R A B\\<rbrakk> \\<Longrightarrow> z \\<cdot>\\<^sub>r y \\<in> sum_mult R A (B \\<diamondsuit>\\<^sub>r C)\""]]

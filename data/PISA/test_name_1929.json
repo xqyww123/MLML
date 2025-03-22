@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automatic_Refinement/Lib/Misc.thy", "lemma list_induct_first2 [consumes 0, case_names Nil Sing Cons2]: assumes \"P []\" \"\\<And>x. P [x]\" \"\\<And>x1 x2 xs. P xs \\<Longrightarrow> P (x1 # x2 #xs)\" shows \"P xs\""]]

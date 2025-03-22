@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_Master_Theorem/Logical_Characterization/Advice.thy", "lemma FG_advice_inter: \"Y \\<inter> subformulas\\<^sub>\\<nu> \\<phi> \\<subseteq> S \\<Longrightarrow> \\<phi>[Y \\<inter> S]\\<^sub>\\<mu> = \\<phi>[Y]\\<^sub>\\<mu>\""]]

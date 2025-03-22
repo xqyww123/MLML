@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/Lazy_List_Chain.thy", "lemma prepend_LNil[simp]: \"prepend xs LNil = llist_of xs\""]]

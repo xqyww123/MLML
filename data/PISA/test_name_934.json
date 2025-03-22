@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Recursion-Theory-I/PRecFun2.thy", "lemma f_mono_inj: \"\\<forall> (x::nat) (y::nat). (x < y \\<longrightarrow> (f::nat\\<Rightarrow>nat) x < f y) \\<Longrightarrow> \\<forall> (x::nat) (y::nat). (f x = f y \\<longrightarrow> x = y)\""]]

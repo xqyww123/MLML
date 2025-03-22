@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Constructive_Cryptography/Wiring.thy", "lemma swap_sum_parallel_converter2: \"map_converter id id swap_sum swap_sum (conv1 |\\<^sub>= conv2) = map_converter swap_sum swap_sum id id (conv2 |\\<^sub>= conv1)\""]]

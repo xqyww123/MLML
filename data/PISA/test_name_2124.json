@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/Circlines_Angle.thy", "lemma moebius_preserve_circline_angle [simp]: shows \"cos_angle (moebius_ocircline M H1) (moebius_ocircline M H2) = cos_angle H1 H2 \""]]

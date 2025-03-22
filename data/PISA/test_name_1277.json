@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/KD_Tree/Nearest_Neighbors.thy", "lemma last_nns_mono: assumes \"invar kdt\" \"sorted_wrt_dist p ps\" \"n \\<le> length ps\" \"0 < n\" shows \"dist (last (nearest_nbors n ps p kdt)) p \\<le> dist (last ps) p\""]]

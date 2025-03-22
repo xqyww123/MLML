@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Factored_Transition_System_Bounding/FactoredSystem.thy", "lemma bool_update_inj: fixes X :: \"'a set\" and v b assumes \"finite X\" \"v \\<notin> X\" shows \"inj_on (\\<lambda>s. fmupd v b s) {s :: 'a state. fmdom' s = X}\""]]

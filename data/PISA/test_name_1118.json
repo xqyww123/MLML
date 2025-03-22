@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Syntax_Independent_Logic/Standard_Model.thy", "lemma prv_imp_implies_isTrue: assumes [simp]: \"\\<phi> \\<in> fmla\" \"\\<chi> \\<in> fmla\" \"Fvars \\<phi> = {}\" \"Fvars \\<chi> = {}\" and p: \"prv (imp \\<phi> \\<chi>)\" and i: \"isTrue \\<phi>\" shows \"isTrue \\<chi>\""]]

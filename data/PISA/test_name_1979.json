@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automated_Stateful_Protocol_Verification/Term_Implication.thy", "lemma timpl_closure'_inv: assumes \"(s, t) \\<in> timpl_closure' TI\" shows \"(\\<exists>x. s = Var x \\<and> t = Var x) \\<or> (\\<exists>f g S T. s = Fun f S \\<and> t = Fun g T \\<and> length S = length T)\""]]

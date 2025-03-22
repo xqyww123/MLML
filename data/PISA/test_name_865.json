@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Program-Conflict-Analysis/Semantics.thy", "lemma atU_add: \"atU U c \\<Longrightarrow> atU U (c+ce) \\<and> atU U (ce+c)\""]]

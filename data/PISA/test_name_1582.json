@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Decreasing-Diagrams/Decreasing_Diagrams.thy", "lemma step2: assumes \"trans r\" and \"\\<tau> \\<noteq> []\" shows \"(M \\<inter>s dl r \\<tau>,lexmax r \\<tau>) \\<in> mul r\""]]

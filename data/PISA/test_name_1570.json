@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Executable_Euclidean_Space.thy", "lemma eucl_of_list_vec_nth3[simp]: \"(eucl_of_list [g, h, i]::real^3) $ 0 = g\" \"(eucl_of_list [g, h, i]::real^3) $ 1 = h\" \"(eucl_of_list [g, h, i]::real^3) $ 2 = i\" \"(eucl_of_list [g, h, i]::real^3) $ 3 = g\""]]

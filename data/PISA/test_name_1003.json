@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/OAlist.thy", "lemma list_of_oalist_update_by_fun_gr [simp, code abstract]: \"list_of_oalist (update_by_fun_gr k f xs) = update_by_fun_gr_raw k f (list_of_oalist xs)\""]]

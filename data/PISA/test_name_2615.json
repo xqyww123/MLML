@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LambdaMu/ContextFacts.thy", "lemma typing_ctxt_correct1: shows \"\\<Gamma>, \\<Delta> \\<turnstile>\\<^sub>T (ctxt_subst E r) : T \\<Longrightarrow> \\<exists>U. (\\<Gamma>, \\<Delta> \\<turnstile>\\<^sub>T r : U \\<and> \\<Gamma>, \\<Delta> \\<turnstile>\\<^sub>c\\<^sub>t\\<^sub>x\\<^sub>t E : T \\<Leftarrow> U)\""]]

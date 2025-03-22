@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/pGCL/Healthiness.thy", "lemma lfp_loop_sound: fixes P::\"'s expect\" assumes hb: \"healthy (wp body)\" and sP: \"sound P\" shows \"sound (lfp_exp (\\<lambda>Q s. \\<guillemotleft>G\\<guillemotright> s * wp body Q s + \\<guillemotleft>\\<N> G\\<guillemotright> s * P s))\""]]

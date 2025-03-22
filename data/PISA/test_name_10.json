@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Landau_Symbols/Landau_Real_Products.thy", "lemma eventually_nonneg_mult' [eventually_nonzero_simps]: assumes \"eventually_nonneg F (\\<lambda>x. -f x)\" \"eventually_nonneg F (\\<lambda>x. - g x)\" shows \"eventually_nonneg F (\\<lambda>x. f x * g x)\""]]

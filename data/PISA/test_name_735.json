@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Monad_Memo_DP/heap_monad/Pair_Memory.thy", "lemma move12_correct1: \"map_of1 heap' \\<subseteq>\\<^sub>m Map.empty\" if \"State_Monad.run_state (move12 k1) heap = (x, heap')\" \"P heap\""]]

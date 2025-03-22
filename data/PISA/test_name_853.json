@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Monomorphic_Monad/Monomorphic_Monad.thy", "lemma run_return_nondet [simp]: \"run_nondet (return_nondet x) = return (single x)\""]]

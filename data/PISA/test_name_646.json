@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/ConcurrentIMP/CIMP_lang.thy", "lemma reachable_states_fragmentsLS: assumes \"(s, h) \\<in> reachable_states sys\" shows \"fragmentsLS (s p) \\<subseteq> fragments (fst sys p) \\<langle>False\\<rangle>\""]]

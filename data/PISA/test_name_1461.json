@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machines/GExp.thy", "lemma apply_guards_double_cons: \"apply_guards (y # x # G) s = (gval (gAnd y x) s = true \\<and> apply_guards G s)\""]]

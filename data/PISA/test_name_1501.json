@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Iptables_Semantics/Semantics_Ternary/MatchExpr_Fold.thy", "lemma andfold_MatchExp_normalized_normalized_n_primitive_single: \"\\<forall>a. \\<not> disc (C a) \\<Longrightarrow> s \\<in> set (normalize_match (andfold_MatchExp (map (Match \\<circ> C) xs))) \\<Longrightarrow> normalized_n_primitive (disc, sel) f s\""]]

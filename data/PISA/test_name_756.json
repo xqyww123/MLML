@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/HoarePartialProps.thy", "lemma MergeGuardsD: assumes deriv: \"\\<Gamma>,\\<Theta>\\<turnstile>\\<^bsub>/F\\<^esub> P merge_guards c Q,A\" shows \"\\<Gamma>,\\<Theta>\\<turnstile>\\<^bsub>/F\\<^esub> P c Q,A\""]]

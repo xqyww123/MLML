@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Containers/Set_Linorder.thy", "lemma empty_set_less_aux_finite_iff: \"finite A \\<Longrightarrow> {} \\<sqsubset>' A \\<longleftrightarrow> A \\<noteq> {}\""]]

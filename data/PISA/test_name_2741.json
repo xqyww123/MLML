@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stone_Relation_Algebras/Relation_Algebras.thy", "lemma asymmetric_inf_closed: \"asymmetric x \\<Longrightarrow> asymmetric (x \\<sqinter> y)\""]]

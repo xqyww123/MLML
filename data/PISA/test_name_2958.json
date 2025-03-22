@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiscretePricing/Option_Price_Examples.thy", "lemma (in CRR_market) asian_borel: shows \"asian_option T \\<in> borel_measurable (G T)\""]]

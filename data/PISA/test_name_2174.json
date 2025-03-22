@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category3/SetCategory.thy", "lemma restr_eqE [elim]: assumes \"restrict F A = restrict F' A\" and \"x \\<in> A\" shows \"F x = F' x\""]]

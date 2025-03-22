@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buildings/Chamber.thy", "lemma (in ChamberComplexIsomorphism) thinish_image_shared_facet: assumes dom: \"domain.chamber C\" \"domain.chamber D\" \"z\\<lhd>C\" \"z\\<lhd>D\" \"C\\<noteq>D\" and cod: \"ThinishChamberComplex Y\" \"codomain.chamber D'\" \"f`z \\<lhd> D'\" \"D' \\<noteq> f`C\" shows \"f`D = D'\""]]

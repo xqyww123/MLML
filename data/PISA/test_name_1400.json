@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HRB-Slicing/StaticInter/WeakSimulation.thy", "lemma silent_append_observable_moves: \"\\<lbrakk>S,f \\<turnstile> (ms,s) =as\\<Rightarrow>\\<^sub>\\<tau> (ms'',s''); S,f \\<turnstile> (ms'',s'') =as'\\<Rightarrow> (ms',s')\\<rbrakk> \\<Longrightarrow> S,f \\<turnstile> (ms,s) =as@as'\\<Rightarrow> (ms',s')\""]]

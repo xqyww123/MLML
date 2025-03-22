@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Launchbury/Env-HOLCF.thy", "lemma fun_upd_below_env_deleteI: assumes \"env_delete x \\<rho> \\<sqsubseteq> env_delete x \\<rho>'\" assumes \"y \\<sqsubseteq> \\<rho>' x\" shows \"\\<rho>(x := y) \\<sqsubseteq> \\<rho>'\""]]

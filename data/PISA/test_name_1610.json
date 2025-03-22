@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Universal_Turing_Machine/Abacus.thy", "lemma halt_lemma2''': \"\\<lbrakk>\\<forall>n. \\<not> P (f n) \\<and> Q (f n) \\<longrightarrow> Q (f (Suc n)) \\<and> (f (Suc n), f n) \\<in> LE; Q (f 0); \\<forall>i<na. \\<not> P (f i)\\<rbrakk> \\<Longrightarrow> Q (f na)\""]]

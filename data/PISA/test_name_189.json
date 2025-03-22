@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Algebraic_Numbers/Algebraic_Numbers_Prelim.thy", "lemma ipoly_mult_rat: assumes r0: \"r \\<noteq> 0\" shows \"ipoly (poly_mult_rat r p) x = of_int (fst (quotient_of r)) ^ degree p * ipoly p (x * inverse (of_rat r))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Universal_Turing_Machine/UF.thy", "lemma rec_sigma_Suc_simp_rewrite: \"primerec f (Suc (length xs)) \\<Longrightarrow> rec_exec (rec_sigma f) (xs @ [Suc x]) = rec_exec (rec_sigma f) (xs @ [x]) + rec_exec f (xs @ [Suc x])\""]]

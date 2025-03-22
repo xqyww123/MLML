@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Well_Sorted_Terms.thy", "lemma swap_preserves_wls3: assumes \"good X\" and \"good Y\" and \"(X #[x1 \\<and> x2]_xs) = (Y #[y1 \\<and> y2]_ys)\" shows \"wls s X = wls s Y\""]]

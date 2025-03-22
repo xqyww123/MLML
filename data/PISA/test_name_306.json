@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Linear_Inequalities/Missing_VS_Connect.thy", "lemma finsum_scalar_prod_sum': assumes f: \"f \\<in> U \\<rightarrow> carrier_vec n\" and w: \"w \\<in> carrier_vec n\" shows \"w \\<bullet> finsum V f U = sum (\\<lambda>u. w \\<bullet> f u) U\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Probabilistic_Timed_Automata/library/Graphs.thy", "lemma Simulation_Invariants_strengthen_post': assumes \"Simulation_Invariants A B sim PA QA PB QB\" \"\\<And> a b. PB a \\<Longrightarrow> QB b \\<Longrightarrow> B a b \\<Longrightarrow> QB' b\" \"\\<And> a. QB' a \\<Longrightarrow> QB a\" shows \"Simulation_Invariants A B sim PA QA PB QB'\""]]

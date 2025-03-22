@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Planarity_Certificates/Planarity/Executable_Permutations.thy", "lemma permutationss_complete: assumes \"distincts xss\" \"distincts yss\" \"xss \\<noteq> []\" and \"set ` set xss = set ` set yss\" shows \"set yss \\<in> set ` set (permutationss xss)\""]]

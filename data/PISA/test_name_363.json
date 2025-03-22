@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Chandy_Lamport/Distributed_System.thy", "lemma no_msgs_change_if_no_channel: assumes \"c \\<turnstile> ev \\<mapsto> c'\" and \"channel i = None\" shows \"msgs c i = msgs c' i\""]]

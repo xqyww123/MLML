@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Matrices_for_ODEs/MTX_Flows.thy", "lemma picard_lindeloef_sq_mtx_affine: assumes \"continuous_on T A\" and \"continuous_on T B\" and \"t\\<^sub>0 \\<in> T\" \"is_interval T\" \"open T\" and \"open S\" shows \"picard_lindeloef (\\<lambda>t s. A t *\\<^sub>V s + B t) T S t\\<^sub>0\""]]

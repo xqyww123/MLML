@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Psi_Calculi/Weak_Bisim_Pres.thy", "lemma weakBisimResPres: fixes \\<Psi> :: 'b and P :: \"('a, 'b, 'c) psi\" and Q :: \"('a, 'b, 'c) psi\" and x :: name assumes \"\\<Psi> \\<rhd> P \\<approx> Q\" and \"x \\<sharp> \\<Psi>\" shows \"\\<Psi> \\<rhd> \\<lparr>\\<nu>x\\<rparr>P \\<approx> \\<lparr>\\<nu>x\\<rparr>Q\""]]

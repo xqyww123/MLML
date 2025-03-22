@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiscretePricing/Infinite_Coin_Toss_Space.thy", "lemma (in infinite_cts_filtration) borel_pseudo_proj_False_preimage: fixes g::\"bool stream \\<Rightarrow> 'b::{t0_space}\" assumes \"g\\<in> borel_measurable (F n)\" shows \"pseudo_proj_False n -` (g -` {g z}) = pseudo_proj_False n -` (pseudo_proj_False n `(g -` {g z}))\""]]

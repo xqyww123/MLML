@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List_Update/List_Factoring.thy", "lemma steps'_rests: \"length qs = length as \\<Longrightarrow> n \\<le> length as \\<Longrightarrow> steps' s qs as n = steps' s (qs@r1) (as@r2) n\""]]

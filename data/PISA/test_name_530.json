@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Octonions/Octonions.thy", "lemma octo_product_alternative_right: \"x * (y * y) = (x * y :: octo) * y\""]]

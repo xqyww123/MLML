@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Consensus_Refined/Refinement.thy", "lemma obs_consistent_conj1 [intro]: \"obs_consistent R pi Sa Sc \\<Longrightarrow> obs_consistent (R \\<inter> R') pi Sa Sc\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Bernoulli/Bernoulli.thy", "lemma bernpoly_altdef: \"bernpoly n = (\\<lambda>x. \\<Sum>k\\<le>n. of_nat (n choose k) * of_real (bernoulli (n - k)) * x ^ k)\""]]

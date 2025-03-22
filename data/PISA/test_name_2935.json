@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Discrete_Summation/Discrete_Summation.thy", "lemma add_sum_orient: \"sum f {k..<j} + sum f {l..<k} = sum f {l..<k} + sum f {k..<j}\""]]

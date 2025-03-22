@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UTP/utp/utp_meta_subst.thy", "lemma msubst_var [usubst]: \"(utp_expr.var x)\\<lbrakk>y\\<rightarrow>u\\<rbrakk> = utp_expr.var x\""]]

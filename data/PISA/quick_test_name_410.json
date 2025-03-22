@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Euler_MacLaurin/Euler_MacLaurin.thy", "lemma integrable_EM_remainder'_int: fixes a b :: int and f :: \"real \\<Rightarrow> 'a :: banach\" assumes \"continuous_on {of_int a..of_int b} f\" shows \"(\\<lambda>t. pbernpoly n t *\\<^sub>R f t) integrable_on {a..b}\""]]

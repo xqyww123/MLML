@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Finite-Map-Extras/Finite_Map_Extras.thy", "lemma fsubset_antisym: assumes \"m \\<subseteq>\\<^sub>f n\" and \"n \\<subseteq>\\<^sub>f m\" shows \"m = n\""]]

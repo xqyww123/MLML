@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Flyspeck-Tame/ListAux.thy", "lemma local_help: \"vs = a @ r # b \\<Longrightarrow> vs = c @ r # d \\<Longrightarrow> r \\<notin> set a \\<Longrightarrow> r \\<notin> set b \\<Longrightarrow> a = c \\<and> b = d\""]]

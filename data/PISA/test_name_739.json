@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Planarity_Certificates/Verification/Check_Planarity_Verification.thy", "lemma (in -) funpow_dist1_less_f: assumes \"b \\<in> orbit f a\" \"a \\<in> orbit f a\" \"a \\<noteq> b\" shows \"funpow_dist1 f a b < funpow_dist1 f a (f b)\""]]

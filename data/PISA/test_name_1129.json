@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Compiler/JJ1WellForm.thy", "lemma compP1_pres_wf: \"wf_J_prog P \\<Longrightarrow> wf_J1_prog (compP1 P)\""]]

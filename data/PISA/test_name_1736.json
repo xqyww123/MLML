@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MuchAdoAboutTwo/MuchAdoAboutTwo.thy", "lemma Prop_2_step_L7: \"map (\\<lambda>k. foldl1 g (map (nth xs) [0..<k + 1])) [0..<length xs] = map (\\<lambda>k. foldl1 g (take (k + 1) xs)) [0..<length xs]\""]]

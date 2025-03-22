@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Name_Carrying_Type_Inference/SimplyTyped.thy", "lemma parallel_reduction_pairE: assumes \"(Pair A B) >> X\" shows \"\\<exists>A' B'. (A >> A') \\<and> (B >> B') \\<and> (X = Pair A' B')\""]]

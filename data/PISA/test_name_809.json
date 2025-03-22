@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra1.thy", "lemma Amax_geTr:\"f \\<in> {j. j \\<le> n} \\<rightarrow> Z\\<^sub>-\\<^sub>\\<infinity> \\<longrightarrow> (\\<forall>j\\<in>{j. j \\<le> n}. (f j) \\<le> Amax n f)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LinearQuantifierElim/Thys/QEdlo_fr.thy", "lemma innermost_intvl: \"\\<lbrakk> nqfree f; nolub f xs l x u; l < x; x < u; x \\<notin> EQ f xs; DLO.I f (x#xs); l < y; y < u\\<rbrakk> \\<Longrightarrow> DLO.I f (y#xs)\""]]

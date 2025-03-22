@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/GenCF/Impl/Impl_Array_Hash_Map.thy", "lemma ahm_size_impl: assumes \"is_bounded_hashcode Id (=) bhc\" shows \"(ahm_size, op_map_size) \\<in> ahm_map_rel' bhc \\<rightarrow> nat_rel\""]]

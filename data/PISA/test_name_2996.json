@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/MPoly_PM.thy", "lemma hom_components_monom_mult: \"hom_components (punit.monom_mult c t p) = (if c = 0 then {} else punit.monom_mult c t ` hom_components p)\" for c::\"'a::semiring_no_zero_divisors\""]]

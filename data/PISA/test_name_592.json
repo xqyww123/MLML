@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOL-CSP/Process.thy", "lemma less_tail: \"s \\<noteq> [] \\<Longrightarrow> s < t \\<Longrightarrow> tl s < tl t\""]]

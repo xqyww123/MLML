@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Well_Quasi_Orders/Almost_Full.thy", "lemma accessible_on_imp_af: assumes \"accessible_on P A x\" shows \"af A (\\<lambda>u v. \\<not> P v u \\<or> \\<not> P u x)\""]]

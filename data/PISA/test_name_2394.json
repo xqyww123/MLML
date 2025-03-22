@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Launchbury/Env.thy", "lemma fun_upd_env_delete[simp]: \"x \\<in> edom \\<Gamma> \\<Longrightarrow> (env_delete x \\<Gamma>)(x := \\<Gamma> x) = \\<Gamma>\""]]

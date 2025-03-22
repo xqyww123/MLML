@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stable_Matching/Sotomayor.thy", "lemma match_Field: assumes \"match \\<mu>\" assumes \"(m, w) \\<in> \\<mu>\" shows \"w \\<in> Field (Pm m)\" and \"m \\<in> Field (Pw w)\""]]

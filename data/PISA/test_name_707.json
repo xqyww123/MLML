@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binomial-Heaps/SkewBinomialHeap.thy", "lemma invar_rev[simp]: \"queue_invar (rev q) \\<longleftrightarrow> queue_invar q\""]]

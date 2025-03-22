@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tarskis_Geometry/Tarski.thy", "theorem th3_7_2: assumes \"b \\<noteq> c\" and \"B a b c\" and \"B b c d\" shows \"B a b d\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/Power_Products.thy", "lemma lex_pm_antisym: \"lex_pm s t \\<Longrightarrow> lex_pm t s \\<Longrightarrow> s = t\""]]

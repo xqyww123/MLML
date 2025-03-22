@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LambdaAuth/Semantics.thy", "lemma hash_eq_hash_real_closed: assumes \"closed t\" shows \"hash t = hash_real t\""]]

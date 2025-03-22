@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FocusStreamsCaseStudies/SteamBoiler_proof.thy", "lemma L5_Controller_Zero: assumes h1:\"Controller_L y lIn lOut z\" and h2:\"lOut t = Zero\" and h3:\"z t = []\" shows \"lIn t = Zero\""]]

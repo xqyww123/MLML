@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HotelKeyCards/Trace.thy", "lemma only_owner_enter_normal: \"\\<lbrakk> hotel s; safe\\<^sub>0 s r; (k,roomk s r) \\<in> cards s g \\<rbrakk> \\<Longrightarrow> owns s r = Some g\""]]

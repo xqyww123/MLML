@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Transitive-Closure/RBT_Map_Set_Extension.thy", "lemma rs_subset_list [simp]: \"rs_subset_list as bs = None \\<longleftrightarrow> rs.\\<alpha> as \\<subseteq> rs.\\<alpha> bs\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Relation_Algebra/Relation_Algebra_Vectors.thy", "lemma vector_2: \"is_vector y \\<Longrightarrow> (x \\<cdot> y\\<^sup>\\<smile>) ; z = x ; (y \\<cdot> z)\""]]

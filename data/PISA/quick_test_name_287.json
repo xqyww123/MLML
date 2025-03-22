@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Smooth_Manifolds/Cotangent_Space.thy", "lemma dual_space_eq: \"dual_space S = {E. linear_fun_on S E} \\<inter> {E. extensional0 S E}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HereditarilyFinite/OrdArith.thy", "lemma BuildSeq_succ_E: assumes s: \"BuildSeq B C s k y\" obtains \"B y\" | m n where \"m \\<^bold>\\<in> k\" \"n \\<^bold>\\<in> k\" \"C y (app s m) (app s n)\""]]

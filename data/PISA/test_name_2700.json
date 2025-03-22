@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/DFA/Listn.thy", "lemma closed_lift2_sup: \"closed (err A) (lift2 f) \\<Longrightarrow> closed (err (list n A)) (lift2 (sup f))\""]]

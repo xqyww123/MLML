@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Neumann_Morgenstern_Utility/Lotteries.thy", "lemma mix_pmf_in_lotteries: assumes \"p \\<in> lotteries_on A\" and \"q \\<in> lotteries_on A\" and \"a \\<in> {0<..<1}\" shows \"(mix_pmf a p q) \\<in> lotteries_on A\""]]

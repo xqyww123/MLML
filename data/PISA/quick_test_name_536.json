@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UPF_Firewall/FWNormalisation/NormalisationIntegerPortProof.thy", "lemma DAinRotate: \"DenyAll \\<in> set (policy2list p) \\<Longrightarrow> DenyAll \\<in> set (policy2list (rotatePolicy p))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gauss_Jordan/Linear_Maps.thy", "lemma invertible_matrix_mult_right_rank': fixes A::\"'a::{field}^'n::{mod_type}^'m::{mod_type}\" and Q::\"'a::{field}^'n::{mod_type}^'n::{mod_type}\" assumes invertible_Q: \"invertible Q\" and B_eq_PA: \"B=A**Q\" shows \"rank B = rank A\""]]

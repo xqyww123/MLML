@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Higher_Order_Terms/Term_to_Nterm.thy", "lemma term_to_nterm: assumes \"no_abs t\" shows \"fst (run_state (term_to_nterm \\<Gamma> t) x) = convert_term t\""]]

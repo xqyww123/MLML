@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Bases/Confluence.thy", "theorem loc_connectivity_equiv_ChurchRosser: assumes \"relation_order r ord UNIV\" shows \"relation.is_ChurchRosser r = is_loc_connective_on UNIV ord r\""]]

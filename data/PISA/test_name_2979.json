@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Sort_Encodings/TermsAndClauses.thy", "lemma varsPB_sappend_incl[simp]: \"varsPB (\\<Phi>1 @@ \\<Phi>2) \\<subseteq> varsPB \\<Phi>1 \\<union> varsPB \\<Phi>2\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/C2KA_DistributedSystems/Topology_C2KA.thy", "lemma strong_orbit_induce_same: \"a \\<sim>\\<^sub>\\<K> b \\<longrightarrow> (a \\<lhd> c \\<longleftrightarrow> b \\<lhd> c)\""]]

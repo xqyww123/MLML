@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FinFun/FinFunPred.thy", "lemma finfun_Bex_except_update_code [code]: fixes a :: \"'a :: card_UNIV\" shows \"finfun_Bex_except xs (finfun_update_code f a b) P \\<longleftrightarrow> ((a \\<notin> set xs \\<and> b \\<and> P a) \\<or> finfun_Bex_except (a # xs) f P)\""]]

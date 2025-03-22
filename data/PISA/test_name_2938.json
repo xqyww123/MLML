@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Iptables_Semantics/Semantics.thy", "lemma dropD: \"\\<Gamma>,\\<gamma>,p\\<turnstile> \\<langle>r, s\\<rangle> \\<Rightarrow> t \\<Longrightarrow> r = [Rule m Drop] \\<Longrightarrow> matches \\<gamma> m p \\<Longrightarrow> s = Undecided \\<Longrightarrow> t = Decision FinalDeny\""]]

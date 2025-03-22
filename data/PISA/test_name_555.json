@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/GenCF/Impl/Impl_List_Map.thy", "lemma list_map_autoref_delete2[param]: shows \"(list_map_delete (=), op_map_delete) \\<in> Id \\<rightarrow> br map_of list_map_invar \\<rightarrow> br map_of list_map_invar\""]]

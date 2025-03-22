@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Quantales/Quantale_Left_Sided.thy", "lemma lsl_local_eq: \"x \\<cdot> \\<nu> y = \\<nu> (x \\<cdot> (y::'a::ab_unital_quantale))\""]]

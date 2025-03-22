@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/HeapList.thy", "theorem notin_List_update[simp]: \"\\<And>p. q \\<notin> set ps \\<Longrightarrow> List p (h(q := y)) ps = List p h ps\""]]

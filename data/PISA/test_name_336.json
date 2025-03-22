@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_RPOs/Lambda_Free_Term.thy", "lemma ground_hd_in_ground_heads: \"ground s \\<Longrightarrow> sym (head s) \\<in> ground_heads (head s)\""]]

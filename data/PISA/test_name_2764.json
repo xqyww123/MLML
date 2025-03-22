@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Call_Arity/CoCallGraph.thy", "lemma cc_restr_eq_subset: \"S \\<subseteq> S' \\<Longrightarrow> cc_restr S' G = cc_restr S' G2 \\<Longrightarrow> cc_restr S G = cc_restr S G2\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Iptables_Semantics/Primitive_Matchers/Protocols_Normalize.thy", "lemma (in primitive_matcher_generic) compress_normalize_protocols_step_Some: assumes \"normalized_nnf_match m\" and \"compress_normalize_protocols_step m = Some m'\" shows \"matches (\\<beta>, \\<alpha>) m' a p \\<longleftrightarrow> matches (\\<beta>, \\<alpha>) m a p\""]]

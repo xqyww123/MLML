@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AODV/variants/a_norreqid/A_Fresher.thy", "lemma kD_nsqn: assumes \"dip \\<in> kD(rt)\" shows \"nsqn rt dip = nsqn\\<^sub>r(the (\\<sigma>\\<^bsub>route\\<^esub>(rt, dip)))\""]]

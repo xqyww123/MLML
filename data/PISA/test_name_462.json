@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tree_Decomposition/Graph.thy", "lemma path_tl: \"path xs \\<Longrightarrow> path (tl xs)\""]]

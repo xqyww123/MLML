@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Allen_Calculus/axioms.thy", "lemma (in interval) nontrans1: \"u\\<parallel>r \\<Longrightarrow> \\<not> (\\<exists>t. u\\<parallel>t \\<and> t\\<parallel>r)\""]]

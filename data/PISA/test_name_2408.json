@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/Semantic.thy", "lemma exec_Call_body: \"\\<Gamma> p=Some bdy \\<Longrightarrow> \\<Gamma>\\<turnstile>\\<langle>Call p,s\\<rangle> \\<Rightarrow> t = \\<Gamma>\\<turnstile>\\<langle>the (\\<Gamma> p),s\\<rangle> \\<Rightarrow> t\""]]

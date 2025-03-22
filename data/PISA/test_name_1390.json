@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Finger-Trees/FingerTree.thy", "lemma head_correct: assumes \"ft_invar t\" \"t \\<noteq> Empty\" shows \"head t = hd (toList t)\""]]

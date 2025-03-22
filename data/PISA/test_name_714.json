@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Key_Agreement_Strong_Adversaries/Refinement.thy", "lemma PO_refinesI: \"\\<lbrakk> init Tc \\<subseteq> R``(init Ta); {R} (trans Ta), (trans Tc) {> R} \\<rbrakk> \\<Longrightarrow> PO_refines R Ta Tc\""]]

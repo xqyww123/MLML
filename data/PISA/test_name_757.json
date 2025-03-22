@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CakeML/Big_Step_Clocked.thy", "lemma prog_unclocked_2: assumes \"evaluate_prog False env (s \\<lparr> clock := cnt1 \\<rparr>) prog (s' \\<lparr> clock := cnt1 \\<rparr>,r)\" shows \"evaluate_prog False env (s \\<lparr> clock := cnt2 \\<rparr>) prog (s' \\<lparr> clock := cnt2 \\<rparr>,r)\""]]

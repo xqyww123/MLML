@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Valuation/Valuation1.thy", "lemma (in Corps) eq_carr_eq_Vring:\" \\<lbrakk>valuation K v; valuation K v'; carrier (Vr K v) = carrier (Vr K v')\\<rbrakk> \\<Longrightarrow> Vr K v = Vr K v'\""]]

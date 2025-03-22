@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptHOL/Misc_CryptHOL.thy", "lemma mk_lossless_map [simp]: \"mk_lossless (map_spmf f p) = map_spmf f (mk_lossless p)\""]]

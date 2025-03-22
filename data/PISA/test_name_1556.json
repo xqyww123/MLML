@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/BNF_CC/Fixpoints.thy", "lemma rec_T_parametric: \"((rel_G (rel_prod (rel_T L1 Co1 Co2 Contra1 Contra2) A) L1 Co1 Co2 Contra1 Contra2 ===> A) ===> rel_T L1 Co1 Co2 Contra1 Contra2 ===> A) rec_T rec_T\""]]

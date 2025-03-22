@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Relational_Paths/Paths.thy", "lemma one_strongly_connected_iff_4: assumes \"is_inj x\" shows \"one_strongly_connected x \\<longleftrightarrow> x\\<^sup>T;1;x \\<le> x\\<^sup>+\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/Lazy_List_Chain.thy", "lemma emb_lset_mono[rotated]: \"x \\<in> lset xs \\<Longrightarrow> emb xs ys \\<Longrightarrow> x \\<in> lset ys\""]]

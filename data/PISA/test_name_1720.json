@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Smooth_Manifolds/Analysis_More.thy", "lemma topspace_final_topology: \"topspace (final_topology X Y f) = X\" if \"\\<And>i. f i \\<in> topspace (Y i) \\<rightarrow> X\""]]

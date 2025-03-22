@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/WorkerWrapper/CounterExample.thy", "lemma assumes \"wrap oo unwrap = ID\" shows \"wrap oo strictify\\<cdot>unwrap = ID\""]]

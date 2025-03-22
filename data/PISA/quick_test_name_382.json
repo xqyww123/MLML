@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/OAlist_Poly_Mapping.thy", "lemma le_of_nat_term_order_plus_monotone: assumes \"le_of_nat_term_order to s (t::'a::nat_pp_term)\" shows \"le_of_nat_term_order to (u + s) (u + t)\""]]

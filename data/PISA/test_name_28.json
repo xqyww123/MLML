@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Attack_Trees/MC.thy", "lemma EF_E[rule_format]: \"\\<forall> f. x \\<in> (EF f) \\<longrightarrow> x \\<in> (f \\<union> EX' (EF f))\""]]

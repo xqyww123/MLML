@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Common/Type.thy", "lemma is_Class_conv [simp]: \"is_Class T \\<longleftrightarrow> (\\<exists>C. T = Class C)\""]]

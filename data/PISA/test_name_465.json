@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Verified_SAT_Based_AI_Planning/AST_SAS_Plus_Equivalence.thy", "lemma map_add_comm: \"(\\<And>x. x \\<in> dom m1 \\<and> x \\<in> dom m2 \\<Longrightarrow> m1 x = m2 x) \\<Longrightarrow> m1 ++ m2 = m2 ++ m1\""]]

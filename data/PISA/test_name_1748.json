@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Kleene_Algebra/DRA.thy", "lemma iteration_annil [simp]: \"(x \\<cdot> 0)\\<^sup>\\<infinity> = 1 + x \\<cdot> 0\""]]

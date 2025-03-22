@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Formal_SSA/FormalSSA_Misc.thy", "lemma butlast_prefix: \"prefix xs ys \\<Longrightarrow> prefix (butlast xs) (butlast ys)\""]]
