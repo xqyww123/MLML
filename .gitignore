@@ -1,6 +1,7 @@
 *.swp
 .~lock*
 *~
-downloads
-Isabelle2024
-afp-2025-02-12
+cache
+contrib
+result.csv
+translation/results
