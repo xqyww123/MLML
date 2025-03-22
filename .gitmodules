@@ -1,0 +1,6 @@
+[submodule "Isa-Mini"]
+	path = Isa-Mini
+	url = git@github.com:xqyww123/Isa-Mini.git
+[submodule "Isa-REPL"]
+	path = Isa-REPL
+	url = git@github.com:xqyww123/Isa-REPL.git
