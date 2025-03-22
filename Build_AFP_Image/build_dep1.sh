@@ -1,6 +1,7 @@
 #!/bin/bash
 ./init.sh
 
+PATH=./contrib/Isabelle2024/bin:$PATH
 rm -f  $(isabelle getenv -b ISABELLE_HOME_USER)/etc/components 2>/dev/null
 isabelle components -u ./contrib/afp-2025-02-12/thys
 

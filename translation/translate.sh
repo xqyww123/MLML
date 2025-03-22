@@ -11,6 +11,12 @@
 #SBATCH --output=logs/top.%j.stdout
 #SBATCH --error=logs/top.%j.stderr
 
+if [ "$#" -ne 2 ]; then
+    echo "Error: Script requires exactly 2 arguments"
+    echo "Usage: $0 <worker_id> <total_workers>"
+    exit 1
+fi
+
 PATH=./contrib/Isabelle2024/bin:$PATH
 
 total_parts=$(( $2 * 2))
@@ -39,11 +45,11 @@ mkdir -p ./cache/translation/repl_tmps/$i
 
 port="6$(printf "%03d" $i)"
 repl_temp_dir="$(realpath ./cache/translation/repl_tmps/$i)"
-./Isa-REPL/repl_server_watch_dog.sh 127.0.0.1:$port HOL $repl_temp_dir -o threads=$num_processors -o timeout_scale=1 &
+./contrib/Isa-REPL/repl_server_watch_dog.sh 127.0.0.1:$port HOL $repl_temp_dir -o threads=$num_processors -o timeout_scale=1 &
 repl_pid=$!
 
 sleep 4
-./Isa-Proof-Shell/translator_watch_dog.sh 127.0.0.1:$port ./translation/results/minilang.$i.db ./translation/tasks/targets.$i &
+./contrib/Isa-Mini/translator/translator_watch_dog.sh 127.0.0.1:$port ./translation/results/minilang.$i.db ./translation/tasks/targets.$i &
 translator_pid=$!
 
 
@@ -54,12 +60,12 @@ mkdir -p ./cache/translation/repl_tmps/$i
 
 port="6$(printf "%03d" $i)"
 repl_temp_dir="$(realpath ./cache/translation/repl_tmps/$i)"
-./Isa-REPL/repl_server_watch_dog.sh 127.0.0.1:$port HOL $repl_temp_dir -o threads=$num_processors -o timeout_scale=1 &
+./contrib/Isa-REPL/repl_server_watch_dog.sh 127.0.0.1:$port HOL $repl_temp_dir -o threads=$num_processors -o timeout_scale=1 &
 repl_pid2=$!
 
 
 sleep 4
-./Isa-Proof-Shell/translator_watch_dog.sh 127.0.0.1:$port ./translation/results/minilang.$i.db ./translation/tasks/targets.$i &
+./contrib/Isa-Mini/translator/translator_watch_dog.sh 127.0.0.1:$port ./translation/results/minilang.$i.db ./translation/tasks/targets.$i &
 translator_pid2=$!
 
 

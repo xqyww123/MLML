@@ -29,7 +29,7 @@ def get_running_jobs(user):
     return result.stdout.strip().split('\n')
 
 def submit_job(idx, total):
-    cmd = f"sbatch collect_data.sh {idx} {total}"
+    cmd = f"sbatch translation/translate.sh {idx} {total}"
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     # Extract job ID from sbatch output (typically looks like "Submitted batch job 123456")
     if result.stdout:
