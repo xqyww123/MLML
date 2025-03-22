@@ -37,7 +37,6 @@ fi
 num_processors=$(( $all_proc / 2 ))
 
 
-
 ###### Worker 1 ###########
 
 i=$(($iii * 2))

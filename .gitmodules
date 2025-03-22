@@ -1,9 +1,9 @@
-[submodule "Isa-Mini"]
-	path = contrib/Isa-Mini
-	url = git@github.com:xqyww123/Isa-Mini.git
-[submodule "Isa-REPL"]
-	path = contrib/Isa-REPL
-	url = git@github.com:xqyww123/Isa-REPL.git
-[submodule "auto_sledgehammer"]
+[submodule "contrib/auto_sledgehammer"]
 	path = contrib/auto_sledgehammer
 	url = git@github.com:xqyww123/auto_sledgehammer.git
+[submodule "contrib/Isa-Mini"]
+	path = contrib/Isa-Mini
+	url = git@github.com:xqyww123/Isa-Mini.git
+[submodule "contrib/Isa-REPL"]
+	path = contrib/Isa-REPL
+	url = git@github.com:xqyww123/Isa-REPL.git
