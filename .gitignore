@@ -6,3 +6,4 @@ contrib
 result.csv
 translation/results
 \#*#
+__pycache__
