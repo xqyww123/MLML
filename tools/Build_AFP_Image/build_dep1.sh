@@ -8,5 +8,5 @@ isabelle components -u ./contrib/afp-2025-02-12/thys
 NPROC=$(nproc)
 
 echo "Building AFP-DEP1. This can take 30+ hours"
-isabelle build -b -D ./Build_AFP_Image/AFP-DEP1 -o threads=$NPROC AFP-DEP1
+isabelle build -b -D ./tools/Build_AFP_Image/AFP-DEP1 -o threads=$NPROC AFP-DEP1
 
