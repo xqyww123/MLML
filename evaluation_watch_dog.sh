@@ -1,9 +1,14 @@
 #!/bin/bash
 
+# Check if current directory is in PYTHONPATH and add if not
+if [[ ":$PYTHONPATH:" != *":$(pwd):"* ]]; then
+    export PYTHONPATH="$PYTHONPATH:$(pwd)"
+fi
+
 BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 while true; do
-    $BASE_DIR/evaluation/lib_test.py "$@"
+    $BASE_DIR/evaluation/evaluator.py "$@"
     exit_status=$?
 
     if [ $exit_status -eq 0 ]; then
