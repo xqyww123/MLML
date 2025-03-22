@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Auto2_Imperative_HOL/Functional/BST.thy", "lemma rotateR_in_trav [rewrite]: \"in_traverse (rotateR t) = in_traverse t\""]]

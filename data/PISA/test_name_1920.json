@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CakeML_Codegen/Rewriting/Big_Step_Value.thy", "lemma (in vrules) veval_closed: assumes \"rs, \\<Gamma> \\<turnstile>\\<^sub>v t \\<down> v\" \"closed_except t (fmdom \\<Gamma>)\" \"closed_venv \\<Gamma>\" assumes \"wellformed t\" \"wellformed_venv \\<Gamma>\" shows \"vclosed v\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/IICF/Impl/Heaps/IICF_Impl_Heapmap.thy", "lemma [def_pat_rules]: \"hmstruct.hm_repair_op$prio \\<equiv> PR_CONST hm_repair_op\""]]

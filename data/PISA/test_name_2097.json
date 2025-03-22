@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Inference/Inductive_Inference_Basics.thy", "lemma prenum_encode: \"prenum (list_encode vs) x \\<down>= (if x < length vs then vs ! x else 0)\""]]

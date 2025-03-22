@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Routing/Routing_Table.thy", "lemma range_prefix_match_sm[simp]: \"wordinterval_to_set (fst (range_prefix_match pfx rg)) = fst (ipset_prefix_match pfx (wordinterval_to_set rg))\""]]

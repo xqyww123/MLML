@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Inference/CONS_LIM.thy", "lemma r_prefixes_aux: \"eval r_prefixes_aux [j, v, i] \\<down>= e_snoc v (if eval r_s [e_snoc v 0] = eval r_s [v] then 1 else 0)\""]]

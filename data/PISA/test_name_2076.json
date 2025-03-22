@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/IP_Addresses/CIDR_Split.thy", "lemma cidrsplit_no_overlaps: \"\\<lbrakk> x \\<in> set (wordinterval_CIDR_split_prefixmatch wi); xa \\<in> set (wordinterval_CIDR_split_prefixmatch wi); pt && ~~ (pfxm_mask x) = pfxm_prefix x; pt && ~~ (pfxm_mask xa) = pfxm_prefix xa \\<rbrakk> \\<Longrightarrow> x = xa\""]]

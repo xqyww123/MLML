@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra1.thy", "lemma minimum_elem_Ssub:\"\\<lbrakk>Order D; T \\<subseteq> carrier D; X \\<subseteq> T\\<rbrakk> \\<Longrightarrow> minimum_elem D X a = minimum_elem (SIod D T) X a\""]]

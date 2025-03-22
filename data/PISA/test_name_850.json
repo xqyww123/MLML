@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/LTS.thy", "lemma silent_move_into_silent_move2: assumes \"s -\\<tau>\\<rightarrow> s'\" shows \"\\<exists>tl. silent_move2 s tl s'\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/InfPathElimination/Store.thy", "lemma symvar_var_imp_var2 : assumes \"sv \\<in> Bexp.vars (adapt_bexp e s)\" (is \"sv \\<in> Bexp.vars ?e'\") shows \"fst sv \\<in> Bexp.vars e\""]]

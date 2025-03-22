@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Abstract-Hoare-Logics/Procs/PsHoareTotal.thy", "lemma execs_pres_termi: \"\\<lbrakk> ([c],s) \\<rightarrow>\\<^sup>* (c'#cs',s'); c\\<down>s \\<rbrakk> \\<Longrightarrow> c'\\<down>s'\""]]

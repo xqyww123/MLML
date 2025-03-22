@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Decl_Sem_Fun_PL/ChangeEnv.thy", "lemma env_eq_ext: fixes \\<rho>::env assumes rr: \"\\<rho> \\<approx> \\<rho>'\" shows \"((x,v)#\\<rho>) \\<approx> ((x,v)#\\<rho>')\""]]

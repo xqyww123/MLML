@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Separata/Separata.thy", "lemma \"((((p3 imp (p0 \\<longrightarrow>* (p3 ** p0))) imp sep_false ) imp (p1 imp sep_false )) imp (p1 imp (p3 imp (p0 \\<longrightarrow>* (p0 ** p3))))) (h::'a::heap_sep_algebra)\""]]

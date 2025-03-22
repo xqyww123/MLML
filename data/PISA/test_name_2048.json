@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MSO_Regex_Equivalence/Pi_Regular_Operators.thy", "lemma rderivs_lderivs: \"rderivs w r = REV (lderivs w (REV r))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/WOOT_Strong_Eventual_Consistency/CreateConsistent.thy", "lemma create_delete_consistent: assumes \"consistent M\" assumes \"is_associated_string N s\" assumes \"N \\<subseteq> M\" assumes \"Inr m = create_delete s n\" shows \"consistent (M \\<union> {m})\""]]

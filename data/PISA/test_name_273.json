@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/CommonSet/SetInterval2.thy", "lemma sub_left_strict_mono_on: \"strict_mono_on (\\<lambda>x. (x::nat) - k) {k..}\""]]

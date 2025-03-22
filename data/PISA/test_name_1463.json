@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Monomorphic_Monad/Monomorphic_Monad.thy", "lemma bind_writer_parametric [transfer_rule]: \"((rel_prod A (list_all2 W) ===> M) ===> (M ===> (rel_prod A (list_all2 W) ===> M) ===> M) ===> rel_writerT W A M ===> (A ===> rel_writerT W A M) ===> rel_writerT W A M) bind_writer bind_writer\""]]

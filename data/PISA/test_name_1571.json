@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Presburger-Automata/Presburger_Automata.thy", "lemma nfa_reach_rtrancl: assumes \"nfa_is_node A i\" shows \"(\\<exists>bss. nfa_reach A i bss j \\<and> list_all (is_alph n) bss) = ((i, j) \\<in> (succsr (subset_succs A))\\<^sup>*)\""]]

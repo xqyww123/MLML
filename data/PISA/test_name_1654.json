@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Symmetric_Polynomials/Symmetric_Polynomials.thy", "lemma lead_monom_sym_mpoly_prod_notin: assumes \"finite A\" \"k \\<notin> A\" shows \"lookup (lead_monom (\\<Prod>i=1..n. sym_mpoly A i ^ h i :: 'a mpoly)) k = 0\""]]

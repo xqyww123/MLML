@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Optics/Lens_Order.thy", "lemma sublens_put_put: \"\\<lbrakk> mwb_lens X; Y \\<subseteq>\\<^sub>L X \\<rbrakk> \\<Longrightarrow> put\\<^bsub>X\\<^esub> (put\\<^bsub>Y\\<^esub> \\<sigma> v) u = put\\<^bsub>X\\<^esub> \\<sigma> u\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptHOL/Resumption.thy", "lemma rel_resumption_OO [relator_distr]: \"rel_resumption A B OO rel_resumption C D = rel_resumption (A OO C) (B OO D)\""]]

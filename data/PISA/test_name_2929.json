@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/IICF/Intf/IICF_Map.thy", "lemma param_dom[param]: \"(dom,dom)\\<in>\\<langle>K,V\\<rangle>map_rel \\<rightarrow> \\<langle>K\\<rangle>set_rel\""]]

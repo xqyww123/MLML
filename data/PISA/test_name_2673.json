@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UPF_Firewall/FWNormalisation/NormalisationIntegerPortProof.thy", "lemma domConc: \"x \\<in> dom (C (list2FWpolicy b)) \\<Longrightarrow> b \\<noteq> [] \\<Longrightarrow> x \\<in> dom (C (list2FWpolicy (a @ b)))\""]]

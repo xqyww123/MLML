@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Splay_Tree/Splay_Tree.thy", "lemma splay_to_root: \"\\<lbrakk> bst t; splay a t = t' \\<rbrakk> \\<Longrightarrow> a \\<in> set_tree t \\<longleftrightarrow> (\\<exists>l r. t' = Node l a r)\""]]

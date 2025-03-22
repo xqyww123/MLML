@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Execute/TypeRelRefine.thy", "lemma map_values_Mapping [simp]: \"map_values f (Mapping.Mapping m) = Mapping.Mapping (\\<lambda>k. map_option (f k) (m k))\""]]

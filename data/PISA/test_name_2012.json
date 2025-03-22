@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stream-Fusion/StreamFusion.thy", "lemma \"foldrL\\<cdot>f\\<cdot>z\\<cdot>(mapL\\<cdot>g\\<cdot>(filterL\\<cdot>p\\<cdot>(enumFromToL\\<cdot>x\\<cdot>y))) = foldrS\\<cdot>f\\<cdot>z\\<cdot>(mapS\\<cdot>g\\<cdot>(filterS\\<cdot>p\\<cdot>(enumFromToS\\<cdot>x\\<cdot>y)))\""]]

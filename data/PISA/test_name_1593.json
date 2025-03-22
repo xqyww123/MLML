@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Octonions/Octonions.thy", "lemma Im3_tendsto_upperbound: \"\\<lbrakk>(f \\<longlongrightarrow> limit) net; \\<forall>\\<^sub>F x in net. Im3 (f x) \\<le> b; net \\<noteq> bot\\<rbrakk> \\<Longrightarrow> Im3 limit \\<le> b\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/J/Expr.thy", "lemma [simp]: \"\\<lbrakk> size vs = size Vs; size Ts = size Vs \\<rbrakk> \\<Longrightarrow> fv (blocks Vs Ts vs e) = fv e - set Vs\""]]

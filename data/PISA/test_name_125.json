@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PSemigroupsConvolution/Binary_Modalities.thy", "lemma rel_fun_Sup_distl: \"(f::'a \\<Rightarrow> 'b::proto_quantale) \\<star> \\<Squnion>G = \\<Squnion>{f \\<star> g |g. g \\<in> G}\""]]

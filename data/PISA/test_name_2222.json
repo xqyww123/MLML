@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Probabilistic_System_Zoo/Bool_Bounded_Set.thy", "lemma bempty_neq_bsingleton[simp]: \"bempty \\<noteq> bsingleton x\" \"bsingleton x \\<noteq> bempty\""]]

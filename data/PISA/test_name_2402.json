@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machine_Inference/Subsumption.thy", "lemma subsumes_update_equality: \"subsumes t1 c t2 \\<Longrightarrow> (\\<forall>i. can_take_transition t2 i c \\<longrightarrow> (\\<forall>r'. ((evaluate_updates t1 i c $ r') = (evaluate_updates t2 i c $ r')) \\<or> evaluate_updates t2 i c $ r' = None))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AWN/AWN_SOS.thy", "lemma seqp_guardTE [elim]: \"\\<lbrakk>((\\<xi>, {l}\\<langle>g\\<rangle> p), a, (\\<xi>', q)) \\<in> seqp_sos \\<Gamma>; \\<lbrakk>a = \\<tau>; \\<xi>' \\<in> g \\<xi>; q = p\\<rbrakk> \\<Longrightarrow> P\\<rbrakk> \\<Longrightarrow> P\""]]

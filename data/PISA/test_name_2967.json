@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Noninterference_Concurrent_Composition/ConcurrentComposition.thy", "lemma con_comp_ipurge_tr_no_fake: assumes A: \"range p \\<union> range q = UNIV\" and B: \"u \\<in> range Some\" shows \"ipurge_tr (con_comp_pol I) (con_comp_map D E p q) u xs = ipurge_tr I (the \\<circ> con_comp_map D E p q) (the u) xs\" (is \"ipurge_tr ?I' ?D' _ _ = _\")"]]

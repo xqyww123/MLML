@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Separation_Logic_Imperative_HOL/Run.thy", "lemma run_exn: assumes \"run f \\<sigma> \\<sigma>' r\" \"is_exn \\<sigma>\" obtains \"\\<sigma>'=\\<sigma>\""]]

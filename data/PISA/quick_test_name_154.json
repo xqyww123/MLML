@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FocusStreamsCaseStudies/arith_hints.thy", "lemma arith_mult_neq_nzero1: fixes i::nat assumes \"i < n\" and \"0 < i\" shows \"i + n * t \\<noteq> n * q\""]]

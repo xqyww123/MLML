@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinal/OrdinalInduct.thy", "lemma f_make_mono_less: \"\\<forall>n. f n < oLimit f \\<Longrightarrow> f (make_mono f n) < f (make_mono f (Suc n))\""]]

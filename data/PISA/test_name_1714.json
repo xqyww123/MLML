@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SATSolverVerification/CNF.thy", "lemma satisfiedClauseCanBeRemoved: assumes \"equivalentFormulae (F @ val2form v) F'\" \"clauseTrue c v\" shows \"equivalentFormulae (F @ val2form v) (F' @ [c])\""]]

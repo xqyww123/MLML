@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JiveDataStoreModel/Isabelle/Value.thy", "lemma isByteV_simps [simp]: \"isByteV (boolV b) = False\" \"isByteV (intgV i) = False\" \"isByteV (shortV s) = False\" \"isByteV (byteV by) = True\" \"isByteV (objV C a) = False\" \"isByteV (arrV T a) = False\" \"isByteV (nullV) = False\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Diophantine_Eqns_Lin_Hom/Simple_Algorithm.thy", "lemma concat_map_nth0: \"xs \\<noteq> [] \\<Longrightarrow> f (xs ! 0) \\<noteq> [] \\<Longrightarrow> concat (map f xs) ! 0 = f (xs ! 0) ! 0\""]]

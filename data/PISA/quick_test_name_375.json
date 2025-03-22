@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Probabilistic_System_Zoo/Probabilistic_Hierarchy.thy", "lemma all_neq_Inl_ex_eq_Inr[dest]: \"(\\<forall>l. x \\<noteq> Inl l) \\<Longrightarrow> (\\<exists>r. x = Inr r)\""]]

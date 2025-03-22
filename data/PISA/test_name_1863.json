@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category2/NatTrans.thy", "lemma NatTransExt': assumes \"NTDom \\<eta>1' = NTDom \\<eta>2'\" and \"NTCod \\<eta>1' = NTCod \\<eta>2'\" and \"\\<And>X . X \\<in> Obj (NTCatDom \\<eta>1') \\<Longrightarrow> \\<eta>1' $$ X = \\<eta>2' $$ X\" shows \"MakeNT \\<eta>1' = MakeNT \\<eta>2'\""]]

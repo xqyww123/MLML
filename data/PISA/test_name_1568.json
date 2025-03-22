@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_Master_Theorem/LTL_to_DRA/Transition_Functions.thy", "lemma af\\<^sub>F_range: \"nested_prop_atoms \\<psi> \\<subseteq> nested_prop_atoms (F\\<^sub>n \\<phi>) \\<Longrightarrow> range (af\\<^sub>F \\<phi> \\<psi>) \\<subseteq> {\\<psi>. nested_prop_atoms \\<psi> \\<subseteq> nested_prop_atoms (F\\<^sub>n \\<phi>)}\""]]

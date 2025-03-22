@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Echelon_Form/Rings2.thy", "lemma left_ideal_generated_subset: assumes \"S \\<subseteq> T\" shows \"left_ideal_generated S \\<subseteq> left_ideal_generated T\""]]

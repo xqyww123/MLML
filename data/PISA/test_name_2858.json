@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Card_Partitions/Injectivity_Solver.thy", "lemma disjoint_bind': \"\\<And>S T f g. (\\<And>s t. s \\<in> S \\<and> t \\<in> T \\<Longrightarrow> f s \\<inter> g t = {}) \\<Longrightarrow> (S \\<bind> f) \\<inter> (T \\<bind> g) = {}\""]]

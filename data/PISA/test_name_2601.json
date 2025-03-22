@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Propositional_Proof_Systems/SC.thy", "lemma lem2: \"x \\<noteq> y \\<Longrightarrow> x, M = y, N \\<longleftrightarrow> y \\<in># M \\<and> N = x, (M - {#y#})\""]]

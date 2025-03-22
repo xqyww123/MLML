@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Iptables_Semantics/Semantics_Ternary/Normalized_Matches.thy", "lemma normalize_rules_fst: \"(normalize_rules f (r # rs)) = (normalize_rules f [r]) @ (normalize_rules f rs)\""]]

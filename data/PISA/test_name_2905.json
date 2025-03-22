@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/IP_Addresses/WordInterval.thy", "lemma listwordinterval_adjacent: \"(\\<Union>s \\<in> set (listwordinterval_adjacent ss). interval_of s) = (\\<Union>s \\<in> set ss. interval_of s)\""]]

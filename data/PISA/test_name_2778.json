@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Universal_Turing_Machine/UTM.thy", "lemma t_fourtimes_change_term_state: \"\\<exists> stp ln rn. steps0 (Suc 0, Bk # Bk # ires, Oc\\<up>(Suc rs) @ Bk\\<up>(n)) t_fourtimes stp = (Suc t_fourtimes_len, Bk\\<up>(ln) @ Bk # Bk # ires, Oc\\<up>(Suc (4 * rs)) @ Bk\\<up>(rn))\""]]

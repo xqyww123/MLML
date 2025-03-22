@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Prpu_Maxflow/Prpu_Common_Impl.thy", "lemma push2_aux_refine: \"\\<lbrakk>((x,cf),f)\\<in>xf_rel; (ei,e)\\<in>Id\\<times>\\<^sub>rId\\<rbrakk> \\<Longrightarrow> push2_aux x cf ei \\<le> \\<Down>xf_rel (push f l e)\""]]

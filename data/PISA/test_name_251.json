@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Iteration.thy", "lemma errMOD_igWlsAbsIsInBar: assumes \"igWlsAbsIsInBar MOD\" shows \"igWlsAbsIsInBar (errMOD MOD)\""]]

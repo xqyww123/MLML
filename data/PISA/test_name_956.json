@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Order_Lattice_Props/Fixpoint_Fusion.thy", "lemma lfp_fusion_sup_pres: fixes f :: \"'a::complete_lattice_with_dual \\<Rightarrow> 'a\" and g :: \"'b::complete_lattice_with_dual \\<Rightarrow> 'b\" assumes \"Sup_pres h\" and \"mono f\" and \"mono g\" and \"h \\<circ> f = g \\<circ> h\" shows \"h (lfp f) = lfp g\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Falling_Factorial_Sum/Falling_Factorial_Sum_Combinatorics.thy", "lemma interleavings_length: assumes \"interleavings xs ys zs\" shows \"length xs + length ys = length zs\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Linear_Programming/Matrix_LinPoly.thy", "lemma dim_poly_of_append_vec: \"dim_poly (vec_to_lpoly (a@\\<^sub>vb)) \\<le> dim_vec a + dim_vec b\""]]

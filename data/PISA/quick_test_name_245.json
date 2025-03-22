@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Menger/Y_neq_new_last.thy", "lemma Q_hit_edges_disjoint: \"\\<Union>(edges_of_walk ` (Q - {Q_hit})) \\<inter> edges_of_walk Q_hit = {}\""]]

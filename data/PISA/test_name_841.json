@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Winding_Number_Eval/Cauchy_Index_Theorem.thy", "lemma part_circlepath_half_finite_inter: assumes \"st\\<noteq>tt\" \"r\\<noteq>0\" \"c\\<noteq>0\" shows \"finite {t. part_circlepath z0 r st tt t \\<bullet> c = d \\<and> 0\\<le> t \\<and> t\\<le>1}\" (is \"finite ?T\")"]]

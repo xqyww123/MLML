@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Randomised_Social_Choice/Preference_Profiles.thy", "lemma not_in_dom': \"i \\<notin> dom \\<Longrightarrow> R i = (\\<lambda>_ _. False)\""]]

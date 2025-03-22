@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hybrid_Logic/Hybrid_Logic.thy", "lemma rev_nth_on: \\<open>p on (ps, i) \\<longleftrightarrow> (\\<exists>v. ps !. v = Some p) \\<or> p = Nom i\\<close>"]]

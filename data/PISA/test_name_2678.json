@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Bounded_Deducibility_Security/BD_Security.thy", "lemma noVal_noVal2: \"noVal K v \\<Longrightarrow> noVal2 (\\<lambda> s v. K s) v\""]]

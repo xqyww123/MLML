@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/IICF/Impl/IICF_HOL_List.thy", "lemma HOL_list_butlast_hnr[sepref_fr_rules]: \"(return \\<circ> op_list_butlast, RETURN \\<circ> op_list_butlast) \\<in> [\\<lambda>y. y \\<noteq> []]\\<^sub>a (list_assn A)\\<^sup>d \\<rightarrow> list_assn A\""]]

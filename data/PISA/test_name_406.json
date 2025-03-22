@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Well_Quasi_Orders/Almost_Full.thy", "lemma af_trans_extension_imp_wf: assumes subrel: \"\\<And>x y. P x y \\<Longrightarrow> Q x y\" and af: \"almost_full_on P A\" and trans: \"transp_on Q A\" shows \"wfp_on (strict Q) A\""]]

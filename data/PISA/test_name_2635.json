@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Counterclockwise_2D_Strict.thy", "lemma det3_eq_zero: \"e \\<noteq> 0 \\<Longrightarrow> det3 0 xr (e *\\<^sub>R Q) = 0 \\<longleftrightarrow> det3 0 xr Q = 0\""]]

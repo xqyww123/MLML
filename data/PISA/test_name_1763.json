@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Affine_Form.thy", "lemma Cons_nth_in_Joints2: assumes \"xs \\<in> Joints XS\" assumes \"i < length XS\" assumes \"j < length XS\" shows \"((xs ! i) #(xs ! j) # xs) \\<in> Joints ((XS ! i)#(XS ! j) # XS)\""]]

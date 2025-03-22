@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Featherweight_OCL/UML_State.thy", "lemma defined_StrictRefEq\\<^sub>O\\<^sub>b\\<^sub>j\\<^sub>e\\<^sub>c\\<^sub>t_I: assumes val_x : \"\\<tau> \\<Turnstile> \\<upsilon> x\" assumes val_x : \"\\<tau> \\<Turnstile> \\<upsilon> y\" shows \"\\<tau> \\<Turnstile> \\<delta> (StrictRefEq\\<^sub>O\\<^sub>b\\<^sub>j\\<^sub>e\\<^sub>c\\<^sub>t x y)\""]]

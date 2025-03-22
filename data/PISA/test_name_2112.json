@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Prim_Dijkstra_Simple/Undirected_Graph.thy", "lemma graph_empty[simp]: \"graph {} {} = graph_empty\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/Language.thy", "lemma inter_guards_Seq: \"(Seq a1 a2 \\<inter>\\<^sub>g c2) = Some c = (\\<exists>b1 b2 d1 d2. c2=Seq b1 b2 \\<and> (a1 \\<inter>\\<^sub>g b1) = Some d1 \\<and> (a2 \\<inter>\\<^sub>g b2) = Some d2 \\<and> c=Seq d1 d2)\""]]

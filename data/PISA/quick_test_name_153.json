@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tycon/Error_Transformer.thy", "lemma bindET_unitET_right_counterexample: fixes m :: \"'a\\<cdot>('m::monad,'e) errorT\" assumes \"m = ErrorT\\<cdot>(return\\<cdot>\\<bottom>)\" assumes \"return\\<cdot>\\<bottom> \\<noteq> (\\<bottom> :: ('a\\<cdot>'e error)\\<cdot>'m)\" shows \"bindET\\<cdot>m\\<cdot>unitET \\<noteq> m\""]]

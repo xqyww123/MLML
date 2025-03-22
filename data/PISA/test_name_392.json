@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automatic_Refinement/Lib/Misc.thy", "lemma rel_restrict_Sigma_sub: \"rel_restrict ((A\\<times>A)\\<^sup>+) R \\<subseteq> ((A - R) \\<times> (A - R))\\<^sup>+\""]]

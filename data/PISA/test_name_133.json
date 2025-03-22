@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LocalLexing/Ladder.thy", "lemma derivation_ge_LeftDerivationLadder: assumes derivation_ge_d: \"derivation_ge D d\" assumes ladder: \"LeftDerivationLadder \\<alpha> D L \\<gamma>\" assumes ladder_i_0: \"ladder_i L 0 \\<ge> d\" shows \"index < length L \\<Longrightarrow> ladder_i L index \\<ge> d \\<and> ladder_j L index \\<ge> d\""]]

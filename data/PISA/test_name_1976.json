@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Order_Lattice_Props/Order_Lattice_Props.thy", "lemma Sup_dual_upset: \"Sup_dual (\\<up>::'a::complete_lattice_with_dual \\<Rightarrow> 'a set)\""]]

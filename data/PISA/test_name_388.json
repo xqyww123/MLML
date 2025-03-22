@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Factored_Transition_System_Bounding/TopologicalProps.thy", "lemma problem_plan_bound_ge_min_pls: fixes PROB :: \"'a problem\" and s :: \"'a state\" and as k assumes \"finite PROB\" \"(s \\<in> valid_states PROB)\" \"(as \\<in> valid_plans PROB)\" \"(problem_plan_bound PROB \\<le> k)\" shows \"(Inf (PLS s as) \\<le> problem_plan_bound PROB)\""]]

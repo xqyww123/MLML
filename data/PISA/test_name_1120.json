@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hoare_Time/Quant_Hoare.thy", "lemma weaken_post: \"\\<lbrakk> \\<turnstile>\\<^sub>2 {P} c {Q}; \\<forall>s. Q s \\<ge> Q' s \\<rbrakk> \\<Longrightarrow> \\<turnstile>\\<^sub>2 {P} c {Q'}\""]]

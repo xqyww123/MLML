@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stable_Matching/Contracts.thy", "lemma CD_on_domain: assumes \"d \\<in> ds\" shows \"CD_on ds A \\<inter> Field (Pd d) = Cd d (A \\<inter> Field (Pd d))\""]]

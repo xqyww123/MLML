@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Flyspeck-Tame/ListAux.thy", "lemma dist_at1: \"\\<And> c vs. distinct vs \\<Longrightarrow> vs = a @ r # b \\<Longrightarrow> vs = c @ r # d \\<Longrightarrow> a = c\""]]

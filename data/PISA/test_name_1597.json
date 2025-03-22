@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptHOL/Generative_Probabilistic_Value.thy", "lemma outs_gpv_assert_gpv [simp]: \"outs_gpv \\<I> (assert_gpv b) = {}\""]]

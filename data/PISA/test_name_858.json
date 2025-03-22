@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_to_DRA/Impl/af_Impl.thy", "lemma af_G_letter_simp_correct: \"S \\<Turnstile>\\<^sub>P af_G_letter \\<phi> \\<nu> \\<longleftrightarrow> S \\<Turnstile>\\<^sub>P af_G_letter_simp \\<phi> \\<nu>\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category3/SetCategory.thy", "lemma set_dom_\\<Phi>: assumes \"S.arr f\" shows \"S'.set (S'.dom (\\<Phi> f)) = \\<phi> ` (S.set (S.dom f))\""]]

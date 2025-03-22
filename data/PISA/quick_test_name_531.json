@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Polynomial_Record_Based.thy", "lemma poly_rel_plus[transfer_rule]: \"(poly_rel ===> poly_rel ===> poly_rel) (plus_poly_i ops) (+)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Knot_Theory/Linkrel_Kauffman.thy", "lemma rotate_toppos_kauff_mat:\"kauff_mat ((basic [vert,over])\\<circ>(basic [cap, vert])) = kauff_mat ((basic [under,vert])\\<circ>(basic [vert,cap]))\""]]

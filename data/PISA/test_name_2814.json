@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Transition_Systems_and_Automata/Basic/Sequence.thy", "lemma scons_eq: \"a ## v = w \\<longleftrightarrow> shd w = a \\<and> stl w = v\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/TLA/Sequence.thy", "lemma seq_app_tail: \"tail (x ## s) = s\""]]

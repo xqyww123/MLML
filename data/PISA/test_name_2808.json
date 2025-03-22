@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hybrid_Multi_Lane_Spatial_Logic/perfect/HMLSL_Perfect.thy", "lemma backwards_c_res_stab: \"(ts \\<^bold>\\<midarrow>c(d,n) \\<^bold>\\<rightarrow> ts') \\<and> (ts',v \\<Turnstile> re(c)) \\<longrightarrow> (ts,v \\<Turnstile> re(c))\""]]

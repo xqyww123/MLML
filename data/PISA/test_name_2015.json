@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Goedel_Incompleteness/Abstract_First_Goedel_Rosser.thy", "theorem goedel_rosser_first: assumes \"consistent\" shows \"\\<not> prv \\<phi>R \\<and> \\<not> prv (neg \\<phi>R)\""]]

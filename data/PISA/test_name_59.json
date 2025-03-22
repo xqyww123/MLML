@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/Power_Products.thy", "lemma dord_fun_refl: assumes \"ord s s\" shows \"dord_fun ord s s\""]]

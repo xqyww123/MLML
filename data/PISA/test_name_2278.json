@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Monad_Memo_DP/example/Counting_Tiles.thy", "lemma lists_of_len_fin1: \"finite (lists A \\<inter> {l. length l = n})\" if \"finite A\""]]

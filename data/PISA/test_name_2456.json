@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Probabilistic_Noninterference/Compositionality.thy", "lemma BrnFT_Int_UNpart1[simp]: assumes l: \"length cl = length dl\" and P: \"\\<And> n. n < length cl \\<Longrightarrow> part {..< brn (cl!n)} (P n) \\<and> {} \\<notin> P n\" and II: \"II \\<in> UNpart1 cl dl P\" shows \"BrnFT cl dl \\<inter> II = {}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Valuation/Valuation2.thy", "lemma (in Corps) Ostrowski_baseTr2:\"\\<lbrakk>vals_nonequiv K (Suc n) vv; l \\<le> (Suc n); m \\<le> (Suc n); l \\<noteq> m\\<rbrakk> \\<Longrightarrow> 0 < ((vv m) (Ostrowski_base K vv (Suc n) l))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Word_Lemmas.thy", "lemma two_power_increasing_less_1: \"\\<lbrakk> n \\<le> m; m \\<le> LENGTH('a) \\<rbrakk> \\<Longrightarrow> (2 :: 'a :: len word) ^ n - 1 \\<le> 2 ^ m - 1\""]]

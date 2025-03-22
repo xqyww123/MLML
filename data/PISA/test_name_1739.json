@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UPF_Firewall/FWNormalisation/NormalisationIntegerPortProof.thy", "lemma C_eq_s_ext[rule_format]: \"p \\<noteq> [] \\<longrightarrow> C (list2FWpolicy (separate p)) a = C (list2FWpolicy p) a \""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buildings/Chamber.thy", "lemma fundfold_comp_fixespointwise_C0: assumes \"set ss \\<subseteq> S\" shows \"fixespointwise (fold fst (map Spair ss)) C0\""]]

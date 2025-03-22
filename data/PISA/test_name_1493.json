@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Formal_SSA/Graph_path.thy", "lemma dominatesI [intro]: \"\\<lbrakk>m \\<in> set (\\<alpha>n g); \\<And>ns. \\<lbrakk>g \\<turnstile> Entry g-ns\\<rightarrow>m\\<rbrakk> \\<Longrightarrow> n \\<in> set ns\\<rbrakk> \\<Longrightarrow> dominates g n m\""]]

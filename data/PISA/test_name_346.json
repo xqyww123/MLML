@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Noninterference_Concurrent_Composition/ConcurrentComposition.thy", "lemma con_comp_prop_5: \"xs \\<in> con_comp_divergences P Q p q \\<Longrightarrow> xs @ [x] \\<in> con_comp_divergences P Q p q\""]]

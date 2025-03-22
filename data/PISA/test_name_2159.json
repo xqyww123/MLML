@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/Examples/Hamming_Stream.thy", "lemma lmerge_simps: \"lmerge (LCons x xs) (LCons y ys) = (if x < y then LCons x (lmerge xs (LCons y ys)) else if y < x then LCons y (lmerge (LCons x xs) ys) else LCons y (lmerge xs ys))\""]]

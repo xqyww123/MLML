@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Linear_Inequalities/Missing_Matrix.thy", "lemma diff_smult_distrib_vec: \"((x :: 'a::ring) - y) \\<cdot>\\<^sub>v v = x \\<cdot>\\<^sub>v v - y \\<cdot>\\<^sub>v v\""]]

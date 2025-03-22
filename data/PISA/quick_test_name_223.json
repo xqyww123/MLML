@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Winding_Number_Eval/Cauchy_Index_Theorem.thy", "lemma shows jumpF_pathfinish_reversepath: \"jumpF_pathfinish (reversepath g) z = jumpF_pathstart g z\" and jumpF_pathstart_reversepath: \"jumpF_pathstart (reversepath g) z = jumpF_pathfinish g z\""]]

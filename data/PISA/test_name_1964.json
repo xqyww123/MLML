@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Monad_Memo_DP/example/Example_Misc.thy", "lemma fold_min_commute: \"fold min xs (min a b) = min a (fold min xs b)\" for a :: \"'a :: linorder\""]]

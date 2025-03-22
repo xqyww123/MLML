@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptHOL/Generative_Probabilistic_Value.thy", "lemma outs_\\<I>_uniform [simp]: \"outs_\\<I> (\\<I>_uniform A B) = (if B = {} then {} else A)\""]]

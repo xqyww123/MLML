@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/Coinductive_List.thy", "lemma inf_llist_lprefix [simp]: \"inf_llist f \\<sqsubseteq> xs \\<longleftrightarrow> xs = inf_llist f\""]]

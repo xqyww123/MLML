@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Abortable_Linearizable_Modules/IOA.thy", "lemma append_exec_frags_is_exec_frag: fixes e e' A as assumes \"is_exec_frag_of A e\" and \"last_state e = fst e'\" and \"is_exec_frag_of A e'\" shows \"is_exec_frag_of A (append_exec e e')\""]]

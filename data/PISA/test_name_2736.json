@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Goodstein_Lambda/Goodstein_Lambda.thy", "lemma exp\\<omega>_addO [simp]: \"exp\\<omega> (addO n m) = mulO (exp\\<omega> n) (exp\\<omega> m)\""]]

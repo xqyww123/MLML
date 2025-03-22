@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stuttering_Equivalence/StutterEquivalence.thy", "lemma suffix_stutter_equiv: assumes f: \"stutter_sampler f \\<sigma>\" shows \"suffix (f n) \\<sigma> \\<approx> suffix n (\\<sigma> \\<circ> f)\""]]

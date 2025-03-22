@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Locally-Nameless-Sigma/Sigma/Sigma.thy", "lemma ssubst_option_lem: \"\\<forall>l\\<in>dom f. [z \\<rightarrow> u] the(f l) = the (ssubst_option z u (f l))\""]]

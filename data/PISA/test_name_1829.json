@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Abstract-Rewriting/Abstract_Rewriting.thy", "lemma SN_on_imp_accp: assumes \"SN_on {(y, z). g z y} A\" shows \"\\<forall>x\\<in>A. Wellfounded.accp g x\""]]

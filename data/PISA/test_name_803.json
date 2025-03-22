@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Formal_SSA/Graph_path.thy", "lemma \\<alpha>n_in_\\<alpha>nE [elim]: assumes \"(n,e,m) \\<in> \\<alpha>e g\" and \"invar g\" obtains \"n \\<in> set (\\<alpha>n g)\" and \"m \\<in> set (\\<alpha>n g)\""]]

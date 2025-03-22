@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category2/NatTrans.thy", "lemma NTCompDefinedI: \"\\<lbrakk>NatTrans \\<eta>1 ; NatTrans \\<eta>2 ; NTCatDom \\<eta>2 = NTCatDom \\<eta>1 ; NTCatCod \\<eta>2 = NTCatCod \\<eta>1 ; NTCod \\<eta>1 = NTDom \\<eta>2\\<rbrakk> \\<Longrightarrow> \\<eta>1 \\<approx>>\\<bullet> \\<eta>2\""]]

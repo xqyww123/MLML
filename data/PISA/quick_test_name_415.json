@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Elliptic_Curves_Group_Law/Elliptic_Locale.thy", "lemma compat_add_triple: assumes a: \"a \\<in> carrier R\" and b: \"b \\<in> carrier R\" and ab: \"nonsingular a b\" and p: \"on_curve a b p\" and \"p \\<noteq> opp p\" and \"add a p p \\<noteq> opp p\" shows \"add a (add a p p) (opp p) = p\""]]

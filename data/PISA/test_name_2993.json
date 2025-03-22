@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/Language.thy", "lemma normalize_whileAnno [simp]: \"normalize (whileAnno b I V c) = whileAnno b I V (normalize c)\""]]

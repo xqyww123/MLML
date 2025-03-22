@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/ICF/ICF_Autoref.thy", "lemma (in poly_set_iterateoi) autoref_iterateoi[autoref_ga_rules]: \"REL_IS_ID Rk \\<Longrightarrow> is_set_to_sorted_list (\\<le>) Rk rel (it_to_list iterateoi)\""]]

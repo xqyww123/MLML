@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Sigma_Commit_Crypto/Rivest.thy", "lemma bind_game_le_inv_q: shows \"spmf (rivest_commit.bind_game \\<A>) True \\<le> 1 / q\""]]

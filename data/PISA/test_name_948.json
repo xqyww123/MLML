@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOL-CSP/Sync.thy", "lemma doubleReverse: \"s1 setinterleaves ((t, u), A)\\<longrightarrow>(rev s1) setinterleaves ((rev t, rev u), A)\""]]

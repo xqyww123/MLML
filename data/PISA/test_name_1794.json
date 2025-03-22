@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/ZFC_in_HOL/ZFC_in_HOL.thy", "lemma Vset_succ: \"Ord i \\<Longrightarrow> Vset(succ(i)) = VPow(Vset(i))\""]]

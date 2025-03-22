@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Incompleteness/SyntaxN.thy", "lemma thin3: \"insert A1 (insert A2 H) \\<turnstile> B \\<Longrightarrow> insert A1 (insert A2 (insert A3 H)) \\<turnstile> B\""]]

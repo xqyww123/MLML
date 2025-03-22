@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Auto2_Imperative_HOL/Imperative/RBTree_Impl.thy", "lemma get_color_rule [hoare_triple]: \"<btree t p> get_color p <\\<lambda>r. btree t p * \\<up>(r = rbt.cl t)>\""]]

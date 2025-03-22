@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Symmetric_Polynomials/Symmetric_Polynomials.thy", "lemma coeff_mapm_mpoly: \"coeff (mapm_mpoly f p) m = (if coeff p m = 0 then 0 else f m (coeff p m))\""]]

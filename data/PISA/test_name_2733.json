@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Noninterference_Ipurge_Unwinding/IpurgeUnwinding.thy", "lemma ipurge_tr_all: \"(ipurge_tr I D u xs = xs) = (\\<not> (\\<exists>v \\<in> D ` set xs. (u, v) \\<in> I))\""]]

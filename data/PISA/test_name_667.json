@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Prim_Dijkstra_Simple/Undirected_Graph.thy", "lemma simple_path_cycle_free_unique: assumes CF: \"cycle_free g\" assumes P: \"path g u p v\" \"path g u p' v\" \"simple p\" \"simple p'\" shows \"p=p'\""]]

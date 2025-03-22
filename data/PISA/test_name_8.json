@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/BNF_CC/DDS.thy", "lemma map_dds_comp: \"map_dds f g (map_dds f' g' S) = map_dds (f' \\<circ> f) (g \\<circ> g') S\""]]

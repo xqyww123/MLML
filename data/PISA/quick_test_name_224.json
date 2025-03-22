@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LambdaAuth/Semantics.thy", "lemma fresh_smallstep_I: fixes x :: var assumes \"\\<lless> \\<pi>, e \\<ggreater> I\\<rightarrow> \\<lless> \\<pi>', e' \\<ggreater>\" \"atom x \\<sharp> e\" shows \"atom x \\<sharp> e'\""]]

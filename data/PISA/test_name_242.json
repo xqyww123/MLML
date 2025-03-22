@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AWN/OClosed_Lifting.thy", "lemma oclosed_oreachable_oreachable [elim]: assumes \"(\\<sigma>, \\<zeta>) \\<in> oreachable (oclosed (opnet onp p)) (\\<lambda>_ _ _. True) U\" shows \"(\\<sigma>, \\<zeta>) \\<in> oreachable (opnet onp p) (\\<lambda>_ _ _. True) U\""]]

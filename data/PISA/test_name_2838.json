@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/ClockSynchInst/ICAInstance.thy", "lemma abs_dif_fiX_bound: assumes hbx: \"\\<forall> l\\<in>C. \\<bar>f l - g l\\<bar> <= x\" and hby: \"\\<forall> l\\<in>C. \\<forall> m\\<in>C. \\<bar>f l - f m\\<bar> <= y\" and hpC: \"p\\<in>C\" and hqC: \"q\\<in>C\" shows \"\\<bar>fiX f p r - fiX g q r\\<bar> <= 2 * \\<Delta> + x + y\""]]

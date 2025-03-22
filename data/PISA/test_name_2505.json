@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/Circlines.thy", "lemma circline_type_pos_card_eq0_diag: assumes \"circline_diag H\" and \"circline_type H > 0\" shows \"circline_set H = {}\""]]

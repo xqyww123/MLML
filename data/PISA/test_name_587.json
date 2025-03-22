@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machine_Inference/Code_Generation.thy", "lemma [code]: \"always_different_outputs_direct_subsumption m1 m2 s s' t = ( if Guards t = [] then recognises_and_visits_both m1 m2 s s' else dirty_always_different_outputs_direct_subsumption m1 m2 s s' t )\""]]

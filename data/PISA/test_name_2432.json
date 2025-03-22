@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Goedel_HFSet_Semanticless/Pf_Predicates.thy", "lemma shows SentP_fresh_iff [simp]: \"a \\<sharp> SentP x \\<longleftrightarrow> a \\<sharp> x\" (is ?thesis1) and SentP_sf [iff]: \"Sigma_fm (SentP x)\" (is ?thsf)"]]

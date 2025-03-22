@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List_Update/BIT.thy", "lemma t_A_A'_leq: \"n < length paid_A' \\<Longrightarrow> t_A n \\<le> t_A' n\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Differential_Dynamic_Logic/Denotational_Semantics.thy", "lemma agree_trans:\"Vagree \\<nu> \\<mu> A \\<Longrightarrow> Vagree \\<mu> \\<omega> B \\<Longrightarrow> Vagree \\<nu> \\<omega> (A \\<inter> B)\""]]

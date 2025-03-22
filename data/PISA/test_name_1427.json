@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CoreC++/Auxiliary.thy", "lemma only_one_append:\"\\<lbrakk>C' \\<notin> set Cs; C' \\<notin> set Cs'; Ds@ C'#Ds' = Cs@ C'#Cs'\\<rbrakk> \\<Longrightarrow> Cs = Ds \\<and> Cs' = Ds'\""]]

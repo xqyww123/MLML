@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Monad_Memo_DP/heap_monad/DP_CRelVH.thy", "lemma crel_vs_bind_eq: \"\\<lbrakk>crel_vs (=) v s; crel_vs R (f v) (sf v)\\<rbrakk> \\<Longrightarrow> crel_vs R (f v) (s \\<bind> sf)\""]]

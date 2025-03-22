@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ramsey-Infinite/Ramsey.thy", "lemma not_empty_least: \"(Y::nat set) \\<noteq> {} \\<Longrightarrow> \\<exists>m. m \\<in> Y \\<and> (\\<forall>m'. m' \\<in> Y \\<longrightarrow> m \\<le> m')\""]]

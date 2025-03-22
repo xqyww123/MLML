@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/Iterator/It_to_It.thy", "lemma it_to_it_correct: assumes \"set_iterator (it::('x,'x list) set_iterator) S\" shows \"set_iterator ((it_to_it it)::('x,'\\<sigma>) set_iterator) S\""]]

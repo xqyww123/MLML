@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiskPaxos/DiskPaxos_Inv2.thy", "theorem HPhase1or2Write_Inv2c: assumes inv: \"Inv2c s\" and act: \"HPhase1or2Write s s' p d\" and inv2a: \"Inv2a s\" shows \"Inv2c s'\""]]

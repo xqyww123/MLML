@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/ListInf/ListInf_Prefix.thy", "lemma iprefix_imp_take_eq: \" \\<lbrakk> n \\<le> length xs; xs \\<sqsubseteq> f \\<rbrakk> \\<Longrightarrow> xs \\<down> n = f \\<Down> n\""]]

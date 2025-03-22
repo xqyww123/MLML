@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SATSolverVerification/KrsticGoel.thy", "lemma applicableBackjumpCharacterization: fixes stateA::State shows \"applicableBackjump stateA = (\\<exists> l level. getConflictFlag stateA = True \\<and> isBackjumpLevel level l (getC stateA) (getM stateA) )\" (is \"?lhs = ?rhs\")"]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Randomised_Social_Choice/Order_Predicates.thy", "lemma is_weak_rankingD: assumes \"is_weak_ranking xs\" \"i < length xs\" \"j < length xs\" \"i \\<noteq> j\" shows \"xs ! i \\<inter> xs ! j = {}\""]]

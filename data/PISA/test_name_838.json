@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stateful_Protocol_Composition_and_Typing/Messages.thy", "lemma subtermeq_imp_funs_term_subset: \"s \\<sqsubseteq> t \\<Longrightarrow> funs_term s \\<subseteq> funs_term t\""]]

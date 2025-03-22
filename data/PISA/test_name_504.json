@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Counterclockwise_2D_Strict.thy", "lemma coll_scale_pair: \"coll 0 (a, b) (c, d) \\<Longrightarrow> (a, b) \\<noteq> 0 \\<Longrightarrow> (\\<exists>x. (c, d) = x *\\<^sub>R (a, b))\""]]

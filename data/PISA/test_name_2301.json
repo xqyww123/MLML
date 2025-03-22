@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/Semantic.thy", "lemma execn_dynCall_Normal_elim: assumes exec: \"\\<Gamma>\\<turnstile>\\<langle>dynCall init p return c,Normal s\\<rangle> =n\\<Rightarrow> t\" assumes \"\\<Gamma>\\<turnstile>\\<langle>call init (p s) return c,Normal s\\<rangle> =n\\<Rightarrow> t \\<Longrightarrow> P\" shows \"P\""]]

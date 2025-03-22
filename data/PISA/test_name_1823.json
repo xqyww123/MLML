@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/KAT_and_DRA/SingleSorted/FolkTheorem.thy", "lemma cond_distr: assumes \"test p\" and \"test q\" and \"test r\" shows \"(p \\<cdot> q + !p \\<cdot> r) \\<cdot> (p \\<cdot> x + !p \\<cdot> y) = p \\<cdot> q \\<cdot> x + !p \\<cdot> r \\<cdot> y\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Knuth_Bendix_Order/Subterm_and_Context.thy", "lemma size_simp6: \"s \\<in> set ss \\<Longrightarrow> s \\<unrhd> t \\<Longrightarrow> size t \\<le> size s \\<Longrightarrow> size t \\<le> Suc (size_list size ss)\""]]

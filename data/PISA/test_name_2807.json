@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Call_Arity/ConstOn.thy", "lemma const_onD[dest]: \"const_on f S x \\<Longrightarrow> y \\<in> S \\<Longrightarrow> f y = x\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/Abstract_Substitution.thy", "lemma ground_subst_ground_cls[simp]: \"is_ground_subst \\<sigma> \\<Longrightarrow> is_ground_cls (C \\<cdot> \\<sigma>)\""]]

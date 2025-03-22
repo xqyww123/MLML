@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptHOL/GPV_Expectation.thy", "lemma plossless_gpv_lossless_spmfD: assumes lossless: \"plossless_gpv \\<I> gpv\" and WT: \"\\<I> \\<turnstile>g gpv \\<surd>\" shows \"lossless_spmf (the_gpv gpv)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/J/JWellForm.thy", "lemma wf_mdecl_wwf_mdecl: \"wf_J_mdecl P C Md \\<Longrightarrow> wwf_J_mdecl P C Md\""]]

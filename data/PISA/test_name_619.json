@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Compiler/Execs.thy", "lemma BinOp_\\<tau>ExecrI1: \"\\<tau>Exec_mover ci P t e1 h s s' \\<Longrightarrow> \\<tau>Exec_mover ci P t (e1 \\<guillemotleft>bop\\<guillemotright> e2) h s s'\""]]

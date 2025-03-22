@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Density_Compiler/PDF_Transformations.thy", "lemma distr_convolution_real: assumes \"has_density M lborel (f :: (real \\<times> real) \\<Rightarrow> ennreal)\" shows \"has_density (distr M borel (case_prod (+))) lborel (\\<lambda>z. \\<integral>\\<^sup>+x. f (x, z - x) \\<partial>lborel)\" (is \"has_density ?M' _ ?f'\")"]]

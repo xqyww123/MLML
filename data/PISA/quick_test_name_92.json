@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive_Languages/Coinductive_Language.thy", "lemma \\<oo>_PLUS[simp]: \"\\<oo> (PLUS xs) = (\\<exists>x\\<in>set xs. \\<oo> x)\""]]

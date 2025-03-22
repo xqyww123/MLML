@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Inference/Inductive_Inference_Basics.thy", "lemma r_prenum [simp]: \"eval r_prenum [e, x] \\<down>= (if x < e_length e then e_nth e x else 0)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UPF_Firewall/FWNormalisation/NormalisationIPPProofs.thy", "lemma aux26[simp]: \"twoNetsDistinct a b c d \\<Longrightarrow> dom (Cp (AllowPortFromTo a b p)) \\<inter> dom (Cp (DenyAllFromTo c d)) = {}\""]]

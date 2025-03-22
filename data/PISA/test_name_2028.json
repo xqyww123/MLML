@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Pi_Calculus/Strong_Late_Sim_SC.thy", "lemma mismatchIdRight: fixes P :: pi and a :: name and b :: name and Rel :: \"(pi \\<times> pi) set\" assumes IdRel: \"Id \\<subseteq> Rel\" and aineqb: \"a \\<noteq> b\" shows \"P \\<leadsto>[Rel] [a\\<noteq>b]P\""]]

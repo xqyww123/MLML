@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nat-Interval-Logic/IL_IntervalOperators.thy", "lemma iT_Div_card: \" \\<And>I.\\<lbrakk> 0 < d; finite I; Max I div d \\<le> n\\<rbrakk> \\<Longrightarrow> card (I \\<oslash> d) = (\\<Sum>k\\<le>n. if I \\<inter> [k * d\\<dots>,d - Suc 0] = {} then 0 else Suc 0)\""]]

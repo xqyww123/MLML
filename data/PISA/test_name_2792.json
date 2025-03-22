@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PLM/TAO_9_PLM.thy", "lemma Substable_intro_id_fun[Substable_intros]: assumes \"Substable Substable_Cond \\<psi>\" shows \"Substable Substable_Cond (\\<lambda> \\<phi> . \\<psi> (\\<phi> x))\""]]

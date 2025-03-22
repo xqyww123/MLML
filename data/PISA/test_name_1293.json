@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra3.thy", "lemma automgroupTr1:\"\\<lbrakk>Group G; gbij\\<^bsub>G,G\\<^esub> f; gbij\\<^bsub>G,G\\<^esub> g; gbij\\<^bsub>G,G\\<^esub> h\\<rbrakk> \\<Longrightarrow> (h \\<circ>\\<^bsub>G\\<^esub> g) \\<circ>\\<^bsub>G\\<^esub> f = h \\<circ>\\<^bsub>G\\<^esub> (g \\<circ>\\<^bsub>G\\<^esub> f)\""]]

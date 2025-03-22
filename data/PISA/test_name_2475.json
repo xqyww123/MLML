@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Execute/Scheduler.thy", "lemma active_threads_correct [simp]: assumes \"state_invar s\" shows \"thr'_\\<alpha> (active_threads s) = \\<alpha>.active_threads (state_\\<alpha> s)\" (is \"?thesis1\") and \"thr'_invar (active_threads s)\" (is \"?thesis2\")"]]

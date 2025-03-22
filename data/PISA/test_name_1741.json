@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List_Update/BIT_2comp_on2.thy", "lemma costBIT_0y: assumes \"x\\<noteq>y\" \"x : {x0,y0}\" \"y\\<in>{x0,y0}\" shows \"E (type0 [x0, y0] x y \\<bind> (\\<lambda>s. BIT_step s y \\<bind> (\\<lambda>(a, is'). return_pmf (real (t\\<^sub>p (fst s) y a))))) = 1\""]]

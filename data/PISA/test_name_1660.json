@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomial_Factorization/Prime_Factorization.thy", "lemma prime_sqrtI: assumes n: \"n \\<ge> 2\" and small: \"\\<And> j. 2 \\<le> j \\<Longrightarrow> j < i \\<Longrightarrow> \\<not> j dvd n\" and i: \"\\<not> i * i \\<le> n\" shows \"prime (n::nat)\""]]

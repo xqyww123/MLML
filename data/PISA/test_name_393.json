@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Order_Lattice_Props/Representations.thy", "lemma at_map_Sup_pres: \"at_map \\<circ> Sup = Sup \\<circ> (`) (at_map::'a::complete_boolean_algebra_alt \\<Rightarrow> 'a atoms)\""]]

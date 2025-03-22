@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Algebraic_Numbers/Complex_Algebraic_Numbers.thy", "lemma factorize_complex_poly: assumes fp: \"factorize_complex_poly p = Some (c,qis)\" shows \"p = smult c (\\<Prod>(q, i)\\<leftarrow>qis. q ^ i)\" \"(q,i) \\<in> set qis \\<Longrightarrow> irreducible q \\<and> i \\<noteq> 0 \\<and> monic q \\<and> degree q = 1\""]]

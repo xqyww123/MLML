@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Factored_Transition_System_Bounding/TopologicalProps.thy", "lemma problem_plan_bound_s_LESS_EQ_problem_plan_bound_thm: fixes PROB :: \"'a problem\" and s :: \"'a state\" assumes \"finite PROB\" \"(s \\<in> valid_states PROB)\" shows \"(problem_plan_bound_s PROB s < problem_plan_bound PROB + 1)\""]]

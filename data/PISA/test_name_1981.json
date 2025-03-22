@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/First_Welfare_Theorem/Preferences.thy", "lemma lns_alt_def2 [iff]: \"local_nonsatiation B P \\<longleftrightarrow> (\\<forall>x\\<in>B. \\<forall>e>0. (\\<exists>y. y \\<in> (ball x e) \\<and> y \\<in> B \\<and> y \\<succ>[P] x))\""]]

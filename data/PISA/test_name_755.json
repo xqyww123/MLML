@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Linear_Programming/More_Jordan_Normal_Forms.thy", "lemma assoc_scalar_prod_mult_mat_vec: fixes A :: \"'a::comm_semiring_1 mat\" assumes \"y \\<in> carrier_vec n\" assumes \"x \\<in> carrier_vec m\" assumes \"A \\<in> carrier_mat n m\" shows \"(A *\\<^sub>v x) \\<bullet> y = (A\\<^sup>T *\\<^sub>v y) \\<bullet> x\""]]

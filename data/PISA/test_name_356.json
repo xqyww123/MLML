@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Timed_Automata/Paths_Cycles.thy", "lemma successive_end_3: \"successive P (xs @ [x]) \\<Longrightarrow> \\<not> P x \\<Longrightarrow> P y \\<Longrightarrow> \\<not> P z \\<Longrightarrow> successive P (xs @ [x,y,z])\""]]

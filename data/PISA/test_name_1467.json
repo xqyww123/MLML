@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UPF/Monads.thy", "lemma assert_intro: \"Q \\<sigma> \\<Longrightarrow> \\<sigma> \\<Turnstile>\\<^sub>S\\<^sub>B\\<^sub>E (assert\\<^sub>S\\<^sub>B\\<^sub>E Q)\""]]

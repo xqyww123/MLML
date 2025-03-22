@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Random_Graph_Subgraph_Threshold/Ugraph_Misc.thy", "lemma quot_bounds: fixes x :: \"'a :: linordered_field\" assumes \"x \\<le> x'\" \"y' \\<le> y\" \"0 < y\" \"0 \\<le> x\" \"0 < y'\" shows \"x / y \\<le> x' / y'\""]]

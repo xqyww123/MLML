@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/ICF/impl/HashMap_Impl.thy", "lemma ahm_be_is_e: assumes I: \"ahm_invar m\" assumes A: \"m hc = Some bm\" \"bm k = Some v\" shows \"ahm_\\<alpha> m k = Some v\""]]

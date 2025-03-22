@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Security_Protocol_Refinement/Key_establish/m1_nssk.thy", "lemma PO_m1_step6_refines_ri_a0i_running: \"{R_a0im1_ri \\<inter> UNIV \\<times> m1_inv0_fin} (a0i_running [B, A] (Kab, Nb)), (m1_step6 Ra A B Na Nb Kab) {> R_a0im1_ri}\""]]

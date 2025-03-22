@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Sigma_Commit_Crypto/Okamoto_Sigma_Commit.thy", "lemma binding: shows \"okamoto_\\<Sigma>_commit.abstract_com.bind_advantage \\<A> \\<le> dis_log.advantage (dis_log_alt.adversary2 (okamoto_\\<Sigma>_commit.adversary \\<A>))\""]]

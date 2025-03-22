@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Constructive_Cryptography/Converter_Rewrite.thy", "lemma eq_resource_on_UNIV_D [simp]: \"res = res'\" if \"UNIV \\<turnstile>\\<^sub>R res \\<sim> res'\""]]

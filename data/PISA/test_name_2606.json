@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Regex_Equivalence/Deriv_PDeriv.thy", "lemma pnorm_deriv_eq_iff_pderiv_eq: \"pnorm (deriv a r) = pnorm (deriv a s) \\<longleftrightarrow> pderiv a r = pderiv a s\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QHLProver/Partial_State.thy", "lemma ptensor_vec_dim [simp]: \"dim_vec (ptensor_vec v1 v2) = d0\""]]

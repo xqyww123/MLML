@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DFS_Framework/Invars/DFS_Invars_Basic.thy", "lemma back_edges_finite[simp, intro!]: \"finite (back_edges s)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Regular-Sets/Regular_Set.thy", "lemma shuffle_Un_distrib: shows \"A \\<parallel> (B \\<union> C) = A \\<parallel> B \\<union> A \\<parallel> C\" and \"A \\<parallel> (B \\<union> C) = A \\<parallel> B \\<union> A \\<parallel> C\""]]

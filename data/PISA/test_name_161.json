@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomial_Factorization/Square_Free_Factorization.thy", "lemma pderiv_exp_prod: \"pderiv p = (prod (\\<lambda> (a,i). a ^ i) as * sum (\\<lambda> (a,i). prod (\\<lambda> (b,j). b) (as - {(a,i)}) * smult (of_nat (Suc i)) (pderiv a)) as)\""]]

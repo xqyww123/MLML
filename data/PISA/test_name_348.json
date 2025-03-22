@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/More_Complex.thy", "lemma Complex_scale4: shows \"c \\<noteq> 0 \\<Longrightarrow> Complex (a / c) (b / c) = Complex a b / cor c\""]]

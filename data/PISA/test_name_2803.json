@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Closest_Pair_Points/Common.thy", "lemma dist_fst_abs: fixes p :: point and l :: int shows \"dist p (l, snd p) = \\<bar>fst p - l\\<bar>\""]]

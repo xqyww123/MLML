@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Key_Agreement_Strong_Adversaries/Payloads.thy", "lemma payload_parts_singleton [simp, dest]: \"\\<lbrakk> X \\<in> parts {Y}; Y \\<in> payload \\<rbrakk> \\<Longrightarrow> X \\<in> payload\""]]

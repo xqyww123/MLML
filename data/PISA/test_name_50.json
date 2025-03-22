@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/Refine_Basic.thy", "lemma refine2specI: assumes \"nofail b \\<Longrightarrow> a \\<le> SPEC (\\<lambda>r. (\\<exists>x. inres b x \\<and> (r,x)\\<in>R) )\" shows \"a \\<le> \\<Down>R b\""]]

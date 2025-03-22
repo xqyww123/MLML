@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra4.thy", "lemma (in aGroup) pOp_cancel_r:\"\\<lbrakk>a \\<in> carrier A; b \\<in> carrier A; c \\<in> carrier A; a \\<plusminus> c = b \\<plusminus> c \\<rbrakk> \\<Longrightarrow> a = b\""]]

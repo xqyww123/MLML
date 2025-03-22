@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Modular_Assembly_Kit_Security/Verification/Basics/BSPTaxonomy.thy", "lemma Trivially_fulfilled_FCI_V_empty: \"V\\<^bsub>\\<V>\\<^esub> = {} \\<Longrightarrow> FCI \\<Gamma> \\<V> Tr\\<^bsub>ES\\<^esub>\""]]

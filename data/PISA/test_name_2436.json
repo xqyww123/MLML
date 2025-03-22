@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/IMP2_Binary_Heap/IMP2_Binary_Heap.thy", "lemma heap_appended_el: assumes \"is_heap cmp heap l r\" \"heap = heap' on {l..<r}\" shows \"is_heap_except_up cmp heap' l (r+1) r\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Monomorphic_Monad/Monomorphic_Monad.thy", "lemma cr_id_prob_bind [cr_id_prob_transfer]: \"(cr_id_prob A ===> (A ===> cr_id_prob B) ===> cr_id_prob B) bind_id bind_pmf\""]]

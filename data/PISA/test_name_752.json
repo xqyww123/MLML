@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Schur_Decomposition.thy", "lemma corthogonal_matI[intro]: assumes \"(\\<And>i j. i < dim_col A \\<Longrightarrow> j < dim_col A \\<Longrightarrow> (col A i \\<bullet>c col A j = 0) = (i \\<noteq> j))\" shows \"corthogonal_mat A\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/pGCL/Sublinearity.thy", "lemma sublinear_wp_loop: fixes body::\"'s prog\" assumes hb: \"healthy (wp body)\" and nhb: \"nearly_healthy (wlp body)\" and sb: \"sublinear (wp body)\" and cb: \"bd_cts (wp body)\" shows \"sublinear (wp (do G \\<longrightarrow> body od))\""]]

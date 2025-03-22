@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AODV/variants/a_norreqid/A_Fresher.thy", "lemma fresher_dsn_flag_hops_const [simp]: fixes dsn dsk dsk' flag hops nhip nhip' pre pre' shows \"(dsn, dsk, flag, hops, nhip, pre) \\<sqsubseteq> (dsn, dsk', flag, hops, nhip', pre')\""]]

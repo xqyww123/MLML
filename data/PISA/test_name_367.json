@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Formula_Derivatives/Abstract_Formula.thy", "lemma satisfies_nFAll: \"lformula \\<phi> \\<Longrightarrow> \\<AA> \\<Turnstile> nFAll b \\<phi> \\<longleftrightarrow> \\<AA> \\<Turnstile> FAll b \\<phi>\""]]

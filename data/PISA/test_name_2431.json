@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Factored_Transition_System_Bounding/Dependency.thy", "lemma NEQ_DEP_IMP_IN_DOM: fixes PROB :: \"(('a, 'b) fmap \\<times> ('a, 'b) fmap) set\" and v v' assumes \"\\<not>(v = v')\" \"(dep PROB v v')\" shows \"(v \\<in> (prob_dom PROB) \\<and> v' \\<in> (prob_dom PROB))\""]]

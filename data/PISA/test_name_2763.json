@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Attack_Trees/MC.thy", "lemma gfp_loop: assumes \"finite (UNIV :: 'b set)\" and \"mono (\\<tau> :: ('b set \\<Rightarrow> 'b set))\" shows \"\\<exists> n . gfp \\<tau> = (\\<tau> ^^ n)UNIV\""]]

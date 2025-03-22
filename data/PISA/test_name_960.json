@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptHOL/Generative_Probabilistic_Value.thy", "lemma map_\\<I>_cong: \"map_\\<I> f g \\<I> = map_\\<I> f' g' \\<I>'\" if \"\\<I> = \\<I>'\" and f: \"f = f'\" and \"\\<And>x y. \\<lbrakk> x \\<in> outs_\\<I> \\<I>'; y \\<in> responses_\\<I> \\<I>' x \\<rbrakk> \\<Longrightarrow> g y = g' y\""]]

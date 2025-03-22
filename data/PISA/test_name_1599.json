@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Network_Security_Policy_Verification/Security_Invariants/SINVAR_ACLnotCommunicateWith_impl.thy", "lemma[code_unfold]: \"SecurityInvariant.node_props SINVAR_ACLnotCommunicateWith.default_node_properties P = NetModel_node_props P\""]]

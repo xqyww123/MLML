@@ -30,62 +30,28 @@ if not os.path.exists('cache/translation_result.db'):
     logging.info('Merging translation_result.db')
     merge_translation_results()
 
-def parse_theories():
-    theories = {}
-    with SqliteDict('cache/translation_result.db') as db:
-        for key, value in db.items():
-            match key.split(':'):
-                case (_,'header',file,_):
-                    if file not in theories:
-                        theories[file] = []
-                    theories[file].append(value[0])
-    with open('cache/theories.json', 'w') as f:
-        json.dump(theories, f)
-
-if not os.path.exists('cache/theories.json'):
-    logging.info('Parsing content theories in each file')
-    parse_theories()
-
-with open('cache/theories.json', 'r') as f:
-    # key: file name
-    # value: (long name, [long names of dependencies])
+with open('./data/theories.json', 'r') as f:
+    # key: long name
+    # value: {'deps':[long names], 'path':file_name}
     THEORIES = json.load(f)
+    THEORIES_IN_FILE = {}
+    for long_name, info in THEORIES.items():
+        path = info['path']
+        if path not in THEORIES_IN_FILE:
+            THEORIES_IN_FILE[path] = []
+        THEORIES_IN_FILE[path].append(long_name)
 
-def parse_headers():
-    dependencies = {}
-    locations = {}
-    with SqliteDict('cache/results.db') as db:
-        for key, value in db.items():
-            match key.split(':'):
-                case (_,'header',file,_):
-                    file = norm_file(file)
-                    deps = []
-                    for dep in value[1]:
-                        if '/' in dep:
-                            dep = dep.strip('"')
-                            dir = os.path.dirname(file)
-                            dep = os.path.normpath(os.path.join(dir, dep)) + '.thy'
-                            try:
-                                deps += THEORIES[dep]
-                            except KeyError:
-                                pass
-                        else:
-                            deps.append(dep)
-                    dependencies[value[0]] = deps
-                    locations[value[0]] = file
-    with open('cache/dependencies.json', 'w') as f:
-        json.dump(dependencies, f)
-    with open('cache/locations.json', 'w') as f:
-        json.dump(locations, f)
+def deps_of(thy):
+    try:
+        return THEORIES[thy]['deps']
+    except KeyError:
+        return []
 
-if not os.path.exists('cache/dependencies.json'):
-    logging.info('Generating dependencies.json')
-    parse_headers()
-
-with open('cache/dependencies.json', 'r') as f:
-    DEPENDENCIES = json.load(f)
-with open('cache/locations.json', 'r') as f:
-    LOCATIONS = json.load(f)
+def location_of(thy):
+    try:
+        return THEORIES[thy]['path']
+    except KeyError:
+        return None
 
 def topological_sort():
     ranks = {}
@@ -95,7 +61,7 @@ def topological_sort():
         else:
             rank = 0
             try:
-                for dep in DEPENDENCIES[thy]:
+                for dep in deps_of(thy):
                     rank = max(rank, ranking(dep))
                 rank += 1
             except KeyError:
@@ -116,21 +82,18 @@ if not os.path.exists('cache/sorted_thy.txt'):
     logging.info('Topological sorting of theories')
     topological_sort()
 
-
 with open('cache/sorted_thy.txt', 'r') as f:
     SORTED_THY = f.read().splitlines()
 
 def collect_declarations():
     declarations = {}
-    with SqliteDict('cache/results.db') as db:
-        for key, value in db.items():
+    with SqliteDict('./cache/translation_result.db') as db:
+        for key, command in db.items():
             match key.split(':'):
                 case (file,line,pos):
-                    if not value.startswith('define '):
-                        file = norm_file(file)
-                        if file not in declarations:
-                            declarations[file] = []
-                        declarations[file].append((int(line), int(pos), value))
+                    if file not in declarations:
+                        declarations[file] = []
+                    declarations[file].append((int(line), int(pos), command))
     declarations = {k: sorted(v, key=lambda x: x[1]) for k, v in declarations.items()}
     with open('cache/declarations.json', 'w') as f:
         json.dump(declarations, f)
@@ -151,19 +114,19 @@ def prelude_of(file, line):
         pass
     dep_thys = []
     try:
-        thys = THEORIES[file]
+        thys = THEORIES_IN_FILE[file]
     except KeyError:
         thys = []
     for thy in thys:
         try:
-            dep_thys += DEPENDENCIES[thy]
+            dep_thys += deps_of(thy)
         except KeyError:
             pass
     deps = []
     for y in dep_thys:
         for x in y:
             try:
-                deps.append(LOCATIONS[x])
+                deps.append(location_of(x))
             except KeyError:
                 pass
     prelude = []
@@ -174,7 +137,7 @@ def prelude_of(file, line):
     return '\n'.join(prelude)
 
 
-PISA_TEST_PATH="./universal_test_theorems"
+PISA_TEST_PATH="./data/PISA"
 
 def preprocess_PISA(addr):
     with Client(addr, 'HOL') as c:
@@ -186,7 +149,7 @@ def preprocess_PISA(addr):
                 [[path,lemma]] = json.load(file)
             prefix = "/home/ywu/afp-2021-02-11/"
             if path.startswith(prefix):
-                path = "./afp-2025-02-12/" + path[len(prefix):]
+                path = "./contrib/afp-2025-02-12/" + path[len(prefix):]
             else:
                 raise ValueError(f"PISA {i}: Exceptional JSON format")
             if not os.path.isfile(path):
@@ -262,66 +225,66 @@ def read_pisa_data():
 
 PISA_DATA, PISA_POS = read_pisa_data()
 
-ISAR_PROOFS = SqliteDict('isar_proofs.db')
-ISAR_PROOF_LEN = len(ISAR_PROOFS)
-
-def gen_fine_tune_data_isar():
-    with open('cache/fine_tune_data_isar.jsonl', 'w') as f:
-        for proof_pos, (spec_pos, spec, proof) in ISAR_PROOFS.items():
-            proof_pos = Position.from_s(proof_pos)
-            if (proof_pos.file, proof_pos.line) not in PISA_POS:
-                f.write(json.dumps({'prelude': prelude_of(proof_pos.file, proof_pos.line),
-                                    'goal': spec,
-                                    'proof': proof}) + '\n')
-    print(f"Generated {ISAR_PROOF_LEN} fine-tune cases in cache/fine_tune_data_isar.jsonl")
-
-if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'fine-tune-isar':
-    gen_fine_tune_data_isar()
-    exit()
-
-def gen_cases():
-    goal_of = {}
-    with open('cache/goal_of.txt', 'w') as f:
-        for proof_pos, (spec_pos, spec, proof) in ISAR_PROOFS.items():
-            proof_pos = Position.from_s(proof_pos)
-            goal_of[(proof_pos.file, proof_pos.line)] = spec
-            f.write(f"{proof_pos.file}:{proof_pos.line}:{spec}\n")
-    num = 0
-    with open('cache/fine_tune_data_minilang.jsonl', 'w') as f:
-        with SqliteDict('cache/results.db') as db:
-            for key, value in db.items():
-                match key.split(':'):
-                    case (file,line):
-                        file = norm_file(file)
-                        if value[0] and (file, int(line)) not in PISA_POS:
-                            try:
-                                prelude = prelude_of(file, int(line))
-                                num += 1
-                                f.write(json.dumps({
-                                    'prelude': prelude,
-                                    'goal': goal_of[(file, int(line))],
-                                    'proof': value[1]['refined']
-                                }) + '\n')
-                            except KeyError:
-                                pass
-    print(f"Generated {num} cases in cache/fine_tune_data_minilang.jsonl")
-
-if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'fine-tune-minilang':
-    gen_cases()
-    exit()
-
-def gen_test_cases():
-    num = 0
-    with open('cache/test_data_pisa.jsonl', 'w') as f:
-        for idx, (pos_before, pos, statement) in PISA_DATA.items():
-            num += 1
-            f.write(json.dumps({
-                'index': idx,
-                'prelude': prelude_of(pos.file, pos.line),
-                'goal': statement,
-            }) + '\n')
-    print(f"Generated {num} cases in cache/test_data_pisa.jsonl")
-
-if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'test-pisa':
-    gen_test_cases()
-    exit()
+#ISAR_PROOFS = SqliteDict('isar_proofs.db')
+#ISAR_PROOF_LEN = len(ISAR_PROOFS)
+#
+#def gen_fine_tune_data_isar():
+#    with open('cache/fine_tune_data_isar.jsonl', 'w') as f:
+#        for proof_pos, (spec_pos, spec, proof) in ISAR_PROOFS.items():
+#            proof_pos = Position.from_s(proof_pos)
+#            if (proof_pos.file, proof_pos.line) not in PISA_POS:
+#                f.write(json.dumps({'prelude': prelude_of(proof_pos.file, proof_pos.line),
+#                                    'goal': spec,
+#                                    'proof': proof}) + '\n')
+#    print(f"Generated {ISAR_PROOF_LEN} fine-tune cases in cache/fine_tune_data_isar.jsonl")
+#
+#if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'fine-tune-isar':
+#    gen_fine_tune_data_isar()
+#    exit()
+#
+#def gen_cases():
+#    goal_of = {}
+#    with open('cache/goal_of.txt', 'w') as f:
+#        for proof_pos, (spec_pos, spec, proof) in ISAR_PROOFS.items():
+#            proof_pos = Position.from_s(proof_pos)
+#            goal_of[(proof_pos.file, proof_pos.line)] = spec
+#            f.write(f"{proof_pos.file}:{proof_pos.line}:{spec}\n")
+#    num = 0
+#    with open('cache/fine_tune_data_minilang.jsonl', 'w') as f:
+#        with SqliteDict('cache/results.db') as db:
+#            for key, value in db.items():
+#                match key.split(':'):
+#                    case (file,line):
+#                        if value[0] and (file, int(line)) not in PISA_POS:
+#                            try:
+#                                prelude = prelude_of(file, int(line))
+#                                num += 1
+#                                f.write(json.dumps({
+#                                    'prelude': prelude,
+#                                    'goal': goal_of[(file, int(line))],
+#                                    'proof': value[1]['refined']
+#                                }) + '\n')
+#                            except KeyError:
+#                                pass
+#    print(f"Generated {num} cases in cache/fine_tune_data_minilang.jsonl")
+#
+#if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'fine-tune-minilang':
+#    gen_cases()
+#    exit()
+#
+#def gen_test_cases():
+#    num = 0
+#    with open('cache/test_data_pisa.jsonl', 'w') as f:
+#        for idx, (pos_before, pos, statement) in PISA_DATA.items():
+#            num += 1
+#            f.write(json.dumps({
+#                'index': idx,
+#                'prelude': prelude_of(pos.file, pos.line),
+#                'goal': statement,
+#            }) + '\n')
+#    print(f"Generated {num} cases in cache/test_data_pisa.jsonl")
+#
+#if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'test-pisa':
+#    gen_test_cases()
+#    exit()
+#

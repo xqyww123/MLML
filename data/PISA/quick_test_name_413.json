@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MFODL_Monitor_Optimized/Optimized_Join.thy", "lemma find_sub_True_proj_list_5_length: assumes \"find_sub_True xs = Some (ys, w, ws, z, zs)\" \"length xs = length xs'\" \"proj_list_5 xs' (ys, w, ws, z, zs) = (ys', w', ws', z', zs')\" shows \"length ys = length ys'\" \"length ws = length ws'\" \"length zs = length zs'\""]]

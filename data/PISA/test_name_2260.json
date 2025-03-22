@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Regular-Sets/Derivatives.thy", "lemma pderivs_lang_Times_aux2: assumes a: \"s \\<in> UNIV1\" shows \"Timess (pderivs s r1) r2 \\<subseteq> Timess (pderivs_lang UNIV1 r1) r2\""]]

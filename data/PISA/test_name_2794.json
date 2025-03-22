@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Isabelle_Marries_Dirac/More_Tensor.thy", "lemma tensor_gate [simp]: assumes \"gate m G1\" and \"gate n G2\" shows \"gate (m + n) (G1 \\<Otimes> G2)\""]]

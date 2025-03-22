@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buildings/Algebra.thy", "lemma quotient_identity_rule: \"\\<lbrakk> Subgroup H; normal H; h\\<in>H \\<rbrakk> \\<Longrightarrow> \\<lceil>h|H\\<rceil> = 0\""]]

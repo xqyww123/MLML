@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Signature_Groebner/Signature_Groebner.thy", "lemma sig_red_rtrancl_mono: assumes \"(sig_red sing_reg top_tail F)\\<^sup>*\\<^sup>* p q\" and \"F \\<subseteq> F'\" shows \"(sig_red sing_reg top_tail F')\\<^sup>*\\<^sup>* p q\""]]

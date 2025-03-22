@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/Proving_Process.thy", "lemma deriv_sat_preserving: assumes deriv: \"chain (\\<triangleright>) Ns\" and sat_n0: \"satisfiable (lhd Ns)\" shows \"satisfiable (Sup_llist Ns)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DFS_Framework/Examples/Tarjan.thy", "lemma no_finished_root: assumes \"scc_root s r scc\" and \"r \\<in> dom (finished s)\" and \"x \\<in> scc\" shows \"x \\<notin> set (tj_stack s)\""]]

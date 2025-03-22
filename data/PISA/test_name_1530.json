@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category3/SetCategory.thy", "lemma dom_mkArr [simp]: assumes \"arr (mkArr A B F)\" shows \"dom (mkArr A B F) = mkIde A\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MiniML/Type.thy", "lemma eq_free_eq_subst_scheme_list: \"(\\<forall>n. n\\<in>(free_tv A) \\<longrightarrow> S1 n = S2 n) \\<Longrightarrow> $S1 (A::type_scheme list) = $S2 A\""]]

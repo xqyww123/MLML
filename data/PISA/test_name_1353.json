@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Incompleteness/SyntaxN.thy", "lemma Mem_SUCC_E: assumes \"insert (u IN t) H \\<turnstile> C\" \"insert (u EQ t) H \\<turnstile> C\" shows \"insert (u IN SUCC t) H \\<turnstile> C\""]]

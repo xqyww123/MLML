@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Markov_Models/ex/MDP_RP_Certification.thy", "lemma lookup_in_set: \"distinct (map fst xs) \\<Longrightarrow> x \\<in> set xs \\<Longrightarrow> lookup d xs (fst x) = snd x\""]]

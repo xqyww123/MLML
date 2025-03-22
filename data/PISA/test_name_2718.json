@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PSemigroupsConvolution/Binary_Modalities.thy", "lemma bmod_sup_fun2: \"\\<otimes> R (f::'a \\<Rightarrow> 'b::weak_proto_quantale) (g \\<squnion> h) = \\<otimes> R f g \\<squnion> \\<otimes> R f h\""]]

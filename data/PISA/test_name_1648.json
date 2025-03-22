@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/Refine_Basic.thy", "lemma bind2let_refine[refine2]: assumes \"RETURN x \\<le> \\<Down>R' M'\" assumes \"\\<And>x'. (x,x')\\<in>R' \\<Longrightarrow> f x \\<le> \\<Down>R (f' x')\" shows \"Let x f \\<le> \\<Down>R (bind M' (\\<lambda>x'. f' x'))\""]]

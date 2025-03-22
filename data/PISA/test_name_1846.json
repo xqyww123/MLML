@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Valuation/Valuation3.thy", "lemma (in Corps) vpr_pow_inter_zero:\"valuation K v \\<Longrightarrow> (\\<Inter> {I. \\<exists>n. I = (vp K v)\\<^bsup>(Vr K v) (an n)\\<^esup>}) = {\\<zero>}\""]]

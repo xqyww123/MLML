@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gauss_Sums/Finite_Fourier_Series.thy", "lemma coeff_finite_fourier_poly': assumes \"n < k\" shows \"coeff (finite_fourier_poly' ws k) n = (1/k) * (\\<Sum>m < k. (ws m) * unity_root k (-n*m))\""]]

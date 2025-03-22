@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Constructive_Cryptography/Converter.thy", "lemma parallel_converter2_parametric [transfer_rule]: includes lifting_syntax shows \"(rel_converter A B C R ===> rel_converter A' B' C' R' ===> rel_converter (rel_sum A A') (rel_sum B B') (rel_sum C C') (rel_sum R R')) parallel_converter2 parallel_converter2\""]]

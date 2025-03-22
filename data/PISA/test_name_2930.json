@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Word_Lemmas.thy", "lemma word_plus_mcs_4': fixes x :: \"'a :: len word\" shows \"\\<lbrakk>x + v \\<le> x + w; x \\<le> x + v\\<rbrakk> \\<Longrightarrow> v \\<le> w\""]]

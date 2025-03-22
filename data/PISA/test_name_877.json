@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Completeness/Sequents.thy", "lemma inDed_mono'[simplified inDed_def]: \"set x <= set y ==> inDed x ==> inDed y\""]]

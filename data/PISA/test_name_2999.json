@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Algebraic_Numbers/Real_Algebraic_Numbers.thy", "lemma root_condE[elim]: assumes \"root_cond plr x\" and \"of_rat (rai_lb plr) \\<le> x \\<Longrightarrow> x \\<le> of_rat (rai_ub plr) \\<Longrightarrow> ipoly (poly_real_alg_1 plr) x = 0 \\<Longrightarrow> thesis\" shows thesis"]]

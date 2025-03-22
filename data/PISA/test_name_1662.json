@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Bases/Auto_Reduction.thy", "lemma comp_min_basis_is_red: assumes \"is_red (set xs) f\" shows \"is_red (set (comp_min_basis xs)) f\""]]

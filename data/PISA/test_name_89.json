@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/TLList.thy", "lemma tnth_code [simp, nitpick_simp, code]: shows tnth_0: \"tnth (TCons x xs) 0 = x\" and tnth_Suc_TCons: \"tnth (TCons x xs) (Suc n) = tnth xs n\""]]

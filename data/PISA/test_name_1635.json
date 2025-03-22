@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/IMP2/basic/Semantics.thy", "lemma assumes WF: \"wf R\" assumes INIT: \"I s\\<^sub>0\" assumes STEP: \"\\<And>s. I s \\<Longrightarrow> (if bval b s then wp \\<pi> c (\\<lambda>s'. I s' \\<and> (s',s)\\<in>R) s else Q s)\" shows \"wp \\<pi> (WHILE b DO c) Q s\\<^sub>0\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/BNF_Operations/N2M.thy", "lemma G_ctor_o_fold: \"ctor_fold_G s o ctor_G = s o map_pre_G id (ctor_fold_G s)\""]]

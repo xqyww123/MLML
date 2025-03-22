@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UTP/utp/utp_hoare.thy", "lemma pre_str_hoare_r: assumes \"`p\\<^sub>1 \\<Rightarrow> p\\<^sub>2`\" and \"\\<lbrace>p\\<^sub>2\\<rbrace>C\\<lbrace>q\\<rbrace>\\<^sub>u\" shows \"\\<lbrace>p\\<^sub>1\\<rbrace>C\\<lbrace>q\\<rbrace>\\<^sub>u\""]]

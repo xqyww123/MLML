@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UTP/utp/utp_pred_laws.thy", "lemma UINF_pred_ueq [simp]: \"(\\<Sqinter> x | \\<guillemotleft>x\\<guillemotright> =\\<^sub>u v \\<bullet> P(x)) = (P x)\\<lbrakk>x\\<rightarrow>v\\<rbrakk>\""]]

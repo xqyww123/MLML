@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Launchbury/Env.thy", "lemma env_restr_belowD: \"m\\<^sub>1 f|` S \\<sqsubseteq> m\\<^sub>2 f|` S \\<Longrightarrow> x \\<in> S \\<Longrightarrow> m\\<^sub>1 x \\<sqsubseteq> m\\<^sub>2 x\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Linear_Programming/Matrix_LinPoly.thy", "lemma matrix_to_lpolies_lambda_valuate_scalarP: assumes \"i < dim_row A\" assumes \"dim_col A = dim_vec x\" shows \"(matrix_to_lpolies A!i) \\<lbrace> (\\<lambda>i. (if i < dim_vec x then x$i else 0)) \\<rbrace> = (row A i) \\<bullet> x\""]]

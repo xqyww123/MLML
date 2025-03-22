@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/GenCF/Impl/Impl_List_Map.thy", "lemma list_map_autoref_lookup[autoref_rules]: assumes \"GEN_OP eq (=) (Rk\\<rightarrow>Rk\\<rightarrow>Id)\" shows \"(list_map_lookup eq, op_map_lookup) \\<in> Rk \\<rightarrow> \\<langle>Rk,Rv\\<rangle>list_map_rel \\<rightarrow> \\<langle>Rv\\<rangle>option_rel\""]]

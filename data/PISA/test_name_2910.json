@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Separation_Logic_Imperative_HOL/Examples/Hash_Table.thy", "lemma ht_distinct_replicate[simp, intro!]: \"ht_distinct (replicate n [])\""]]

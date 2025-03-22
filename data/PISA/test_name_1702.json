@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category3/Functor.thy", "lemma locally_reflects_ide: assumes \"\\<guillemotleft>f : a \\<rightarrow>\\<^sub>A a\\<guillemotright>\" and \"B.ide (F f)\" shows \"A.ide f\""]]

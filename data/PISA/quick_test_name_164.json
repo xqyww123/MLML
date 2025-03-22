@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Density_Compiler/PDF_Values.thy", "lemma count_space_IntVal_prod[simp]: \"INTEG \\<Otimes>\\<^sub>M INTEG = count_space (range IntVal \\<times> range IntVal)\""]]

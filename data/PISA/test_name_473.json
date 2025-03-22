@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UPF_Firewall/FWNormalisation/NormalisationGenericProofs.thy", "lemma WP1n_DA_notinSet[rule_format]: \"wellformed_policy1_strong p \\<longrightarrow> DenyAll \\<notin> set (tl p)\""]]

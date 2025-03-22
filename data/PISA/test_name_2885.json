@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/Abstract_Substitution.thy", "lemma strictly_subsumes_has_minimum: assumes \"CC \\<noteq> {}\" shows \"\\<exists>C \\<in> CC. \\<forall>D \\<in> CC. \\<not> strictly_subsumes D C\""]]

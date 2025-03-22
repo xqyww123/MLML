@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Incompleteness/Predicates.thy", "lemma OrdInd2H: assumes \"H \\<turnstile> A(i::= Zero)\" and \"H \\<turnstile> All i (OrdP (Var i) IMP A IMP (A(i::= SUCC (Var i))))\" shows \"insert (OrdP (Var i)) H \\<turnstile> A\""]]

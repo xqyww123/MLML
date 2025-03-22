@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/BirdKMP/Theory_Of_Lists.thy", "lemma sdrop_sappend[simp]: \"sdrop\\<cdot>i\\<cdot>(xs :@ ys) = sdrop\\<cdot>i\\<cdot>xs :@ sdrop\\<cdot>(i - slength\\<cdot>xs)\\<cdot>ys\""]]

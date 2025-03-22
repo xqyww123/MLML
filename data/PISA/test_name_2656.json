@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Finite_Field.thy", "lemma [transfer_rule]: \"((=) ===> pcr_mod_ring) (\\<lambda> x. x mod int (CARD('a :: nontriv))) (of_int :: int \\<Rightarrow> 'a mod_ring)\""]]

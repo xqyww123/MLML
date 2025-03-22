@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/ZFC_in_HOL/Kirby.thy", "lemma Ord_odiff_less_odiff: \"\\<lbrakk>\\<alpha> \\<le> x; x < y; Ord x; Ord y; Ord \\<alpha>\\<rbrakk> \\<Longrightarrow> odiff x \\<alpha> < odiff y \\<alpha>\""]]

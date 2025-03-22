@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/EdmondsKarp_Maxflow/Augmenting_Path_BFS.thy", "lemma bfs2_refine: assumes succ_impl: \"\\<And>ui u. \\<lbrakk>(ui,u)\\<in>Id; u\\<in>V\\<rbrakk> \\<Longrightarrow> succ ui \\<le> SPEC (\\<lambda>l. (l,E``{u}) \\<in> \\<langle>Id\\<rangle>list_set_rel)\" shows \"bfs2 succ src dst \\<le> \\<Down>Id (bfs src dst)\""]]

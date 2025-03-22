@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/ROBDD/Conc_Impl.thy", "lemma bdd_exhaust: \"dpm a = dpm b \\<Longrightarrow> dcl a = dcl b \\<Longrightarrow> a = (b :: bdd)\""]]

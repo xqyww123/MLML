@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/Lib/Robdd.thy", "lemma robdd_invar_alt_def : \"robdd_invar b = (robdd_invar_ids {b} \\<and> robdd_invar_vars b \\<and> robdd_invar_reduced b)\""]]

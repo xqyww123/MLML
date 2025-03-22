@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Recursion-Theory-I/CPair.thy", "lemma c_fst_less_arg: \"x > 0 \\<Longrightarrow> c_fst x < x\""]]

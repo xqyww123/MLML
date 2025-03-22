@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/Semantic.thy", "lemma noStucknI: \"\\<lbrakk>\\<And>t. \\<Gamma>\\<turnstile>\\<langle>c,s\\<rangle> =n\\<Rightarrow>t \\<Longrightarrow> t\\<noteq>Stuck\\<rbrakk> \\<Longrightarrow> \\<Gamma>\\<turnstile>\\<langle>c,s\\<rangle> =n\\<Rightarrow>\\<notin>{Stuck}\""]]

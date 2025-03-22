@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Poincare_Disc/Poincare_Lines_Ideal_Points.thy", "lemma ideal_points_proportional: assumes \"is_poincare_line H\" \"ideal_points H = {i1, i2}\" \"to_complex i1 = cor k * to_complex i2\" shows \"0\\<^sub>h \\<in> circline_set H\""]]

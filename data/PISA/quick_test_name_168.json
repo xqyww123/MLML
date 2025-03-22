@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/ConcurrentIMP/CIMP_lang.thy", "lemma at_decompose: \"(c, ictxt, fctxt) \\<in> decompose_com c0 \\<Longrightarrow> (\\<forall>l. atC c l \\<longrightarrow> atC c0 l)\""]]

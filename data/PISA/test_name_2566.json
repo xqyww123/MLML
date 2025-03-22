@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/Language.thy", "lemma inter_guards_strip_eq: \"\\<And>c. (c1 \\<inter>\\<^sub>g c2) = Some c \\<Longrightarrow> (strip_guards UNIV c = strip_guards UNIV c1) \\<and> (strip_guards UNIV c = strip_guards UNIV c2)\""]]

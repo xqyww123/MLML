@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/CommonSet/SetIntervalStep.thy", "lemma inext_nth_atLeastAtMost: \"\\<lbrakk> a \\<le> n - m; m \\<le> n \\<rbrakk> \\<Longrightarrow> {m..n} \\<rightarrow> a = m + a\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/KAT_and_DRA/SingleSorted/Conway_Tests.thy", "lemma test_preserve1: \"test p \\<Longrightarrow> p \\<cdot> x \\<le> p \\<cdot> x \\<cdot> p \\<Longrightarrow> p \\<cdot> (p \\<cdot> x + !p \\<cdot> y)\\<^sup>\\<dagger> = (p \\<cdot> x)\\<^sup>\\<dagger> \\<cdot> p\""]]

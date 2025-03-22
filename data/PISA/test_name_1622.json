@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Landau_Symbols/Landau_Real_Products.thy", "lemma eventually_nonzero_powr_at_top [eventually_nonzero_simps]: \"eventually_nonzero at_top (\\<lambda>x::real. f x powr p) \\<longleftrightarrow> eventually_nonzero at_top f\""]]

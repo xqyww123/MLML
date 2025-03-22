@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/FWThread.thy", "lemma redT_updT'_convert_new_thread_action_eq_None: \"redT_updT' ts (convert_new_thread_action f ta) t = None \\<longleftrightarrow> redT_updT' ts ta t = None\""]]

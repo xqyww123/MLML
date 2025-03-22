@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buildings/Prelim.thy", "lemma fun_eq_on_trans: \"fun_eq_on f g A \\<Longrightarrow> fun_eq_on g h A \\<Longrightarrow> fun_eq_on f h A\""]]

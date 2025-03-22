@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PCF/OpSem.thy", "lemma ca_open: assumes \"\\<forall>v. freedb e v \\<longrightarrow> \\<rho>\\<cdot>v \\<triangleleft> \\<Gamma> v \\<and> closed (\\<Gamma> v)\" shows \"evalDdb e\\<cdot>\\<rho> \\<triangleleft> closing_subst e \\<Gamma> 0\""]]

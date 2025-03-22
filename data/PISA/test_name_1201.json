@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOLCF-Prelude/Data_List.thy", "lemma zip_simps [simp]: \"zip\\<cdot>(x : xs)\\<cdot>(y : ys) = \\<langle>x, y\\<rangle> : zip\\<cdot>xs\\<cdot>ys\" \"zip\\<cdot>(x : xs)\\<cdot>[] = []\" \"zip\\<cdot>(x : xs)\\<cdot>\\<bottom> = \\<bottom>\" \"zip\\<cdot>[]\\<cdot>ys = []\" \"zip\\<cdot>\\<bottom>\\<cdot>ys = \\<bottom>\""]]

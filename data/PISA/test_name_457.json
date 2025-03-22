@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Propositional_Proof_Systems/Sema.thy", "lemma entail_sat: \"\\<Gamma> \\<TTurnstile> \\<bottom> \\<longleftrightarrow> \\<not> sat \\<Gamma>\""]]

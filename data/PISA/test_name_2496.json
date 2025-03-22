@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/Examples/LList_CCPO_Topology.thy", "lemma lfilter'_LNil_I[simp]: \"(\\<forall>x \\<in> lset xs. \\<not> P x) \\<Longrightarrow> lfilter' P xs = LNil\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Fermat3_4/Quad_Form.thy", "lemma qfN_cube_prime: assumes ass: \"prime (p^2 + N*q^2::int) \\<and> N > 1 \\<and> (p^2 + N*q^2)^3 = a^2 + N*b^2 \\<and> coprime a b\" shows \"\\<bar>a\\<bar> = \\<bar>p^3- 3*N*p*q^2\\<bar> \\<and> \\<bar>b\\<bar> = \\<bar>3*p^2*q-N*q^3\\<bar>\""]]

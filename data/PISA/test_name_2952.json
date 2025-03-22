@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Affine_Approximation.thy", "lemma inverse_aform'_float: \"inverse_aform' p x = ((a, bb), baa) \\<Longrightarrow> a \\<in> float\""]]

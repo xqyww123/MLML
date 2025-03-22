@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Density_Compiler/PDF_Density_Contexts.thy", "lemma density_context_if_dens_det: assumes e: \"\\<Gamma> \\<turnstile> e : BOOL\" \"randomfree e\" \"free_vars e \\<subseteq> V \\<union> V'\" shows \"density_context V V' \\<Gamma> (if_dens_det \\<delta> e b)\""]]

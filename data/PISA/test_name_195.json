@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/RSAPSS/Word.thy", "lemma bv_to_nat_helper [simp]: \"bv_to_nat (b # bs) = bitval b * 2 ^ length bs + bv_to_nat bs\""]]

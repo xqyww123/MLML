@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/BV/Effect.thy", "lemma appCheckcast[simp]: \"app\\<^sub>i (Checkcast Ty,P,pc,mxs,T\\<^sub>r,s) = (\\<exists>T ST LT. s = (T#ST,LT) \\<and> is_type P Ty)\""]]

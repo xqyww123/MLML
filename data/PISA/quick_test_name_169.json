@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Word_Lemmas.thy", "lemma word_sdiv_div1 [simp]: \"(a :: ('a::len) word) sdiv 1 = a\""]]

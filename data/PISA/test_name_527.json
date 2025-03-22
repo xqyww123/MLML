@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Security_Protocol_Refinement/Key_establish/m1_ds.thy", "lemma PO_m1_leak_refines_m1a_leak: \"{R1a1} (m1a_leak Rs), (m1_leak Rs) {> R1a1}\""]]

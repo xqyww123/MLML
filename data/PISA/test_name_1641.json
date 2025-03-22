@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Abstract-Hoare-Logics/Procs/PsLang.thy", "lemma [iff]: \"(s -CALL p-Suc n\\<rightarrow> t) = (s -body p-n\\<rightarrow> t)\""]]

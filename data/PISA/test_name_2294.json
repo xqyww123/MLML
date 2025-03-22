@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stateful_Protocol_Composition_and_Typing/Messages.thy", "lemma zip_arg_subterm: assumes \"(s,t) \\<in> set (zip X Y)\" shows \"s \\<sqsubset> Fun f X\" \"t \\<sqsubset> Fun g Y\""]]

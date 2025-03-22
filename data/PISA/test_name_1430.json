@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MFODL_Monitor_Optimized/Code_Double.thy", "lemma nan_not_le: \"is_nan x \\<or> is_nan y \\<Longrightarrow> \\<not> x \\<le> y\""]]

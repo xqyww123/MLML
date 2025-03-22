@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tycon/Monad_Plus.thy", "lemma join_mplus: fixes xss yss :: \"('a\\<cdot>'m)\\<cdot>'m::monad_plus\" shows \"join\\<cdot>(mplus\\<cdot>xss\\<cdot>yss) = mplus\\<cdot>(join\\<cdot>xss)\\<cdot>(join\\<cdot>yss)\""]]

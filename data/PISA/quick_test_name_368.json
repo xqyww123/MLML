@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nested_Multisets_Ordinals/Signed_Syntactic_Ordinal.thy", "lemma minus_zhmset_of_pos_le: \"- zhmset_of (hmset_neg M) \\<le> M\""]]

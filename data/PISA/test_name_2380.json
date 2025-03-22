@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Formula_Derivatives/Presburger_Formula.thy", "lemma Extend_commute_unsafe[Presb_simps]: \"k \\<noteq> k' \\<Longrightarrow> Extend k j (Extend k' i \\<AA> P) Q = Extend k' i (Extend k j \\<AA> Q) P\""]]

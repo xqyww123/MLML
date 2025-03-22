@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LOFT/OpenFlow_Documentation.thy", "lemma \"CARD('action) \\<ge> 2 \\<Longrightarrow> \\<exists>ff. \\<gamma> ff p \\<Longrightarrow> \\<exists>ft (a1 :: 'action) (a2 :: 'action). a1 \\<noteq> a2 \\<and> guha_table_semantics \\<gamma> ft p (Some a1) \\<and> guha_table_semantics \\<gamma> ft p (Some a2)\""]]

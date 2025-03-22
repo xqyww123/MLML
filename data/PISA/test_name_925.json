@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Locally-Nameless-Sigma/Sigma/Sigma.thy", "lemma Param_not_in_closed[simp]: \"pa \\<notin> FV ({n \\<leftarrow> [sa,pa]} t)\""]]

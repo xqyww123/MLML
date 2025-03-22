@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_RPOs/Lambda_Free_Term.thy", "lemma args_subst[simp]: \"args (subst \\<rho> s) = (case head s of Var x \\<Rightarrow> args (\\<rho> x) | Sym f \\<Rightarrow> []) @ map (subst \\<rho>) (args s)\""]]

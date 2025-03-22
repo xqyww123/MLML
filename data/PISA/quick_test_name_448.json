@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/Iterator/SetIterator.thy", "lemma map_iterator_rev_linord_I [intro] : \"\\<lbrakk>distinct (map fst l0); m = map_of l0; sorted (rev (map fst l0)); iti = foldli l0\\<rbrakk> \\<Longrightarrow> map_iterator_rev_linord iti m\""]]

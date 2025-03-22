@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Smooth_Manifolds/Topological_Manifold.thy", "lemma carrierE: assumes \"x \\<in> carrier\" obtains c where \"c \\<in> charts\" \"x \\<in> domain c\""]]

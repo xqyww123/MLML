@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiscretePricing/Fair_Price.thy", "lemma replace_comp_val_process: assumes \"\\<forall>n w. prices Mkt x n w = val_process Mkt pf2 n w\" and \"portfolio pf1\" and \"portfolio pf2\" shows \"\\<forall>n w. val_process Mkt (qty_replace_comp pf1 x pf2) n w = val_process Mkt pf1 n w\""]]

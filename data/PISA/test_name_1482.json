@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/CommonArith/Util_MinMax.thy", "lemma conj_less_imp_max:\"\\<lbrakk> x < (b::('a::linorder)); y < b \\<rbrakk> \\<Longrightarrow> max x y < b\""]]

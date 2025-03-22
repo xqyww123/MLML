@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Dijkstra_Shortest_Path/Graph.thy", "lemma edges_add_edge[simp]: \"edges (add_edge v e v' g) = insert (v,e,v') (edges g)\""]]

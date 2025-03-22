@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DynamicArchitectures/Dynamic_Architecture_Calculus.thy", "lemma conjE[elim!]: assumes \"eval cid t t' n (\\<gamma> \\<and>\\<^sup>b \\<gamma>')\" shows \"eval cid t t' n \\<gamma> \\<and> eval cid t t' n \\<gamma>'\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Kruskal/UGraph.thy", "lemma epath_subset_E: \"epath E u p v \\<Longrightarrow> set p \\<subseteq> E\""]]

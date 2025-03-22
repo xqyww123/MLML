@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UTP/utp/utp_hoare.thy", "lemma assign_floyd_hoare_r: assumes \"vwb_lens x\" shows \"\\<lbrace>p\\<rbrace> assign_r x e \\<lbrace>\\<^bold>\\<exists>v \\<bullet> p\\<lbrakk>\\<guillemotleft>v\\<guillemotright>/x\\<rbrakk> \\<and> &x =\\<^sub>u e\\<lbrakk>\\<guillemotleft>v\\<guillemotright>/x\\<rbrakk>\\<rbrace>\\<^sub>u\""]]

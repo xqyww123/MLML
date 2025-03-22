@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Safe_Distance/Safe_Distance.thy", "lemma snd_safe_distance_iff_nonneg_D2: assumes \"a\\<^sub>e < a\\<^sub>o\" shows \"s\\<^sub>o - s\\<^sub>e \\<le> snd_safe_distance \\<longleftrightarrow> 0 \\<le> D2\""]]

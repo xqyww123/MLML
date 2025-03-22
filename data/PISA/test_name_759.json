@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tarskis_Geometry/Hyperbolic_Tarski.thy", "lemma is_K2_isometry_z_non_zero: assumes \"p \\<in> hyp2 \\<union> S\" and \"is_K2_isometry J\" shows \"z_non_zero (apply_cltn2 p J)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/More_Transcendental.thy", "lemma cos_periodic_nat [simp]: fixes n :: nat shows \"cos (x + n * (2 * pi)) = cos x\""]]

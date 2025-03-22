@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Secondary_Sylow/SubgroupConjugation.thy", "lemma stabilizer_contains_P: assumes fin:\"finite (carrier G)\" assumes P:\"P \\<in> subgroups_of_size p\" shows \"P \\<subseteq> group_action.stabilizer G (conjugation_action p) P\""]]

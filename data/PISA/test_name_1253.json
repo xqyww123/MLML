@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category3/Adjunction.thy", "lemma F_simp: assumes \"D.arr g\" shows \"F g = initial_arrow_to_functor.the_ext C D G (Fo (D.dom g)) (\\<eta>o (D.dom g)) (Fo (D.cod g)) (\\<eta>o (D.cod g) \\<cdot>\\<^sub>D g)\""]]

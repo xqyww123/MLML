@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Quaternions/Quaternions.thy", "lemma Im2_divide_numeral [simp]: \"Im2 (x / numeral w) = Im2 x / numeral w\""]]

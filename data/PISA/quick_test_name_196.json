@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CCS/Weak_Cong.thy", "lemma weakCongruenceE: fixes P :: \"ccs\" and Q :: \"ccs\" assumes \"P \\<cong> Q\" shows \"P \\<leadsto><weakBisimulation> Q\" and \"Q \\<leadsto><weakBisimulation> P\""]]

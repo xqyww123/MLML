@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/Homogeneous_Coordinates.thy", "lemma sub_eq_zero [simp]: assumes \"z \\<noteq> \\<infinity>\\<^sub>h\" shows \"z -\\<^sub>h z = 0\\<^sub>h\""]]

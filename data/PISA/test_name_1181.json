@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL/Equivalence_Relations.thy", "lemma ltl_lang_equiv_and_true[simp]: \"\\<phi>\\<^sub>1 and\\<^sub>n \\<phi>\\<^sub>2 \\<sim>\\<^sub>L true\\<^sub>n \\<longleftrightarrow> \\<phi>\\<^sub>1 \\<sim>\\<^sub>L true\\<^sub>n \\<and> \\<phi>\\<^sub>2 \\<sim>\\<^sub>L true\\<^sub>n\""]]

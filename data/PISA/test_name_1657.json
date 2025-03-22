@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Partial_Order_Reduction/Extensions/Basic_Extensions.thy", "lemma INFM_plus[simp]: \"(\\<exists>\\<^sub>\\<infinity> i. P (i + n :: nat)) \\<longleftrightarrow> (\\<exists>\\<^sub>\\<infinity> i. P i)\""]]

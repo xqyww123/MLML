@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CRDT/ORSet.thy", "theorem (in orset) convergence: assumes \"set (node_deliver_messages xs) = set (node_deliver_messages ys)\" and \"xs prefix of i\" and \"ys prefix of j\" shows \"apply_operations xs = apply_operations ys\""]]

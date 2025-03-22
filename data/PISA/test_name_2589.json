@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HereditarilyFinite/Ordinal.thy", "lemma Seq_insf: \"Seq s k \\<Longrightarrow> Seq (insf s k y) (succ k)\""]]

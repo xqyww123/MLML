@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Knuth_Morris_Pratt/KMP.thy", "lemma kmp3_correct': \"(uncurry kmp3, uncurry kmp_SPEC) \\<in> Id \\<times>\\<^sub>r Id \\<rightarrow>\\<^sub>f \\<langle>Id\\<rangle>nres_rel\""]]

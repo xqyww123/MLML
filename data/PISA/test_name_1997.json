@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Iptables_Semantics/Examples/Small_Examples.thy", "lemma \"map simple_rule_ipv4_toString cool_example2 = [''DROP all -- 10.128.0.0/9 0.0.0.0/0 '', ''ACCEPT tcp -- 10.0.0.0/8 10.0.0.42/32 '', ''DROP all -- 0.0.0.0/0 0.0.0.0/0 '']\""]]

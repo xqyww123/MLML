@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automatic_Refinement/Lib/Misc.thy", "lemma atLeastPlusOneLessThan_greaterThanLessThan_integer: \"{l+1..<u} = {l<..<u::integer}\""]]

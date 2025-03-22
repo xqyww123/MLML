@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/GenCF/Intf/Intf_Comp.thy", "lemma prod_linorder[intro?]: assumes A: \"linorder_on A cmp1\" assumes B: \"linorder_on B cmp2\" shows \"linorder_on (A\\<times>B) (cmp_prod cmp1 cmp2)\""]]

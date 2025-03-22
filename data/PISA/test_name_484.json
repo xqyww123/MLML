@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Green/Green.thy", "lemma finite_two_chain_vertical_boundary: assumes \"finite two_chain\" shows \"finite (two_chain_vertical_boundary two_chain)\""]]

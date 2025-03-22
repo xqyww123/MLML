@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Optimal_BST/Weighted_Path_Length.thy", "lemma sum_nodes: \"inorder t = [i..j] \\<Longrightarrow> (\\<Sum>xy\\<in>nodes t. (f(fst xy) :: nat)) = sum f {i..j}\""]]

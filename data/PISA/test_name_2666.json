@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Bases/Reduction.thy", "lemma is_relation_order_red: assumes \"dickson_grading d\" shows \"Confluence.relation_order (red F) (\\<prec>\\<^sub>p) (dgrad_p_set d m)\""]]

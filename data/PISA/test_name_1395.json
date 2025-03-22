@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category3/Functor.thy", "lemma preserves_iso [simp]: assumes \"A.iso f\" shows \"B.iso (F f)\""]]

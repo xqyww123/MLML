@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FOL-Fitting/FOL_Fitting.thy", "lemma closed_put_unis [simp]: \\<open>closed m (put_unis k p) = closed (m + k) p\\<close>"]]

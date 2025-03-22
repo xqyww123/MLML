@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Consensus_Refined/HO_Transition_System.thy", "lemma get_msgs_K: \"get_msgs snd_f cfg (K (HOs r p)) (K (SHOs r p)) p = get_msgs snd_f cfg (HOs r) (SHOs r) p\""]]

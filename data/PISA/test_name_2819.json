@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UPF_Firewall/FWNormalisation/NormalisationGenericProofs.thy", "lemma sort_is_sorted[rule_format]: \"all_in_list p l \\<longrightarrow> distinct p \\<longrightarrow> singleCombinators p \\<longrightarrow> sorted (sort p l) l\""]]

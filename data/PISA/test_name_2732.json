@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hybrid_Logic/Hybrid_Logic.thy", "lemma omit_del: assumes \\<open>p \\<in>. ps\\<close> \\<open>p \\<notin> set (omit xs ps)\\<close> shows \\<open>\\<exists>v. ps !. v = Some p \\<and> v \\<in> xs\\<close>"]]

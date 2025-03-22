@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Consensus_Refined/Refinement.thy", "lemma PO_refines_implies_Range_init: \"PO_refines R Ta Tc \\<Longrightarrow> init Tc \\<subseteq> Range R\""]]

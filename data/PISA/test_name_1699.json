@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gauss_Sums/Gauss_Sums_Auxiliary.thy", "lemma multipl_div_mono: fixes m k d :: nat and f :: \"nat \\<Rightarrow> complex\" assumes \"completely_multiplicative_function f\" \"d dvd k\" \"d > 0\" \"\\<And>p. prime p \\<Longrightarrow> f(p) \\<noteq> 0\" shows \"f (k div d) = f(k) div f(d)\""]]

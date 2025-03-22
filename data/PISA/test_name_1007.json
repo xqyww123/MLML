@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Shivers-CFA/CPSUtils.thy", "lemma finite_nList[intro]: assumes finA: \"finite A\" shows \"finite (nList A n)\""]]

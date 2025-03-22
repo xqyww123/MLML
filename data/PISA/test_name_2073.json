@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Separata/Separata.thy", "lemma lspasl_starl_der: \"((A ** B) h0) \\<Longrightarrow> (\\<exists>h1 h2. (h1,h2\\<triangleright>h0) \\<and> (A h1) \\<and> (B h2))\""]]

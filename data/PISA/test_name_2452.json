@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AI_Planning_Languages_Semantics/Lifschitz_Consistency.thy", "lemma wf_pddl_ground_act_is_sound_opr: assumes \"wf_ground_action g_opr\" shows \"sound_opr g_opr (pddl_opr_to_act g_opr)\""]]

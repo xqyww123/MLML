@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Prime_Distribution_Elementary/Primorial.thy", "lemma primorial'_0 [simp]: \"primorial' 0 = 1\" and primorial'_1 [simp]: \"primorial' 1 = 2\" and primorial'_2 [simp]: \"primorial' 2 = 6\" and primorial'_3 [simp]: \"primorial' 3 = 30\""]]

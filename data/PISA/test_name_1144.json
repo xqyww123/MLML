@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Finger-Trees/FingerTree.thy", "lemma app_correct: assumes \"ft_invar t1\" \"ft_invar t2\" shows \"toList (app t1 t2) = (toList t1) @ (toList t2)\" and \"ft_invar (app t1 t2)\""]]

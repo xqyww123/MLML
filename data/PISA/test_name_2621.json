@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Knuth_Bendix_Order/KBO.thy", "lemma scf_list_map [simp]: \"scf_list scf (map f xs) = map f (scf_list scf xs)\""]]

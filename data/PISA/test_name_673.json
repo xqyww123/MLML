@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Poincare_Disc/Poincare_Lines.thy", "lemma conjugate_preserve_poincare_collinear_iff [simp]: shows \"poincare_collinear (conjugate ` A) \\<longleftrightarrow> poincare_collinear A\""]]

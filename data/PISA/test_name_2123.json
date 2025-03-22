@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Core_SC_DOM/common/preliminaries/Heap_Error_Monad.thy", "lemma filter_M_not_more_elements: assumes \"h \\<turnstile> filter_M P xs \\<rightarrow>\\<^sub>r ys\" and \"\\<And>x. x \\<in> set xs \\<Longrightarrow> pure (P x) h\" and \"x \\<in> set ys\" shows \"x \\<in> set xs\""]]

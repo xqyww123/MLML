@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Robinson_Arithmetic/Robinson_Arithmetic.thy", "lemma P1_cong: fixes tms :: \"trm list\" assumes \"\\<And>i t x. atom i \\<sharp> tms \\<Longrightarrow> (P t)(i::=x) = P (subst i x t)\" and \"H \\<turnstile> x EQ x'\" shows \"H \\<turnstile> P x IFF P x'\""]]

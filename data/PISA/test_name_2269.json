@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Goedel_Incompleteness/Standard_Model_More.thy", "lemma prfOf_prv_Pf: assumes \"n \\<in> num\" and \"\\<phi> \\<in> fmla\" \"Fvars \\<phi> = {}\" and \"prfOf n \\<phi>\" shows \"bprv (psubst Pf [(n, yy), (\\<langle>\\<phi>\\<rangle>, xx)])\""]]

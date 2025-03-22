@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/Refine_Foreach.thy", "lemma nfoldli_mono[refine_mono]: \"\\<lbrakk> \\<And>x s. f x s \\<le> f' x s \\<rbrakk> \\<Longrightarrow> nfoldli l c f \\<sigma> \\<le> nfoldli l c f' \\<sigma>\" \"\\<lbrakk> \\<And>x s. flat_ge (f x s) (f' x s) \\<rbrakk> \\<Longrightarrow> flat_ge (nfoldli l c f \\<sigma>) (nfoldli l c f' \\<sigma>)\""]]

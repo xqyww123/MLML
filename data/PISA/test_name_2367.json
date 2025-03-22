@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Green/Integrals.thy", "lemma has_integral_bound_: fixes f :: \"real \\<Rightarrow> 'a::real_normed_vector\" assumes \"a < b\" and \"0 \\<le> B\" and f: \"(f has_integral i) (cbox a b)\" and \"finite s\" and \"\\<forall>x\\<in>(cbox a b)-s. norm (f x) \\<le> B\" shows \"norm i \\<le> B * content (cbox a b)\""]]

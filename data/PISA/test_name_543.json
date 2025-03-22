@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Distinct_Degree_Factorization.thy", "lemma degree_divisor2: assumes f: \"irreducible (f :: 'a :: prime_card mod_ring poly)\" and d: \"degree f = d\" and c_ge_1: \"1 \\<le> c\" and cd: \"c < d\" shows \"\\<not> f dvd monom 1 1 ^ CARD('a) ^ c - monom 1 1\""]]

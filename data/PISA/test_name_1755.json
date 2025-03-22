@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Probabilistic_Prime_Tests/Algebraic_Auxiliaries.thy", "lemma cong_add_mod[simp]: \"[(a mod n) + b = c] (mod n) \\<longleftrightarrow> [a + b = c] (mod n)\" \"[a + (b mod n) = c] (mod n) \\<longleftrightarrow> [a + b = c] (mod n)\" \"[\\<Sum>i\\<in>A. f i mod n = c] (mod n) \\<longleftrightarrow> [\\<Sum>i\\<in>A. f i = c] (mod n)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Multirelations/C_Algebras.thy", "lemma d_glb: \"d z \\<le> d x \\<and> d z \\<le> d y \\<Longrightarrow> d z \\<le> d x \\<cdot> d y\""]]

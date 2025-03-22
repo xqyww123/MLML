@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Smooth_Manifolds/Analysis_More.thy", "lemma continuous_on_finer_topo2: \"continuous_map s t f\" if \"continuous_map s t' f\" \"t' finer_than t\""]]

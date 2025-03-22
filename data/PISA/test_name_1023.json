@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/Utils.thy", "lemma fun_sum_commute: assumes \"f 0 = 0\" and \"\\<And>x y. f (x + y) = f x + f y\" shows \"f (sum g A) = (\\<Sum>a\\<in>A. f (g a))\""]]

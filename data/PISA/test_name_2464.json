@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Universal_Turing_Machine/UTM.thy", "lemma prepare_mainpart_lemma: \"args \\<noteq> [] \\<Longrightarrow> \\<exists> stp ln rn. steps0 (Suc 0, [], <m # args>) (t_wcode_prepare |+| t_wcode_main) stp = (0, Bk # Oc\\<up>(Suc m), Bk # Oc # Bk\\<up>(ln) @ Bk # Bk # Oc\\<up>(bl_bin (<args>)) @ Bk\\<up>(rn))\""]]

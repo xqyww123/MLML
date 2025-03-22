@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Signature_Groebner/Signature_Groebner.thy", "lemma dgrad_sig_set_closed_minus: \"r \\<in> dgrad_sig_set' j d \\<Longrightarrow> s \\<in> dgrad_sig_set' j d \\<Longrightarrow> r - s \\<in> dgrad_sig_set' j d\""]]

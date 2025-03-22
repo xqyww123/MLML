@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Density_Compiler/PDF_Compiler_Pred.thy", "lemma restrict_state_measure[measurable]: \"(\\<lambda>x. restrict x V') \\<in> measurable (state_measure (V \\<union> V') \\<Gamma>) (state_measure V' \\<Gamma>)\""]]

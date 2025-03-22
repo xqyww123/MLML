@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Regular_Algebras/Regular_Algebra_Models.thy", "lemma aarden_aux_l: \"y \\<le> x \\<cdot> y + z \\<Longrightarrow> y \\<le> x\\<^bsup>Suc n\\<^esup> \\<cdot> y + x\\<^sup>\\<star> \\<cdot> z\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/Userguides/Sepref_Guide_Quickstart.thy", "lemma test_remdup1_refine_aux: \"(test_remdup1, my_remdup_impl_loc.test_remdup) \\<in> [my_remdup_impl_loc]\\<^sub>a nat_assn\\<^sup>k \\<rightarrow> nat_assn\""]]

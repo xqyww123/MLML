@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Recursion-Theory-I/RecEnSet.thy", "lemma s_ce_inj: \"s_ce e1 x1 = s_ce e2 x2 \\<Longrightarrow> e1=e2 \\<and> x1=x2\""]]

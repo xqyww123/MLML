@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Sort_Encodings/M.thy", "lemma int_cong: assumes \"\\<And>x. x \\<in> vars T \\<Longrightarrow> \\<xi>1 x = \\<xi>2 x\" shows \"int \\<xi>1 T = int \\<xi>2 T\""]]

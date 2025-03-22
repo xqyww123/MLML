@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stateful_Protocol_Composition_and_Typing/Stateful_Strands.thy", "lemma fv_ik\\<^sub>s\\<^sub>s\\<^sub>t_is_fv\\<^sub>s\\<^sub>s\\<^sub>t: assumes \"x \\<in> fv\\<^sub>s\\<^sub>e\\<^sub>t (ik\\<^sub>s\\<^sub>s\\<^sub>t A)\" shows \"x \\<in> fv\\<^sub>s\\<^sub>s\\<^sub>t A\""]]

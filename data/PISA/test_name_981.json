@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_RPOs/Lambda_Free_Term.thy", "lemma tm_exhaust_apps[case_names apps]: \"(\\<And>\\<zeta> ss. s = apps (Hd \\<zeta>) ss \\<Longrightarrow> P) \\<Longrightarrow> P\""]]

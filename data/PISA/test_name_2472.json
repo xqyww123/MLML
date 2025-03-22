@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/MPoly_PM.thy", "lemma PPs_closed_gcs: assumes \"s \\<in> .[X]\" shows \"gcs s t \\<in> .[X]\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Algebraic_VCs/AVC_KAT/VC_KAT.thy", "lemma H_assign_floyd: \" rel_kat.H \\<lceil>P\\<rceil> (v ::= e) \\<lceil>\\<lambda>s. \\<exists>w. s v = e (s(v := w)) \\<and> P (s(v := w))\\<rceil>\""]]

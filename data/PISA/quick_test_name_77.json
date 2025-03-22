@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Transition_Systems_and_Automata/Basic/Sequence_LTL.thy", "lemma infs_coinduct[case_names infs, coinduct pred: infs]: assumes \"R w\" assumes \"\\<And> w. R w \\<Longrightarrow> Bex (sset w) P \\<and> ev R (stl w)\" shows \"infs P w\""]]

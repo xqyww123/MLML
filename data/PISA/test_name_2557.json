@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/First_Order_Terms/Abstract_Matching.thy", "lemma size_mset_mset_less [simp]: assumes \"length ss = length ts\" shows \"size_mset (mset (zip ss ts)) < 3 + (size_list size ss + size_list size ts)\""]]

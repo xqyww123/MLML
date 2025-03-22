@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/FWLock.thy", "lemma has_lock_may_lock: \"has_lock l t \\<Longrightarrow> may_lock l t\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Incompleteness/SyntaxN.thy", "theorem Imp_I [intro!]: \"insert A H \\<turnstile> B \\<Longrightarrow> H \\<turnstile> A IMP B\""]]

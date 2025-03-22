@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Higher_Order_Terms/Term.thy", "lemma match_list_comb_list_comb_some: assumes \"match (list_comb f ps) (list_comb g vs) = Some env\" \"left_nesting f = left_nesting g\" assumes \"is_const (fst (strip_comb f))\" shows \"match f g \\<noteq> None\" \"length ps = length vs\""]]

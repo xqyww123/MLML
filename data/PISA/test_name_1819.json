@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Finger-Trees/FingerTree.thy", "lemma tailR_correct: \"t\\<noteq>empty \\<Longrightarrow> toList (tailR t) = butlast (toList t)\""]]

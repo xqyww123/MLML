@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Macaulay/Cone_Decomposition.thy", "lemma \\<a>_nonempty_unique: assumes \"valid_decomp X ps\" and \"standard_decomp k ps\" and \"ps\\<^sub>+ \\<noteq> []\" shows \"\\<a> ps = k\""]]

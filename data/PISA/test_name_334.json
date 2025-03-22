@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Isabelle_Marries_Dirac/Quantum.thy", "lemma vec_index_is_linear [simp]: assumes \"dim_vec u = dim_vec v\" and \"j < dim_vec u\" shows \"(k \\<cdot>\\<^sub>v u + l \\<cdot>\\<^sub>v v) $ j = k * (u $ j) + l * (v $ j)\""]]

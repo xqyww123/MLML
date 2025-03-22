@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra2.thy", "lemma (in Order) S_inductive_sup_compare:\"\\<lbrakk>S_inductive_set D; Chain D X1; Chain D X2; X1 \\<subseteq> X2\\<rbrakk> \\<Longrightarrow> Sup D X1 \\<preceq> Sup D X2\""]]

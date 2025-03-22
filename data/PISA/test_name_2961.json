@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UTP/utp/utp_healthy.thy", "lemma Continuous_cond [closure]: assumes \"Continuous F\" \"Continuous G\" shows \"Continuous (\\<lambda> X. F(X) \\<triangleleft> b \\<triangleright> G(X))\""]]

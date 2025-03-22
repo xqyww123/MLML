@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Char_Poly.thy", "lemma char_matrix_closed[simp]: \"A \\<in> carrier_mat n n \\<Longrightarrow> char_matrix A e \\<in> carrier_mat n n\""]]

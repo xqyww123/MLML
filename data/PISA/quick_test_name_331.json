@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Goedel_Incompleteness/Standard_Model_More.thy", "lemma prv_exi_PPf_iff_isTrue: assumes [simp]: \"\\<phi> \\<in> fmla\" \"Fvars \\<phi> = {}\" shows \"bprv (exi yy (PPf (Var yy) \\<langle>\\<phi>\\<rangle>)) \\<longleftrightarrow> isTrue (exi yy (PPf (Var yy) \\<langle>\\<phi>\\<rangle>))\" (is \"?L \\<longleftrightarrow> ?R\")"]]

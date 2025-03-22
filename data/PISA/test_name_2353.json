@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/BNF_CC/Composition.thy", "lemma mapl_FGcontra_contrang: assumes \"\\<And>z. z \\<in> set1_FGcontra x \\<Longrightarrow> l1 z = l1' z\" shows \"mapl_FGcontra l1 x = mapl_FGcontra l1' x\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomial_Factorization/Missing_List.thy", "lemma finite_distinct: \"finite { xs . distinct xs \\<and> set xs = X}\" (is \"finite (?S X)\")"]]

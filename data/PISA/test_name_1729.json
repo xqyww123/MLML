@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Blue_Eyes/Blue_Eyes.thy", "lemma blues_seen_same[simp]: assumes \"possible n p w w'\" shows \"blues_seen w' p = blues_seen w p\""]]

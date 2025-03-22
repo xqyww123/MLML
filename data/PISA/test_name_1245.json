@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Factored_Transition_System_Bounding/TopologicalProps.thy", "lemma x_in_MPLS_if: fixes x PROB assumes \"x \\<in> MPLS PROB\" shows \"\\<exists>s as. s \\<in> valid_states PROB \\<and> as \\<in> valid_plans PROB \\<and> x = Inf (PLS s as)\""]]

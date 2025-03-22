@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tarskis_Geometry/Projective.thy", "lemma apply_cltn2_injective: assumes \"apply_cltn2 p C = apply_cltn2 q C\" shows \"p = q\""]]

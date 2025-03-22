@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Consensus_Refined/Refinement.thy", "lemma beh_in_reach [rule_format]: \"b \\<in> beh T \\<Longrightarrow> (\\<forall>s \\<in> set b. s \\<in> reach T)\""]]

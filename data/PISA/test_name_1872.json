@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Optics/Lens_Laws.thy", "lemma update_comp: \"update f (update g \\<sigma>) = update (f \\<circ> g) \\<sigma>\""]]

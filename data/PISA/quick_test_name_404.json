@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Isabelle_Marries_Dirac/Measurement.thy", "lemma prob1_is_prob: assumes \"state n v\" shows \"prob1 n v i \\<ge> 0 \\<and> prob1 n v i \\<le> 1\""]]

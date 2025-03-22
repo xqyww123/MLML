@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stateful_Protocol_Composition_and_Typing/Intruder_Deduction.thy", "lemma wf_trm_subst_rangeD: \"wf\\<^sub>t\\<^sub>r\\<^sub>m\\<^sub>s (subst_range \\<theta>) \\<Longrightarrow> wf\\<^sub>t\\<^sub>r\\<^sub>m (\\<theta> x)\""]]

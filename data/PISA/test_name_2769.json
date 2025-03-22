@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Closest_Pair_Points/Closest_Pair_Alternative.thy", "lemma closest_pair_rec_dist: assumes \"1 < length xs\" \"distinct xs\" \"sorted_fst xs\" \"(ys, c\\<^sub>0, c\\<^sub>1) = closest_pair_rec xs\" shows \"sparse (dist c\\<^sub>0 c\\<^sub>1) (set xs)\""]]

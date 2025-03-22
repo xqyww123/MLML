@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/Coinductive_List.thy", "lemma mcont_lprefix_case [cont_intro, simp]: assumes \"\\<And>x. mcont lSup (\\<sqsubseteq>) lSup (\\<sqsubseteq>) (\\<lambda>xs. f x xs (LCons x xs))\" shows \"mcont lSup (\\<sqsubseteq>) lSup (\\<sqsubseteq>) (\\<lambda>xs. case xs of LNil \\<Rightarrow> LNil | LCons x xs' \\<Rightarrow> f x xs' xs)\""]]

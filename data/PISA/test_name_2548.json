@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Formal_SSA/Serial_Rel.thy", "theorem serial_on_finite_cycle: assumes \"serial_on A r\" \"A \\<noteq> {}\" \"finite A\" obtains a where \"a \\<in> A\" \"(a,a) \\<in> r\\<^sup>+\""]]

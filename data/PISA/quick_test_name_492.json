@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Abstract-Hoare-Logics/Proc/PHoareTotal.thy", "lemma CALL_cor: \"{(\\<lambda>z s. (z=s \\<and> body\\<down>s) \\<and> (s,t) \\<in> termi_call_steps, CALL, \\<lambda>z s. z -body\\<rightarrow> s)} \\<turnstile>\\<^sub>t {\\<lambda>z s. (z=s \\<and> body\\<down>s) \\<and> s = t} body {\\<lambda>z s. z -body\\<rightarrow> s}\""]]

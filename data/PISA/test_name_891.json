@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/VerifyThis2019/lib/Exc_Nres_Monad.thy", "lemma eLet_rule[refine_vcg]: \"f v \\<le> ESPEC \\<Phi> \\<Psi> \\<Longrightarrow> (let x=v in f x) \\<le> ESPEC \\<Phi> \\<Psi>\""]]

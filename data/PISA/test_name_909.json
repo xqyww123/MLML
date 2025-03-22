@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/IP_Addresses/WordInterval.thy", "lemma wordinterval_union_set_eq[simp]: \"wordinterval_to_set (wordinterval_union r1 r2) = wordinterval_to_set r1 \\<union> wordinterval_to_set r2\""]]

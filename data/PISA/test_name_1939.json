@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Incompleteness/Predicates.thy", "lemma OrdP_Mem_imp_Subset: assumes k: \"H \\<turnstile> k IN l\" and l: \"H \\<turnstile> OrdP l\" shows \"H \\<turnstile> k SUBS l\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/Examples/LMirror.thy", "lemma lmap_lmirror: \"lmap f (lmirror xs) = lmirror (lmap f xs)\""]]

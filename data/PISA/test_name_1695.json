@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Pi_Calculus/Weak_Late_Cong_SC.thy", "lemma scopeExtPar: fixes P :: pi and Q :: pi and x :: name assumes \"x \\<sharp> P\" shows \"<\\<nu>x>(P \\<parallel> Q) \\<simeq> P \\<parallel> <\\<nu>x>Q\""]]

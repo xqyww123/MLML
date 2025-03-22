@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Twelvefold_Way/Twelvefold_Way_Entry5.thy", "lemma functions_of_subset_of: assumes \"finite A\" assumes \"F \\<in> {f \\<in> A \\<rightarrow>\\<^sub>E B. inj_on f A} // domain_permutation A B\" shows \"functions_of A (subset_of A F) = F\""]]

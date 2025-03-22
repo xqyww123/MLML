@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hybrid_Multi_Lane_Spatial_Logic/NatInt.thy", "lemma card_seq:\" \\<forall>i .|i| = x \\<longrightarrow> (Rep_nat_int i = {} \\<or> (\\<exists>n. Rep_nat_int i = {n..n+(x-1)}))\""]]

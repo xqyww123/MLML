@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Iptables_Semantics/Common/Ternary.thy", "lemma bool_to_ternary_simp4: \"eval_ternary_Not (bool_to_ternary X) = TernaryFalse \\<longleftrightarrow> X\""]]

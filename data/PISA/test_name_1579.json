@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/HoareTotal.thy", "lemma GuardsCons: \"\\<Gamma>,\\<Theta>\\<turnstile>\\<^sub>t\\<^bsub>/F\\<^esub> P Guard f g (guards gs c) Q,A \\<Longrightarrow> \\<Gamma>,\\<Theta>\\<turnstile>\\<^sub>t\\<^bsub>/F\\<^esub> P (guards ((f,g)#gs) c) Q,A\""]]

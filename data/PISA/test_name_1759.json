@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Attack_Trees/AT.thy", "theorem AT_EF: assumes \" \\<turnstile> (A :: ('s :: state) attree)\" and \"attack A = (I,s)\" shows \"Kripke {s :: ('s :: state). \\<exists> i \\<in> I. (i \\<rightarrow>\\<^sub>i* s)} (I :: ('s :: state)set) \\<turnstile> EF s\""]]

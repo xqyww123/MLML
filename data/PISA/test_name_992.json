@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/CommonSet/SetInterval2.thy", "lemma iMinI2_order:\" \\<lbrakk> k \\<in> I; \\<And>y. y \\<in> I \\<Longrightarrow> k \\<le> y; \\<And>x. \\<lbrakk> x \\<in> I; \\<forall>y\\<in>I. x \\<le> y \\<rbrakk> \\<Longrightarrow> P x \\<rbrakk> \\<Longrightarrow> P (iMin I)\""]]

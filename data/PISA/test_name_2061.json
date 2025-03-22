@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/Sepref_Rules.thy", "lemma rel2p_fref[rel2p]: \"rel2p (fref P R S) = (\\<lambda>f g. (\\<forall>x y. P y \\<longrightarrow> rel2p R x y \\<longrightarrow> rel2p S (f x) (g y)))\""]]

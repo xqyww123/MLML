@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Network_Security_Policy_Verification/Security_Invariants/SINVAR_TaintingTrusted.thy", "lemma sinvar_mono: \"SecurityInvariant_withOffendingFlows.sinvar_mono sinvar\""]]

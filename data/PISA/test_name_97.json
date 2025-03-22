@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Laplace_Transform/Piecewise_Continuous.thy", "lemma piecewise_continuous_on_congI: \"piecewise_continuous_on a b I g\" if \"piecewise_continuous_on a b I f\" and eq: \"\\<And>x. x \\<in> {a .. b} - I \\<Longrightarrow> g x = f x\""]]

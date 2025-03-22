@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Executable_Euclidean_Space.thy", "lemma eucl_le_Basis_list_iff: \"(x::'a::executable_euclidean_space) \\<le> y \\<longleftrightarrow> (\\<forall>i<DIM('a). x \\<bullet> Basis_list ! i \\<le> y \\<bullet> Basis_list ! i)\""]]

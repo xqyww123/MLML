@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Aligned.thy", "lemma is_aligned_add_mult_multI: fixes p :: \"'a::len word\" shows \"\\<lbrakk>is_aligned p m; n \\<le> m; n' = n\\<rbrakk> \\<Longrightarrow> is_aligned (p + x * 2 ^ n * z) n'\""]]

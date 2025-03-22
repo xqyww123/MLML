@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nested_Multisets_Ordinals/Multiset_More.thy", "lemma sum_mset_distrib_div_if_dvd: fixes k :: \"'a::unique_euclidean_semiring\" assumes \"\\<forall>m \\<in># M. k dvd f m\" shows \"(\\<Sum>m \\<in># M. f m) div k = (\\<Sum>m \\<in># M. f m div k)\""]]

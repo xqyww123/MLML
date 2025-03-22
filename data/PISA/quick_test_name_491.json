@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/Abstract_Substitution.thy", "lemma subst_atm_mset_list_append[simp]: \"(AAs @ BBs) \\<cdot>aml \\<sigma> = AAs \\<cdot>aml \\<sigma> @ BBs \\<cdot>aml \\<sigma>\""]]

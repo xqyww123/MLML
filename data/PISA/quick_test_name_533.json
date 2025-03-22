@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Weight_Balanced_Trees/Weight_Balanced_Trees.thy", "lemma inorder_rot2: \"B \\<noteq> Leaf \\<Longrightarrow> inorder(rot2 A a B b C) = inorder A @ a # inorder B @ b # inorder C\""]]

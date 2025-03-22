@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Security_Protocol_Refinement/Key_establish/m1_kerberos.thy", "lemma PO_m1_step5_refines_a0_ri_commit: \"{R_a0iim1_ri \\<inter> UNIV \\<times> (m1_inv1r_cache \\<inter> m1_inv0_fin)} (a0i_commit [B, A] (Kab, Ts, Ta)), (m1_step5 Rb A B Kab Ts Ta) {> R_a0iim1_ri}\""]]

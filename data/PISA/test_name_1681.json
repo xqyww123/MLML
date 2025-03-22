@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PAC_Checker/PAC_Specification.thy", "lemma pac_ideal_Xsq2_iff: \\<open>Var c ^ 2 \\<in> pac_ideal A \\<longleftrightarrow> Var c \\<in> pac_ideal A\\<close>"]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Safe_OCL/OCL_Typing.thy", "lemma super_binop_type_det: \"super_binop_type op \\<tau> \\<sigma> \\<rho>\\<^sub>1 \\<Longrightarrow> super_binop_type op \\<tau> \\<sigma> \\<rho>\\<^sub>2 \\<Longrightarrow> \\<rho>\\<^sub>1 = \\<rho>\\<^sub>2\""]]

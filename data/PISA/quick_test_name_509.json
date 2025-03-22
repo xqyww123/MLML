@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Circus/Denotational_Semantics.thy", "lemma Skip_is_action: \"(R (true \\<turnstile> \\<lambda>(A, A'). tr A' = tr A \\<and> \\<not>wait A' \\<and> more A = more A')) \\<in> {p. is_CSP_process p}\""]]

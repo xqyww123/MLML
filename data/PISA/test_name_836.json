@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Consensus_Refined/Refinement.thy", "lemma abs_INV_init_transfer: assumes \"PO_refines R Ta Tc\" \"init Ta \\<subseteq> I\" shows \"init Tc \\<subseteq> R `` I\""]]

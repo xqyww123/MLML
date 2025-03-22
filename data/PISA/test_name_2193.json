@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/Hermitean_Matrices.thy", "lemma hermitean_mk_circline' [simp]: assumes \"is_real A\" and \"is_real D\" shows \"hermitean (A, B, cnj B, D)\""]]

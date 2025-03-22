@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/TLA/Sequence.thy", "lemma stutstep_notempty_sucnextnat: assumes h1: \"\\<not> emptyseq (s |\\<^sub>s n)\" and h2: \"stutstep s n\" shows \"(nextnat (s |\\<^sub>s n)) = Suc (nextnat (s |\\<^sub>s (Suc n)))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SuperCalc/superposition.thy", "lemma lit_ord_rhs: assumes \"(t1,t2) \\<in> trm_ord\" assumes \"orient_lit x1 s t1 p\" assumes \"orient_lit x2 s t2 p\" assumes \"vars_of_lit x1 = {}\" assumes \"vars_of_lit x2 = {}\" shows \"(x1,x2) \\<in> lit_ord\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QR_Decomposition/Gram_Schmidt.thy", "lemma cols_upt_k_insert: fixes A::\"'a^'n::{mod_type}^'m::{mod_type}\" assumes k: \"(Suc k)<ncols A\" shows \"cols_upt_k A (Suc k) = (insert (column (from_nat (Suc k)) A) (cols_upt_k A k))\""]]

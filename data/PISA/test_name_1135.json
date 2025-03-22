@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Taylor_Models/Polynomial_Expression.thy", "lemma degreen_npolyhCN[simp]: \"isnpolyh (CN c n p) n0 \\<Longrightarrow> degreen c n = 0\""]]

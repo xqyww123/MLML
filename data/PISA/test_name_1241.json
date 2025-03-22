@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hoare_Time/Quant_Hoare.thy", "theorem wp2_is_weakestprePotential: \"\\<Turnstile>\\<^sub>2 {P}c{Q} \\<longleftrightarrow> (\\<forall>s. wp\\<^sub>2 c Q s \\<le> P s)\""]]

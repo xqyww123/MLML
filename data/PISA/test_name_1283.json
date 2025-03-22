@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stream_Fusion_Code/Stream_Fusion_LList.thy", "lemma lnth_cons_fusion2 [stream_fusion]: \"lnth_cons (lgenerator g) n s = lnth (lunstream' g s) n\""]]

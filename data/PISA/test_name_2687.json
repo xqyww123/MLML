@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Smooth_Manifolds/Smooth.thy", "lemma smooth_on_open_Un: \"k-smooth_on S f \\<Longrightarrow> k-smooth_on T f \\<Longrightarrow> open S \\<Longrightarrow> open T \\<Longrightarrow> k-smooth_on (S \\<union> T) f\""]]

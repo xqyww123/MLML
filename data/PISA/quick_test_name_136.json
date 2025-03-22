@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stream-Fusion/StreamFusion.thy", "lemma appendStep_strict [simp]: \"appendStep\\<cdot>ha\\<cdot>hb\\<cdot>sb0\\<cdot>\\<bottom> = \\<bottom>\""]]

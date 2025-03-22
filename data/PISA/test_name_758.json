@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PAC_Checker/PAC_Checker.thy", "lemma weak_equality_spec_weak_equality: \\<open>(p, p') \\<in> mset_poly_rel \\<Longrightarrow> (r, r') \\<in> mset_poly_rel \\<Longrightarrow> weak_equality_spec p r \\<le> weak_equality p' r'\\<close>"]]

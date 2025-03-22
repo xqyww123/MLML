@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/ListInf/List2.thy", "lemma sublist_list_eq_imp_length_eq: \" sublist_list xs ys = sublist_list xs zs \\<Longrightarrow> length ys = length zs\""]]

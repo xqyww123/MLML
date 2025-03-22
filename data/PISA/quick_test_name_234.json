@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UPF_Firewall/Examples/Transformation/Transformation01.thy", "lemma sets_distinct6: \"(s::int) < g \\<Longrightarrow> {(a::int, b::int). g < a} \\<noteq> {(a::int, b::int). a = s}\""]]

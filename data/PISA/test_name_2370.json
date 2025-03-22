@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/WebAssembly/Wasm_Properties_Aux.thy", "lemma b_e_type_value: assumes \"\\<C> \\<turnstile> [e] : (ts _> ts')\" \"e = C v\" shows \"ts' = ts @ [typeof v]\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Abs_Int_ITP2012/Complete_Lattice_ix.thy", "lemma lfp_unfold: assumes \"\\<And>x i. f x : L i \\<longleftrightarrow> x : L i\" and mono: \"mono f\" shows \"lfp f i = f (lfp f i)\""]]

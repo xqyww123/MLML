@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QHLProver/Partial_State.thy", "lemma tensor_vec_eval: assumes \"i < d\" shows \"tensor_vec v1 v2 $ i = v1 $ encode1 i * v2 $ encode2 i\""]]

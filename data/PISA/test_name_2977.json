@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Execute/TypeRelRefine.thy", "lemma rtranclp_tranclpE: assumes \"r^** x y\" obtains (refl) \"x = y\" | (trancl) \"r^++ x y\""]]

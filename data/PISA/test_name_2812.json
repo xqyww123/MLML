@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Probabilistic_Noninterference/Trace_Based.thy", "lemma part_is_subset: \"part S P \\<Longrightarrow> p \\<in> P \\<Longrightarrow> p \\<subseteq> S\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/IICF/Intf/IICF_Matrix.thy", "lemma opr_fold_impl_refine: \"(opr_fold_impl, mtx_pointwise_unop f) \\<in> [\\<lambda>m. mtx_nonzero m \\<subseteq> {0..<N}\\<times>{0..<M}]\\<^sub>f Id \\<rightarrow> Id\""]]

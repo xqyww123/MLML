@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FocusStreamsCaseStudies/ListExtras.thy", "lemma list_nth_append1: assumes \"i < length x\" shows \"(b # x) ! i = (b # x @ y) ! i\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Topological_Semantics/topo_derivative_algebra.thy", "lemma Int_inf_closed: \"Der_inf \\<D> \\<Longrightarrow> infimum_closed (\\<lambda>A. Op A)\""]]

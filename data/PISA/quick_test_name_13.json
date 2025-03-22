@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automated_Stateful_Protocol_Verification/Term_Abstraction.thy", "lemma abs_list_set_is_set_abs_set: \"set (M \\<cdot>\\<^sub>\\<alpha>\\<^sub>l\\<^sub>i\\<^sub>s\\<^sub>t \\<alpha>) = (set M) \\<cdot>\\<^sub>\\<alpha>\\<^sub>s\\<^sub>e\\<^sub>t \\<alpha>\""]]

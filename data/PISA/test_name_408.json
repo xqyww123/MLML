@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Types_Tableaus_and_Goedels_God/IHOML_Examples.thy", "lemma \"\\<lfloor>((\\<lambda>\\<alpha>. \\<^bold>\\<diamond>\\<phi> \\<alpha>) \\<downharpoonleft>(\\<tau>::\\<up>\\<zero>)) \\<^bold>\\<leftrightarrow> (\\<^bold>\\<diamond>\\<phi> \\<downharpoonleft>\\<tau>)\\<rfloor>\""]]

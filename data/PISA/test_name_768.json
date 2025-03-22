@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Perron_Frobenius/Perron_Frobenius_Irreducible.thy", "lemma Y_pos_main: assumes y: \"y \\<in> pow_A_1 ` X\" shows \"y $ i > 0\""]]

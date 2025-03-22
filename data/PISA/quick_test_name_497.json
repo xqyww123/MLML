@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tree-Automata/Ta_impl.thy", "lemma (in hashedTa) hta_states_correct: \"hs_\\<alpha> (hta_states H) = ta_rstates (hta_\\<alpha> H)\" \"hs_invar (hta_states H)\""]]

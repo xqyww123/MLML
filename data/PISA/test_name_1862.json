@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Twelvefold_Way/Twelvefold_Way_Core.thy", "lemma permutes_implies_inv_image_on_eq: assumes \"p permutes B\" shows \"(\\<lambda>b. {x \\<in> A. p (f x) = b}) ` B = (\\<lambda>b. {x \\<in> A. f x = b}) ` B\""]]

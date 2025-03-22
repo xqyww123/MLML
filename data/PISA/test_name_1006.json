@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_Master_Theorem/Logical_Characterization/Syntactic_Fragments_and_Stability.thy", "lemma \\<G>_subset: \"\\<psi> \\<in> subfrmlsn \\<phi> \\<Longrightarrow> \\<G> \\<psi> w \\<subseteq> \\<G> \\<phi> w\""]]

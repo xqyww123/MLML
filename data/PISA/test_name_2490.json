@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Diophantine_Eqns_Lin_Hom/Simple_Algorithm.thy", "lemma less_imp_rlex2: \"\\<not> (case x of (x, y) \\<Rightarrow> \\<lambda>(u, v). \\<not> x @ y <\\<^sub>v u @ v) y \\<Longrightarrow> x <\\<^sub>r\\<^sub>l\\<^sub>e\\<^sub>x\\<^sub>2 y\""]]

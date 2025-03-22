@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Derangements/Derangements.thy", "lemma derangements_no_fixpoint: assumes \"d \\<in> derangements A\" \"x \\<in> A\" shows \"d x \\<noteq> x\""]]

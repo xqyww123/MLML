@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Bicategory/IsomorphismClass.thy", "lemma iso_class_elems_isomorphic: assumes \"is_iso_class F\" and \"f \\<in> F\" and \"f' \\<in> F\" shows \"f \\<cong> f'\""]]

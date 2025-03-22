@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Separation_Logic_Imperative_HOL/Run.thy", "lemma \"fst (Ref.alloc x h) = Ref (lim h)\""]]

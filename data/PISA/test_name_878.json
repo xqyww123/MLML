@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hybrid_Logic/Hybrid_Logic.thy", "lemma DisP'': assumes \\<open>(p \\<^bold>\\<or> q) at a in (ps, a) # branch\\<close> \\<open>n \\<turnstile> (p # ps, a) # branch\\<close> \\<open>m \\<turnstile> (q # ps, a) # branch\\<close> shows \\<open>max n m \\<turnstile> (ps, a) # branch\\<close>"]]

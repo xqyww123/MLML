@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category3/Yoneda.thy", "lemma \\<tau>_ide: assumes b: \"Cop.ide b\" shows \"\\<tau> b = S.mkArr (Hom.set (b, a)) (F.SET b) (\\<lambda>x. (F.FUN (\\<psi> (b, a) x) (\\<tau>.FUN a (\\<phi> (a, a) a))))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hoare_Time/Quant_Hoare.thy", "lemma thet_WhileFalse: \"~ bval b s \\<Longrightarrow> \\<down>\\<^sub>t (WHILE b DO c, s) = 1\""]]

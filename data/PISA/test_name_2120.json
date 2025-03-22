@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nat-Interval-Logic/IL_IntervalOperators.thy", "lemma i_set_as_iMOD_iMODb: \" I \\<in> i_set \\<Longrightarrow> (\\<exists>r m. I = [r, mod m]) \\<or> (\\<exists>r m c. I = [r, mod m, c])\""]]

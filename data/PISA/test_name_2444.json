@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Finite_Field_Record_Based.thy", "lemma mod_ring_normalize32: \"(mod_ring_rel32 ===> mod_ring_rel32) (\\<lambda>x. if x = 0 then 0 else 1) normalize\""]]

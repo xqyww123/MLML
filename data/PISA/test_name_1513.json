@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machines/EFSM.thy", "lemma no_outgoing_transitions: \"ffilter (\\<lambda>((s', _), _). s = s') e = {||} \\<Longrightarrow> possible_steps e s r l i = {||}\""]]

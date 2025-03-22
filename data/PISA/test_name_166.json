@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buildings/Algebra.thy", "lemma pair_relator_halflist2_conv_rev_pair_relator_halflist: \"pair_relator_halflist2 s t = rev (pair_relator_halflist t s)\""]]

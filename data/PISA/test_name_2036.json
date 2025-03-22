@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stateful_Protocol_Composition_and_Typing/Stateful_Strands.thy", "lemma bvars\\<^sub>s\\<^sub>s\\<^sub>t\\<^sub>p_NegChecks: \"\\<not>is_NegChecks a \\<Longrightarrow> bvars\\<^sub>s\\<^sub>s\\<^sub>t\\<^sub>p a = []\""]]

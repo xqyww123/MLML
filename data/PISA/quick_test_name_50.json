@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Pi_Calculus/Weak_Late_Cong_SC.thy", "lemma sumAssoc: fixes P :: pi and Q :: pi and R :: pi shows \"(P \\<oplus> Q) \\<oplus> R \\<simeq> P \\<oplus> (Q \\<oplus> R)\""]]

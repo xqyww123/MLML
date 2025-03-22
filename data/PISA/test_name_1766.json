@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LLL_Basis_Reduction/LLL_Impl.thy", "lemma d_sq_norm_comparison: assumes quot: \"quotient_of \\<alpha> = (num,denom)\" and i: \"i < m\" and i0: \"i \\<noteq> 0\" shows \"(d fs i * d fs i * denom \\<le> num * d fs (i - 1) * d fs (Suc i)) = (sq_norm (gs.gso (i - 1)) \\<le> \\<alpha> * sq_norm (gs.gso i))\""]]

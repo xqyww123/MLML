@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Triangle/Angles.thy", "lemma angle_eqI: assumes \"a \\<noteq> b\" \"a \\<noteq> c\" \"d \\<noteq> e\" \"d \\<noteq> f\" assumes \"((b-a) \\<bullet> (c-a)) * dist d e * dist d f = ((e-d) \\<bullet> (f-d)) * dist a b * dist a c\" shows \"angle b a c = angle e d f\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinary_Differential_Equations/Library/Vector_Derivative_On.thy", "lemma has_vderiv_on_zero_constant: assumes \"convex s\" assumes \"(f has_vderiv_on (\\<lambda>h. 0)) s\" obtains c where \"\\<And>x. x \\<in> s \\<Longrightarrow> f x = c\""]]

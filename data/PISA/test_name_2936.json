@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/InfPathElimination/SubRel.thy", "lemma (in sub_rel_of) ces_imp_ends_vertices : assumes \"ces v1 es v2 subs\" assumes \"set es \\<subseteq> edges g\" assumes \"v1 \\<in> Graph.vertices g\" shows \"v2 \\<in> Graph.vertices g\""]]

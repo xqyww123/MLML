@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gromov_Hyperbolicity/Gromov_Hyperbolicity.thy", "lemma Gromov_hyperbolic_closure: assumes \"Gromov_hyperbolic_subset delta A\" shows \"Gromov_hyperbolic_subset delta (closure A)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Kruskal/SeprefUF.thy", "lemma per_union_sepref_rule[sepref_fr_rules]: \"(uncurry2 uf_union, uncurry2 (RETURN ooo per_union)) \\<in> [\\<lambda>((R,i),j). i\\<in>Domain R \\<and> j\\<in>Domain R ]\\<^sub>a is_uf\\<^sup>d *\\<^sub>a nat_assn\\<^sup>k *\\<^sub>a nat_assn\\<^sup>k \\<rightarrow> is_uf\""]]

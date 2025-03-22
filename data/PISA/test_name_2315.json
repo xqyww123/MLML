@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Robinson_Arithmetic/Robinson_Arithmetic.thy", "lemma fresh_subst_fmla_if [simp]: \"j \\<sharp> (A(i::=x)) \\<longleftrightarrow> (atom i \\<sharp> A \\<and> j \\<sharp> A) \\<or> (j \\<sharp> x \\<and> (j \\<sharp> A \\<or> j = atom i))\""]]

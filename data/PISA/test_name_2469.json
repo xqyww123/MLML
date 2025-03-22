@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Compiler/J1State.thy", "lemma B_inline_call: \"\\<lbrakk> \\<B> e n; \\<And>n. \\<B> e' n \\<rbrakk> \\<Longrightarrow> \\<B> (inline_call e' e) n\" and Bs_inline_calls: \"\\<lbrakk> \\<B>s es n; \\<And>n. \\<B> e' n \\<rbrakk> \\<Longrightarrow> \\<B>s (inline_calls e' es) n\""]]

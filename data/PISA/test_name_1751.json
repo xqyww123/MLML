@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Recursion-Theory-I/PRecUnGr.thy", "lemma c_is_sub_fun_lm_1: \"\\<lbrakk> c_is_sub_fun ls f; c_assoc_have_key ls x = 0 \\<rbrakk> \\<Longrightarrow> c_assoc_value ls x = f x\""]]

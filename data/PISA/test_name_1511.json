@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/pGCL/Transformers.thy", "lemma le_trans_trans[trans]: \"\\<lbrakk> le_trans x y; le_trans y z \\<rbrakk> \\<Longrightarrow> le_trans x z\""]]

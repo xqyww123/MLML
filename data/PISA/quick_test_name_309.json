@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Sqrt_Babylonian/NthRoot_Impl.thy", "lemma root_int_floor[simp]: \"root_int_floor p x = floor (root p (of_int x))\""]]

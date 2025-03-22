@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Macaulay/Poly_Fun.thy", "lemma poly_fun_sum [simp]: \"(\\<And>i. i \\<in> I \\<Longrightarrow> poly_fun (f i)) \\<Longrightarrow> poly_fun (\\<lambda>x. (\\<Sum>i\\<in>I. f i x))\""]]

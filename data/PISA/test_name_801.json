@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Noninterference_Ipurge_Unwinding/IpurgeUnwinding.thy", "lemma fc_traces: assumes A: \"future_consistent P D R\" and B: \"u \\<in> range D\" and C: \"(xs, ys) \\<in> R u\" shows \"(xs \\<in> traces P) = (ys \\<in> traces P)\""]]

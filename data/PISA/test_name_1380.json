@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Featherweight_OCL/UML_State.thy", "lemma fold_val_elem\\<^sub>S\\<^sub>e\\<^sub>q: assumes \"\\<tau> \\<Turnstile> \\<upsilon> (foldl UML_Sequence.OclIncluding Sequence{} (List.map (f p) s_set))\" shows \"list_all (\\<lambda>x. (\\<tau> \\<Turnstile> \\<upsilon> (f p x))) s_set\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stone_Relation_Algebras/Relation_Algebras.thy", "lemma inf_vector_comp: \"(x \\<sqinter> y * top) * z = y * top \\<sqinter> x * z\""]]

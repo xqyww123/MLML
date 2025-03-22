@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/WebAssembly/Wasm_Properties.thy", "lemma types_preserved_set_global: assumes \"\\<S>\\<bullet>\\<C> \\<turnstile> [$C v, $Set_global j] : (ts _> ts')\" shows \"\\<S>\\<bullet>\\<C> \\<turnstile> [] : (ts _> ts')\" \"tg_t (global \\<C> ! j) = typeof v\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AutoFocus-Stream/ListSlice.thy", "lemma list_slice2_list_slice_nth: \" m < length xs div k \\<Longrightarrow> list_slice2 xs k ! m = list_slice xs k ! m\""]]

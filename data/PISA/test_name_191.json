@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Safe_OCL/OCL_Types.thy", "lemma update_element_type_det: \"update_element_type \\<tau> \\<sigma> \\<rho>\\<^sub>1 \\<Longrightarrow> update_element_type \\<tau> \\<sigma> \\<rho>\\<^sub>2 \\<Longrightarrow> \\<rho>\\<^sub>1 = \\<rho>\\<^sub>2\""]]

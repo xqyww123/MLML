@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Separation_Logic_Imperative_HOL/Examples/Array_Map_Impl.thy", "lemma [code]: \"iam_lookup k a \\<equiv> nth_oo None a k\""]]

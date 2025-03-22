@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Amortized_Complexity/Pairing_Heap_List1_Analysis.thy", "lemma size_hps_pass2: \"hs \\<noteq> [] \\<Longrightarrow> no_Emptys hs \\<Longrightarrow> no_Empty(pass\\<^sub>2 hs) & size_hps hs = size_hps(hps(pass\\<^sub>2 hs))+1\""]]

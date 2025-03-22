@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PLM/TAO_7_Axioms.thy", "lemma lambda_predicates_2_3[axiom]: assumes \"IsProperInXYZ \\<phi>\" shows \"[[\\<lparr>(\\<^bold>\\<lambda>\\<^sup>3 (\\<lambda> x y z . \\<phi> (x\\<^sup>P) (y\\<^sup>P) (z\\<^sup>P))),x\\<^sup>P,y\\<^sup>P,z\\<^sup>P\\<rparr> \\<^bold>\\<equiv> \\<phi> (x\\<^sup>P) (y\\<^sup>P) (z\\<^sup>P)]]\""]]

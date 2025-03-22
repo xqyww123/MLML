@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stateful_Protocol_Composition_and_Typing/Intruder_Deduction.thy", "lemma deduct_num_if_deduct: \"M \\<turnstile> t \\<Longrightarrow> \\<exists>k. \\<langle>M; k\\<rangle> \\<turnstile>\\<^sub>n t\""]]

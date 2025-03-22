@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Linear_Inequalities/Sum_Vec_Set.thy", "lemma sum_carrier_vec[intro]: \"A \\<subseteq> carrier_vec n \\<Longrightarrow> B \\<subseteq> carrier_vec n \\<Longrightarrow> A + B \\<subseteq> carrier_vec n\""]]

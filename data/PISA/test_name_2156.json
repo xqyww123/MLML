@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Graph_Saturation/MissingRelation.thy", "lemma univalent_union[intro]: assumes \"univalent f_a\" \"univalent f_b\" \"Domain f_a \\<inter> Domain f_b = Domain (f_a \\<inter> f_b)\" shows \"univalent (f_a \\<union> f_b)\""]]

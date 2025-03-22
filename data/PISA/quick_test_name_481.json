@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Incompleteness/SyntaxN.thy", "lemma HPair_cong: \"\\<lbrakk>H \\<turnstile> t EQ t'; H \\<turnstile> u EQ u'\\<rbrakk> \\<Longrightarrow> H \\<turnstile> HPair t u EQ HPair t' u'\""]]

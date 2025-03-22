@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/TLList.thy", "lemma tmap_eq_TCons_conv: \"tmap f g xs = TCons y ys \\<longleftrightarrow> (\\<exists>z zs. xs = TCons z zs \\<and> f z = y \\<and> tmap f g zs = ys)\""]]

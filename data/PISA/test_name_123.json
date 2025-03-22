@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Parity_Game/Attractor.thy", "lemma attractor_in_V: \"W \\<subseteq> V \\<Longrightarrow> attractor p W \\<subseteq> V\""]]

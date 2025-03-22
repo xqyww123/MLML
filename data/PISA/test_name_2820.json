@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MSO_Regex_Equivalence/Pi_Regular_Exp.thy", "lemma wf_lang_wf_word: \"wf n r \\<Longrightarrow> \\<forall>w \\<in> lang n r. wf_word n w\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MFOTL_Monitor/MFOTL.thy", "lemma disjE_Not2: \"P \\<or> Q \\<Longrightarrow> (P \\<Longrightarrow> R) \\<Longrightarrow> (\\<not>P \\<Longrightarrow> Q \\<Longrightarrow> R) \\<Longrightarrow> R\""]]

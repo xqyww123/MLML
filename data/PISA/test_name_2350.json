@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Launchbury/Denotational-Related.thy", "theorem denotational_semantics_similar: assumes \"\\<rho> \\<triangleleft>\\<triangleright>\\<^sup>* \\<sigma>\" shows \"\\<lbrakk>e\\<rbrakk>\\<^bsub>\\<rho>\\<^esub> \\<triangleleft>\\<triangleright> (\\<N>\\<lbrakk>e\\<rbrakk>\\<^bsub>\\<sigma>\\<^esub>)\\<cdot>C\\<^sup>\\<infinity>\""]]

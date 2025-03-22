@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Buchi_Complementation/Complementation_Implement.thy", "lemma complement_1_refine: \"(complement_1, complement) \\<in> \\<langle>Id, Id\\<rangle> nba_rel \\<rightarrow> \\<langle>Id, cs_rel\\<rangle> nba_rel\""]]

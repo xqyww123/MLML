@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Noninterference_Sequential_Composition/Propaedeutics.thy", "lemma ipurge_fail_aux_t_intro_3: \"\\<lbrakk>ipurge_fail_aux_t_inv_3 P I D xs X Y; ipurge_fail_aux_t_form Y\\<rbrakk> \\<Longrightarrow> secure P I D \\<longrightarrow> (xs, X) \\<in> failures P \\<longrightarrow> ipurge_fail_aux_t_out Y \\<in> failures P\""]]

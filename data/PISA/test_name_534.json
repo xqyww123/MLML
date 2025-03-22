@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UTP/utp/utp_pred_laws.thy", "lemma one_point: assumes \"mwb_lens x\" \"x \\<sharp> v\" shows \"(\\<exists> x \\<bullet> P \\<and> var x =\\<^sub>u v) = P\\<lbrakk>v/x\\<rbrakk>\""]]

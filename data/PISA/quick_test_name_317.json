@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Poly_Mod.thy", "lemma Mp_shrink_modulus: assumes \"poly_mod.eq_m (m * k) f g\" \"k \\<noteq> 0\" shows \"f =m g\""]]

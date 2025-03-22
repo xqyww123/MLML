@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Executable_Euclidean_Space.thy", "lemma euclidean_eq_list_of_euclI: \"x = y\" if \"list_of_eucl x = list_of_eucl y\""]]

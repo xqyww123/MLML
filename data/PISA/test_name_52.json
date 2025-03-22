@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Impossible_Geometry/Impossible_Geometry.thy", "lemma upmost_radical_sqrt2: \"radicals e \\<noteq> {} \\<Longrightarrow> \\<exists> r \\<in> radicals e. \\<forall> s \\<in> radicals e. r \\<notin> radicals s\""]]

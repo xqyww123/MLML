@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/PAC_Checker/PAC_Polynomials.thy", "lemma rtranclp_mult_poly_p_mult_ideal: \\<open>(mult_poly_p q)\\<^sup>*\\<^sup>* (p, r) (p', r') \\<Longrightarrow> (polynomial_of_mset p' * polynomial_of_mset q + polynomial_of_mset r') - (polynomial_of_mset p * polynomial_of_mset q + polynomial_of_mset r) \\<in> ideal polynomial_bool\\<close>"]]

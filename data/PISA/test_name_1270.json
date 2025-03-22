@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomial_Factorization/Missing_Multiset.thy", "lemma remove1_mset: \"w \\<in> set vs \\<Longrightarrow> mset (remove1 w vs) + {#w#} = mset vs\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Relational_Paths/More_Relation_Algebra.thy", "lemma ss422iv: assumes \"is_p_fun y\" and \"x \\<le> y\" and \"y;1 \\<le> x;1\" shows \"x = y\""]]

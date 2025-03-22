@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinary_Differential_Equations/IVP/Picard_Lindeloef_Qualitative.thy", "lemma segment_subset_existence_ivl: assumes \"s \\<in> existence_ivl t0 x0\" \"t \\<in> existence_ivl t0 x0\" shows \"{s -- t} \\<subseteq> existence_ivl t0 x0\""]]

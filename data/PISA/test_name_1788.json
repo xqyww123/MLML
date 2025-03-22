@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/Lazy_List_Chain.thy", "lemma lfinite_wit[simp]: assumes \"chain R\\<^sup>+\\<^sup>+ xs\" shows \"lfinite (wit xs) \\<longleftrightarrow> lfinite xs\""]]

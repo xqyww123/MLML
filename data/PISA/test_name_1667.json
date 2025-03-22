@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Terms.thy", "lemma substAbs_compose2: assumes \"goodAbs A\" and \"good Y\" and \"good Z\" and \"ys \\<noteq> zs \\<or> y \\<noteq> z\" and fresh: \"fresh ys y Z\" shows \"((A $[Y / y]_ys) $[Z / z]_zs) = ((A $[Z / z]_zs) $[(Y #[Z / z]_zs) / y]_ys)\""]]

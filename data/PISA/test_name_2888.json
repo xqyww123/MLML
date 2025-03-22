@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Order_Lattice_Props/Order_Lattice_Props.thy", "lemma join_shunt_var: \"(x \\<longrightarrow> y = \\<top>) = (x \\<le> y)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category3/SetCategory.thy", "lemma terminal_char3: assumes \"\\<exists>!x. \\<guillemotleft>x : unity \\<rightarrow> a\\<guillemotright>\" shows \"terminal a\""]]

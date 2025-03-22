@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Algebraic_Numbers/Real_Factorization.thy", "lemma monic_imp_nonzero: \"monic x \\<Longrightarrow> x \\<noteq> 0\" for x :: \"'a :: semiring_1 poly\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Topological_Semantics/topo_strict_implication.thy", "lemma iprop6b: \"Fr_2 \\<F> \\<Longrightarrow> Fr_3 \\<F> \\<Longrightarrow> \\<forall>a b c. (a \\<^bold>\\<and> (b \\<^bold>\\<or> c)) \\<^bold>\\<Leftarrow> ((a \\<^bold>\\<and> b) \\<^bold>\\<or> (a \\<^bold>\\<and> c)) \\<^bold>\\<approx> \\<^bold>\\<top>\""]]

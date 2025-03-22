@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Syntax_Independent_Logic/Deduction.thy", "lemma prv_sdsj_cases: assumes \"F \\<subseteq> fmla\" \"finite F\" \"\\<psi> \\<in> fmla\" and \"prv (sdsj F)\" and \"\\<And> \\<phi>. \\<phi> \\<in> F \\<Longrightarrow> prv (imp \\<phi> \\<psi>)\" shows \"prv \\<psi>\""]]

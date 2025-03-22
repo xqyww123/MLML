@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hoare_Time/QuantK_Examples.thy", "lemma example_sound: \"\\<Turnstile>\\<^sub>2\\<^sub>' {\\<lambda>s. enat (2 + 3*n) + emb (s ''x'' = int n)} ''y'' ::= N 0;; wsum {\\<lambda>s. 0 }\""]]

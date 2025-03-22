@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gromov_Hyperbolicity/Bonk_Schramm_Extension.thy", "theorem (in Gromov_hyperbolic_space) Morse_Gromov_theorem': fixes f::\"real \\<Rightarrow> 'a\" assumes \"lambda C-quasi_isometry_on {a..b} f\" \"geodesic_segment_between G (f a) (f b)\" shows \"hausdorff_distance (f`{a..b}) G \\<le> 92 * lambda\\<^sup>2 * (C + deltaG(TYPE('a)))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simple_Firewall/Service_Matrix.thy", "lemma same_fw_spec: \"same_fw_behaviour ip1 ip2 rs \\<Longrightarrow> same_fw_behaviour_one ip1 ip2 c rs\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOLCF-Prelude/Data_Integer.thy", "lemma eq_MkI_MkI [simp]: \"eq\\<cdot>(MkI\\<cdot>m)\\<cdot>(MkI\\<cdot>n) = (if m = n then TT else FF)\""]]

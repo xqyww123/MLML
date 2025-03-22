@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra3.thy", "lemma r_unit_gHom:\"\\<lbrakk>Group F; Group G; f \\<in> gHom F G \\<rbrakk> \\<Longrightarrow> f \\<circ>\\<^bsub>F\\<^esub> (I\\<^bsub>F\\<^esub>) = f\""]]

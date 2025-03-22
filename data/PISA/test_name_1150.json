@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_RPOs/Lambda_Encoding.thy", "lemma vars_mset_subst_db: \"vars_mset (subst_db i x s) = {#y \\<in># vars_mset s. y \\<noteq> x#}\""]]

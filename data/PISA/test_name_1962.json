@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/FWWellform.thy", "lemma lock_thread_ok_has_lock: assumes \"lock_thread_ok ls ts\" and \"has_lock (ls $ l) t\" obtains xw where \"ts t = \\<lfloor>xw\\<rfloor>\""]]

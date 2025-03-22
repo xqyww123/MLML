@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/GenCF/Impl/Impl_RBT_Map.thy", "lemma param_compare[param]: \"(RBT_Impl.LT,RBT_Impl.LT)\\<in>compare_rel\" \"(RBT_Impl.GT,RBT_Impl.GT)\\<in>compare_rel\" \"(RBT_Impl.EQ,RBT_Impl.EQ)\\<in>compare_rel\" \"(RBT_Impl.case_compare,RBT_Impl.case_compare)\\<in>R\\<rightarrow>R\\<rightarrow>R\\<rightarrow>compare_rel\\<rightarrow>R\""]]

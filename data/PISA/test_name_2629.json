@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Sigma_Commit_Crypto/Chaum_Pedersen_Sigma_Commit.thy", "lemma asymp_computational_binding: assumes \"negligible (\\<lambda> n. dis_log.advantage n (dis_log_alt.adversary3 n ((chaum_ped_\\<Sigma>_commit.adversary n (\\<A> n)))))\" shows \"negligible (\\<lambda> n. chaum_ped_\\<Sigma>_commit.abstract_com.bind_advantage n (\\<A> n))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/FWThread.thy", "lemma free_thread_id_iff: \"free_thread_id ts t = (ts t = None)\""]]

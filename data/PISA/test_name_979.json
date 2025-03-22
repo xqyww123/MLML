@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Recursion-Theory-I/PRecUnGr.thy", "lemma loc_upb_lex_3: \"c_fst n mod 7 = 3 \\<Longrightarrow> c_assoc_have_key (pr_gr (loc_upb n x)) (c_pair n x) = 0\""]]

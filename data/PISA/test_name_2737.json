@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Auto2_Imperative_HOL/Imperative/RBTree_Impl.thy", "theorem rbt_empty_rule [hoare_triple]: \"<emp> tree_empty <rbt_map_assn empty_map>\""]]

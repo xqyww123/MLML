@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CAVA_LTL_Modelchecker/BoolProgs/BoolProgs.thy", "lemma finite_bprog_vars[simp, intro!]: \"finite (bprog_vars bp)\""]]

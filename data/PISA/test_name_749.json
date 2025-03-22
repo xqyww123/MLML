@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binomial-Heaps/SkewBinomialHeap.thy", "lemma findMin_correct': assumes I: \"elem_invar x\" shows \"findMin' x \\<in># elem_to_mset x\" \"\\<forall>y\\<in>set_mset (elem_to_mset x). snd (findMin' x) \\<le> snd y\""]]

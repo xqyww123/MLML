@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Graph_Theory/Kuratowski.thy", "lemma (in wf_digraph) iapath_dist_ends: \"\\<And>u p v. iapath u p v \\<Longrightarrow> u \\<noteq> v\""]]

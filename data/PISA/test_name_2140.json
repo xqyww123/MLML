@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Heard_Of/uv/UvProof.thy", "theorem uv_termination: assumes run: \"HORun UV_M rho HOs\" and commR: \"\\<forall>r. HOcommPerRd UV_M (HOs r)\" and commG: \"HOcommGlobal UV_M HOs\" shows \"\\<exists>r v. decide (rho r p) = Some v\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lazy-Lists-II/LList2.thy", "lemma ltake_ldrop: \"(xs \\<up> m) \\<down> n =(xs \\<down> (n + m)) \\<up> m\""]]

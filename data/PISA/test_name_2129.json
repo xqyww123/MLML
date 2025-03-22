@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tarskis_Geometry/Projective.thy", "lemma proj2_no_3_Col_span: assumes \"proj2_no_3_Col S\" and \"p \\<in> S\" shows \"span (proj2_rep ` (S - {p})) = UNIV\""]]

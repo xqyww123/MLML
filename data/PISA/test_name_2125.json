@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stone_Relation_Algebras/Semirings.thy", "lemma test_preserves_equation: assumes \"dense_rel p\" and \"coreflexive p\" shows \"p * x \\<le> x * p \\<longleftrightarrow> p * x = p * x * p\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tarskis_Geometry/Hyperbolic_Tarski.thy", "lemma M_perp_sym: assumes \"M_perp l m\" shows \"M_perp m l\""]]

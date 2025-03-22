@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FocusStreamsCaseStudies/BitBoolTS.thy", "lemma ts_bool_False: assumes h1:\"ts x\" and h2:\"x i \\<noteq> [True]\" shows \"x i = [False]\""]]

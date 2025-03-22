@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/FWBisimulation.thy", "lemma ta_bisim_\\<epsilon> [simp]: \"ta_bisim b \\<epsilon> ta' \\<longleftrightarrow> ta' = \\<epsilon>\" \"ta_bisim b ta \\<epsilon> \\<longleftrightarrow> ta = \\<epsilon>\""]]

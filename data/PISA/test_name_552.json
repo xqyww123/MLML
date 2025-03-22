@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AODV/variants/b_fwdrreps/B_Aodv_Data.thy", "lemma sqnf_update_another [simp]: fixes dip ip rt dsn dsk flag hops nhip pre assumes \"ip \\<noteq> dip\" shows \"sqnf (update rt dip (dsn, dsk, flag, hops, nhip, pre)) ip = sqnf rt ip\""]]

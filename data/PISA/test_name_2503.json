@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/Power_Products.thy", "lemma drlex_pm_zero_min: \"drlex_pm 0 s\" for s t::\"(_ \\<Rightarrow>\\<^sub>0 _::add_linorder_min)\""]]

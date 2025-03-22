@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Symmetric_Polynomials/Symmetric_Polynomials.thy", "theorem lookup_lead_monom_decreasing: assumes \"symmetric_mpoly A p\" defines \"m \\<equiv> lead_monom p\" assumes \"i \\<in> A\" \"j \\<in> A\" \"i \\<le> j\" shows \"lookup m i \\<ge> lookup m j\""]]

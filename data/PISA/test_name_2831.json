@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/BirdKMP/Theory_Of_Lists.thy", "lemma supto_split2: \\<comment>\\<open>From \\<open>HOL.List\\<close>\\<close> assumes \"i \\<le> j\" assumes \"j \\<le> k\" shows \"supto\\<cdot>(MkI\\<cdot>i)\\<cdot>(MkI\\<cdot>k) = supto\\<cdot>(MkI\\<cdot>i)\\<cdot>(MkI\\<cdot>j) :@ supto\\<cdot>(MkI\\<cdot>(j + 1))\\<cdot>(MkI\\<cdot>k)\""]]

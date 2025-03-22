@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UTP/toolkit/List_Extra.thy", "lemma prefix_eq_exists: \"prefix s t \\<longleftrightarrow> (\\<exists>xs . s @ xs = t)\""]]

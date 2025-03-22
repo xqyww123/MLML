@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Launchbury/Env-HOLCF.thy", "lemma fmap_below_add_restrI: assumes \"x f|` (-S) \\<sqsubseteq> y f|` (-S)\" and \"x f|` S \\<sqsubseteq> z f|` S\" shows \"x \\<sqsubseteq> y ++\\<^bsub>S\\<^esub> z\""]]

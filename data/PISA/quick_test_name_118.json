@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Containers/Set_Linorder.thy", "lemma set_less_aux_singleton_iff: \"A \\<sqsubset>' {x} \\<longleftrightarrow> finite A \\<and> (\\<forall>a\\<in>A. x < a)\""]]

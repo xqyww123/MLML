@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Matrix_Tensor/Matrix_Tensor.thy", "lemma scalar_product_append: \"\\<forall>xs ys zs ws.(length zs = length ws) \\<and>(length xs = length ys) \\<and>(length xs = n) \\<longrightarrow> (scalar_product (xs@zs) (ys@ws)) = (scalar_product xs ys) +(scalar_product zs ws)\""]]

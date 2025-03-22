@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SIFUM_Type_Systems/LocallySoundModeUse.thy", "lemma seq_stop_elim: \"\\<langle>Stop ;; c, mds, mem\\<rangle> \\<leadsto> \\<langle>c', mds', mem'\\<rangle> \\<Longrightarrow> c' = c \\<and> mds' = mds \\<and> mem' = mem\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CoreC++/WellForm.thy", "lemma assumes subo:\"Subobjs P C Cs\" and wf:\"wf_prog wf_md P\" shows path_length:\"length Cs \\<le> length P\""]]

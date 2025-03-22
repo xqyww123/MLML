@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Unique_Factorization.thy", "lemma essentially_equal_connect[simp]: \"essentially_equal mk_monoid fs gs \\<longleftrightarrow> rel_mset (ddvd) (mset fs) (mset gs)\""]]

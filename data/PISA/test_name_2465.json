@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/Abstract_Substitution.thy", "lemma subst_lit_is_pos[simp]: \"is_pos (L \\<cdot>l \\<sigma>) = is_pos L\""]]

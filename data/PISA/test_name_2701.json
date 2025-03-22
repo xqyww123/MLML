@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/J/WellType.thy", "lemma fixes is_lub shows WT_fv: \"is_lub,P,E \\<turnstile> e :: T \\<Longrightarrow> fv e \\<subseteq> dom E\" and WT_fvs: \"is_lub,P,E \\<turnstile> es [::] Ts \\<Longrightarrow> fvs es \\<subseteq> dom E\""]]

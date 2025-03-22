@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Inference/LIM_BC.thy", "lemma learn_lim_sigma: assumes \"learn_lim \\<psi> U (\\<phi> i)\" shows \"learn_lim \\<psi> U (\\<sigma> i)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/OAlist_Poly_Mapping.thy", "lemma nat_term_compare_splus: \"nat_term_compare to (splus t u) (splus t v) = nat_term_compare to u v\""]]

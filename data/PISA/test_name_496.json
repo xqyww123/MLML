@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AI_Planning_Languages_Semantics/Lifschitz_Consistency.thy", "lemma wm_to_state_eq[simp]: \"wm_to_state M (p, as) \\<longleftrightarrow> Atom (predAtm p as) \\<in> M\""]]

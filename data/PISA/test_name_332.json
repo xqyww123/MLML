@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Valuation/Valuation1.thy", "lemma (in Corps) field_frac2:\"\\<lbrakk>x \\<in> carrier K; x \\<noteq> \\<zero>\\<rbrakk> \\<Longrightarrow> x = (1\\<^sub>r) \\<cdot>\\<^sub>r ((x\\<^bsup>\\<hyphen>K\\<^esup>)\\<^bsup>\\<hyphen>K\\<^esup>)\""]]

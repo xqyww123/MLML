@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/pGCL/LoopInduction.thy", "lemma wp_loop_step_unitary: fixes body::\"'s prog\" assumes hb: \"healthy (wp body)\" and uP: \"unitary P\" and uQ: \"unitary Q\" shows \"unitary (\\<lambda>s. \\<guillemotleft>G\\<guillemotright> s * wp body Q s + \\<guillemotleft>\\<N> G\\<guillemotright> s * P s)\""]]

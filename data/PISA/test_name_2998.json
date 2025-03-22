@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/DFA/SemilatAlg.thy", "lemma (in Semilat) pp_ub1: shows \"\\<And>y. \\<lbrakk>set ls \\<subseteq> A; y \\<in> A; x \\<in> set ls\\<rbrakk> \\<Longrightarrow> x \\<sqsubseteq>\\<^bsub>r\\<^esub> ls \\<Squnion>\\<^bsub>f\\<^esub> y\""]]

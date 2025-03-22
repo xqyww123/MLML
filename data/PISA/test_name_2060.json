@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/AWN/Pnet.thy", "lemma pnet_init_in_net_tree_ips_in_net_ips [elim]: assumes \"s \\<in> init (pnet np p)\" and \"i \\<in> net_tree_ips p\" shows \"i \\<in> net_ips s\""]]

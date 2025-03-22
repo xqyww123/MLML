@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SuperCalc/superposition.thy", "lemma lower_on_lit_eq: assumes \"lower_on \\<sigma> \\<eta> (vars_of_lit L)\" shows \"((subst_lit L \\<sigma>) = (subst_lit L \\<eta>)) \\<or> ((subst_lit L \\<sigma>), (subst_lit L \\<eta>)) \\<in> lit_ord\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nat-Interval-Logic/IL_TemporalOperators.thy", "lemma iT_Minus_iAll_conv: \"(\\<box> t k \\<ominus> I. P t) = (\\<box> t (I \\<down>\\<le> k). P (k - t))\""]]

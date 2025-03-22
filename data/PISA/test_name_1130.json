@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Chandy_Lamport/Swap.thy", "lemma swap_cs_Recv_RecvMarker: assumes \"c \\<turnstile> ev \\<mapsto> d\" and \"d \\<turnstile> ev' \\<mapsto> e\" and \"isRecv ev\" and \"isRecvMarker ev'\" and \"c \\<turnstile> ev' \\<mapsto> d'\" and \"d' \\<turnstile> ev \\<mapsto> e'\" and \"occurs_on ev \\<noteq> occurs_on ev'\" shows \"cs e i = cs e' i\""]]

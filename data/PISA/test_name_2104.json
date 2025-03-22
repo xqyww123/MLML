@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Timed_Automata/Normalized_Zone_Semantics.thy", "lemma finite_ta_RegionsD: assumes \"finite_ta A\" obtains k :: \"'b \\<Rightarrow> nat\" and v n x where \"Regions' (clk_set A) v n x\" \"valid_abstraction A (clk_set A) k\" \"global_clock_numbering A v n\""]]

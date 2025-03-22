@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Fourier/Fourier_Aux2.thy", "lemma integral_sin_Z' [simp]: assumes \"n \\<in> \\<int>\" shows \"integral\\<^sup>L (lebesgue_on {-pi..pi}) (\\<lambda>x. sin(n * x)) = 0\""]]

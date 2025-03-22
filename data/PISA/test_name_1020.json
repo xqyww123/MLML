@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Planarity_Certificates/Planarity/Graph_Genus.thy", "lemma face_cycle_pred_closed[simp]: \"face_cycle_pred a \\<in> arcs G \\<longleftrightarrow> a \\<in> arcs G\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/More_Complex.thy", "lemma Re_sgn: assumes \"is_real R\" shows \"Re (sgn R) = sgn (Re R)\""]]

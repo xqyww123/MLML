@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Matrix.thy", "lemma similar_mat_witD: assumes \"n = dim_row A\" \"similar_mat_wit A B P Q\" shows \"P * Q = 1\\<^sub>m n\" \"Q * P = 1\\<^sub>m n\" \"A = P * B * Q\" \"A \\<in> carrier_mat n n\" \"B \\<in> carrier_mat n n\" \"P \\<in> carrier_mat n n\" \"Q \\<in> carrier_mat n n\""]]

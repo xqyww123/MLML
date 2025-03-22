@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Floatarith_Expression.thy", "lemma fold_const_fa_Add_eq_NumE: assumes \"fold_const_fa (Add a b) = Num x\" obtains y z where \"fold_const_fa a = Num y\" \"fold_const_fa b = Num z\" \"x = y + z\""]]

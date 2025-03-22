@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Elliptic_Curves_Group_Law/Elliptic_Locale.thy", "lemma (in cring) padd_in_carrierp: \"a \\<in> carrier R \\<Longrightarrow> in_carrierp p\\<^sub>1 \\<Longrightarrow> in_carrierp p\\<^sub>2 \\<Longrightarrow> in_carrierp (padd a p\\<^sub>1 p\\<^sub>2)\""]]

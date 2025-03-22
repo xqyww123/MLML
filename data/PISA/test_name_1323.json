@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Iptables_Semantics/Semantics_Ternary/Fixed_Action.thy", "lemma helperX1_Empty: \"matches \\<gamma> m' Empty p \\<Longrightarrow> approximating_bigstep_fun \\<gamma> p (map ((\\<lambda>m. Rule m Empty) \\<circ> MatchAnd m') m2' @ rs2) Undecided = approximating_bigstep_fun \\<gamma> p rs2 Undecided\""]]

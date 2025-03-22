@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_RPOs/Lambda_Free_Util.thy", "lemma enat_sub_add_same[intro]: \"n \\<le> m \\<Longrightarrow> m = m - n + n\" for m n :: enat"]]

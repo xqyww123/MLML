@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SIFPL/VDM.thy", "lemma VDMWhile_derivable: \"\\<lbrakk> G \\<rhd> c : B; \\<forall> s . (\\<not> evalB b s) \\<longrightarrow> A s s; \\<forall> s r t. evalB b s \\<longrightarrow> B s r \\<longrightarrow> A r t \\<longrightarrow> A s t \\<rbrakk> \\<Longrightarrow> G \\<rhd> (While b c) : (\\<lambda> s t . A s t \\<and> \\<not> (evalB b t))\""]]

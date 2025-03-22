@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jinja/J/Equivalence.thy", "lemma LAssRedsThrow: \"\\<lbrakk> P \\<turnstile> \\<langle>e,s\\<rangle> \\<rightarrow>* \\<langle>throw a,s'\\<rangle> \\<rbrakk> \\<Longrightarrow> P \\<turnstile> \\<langle> V:=e,s\\<rangle> \\<rightarrow>* \\<langle>throw a,s'\\<rangle>\""]]

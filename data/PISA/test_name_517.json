@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Extended_Finite_State_Machines/examples/Drinks_Machine.thy", "lemma possible_steps_0_not_select: \"a \\<noteq> STR ''select'' \\<Longrightarrow> possible_steps drinks 0 <> a b = {||}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MSO_Regex_Equivalence/Formula.thy", "lemma star_Arbitrary_ExceptD: \"\\<lbrakk>v \\<in> star (lang n (Atom (Arbitrary_Except r b))); r < n; i < length v\\<rbrakk> \\<Longrightarrow> snd (v ! i) ! r = b\""]]

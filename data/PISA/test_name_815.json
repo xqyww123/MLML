@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Landau_Symbols/Landau_More.thy", "lemma smallo_const_inverse [simp]: \"filterlim f at_top F \\<Longrightarrow> F \\<noteq> bot \\<Longrightarrow> (\\<lambda>_. c :: real) \\<in> o[F](\\<lambda>x. inverse (f x)) \\<longleftrightarrow> c = 0\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List_Update/BIT_2comp_on2.thy", "lemma oneBIT_step4y: assumes \"x\\<noteq>y\" \"x : {x0,y0}\" \"y\\<in>{x0,y0}\" shows \"BIT_Step (type4 [x0, y0] x y) y = type0 [x0, y0] y x\""]]

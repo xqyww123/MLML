@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UPF_Firewall/FWNormalisation/NormalisationIntegerPortProof.thy", "lemma InDomConc[rule_format]: \"p \\<noteq> [] \\<longrightarrow> x \\<in> dom (C (list2FWpolicy (p))) \\<longrightarrow> x \\<in> dom (C (list2FWpolicy (a#p)))\""]]

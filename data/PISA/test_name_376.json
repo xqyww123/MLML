@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Propositional_Proof_Systems/Consistency.thy", "lemma pcp_lim_in: assumes c: \"pcp C\" and el: \"S \\<in> C\" and sc: \"subset_closed C\" and fc: \"finite_character C\" shows \"pcp_lim C S \\<in> C\" (is \"?cl \\<in> C\")"]]

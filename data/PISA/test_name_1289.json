@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Circus/Relations.thy", "lemma disj_subst: \"P = R \\<Longrightarrow> ((P::'\\<alpha> predicate) \\<or> Q) = (R \\<or> Q)\""]]

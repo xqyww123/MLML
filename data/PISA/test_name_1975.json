@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Locally-Nameless-Sigma/Sigma/Sigma.thy", "lemma sclose_subset_FV[rule_format]: \"FV ({n \\<leftarrow> [s,p]} t) \\<subseteq> FV t\""]]

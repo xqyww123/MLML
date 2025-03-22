@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/QuasiTerms_PickFresh_Alpha.thy", "lemma alphaAbs_qAbs_imp_alphaAbs_all_equal_or_qAFresh: assumes \"qGood X\" and \"qAbs xs x X $= qAbs xs' x' X'\" shows \"alphaAbs_all_equal_or_qAFresh xs x X xs' x' X'\""]]

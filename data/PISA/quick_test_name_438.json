@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Network_Security_Policy_Verification/vertex_example_simps.thy", "lemma unique_default_example1: \"succ_tran \\<lparr>nodes = {vertex_1, vertex_2}, edges = {(vertex_1, vertex_2)}\\<rparr> vertex_1 = {vertex_2}\""]]

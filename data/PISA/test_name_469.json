@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/VerifyThis2019/Challenge2A.thy", "lemma pop2_refine: \"(uncurry2 pop2, uncurry2 (RETURN ooo pop)) \\<in> [\\<lambda>((xs,stk),v). set stk \\<subseteq> {0..<length xs}]\\<^sub>f (Id \\<times>\\<^sub>r Id) \\<times>\\<^sub>r Id \\<rightarrow> \\<langle>Id\\<rangle>nres_rel\""]]

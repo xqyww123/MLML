@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiscretePricing/Fair_Price.thy", "lemma remove_comp_portfolio: assumes \"portfolio pf1\" shows \"portfolio (qty_rem_comp pf1 x)\""]]

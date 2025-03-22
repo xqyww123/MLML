@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/CommonSet/SetInterval2.thy", "lemma mod_eq_div_right_strict_mono_on: \" \\<lbrakk> 0 < (k::nat); \\<forall>x\\<in>I. \\<forall>y\\<in>I. x mod k = y mod k \\<rbrakk> \\<Longrightarrow> strict_mono_on (\\<lambda>x. x div k) I\""]]

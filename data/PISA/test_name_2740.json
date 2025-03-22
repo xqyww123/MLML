@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Suitable_Prime.thy", "lemma next_primes: assumes res: \"next_primes n = (m,ps)\" and n: \"candidate_invariant n\" shows \"candidate_invariant m\" \"sorted ps\" \"distinct ps\" \"n < m\" \"set ps = {i. prime i \\<and> n \\<le> i \\<and> i < m}\""]]

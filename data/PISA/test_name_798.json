@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FOL-Fitting/FOL_Fitting.thy", "lemma remove_imps: assumes \\<open>infinite (- params p)\\<close> shows \\<open>z' \\<turnstile> put_imps p z \\<Longrightarrow> rev z @ z' \\<turnstile> p\\<close>"]]

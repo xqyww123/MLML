@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Polynomials/Power_Products.thy", "lemma plus_adds_mono: assumes \"a adds b\" and \"c adds d\" shows \"a + c adds b + d\""]]

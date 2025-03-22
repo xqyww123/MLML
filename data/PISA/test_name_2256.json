@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stable_Matching/COP.thy", "theorem Theorem_3: assumes \"\\<forall>h. irc_on A (Ch h)\" shows \"(\\<forall>h. substitutes_on A (Ch h)) \\<longleftrightarrow> (\\<forall>h. unilateral_substitutes_on A (Ch h) \\<and> pareto_separable_on A)\""]]

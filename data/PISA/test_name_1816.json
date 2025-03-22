@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/Refine_Foreach.thy", "lemma foldli_mono_dres_aux2: assumes STRICT: \"\\<And>x. f x bot = bot\" \"\\<And>x. f' x top = top\" assumes A: \"\\<And>a x x'. x\\<le>x' \\<Longrightarrow> f a x \\<le> f' a x'\" shows \"foldli l (case_dres False False c) f \\<sigma> \\<le> foldli l (case_dres False False c) f' \\<sigma>\""]]

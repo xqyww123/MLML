@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Finger-Trees/FingerTree.thy", "lemma nrcons_invlevel: \"\\<lbrakk>is_leveln_ftree n t; is_leveln_node n nd\\<rbrakk> \\<Longrightarrow> is_leveln_ftree n (nrcons t nd)\""]]

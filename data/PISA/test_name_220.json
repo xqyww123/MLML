@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/IEEE_Floating_Point/IEEE_Properties.thy", "lemma finite_nan: \"is_finite a \\<Longrightarrow> \\<not> is_nan a\""]]

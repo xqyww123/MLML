@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra2.thy", "lemma (in Worder) Word_compare:\"Worder E \\<Longrightarrow> (\\<exists>a\\<in>carrier D. ord_equiv (Iod D (segment D a)) E) \\<or> ord_equiv D E \\<or> (\\<exists>b\\<in>carrier E. ord_equiv D (Iod E (segment E b)))\""]]

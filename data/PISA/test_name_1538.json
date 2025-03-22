@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Word_Lemmas.thy", "lemma of_nat_power: shows \"\\<lbrakk> p < 2 ^ x; x < len_of TYPE ('a) \\<rbrakk> \\<Longrightarrow> of_nat p < (2 :: 'a :: len word) ^ x\""]]

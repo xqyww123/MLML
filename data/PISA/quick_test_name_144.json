@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CISC-Kernel/step/Step_invariants.thy", "lemma set_thread_value_invariant: shows \"atomic_step_invariant s = atomic_step_invariant (s \\<lparr> thread := thrst \\<rparr>)\""]]

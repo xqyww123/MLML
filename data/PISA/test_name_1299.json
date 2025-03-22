@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Inference/Standard_Results.thy", "lemma R1I [intro]: assumes \"recfn 1 r\" and \"total r\" and \"\\<And>x. eval r [x] = f x\" shows \"f \\<in> \\<R>\""]]

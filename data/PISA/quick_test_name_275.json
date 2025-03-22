@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Poincare_Bendixson/Invariance.thy", "lemma pos_invariant_iff_compl_neg_invariant: \"positively_invariant M \\<longleftrightarrow> negatively_invariant (X - M)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Transition_Systems_and_Automata/Basic/Sequence.thy", "lemma stream_pred_coinduct[case_names stream_pred, coinduct pred: pred_stream]: assumes \"R w\" assumes \"\\<And> a w. R (a ## w) \\<Longrightarrow> P a \\<and> R w\" shows \"pred_stream P w\""]]

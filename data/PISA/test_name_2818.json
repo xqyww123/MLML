@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_EPO/Embeddings.thy", "lemma emb_vars: \"t \\<unrhd>\\<^sub>e\\<^sub>m\\<^sub>b s \\<Longrightarrow> vars s \\<subseteq> vars t\""]]

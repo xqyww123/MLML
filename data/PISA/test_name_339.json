@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automatic_Refinement/Lib/Misc.thy", "lemma dom_const'[simp]: \"dom (\\<lambda>x. Some (f x)) = UNIV\""]]

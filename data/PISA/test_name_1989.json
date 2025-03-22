@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Containers/List_Fusion.thy", "lemma has_next_filter_generator: \"list.has_next (filter_generator g) s \\<longleftrightarrow> list.has_next g s \\<and> (let (x, s') = list.next g s in if P x then True else list.has_next (filter_generator g) s')\""]]

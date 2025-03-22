@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinary_Differential_Equations/Library/Multivariate_Taylor.thy", "lemma symmetric_second_derivative: assumes \"a \\<in> interior G\" shows \"f'' i j = f'' j i\""]]

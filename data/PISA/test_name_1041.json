@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_to_DRA/Semi_Mojmir.thy", "lemma older_seniors_card: \"card (older_seniors x n) = card (older_seniors y n) \\<longleftrightarrow> older_seniors x n = older_seniors y n\""]]

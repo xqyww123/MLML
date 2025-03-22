@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_RPOs/Lambda_Free_Util.thy", "lemma count_image_mset_lt_imp_lt_raw: assumes \"finite A\" and \"A = set_mset M \\<union> set_mset N\" and \"count (image_mset f M) b < count (image_mset f N) b\" shows \"\\<exists>x. f x = b \\<and> count M x < count N x\""]]

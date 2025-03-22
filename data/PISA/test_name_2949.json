@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/TLA/Liveness.thy", "lemma enabled_WFSF: \"\\<turnstile> \\<box>Enabled \\<langle>F\\<rangle>_v \\<longrightarrow> (WF(F)_v = SF(F)_v)\""]]

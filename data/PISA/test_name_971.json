@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/Sepref_Rules.thy", "lemma auto_weaken_pre_comp_PRE_I: assumes \"S x \\<Longrightarrow> P x\" assumes \"\\<And>y. \\<lbrakk>(y,x)\\<in>R; P x; S x\\<rbrakk> \\<Longrightarrow> Q x y\" shows \"comp_PRE R P Q S x\""]]

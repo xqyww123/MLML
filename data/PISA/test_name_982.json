@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiskPaxos/DiskPaxos_Inv4.thy", "lemma HPhase0Read_HInv4c_q: assumes act: \"HPhase0Read s s' p d\" and inv: \"HInv4c s q\" and pnq: \"p\\<noteq>q\" shows \"HInv4c s' q\""]]

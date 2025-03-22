@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Monadic/Refine_Misc.thy", "lemma inf_distribI': fixes f :: \"'a::complete_lattice \\<Rightarrow> 'b::complete_lattice\" assumes B: \"\\<And>C. f (Sup C) = Sup (f`C)\" shows \"inf_distrib f\""]]

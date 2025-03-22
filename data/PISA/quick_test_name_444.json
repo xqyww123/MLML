@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Inductive_Inference/Partial_Recursive.thy", "lemma e_hd_neq_0 [simp]: assumes \"e \\<noteq> 0\" shows \"e_hd e = hd (list_decode e)\""]]

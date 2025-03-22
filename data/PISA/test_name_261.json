@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Coinductive/Coinductive_Stream.thy", "lemma sconst_conv_of_seq: \"sconst a = of_seq (\\<lambda>_. a)\""]]

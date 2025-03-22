@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/SATSolverVerification/SatSolverVerification.thy", "lemma InvariantConsistentAfterBacktrack: fixes F::Formula and M::LiteralTrail assumes \"InvariantUniq M\" and \"InvariantConsistent M\" and \"decisions M \\<noteq> []\" and \"M' = (prefixBeforeLastDecision M) @ [(opposite (lastDecision M), False)]\" shows \"InvariantConsistent M'\""]]

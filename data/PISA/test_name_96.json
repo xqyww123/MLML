@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Collections/Lib/Robdd.thy", "lemma list_to_assignment_set_simps [simp]: \"list_to_assignment_set [] = UNIV\" (is ?T1) \"list_to_assignment_set (Some b # l) = (shift_assignment b) ` (list_to_assignment_set l)\" (is \"?T3 b\")"]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Bases/Groebner_Bases.thy", "lemma some_GB_pmdl_dgrad_p_set: assumes \"dickson_grading d\" and \"finite (component_of_term ` Keys F)\" and \"F \\<subseteq> dgrad_p_set d m\" shows \"pmdl (some_GB F) = pmdl F\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/ListInf/ListInf.thy", "lemma gappend_glength[simp]: \"glength (a @\\<^sub>g b) = glength a + glength b\""]]

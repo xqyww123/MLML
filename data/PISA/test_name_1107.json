@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Probabilistic_Timed_Automata/library/Graphs.thy", "lemma reaches1_reaches_iff2: \"x \\<rightarrow>\\<^sup>+ y \\<longleftrightarrow> (\\<exists> z. x \\<rightarrow>* z \\<and> z \\<rightarrow> y)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Multirelations/C_Algebras.thy", "lemma tau_ideal2: \"\\<lbrakk>\\<tau> x = x; \\<tau> y = y\\<rbrakk> \\<Longrightarrow> \\<tau> (x + y) = x + y\""]]

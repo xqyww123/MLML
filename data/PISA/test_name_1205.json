@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Timed_Automata/Floyd_Warshall.thy", "lemma remove_all_subs: \"set (remove_all x xs) \\<subseteq> set xs\""]]

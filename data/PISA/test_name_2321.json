@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Stream-Fusion/StreamFusion.thy", "lemma unstream_concatMapS: \"unstream\\<cdot>(concatMapS\\<cdot>f\\<cdot>a) = concatMapL\\<cdot>(unstream oo f)\\<cdot>(unstream\\<cdot>a)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nat-Interval-Logic/IL_Interval.thy", "lemma iMOD_card_if: \"card [r, mod m] = (if m = 0 then Suc 0 else 0)\""]]

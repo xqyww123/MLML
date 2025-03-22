@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Category/Cat.thy", "lemma (in category) homE: assumes \"A \\<in> Ob\" and \"B \\<in> Ob\" and \"f \\<in> Hom A B\" shows \"Dom f = A\" and \"Cod f = B\""]]

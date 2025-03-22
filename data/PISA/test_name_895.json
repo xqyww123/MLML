@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Dirichlet_Series/Dirichlet_Misc.thy", "lemma inj_on_insert': \"(\\<And>B. B \\<in> A \\<Longrightarrow> x \\<notin> B) \\<Longrightarrow> inj_on (insert x) A\""]]

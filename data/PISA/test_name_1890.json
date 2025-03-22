@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Isabelle_Marries_Dirac/Deutsch_Jozsa.thy", "lemma (in jozsa) balanced_pos_and_neg_terms_cancel_out1: assumes \"is_balanced\" shows \"(\\<Sum>k<(2::nat)^n. (-(1::nat))^(f k)) = 0\""]]

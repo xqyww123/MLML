@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Random_Graph_Subgraph_Threshold/Ugraph_Lemmas.thy", "lemma subgraph_isomorphic_trans[trans]: assumes \"G\\<^sub>1 \\<sqsubseteq> G\\<^sub>2\" and \"G\\<^sub>2 \\<sqsubseteq> G\\<^sub>3\" shows \"G\\<^sub>1 \\<sqsubseteq> G\\<^sub>3\""]]

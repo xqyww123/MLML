@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/TESL_Language/Corecursive_Prop.thy", "lemma forall_nat_set_suc:\\<open>{x. \\<forall>m \\<ge> n. P x m} = {x. P x n} \\<inter> {x. \\<forall>m \\<ge> Suc n. P x m}\\<close>"]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/QuasiTerms_PickFresh_Alpha.thy", "lemma alphaAbs_weakestEx_imp_strongestAll: assumes GOOD_X: \"qGood X\" and \"alphaAbs_ex_equal_or_qAFresh xs x X xs' x' X'\" shows \"alphaAbs_all_equal_or_qAFresh xs x X xs' x' X'\""]]

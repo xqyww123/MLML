@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gromov_Hyperbolicity/Bonk_Schramm_Extension.thy", "lemma extended_distance_triang_ineq: assumes \"x \\<in> extended_distance_set\" \"y \\<in> extended_distance_set\" \"z \\<in> extended_distance_set\" shows \"extended_distance x z \\<le> extended_distance x y + extended_distance y z\""]]

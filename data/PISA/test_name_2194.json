@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Timed_Automata/Floyd_Warshall.thy", "lemma start_remove_neg_cycles: \"len m i j (start_remove xs k []) > len m i j xs \\<Longrightarrow> \\<exists> ys. set ys \\<subseteq> set xs \\<and> len m k k ys < \\<one>\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Syntax_Independent_Logic/Prelim.thy", "lemma inj_on_set_zip_map: assumes i: \"inj_on f X\" and a: \"(f x1, y1) \\<in> set (zip (map f xs) ys)\" \"set xs \\<subseteq> X\" \"x1 \\<in> X\" \"length xs = length ys\" shows \"(x1, y1) \\<in> set (zip xs ys)\""]]

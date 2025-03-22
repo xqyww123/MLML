@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Markov_Models/Discrete_Time_Markov_Chain.thy", "lemma prob_T_split: assumes P[measurable]: \"Measurable.pred S P\" shows \"\\<P>(\\<omega> in T s. P \\<omega>) = (\\<integral>\\<omega>. \\<P>(\\<omega>' in T ((s ## \\<omega>) !! n). P (stake n \\<omega> @- \\<omega>')) \\<partial>T s)\""]]

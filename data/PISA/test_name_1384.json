@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra1.thy", "lemma aasc_seq_mem:\"\\<lbrakk>a \\<in> A; \\<not> (\\<exists>m. m\\<in>A \\<and> (\\<forall>x\\<in>A. x \\<le> m))\\<rbrakk> \\<Longrightarrow> (aasc_seq A a n) \\<in> A\""]]

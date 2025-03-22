@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CoreC++/TypeSafe.thy", "lemma eval_preserves_type: assumes wf: \"wf_C_prog P\" shows \"\\<lbrakk> P,E \\<turnstile> \\<langle>e,s\\<rangle> \\<Rightarrow> \\<langle>e',s'\\<rangle>; P,E \\<turnstile> s \\<surd>; P,E \\<turnstile> e::T \\<rbrakk> \\<Longrightarrow> P,E,(hp s') \\<turnstile> e' :\\<^bsub>NT\\<^esub> T\""]]

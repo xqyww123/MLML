@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/WorkerWrapper/UnboxedNats.thy", "lemma fac_body'_fac_body: \"fac_body' = unwrapB oo fac_body oo wrapB\" (is \"?lhs = ?rhs\")"]]

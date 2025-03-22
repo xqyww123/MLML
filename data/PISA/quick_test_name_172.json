@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_to_DRA/Semi_Mojmir.thy", "lemma pre_ranks_pre_oldest_token_Min_state_special: assumes \"\\<not>sink q\" assumes \"configuration q (Suc n) \\<noteq> {}\" shows \"Min (pre_ranks (\\<lambda>q. state_rank q n) (w n) q) = max_rank \\<longleftrightarrow> Min (pre_oldest_tokens q n) = Suc n\" (is \"?lhs \\<longleftrightarrow> ?rhs\")"]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Higher_Order_Terms/Find_First.thy", "lemma find_first_some_index: \"i < length xs \\<Longrightarrow> distinct xs \\<Longrightarrow> find_first (xs ! i) xs = Some i\""]]

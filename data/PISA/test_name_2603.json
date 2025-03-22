@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinary_Differential_Equations/IVP/Flow.thy", "lemma flow_has_vector_derivative_at_0: assumes\"t \\<in> existence_ivl t0 x0\" shows \"((\\<lambda>h. flow t0 x0 (t + h)) has_vector_derivative f t (flow t0 x0 t)) (at 0)\""]]

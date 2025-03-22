@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Hybrid_Logic/Hybrid_Logic.thy", "lemma witness_used: fixes i :: 'b assumes inf: \\<open>infinite (UNIV :: 'b set)\\<close> and \\<open>finite used\\<close> \\<open>i \\<notin> block_nominals block\\<close> shows \\<open>i \\<notin> block_nominals (witness block ({i} \\<union> used))\\<close>"]]

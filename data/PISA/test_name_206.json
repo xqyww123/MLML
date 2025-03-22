@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/BNF_CC/Axiomatised_BNF_CC.thy", "lemma rell_G_compp_Grp: \"rell_G L1 L2 = (Grp {x. set1_G x \\<subseteq> {(x, y). L1 x y} \\<and> set2_G x \\<subseteq> {(x, y). L2 x y}} (mapl_G fst fst))\\<inverse>\\<inverse> OO Grp {x. set1_G x \\<subseteq> {(x, y). L1 x y} \\<and> set2_G x \\<subseteq> {(x, y). L2 x y}} (mapl_G snd snd)\""]]

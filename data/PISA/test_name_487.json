@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/Sepref_Tool.thy", "lemma CONS_init: assumes \"hn_refine \\<Gamma> c \\<Gamma>' R a\" assumes \"\\<Gamma>' \\<Longrightarrow>\\<^sub>t \\<Gamma>c'\" assumes \"\\<And>a c. hn_ctxt R a c \\<Longrightarrow>\\<^sub>t hn_ctxt Rc a c\" shows \"hn_refine \\<Gamma> c \\<Gamma>c' Rc a\""]]

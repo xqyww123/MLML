@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Splay_Tree/Splay_Map.thy", "lemma splay_map_of_inorder: \"splay x t = Node l a r \\<Longrightarrow> sorted1(inorder t) \\<Longrightarrow> map_of (inorder t) x = (if x = fst a then Some(snd a) else None)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Auto2_Imperative_HOL/Functional/Arrays_Ex.thy", "lemma set_list_swap [rewrite]: \"i < length xs \\<Longrightarrow> j < length xs \\<Longrightarrow> set (list_swap xs i j) = set xs\""]]

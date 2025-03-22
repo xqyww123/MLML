@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Heard_Of/otr/OneThirdRuleProof.thy", "lemma A1: assumes run:\"HORun OTR_M rho HOs\" and dec: \"decide (rho (Suc n) p) = Some v\" and chg: \"decide (rho (Suc n) p) \\<noteq> decide (rho n p)\" (is \"decide ?st' \\<noteq> decide ?st\") shows \"(2*N) div 3 < card { q . x (rho n q) = v }\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UTP/utp/utp_rel_laws.thy", "theorem RA7: \"((P\\<^sup>- ;; (\\<not>(P ;; Q))) \\<or> (\\<not>Q)) = (\\<not>Q)\""]]

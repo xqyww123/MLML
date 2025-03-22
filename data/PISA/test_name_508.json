@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Graph_Theory/Digraph_Isomorphism.thy", "lemma arcs_ends_app_iso_eq: assumes \"digraph_isomorphism hom\" shows \"arcs_ends (app_iso hom G) = (\\<lambda>(u,v). (iso_verts hom u, iso_verts hom v)) ` arcs_ends G\""]]

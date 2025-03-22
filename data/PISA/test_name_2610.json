@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Functional-Automata/NAe.thy", "lemma in_epsclosure_steps: \"[| (p,q) : steps A w; (q,r) : (eps A)\\<^sup>* |] ==> (p,r) : steps A w\""]]

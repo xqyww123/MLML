@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Closest_Pair_Points/Closest_Pair_Alternative.thy", "theorem closest_pair_dist: assumes \"1 < length ps\" \"distinct ps\" \"(c\\<^sub>0, c\\<^sub>1) = closest_pair ps\" shows \"sparse (dist c\\<^sub>0 c\\<^sub>1) (set ps)\""]]

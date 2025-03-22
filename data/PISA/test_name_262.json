@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FileRefinement/FileRefinement.thy", "lemma writeExtendCorrect: \"[| nextFreeBlockInvariant cfile1; unallocatedBlocksInvariant cfile1; lastBlockInvariant cfile1; ~ index < fileSize cfile1; Some cfile2 = cfWrite cfile1 index value |] ==> Some (abstFn cfile2) = afWrite (abstFn cfile1) index value\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordinary_Differential_Equations/IVP/Initial_Value_Problem.thy", "lemma solves_in_cone: assumes \"t \\<in> T\" assumes init: \"x t0 = x0\" assumes cont: \"continuous_on (closed_segment t0 t) x\" assumes solves: \"(x has_vderiv_on (\\<lambda>s. f s (x s))) (open_segment t0 t)\" shows \"x t \\<in> cball x0 (B * abs (t - t0))\""]]

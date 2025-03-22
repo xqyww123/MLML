@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Auto2_Imperative_HOL/Functional/RBTree.thy", "lemma del_bd [forward_arg]: \"bd_inv t \\<Longrightarrow> cl_inv t \\<Longrightarrow> bd_inv (del x t) \\<and> ( if cl t = R then black_depth (del x t) = black_depth t else black_depth (del x t) = black_depth t - 1)\""]]

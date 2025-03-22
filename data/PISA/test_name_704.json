@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Pi_Calculus/Weak_Early_Bisim_Pres.thy", "lemma resPres: fixes P :: pi and Q :: pi and x :: name assumes \"P \\<approx> Q\" shows \"<\\<nu>x>P \\<approx> <\\<nu>x>Q\""]]

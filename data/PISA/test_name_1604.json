@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/UTP/utp/utp_pred_laws.thy", "lemma bool_eq_splitI: assumes \"vwb_lens x\" \"P\\<lbrakk>true/x\\<rbrakk> = Q\\<lbrakk>true/x\\<rbrakk>\" \"P\\<lbrakk>false/x\\<rbrakk> = Q\\<lbrakk>false/x\\<rbrakk>\" shows \"P = Q\""]]

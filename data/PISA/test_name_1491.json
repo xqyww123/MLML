@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/More_Complex.thy", "lemma cmod_eqE: assumes \"cmod z1 = cmod z2\" shows \"z1 * cnj z1 = z2 * cnj z2\""]]

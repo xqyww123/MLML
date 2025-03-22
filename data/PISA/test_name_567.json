@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CAVA_LTL_Modelchecker/BoolProgs/BoolProgs.thy", "lemma reachable_configs_finite[simp, intro!]: \"finite (reachable_configs bp c)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Huffman/Huffman.thy", "lemma freq_swapFourSyms[simp]: \"\\<lbrakk>consistent t; a \\<in> alphabet t; b \\<in> alphabet t; c \\<in> alphabet t; d \\<in> alphabet t\\<rbrakk> \\<Longrightarrow> freq (swapFourSyms t a b c d) = freq t\""]]

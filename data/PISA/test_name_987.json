@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Key_Agreement_Strong_Adversaries/sklvl1.thy", "lemma skl1_step3_refines_a0i_commit_skip_i: \"{R0sk1iai \\<inter> (UNIV \\<times> skl1_inv3)} a0i_commit A B \\<langle>NonceF (Ra$ni), Nr, Exp gny (NonceF (Ra$nx))\\<rangle> \\<union> Id, skl1_step3 Ra A B Nr gny {>R0sk1iai}\""]]

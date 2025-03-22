@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LLL_Basis_Reduction/Gram_Schmidt_2.thy", "lemma gram_schmidt_short_vector: assumes in_L: \"h \\<in> lattice_of fs - {0\\<^sub>v n}\" shows \"\\<exists> i < m. \\<parallel>h\\<parallel>\\<^sup>2 \\<ge> \\<parallel>gso i\\<parallel>\\<^sup>2\""]]

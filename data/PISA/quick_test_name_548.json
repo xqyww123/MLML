@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Smooth_Manifolds/Tangent_Space.thy", "lemma push_forward_id: \"diff.push_forward k charts charts f X = X\" if \"\\<And>x. x \\<in> carrier \\<Longrightarrow> f x = x\" \"X \\<in> tangent_space p\" \"p \\<in> carrier\""]]

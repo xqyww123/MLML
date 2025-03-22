@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Prim_Dijkstra_Simple/Undirected_Graph.thy", "lemma connectedD[intro?]: assumes \"connected g\" \"u\\<in>nodes g\" \"v\\<in>nodes g\" shows \"(u,v)\\<in>(edges g)\\<^sup>*\""]]

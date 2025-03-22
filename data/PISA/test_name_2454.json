@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiscretePricing/Disc_Cond_Expect.thy", "lemma expl_cond_expect_const_exp: shows \"integral\\<^sup>L M (\\<lambda>y. expl_cond_expect M Y X w * (indicator (Y -` {Y w} \\<inter> space M)) y) = integral\\<^sup>L M (\\<lambda>y. expl_cond_expect M Y X y * (indicator (Y -` {Y w} \\<inter> space M)) y)\""]]

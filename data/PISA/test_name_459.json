@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Cauchy/CauchysMeanTheorem.thy", "lemma list_sum_mean: fixes xs::\"real list\" shows \"\\<Sum>:xs = ((mean xs) * (real (length xs)))\""]]

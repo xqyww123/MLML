@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/QuasiTerms_PickFresh_Alpha.thy", "lemma alpha_qFresh_qSwap_compose: assumes GOOD: \"qGood X\" and \"qFresh zs y X\" and \"qFresh zs z X\" shows \"((X #[[y \\<and> x]]_zs) #[[z \\<and> y]]_zs) #= (X #[[z \\<and> x]]_zs)\""]]

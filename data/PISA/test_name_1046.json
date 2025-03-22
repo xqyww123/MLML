@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOL-CSP/Hide.thy", "lemma hiding_maintains_is_process: \"is_process ({(s,X). \\<exists> t. s = trace_hide t (ev`A) \\<and> (t,X \\<union> (ev`A)) \\<in> F P} \\<union> {(s,X). s \\<in> div_hide P A}, div_hide P A)\" (is \"is_process(?f, ?d)\")"]]

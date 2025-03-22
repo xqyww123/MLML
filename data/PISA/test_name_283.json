@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Well_Sorted_Terms.thy", "theorem wls_fresh_vsubst_E2: assumes \"wls s X\" and \"fresh zs z (X #[y1 // y]_ys)\" shows \"fresh ys y X \\<or> zs \\<noteq> ys \\<or> z \\<noteq> y1\""]]

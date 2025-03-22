@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CAVA_Automata/CAVA_Base/Lexord_List.thy", "lemma less_eq_list_code [code]: \"list_le (x # xs) [] \\<longleftrightarrow> False\" \"list_le [] xs \\<longleftrightarrow> True\" \"list_le (x # xs) (y # ys) \\<longleftrightarrow> x < y \\<or> x = y \\<and> list_le xs ys\""]]

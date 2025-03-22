@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/EdmondsKarp_Maxflow/EdmondsKarp_Impl.thy", "lemma (in RGraph) augment_cf_impl_refine: assumes \"Graph.isSimplePath cf s p t\" shows \"augment_cf_impl cf p x \\<le> RETURN (Graph.augment_cf cf (set p) x)\""]]

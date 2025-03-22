@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Pi_Calculus/Weak_Late_Cong_SC.thy", "lemma sumZero: fixes P :: pi shows \"P \\<oplus> \\<zero> \\<simeq> P\""]]

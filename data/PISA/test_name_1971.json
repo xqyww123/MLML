@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Transition_Systems_and_Automata/Automata/Deterministic.thy", "lemma language_elim[elim]: assumes \"w \\<in> language A\" obtains \"run A w (initial A)\" \"test (condition A) w (trace A w (initial A)) (initial A)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/MM/SC_Completion.thy", "lemma complete_sc_ta_seq_consist: assumes cau: \"sc_completion s vs\" and ta_seq_consist_convert_RA: \"\\<And>vs ln. ta_seq_consist P vs (llist_of (convert_RA ln))\" shows \"ta_seq_consist P vs (lconcat (lmap (\\<lambda>(t, ta). llist_of \\<lbrace>ta\\<rbrace>\\<^bsub>o\\<^esub>) (complete_sc s vs)))\""]]

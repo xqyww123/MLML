@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Universal_Turing_Machine/Abacus_Mopup.thy", "lemma fetch_bef_erase_a_o[simp]: \"\\<lbrakk>0 < s; s \\<le> 2 * n; s mod 2 = Suc 0\\<rbrakk> \\<Longrightarrow> (fetch (mopup_a n @ shift mopup_b (2 * n)) s Oc) = (W0, s + 1)\""]]

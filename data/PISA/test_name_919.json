@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Psi_Calculi/Frame.thy", "lemma freshBottom[simp]: fixes x :: name shows \"x \\<sharp> \\<bottom>\""]]

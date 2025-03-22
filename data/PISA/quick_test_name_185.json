@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FocusStreamsCaseStudies/SteamBoiler_proof.thy", "lemma L4_Controller_One: assumes h1:\"Controller_L y (fin_inf_append [Zero] l) l z\" and h2:\"l (Suc t) = One\" shows \"(z (Suc t) = [] \\<and> l t = One) \\<or> (z (Suc t) = [One] \\<and> l t = Zero)\""]]

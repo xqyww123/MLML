@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Macaulay/Degree_Section.thy", "lemma deg_sect_Suc: \"deg_sect X (Suc d) = (\\<Union>x\\<in>X. (+) (Poly_Mapping.single x 1) ` deg_sect X d)\" (is \"?A = ?B\")"]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Sigma_Commit_Crypto/Cyclic_Group_Ext.thy", "lemma generator_pow_mult_order: \"\\<^bold>g [^] (order G * order G) = \\<one>\""]]

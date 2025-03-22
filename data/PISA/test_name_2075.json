@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Launchbury/Env-Nominal.thy", "lemma env_delete_eqvt[eqvt]: fixes m :: \"'a::pt \\<Rightarrow> 'b::{cont_pt,pcpo}\" shows \"\\<pi> \\<bullet> env_delete x m = env_delete (\\<pi> \\<bullet> x) (\\<pi> \\<bullet> m)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binomial-Queues/Binomial_Queue.thy", "lemma normalized_last_not_None: \\<comment> \\<open>\\ sometimes the inductive definition might work better\\<close> \"normalized xs \\<longleftrightarrow> xs = [] \\<or> last xs \\<noteq> None\""]]

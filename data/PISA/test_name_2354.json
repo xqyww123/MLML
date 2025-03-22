@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/IMP2/lib/IMP2_Aux_Lemmas.thy", "lemma eq_on_trans[trans]: \"r=s on X \\<Longrightarrow> s=t on X \\<Longrightarrow> r=t on X\""]]

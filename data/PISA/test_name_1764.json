@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Word_Lemmas.thy", "lemma if_conj_dist: \"((if b then w else x) \\<and> (if b then y else z) \\<and> X) = ((if b then w \\<and> y else x \\<and> z) \\<and> X)\""]]

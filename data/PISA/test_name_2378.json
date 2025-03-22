@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/ConcurrentGC/Proofs_Basis.thy", "lemma obj_at_split: \"Q (obj_at P r s) = ((sys_heap s r = None \\<longrightarrow> Q False) \\<and> (\\<forall>obj. sys_heap s r = Some obj \\<longrightarrow> Q (P obj)))\""]]

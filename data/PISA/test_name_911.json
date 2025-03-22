@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Relation_Algebra/More_Boolean_Algebra.thy", "lemma is_conjugation_unique: \"\\<lbrakk>is_conjugation f g; is_conjugation f h\\<rbrakk> \\<Longrightarrow> g = h\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lp/Lp.thy", "lemma Lp: assumes \"p \\<ge> (1::real)\" shows \"eNorm (\\<LL> p M) f = (if (f \\<in> borel_measurable M \\<and> integrable M (\\<lambda>x. \\<bar>f x\\<bar> powr p)) then (\\<integral>x. \\<bar>f x\\<bar> powr p \\<partial>M) powr (1/p) else (\\<infinity>::ennreal))\" \"defect (\\<LL> p M) = 1\""]]

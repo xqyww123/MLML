@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HereditarilyFinite/HF.thy", "lemma hballE [elim]: \"\\<forall>x\\<^bold>\\<in>A. P x \\<Longrightarrow> (P x \\<Longrightarrow> Q) \\<Longrightarrow> (x \\<^bold>\\<notin> A \\<Longrightarrow> Q) \\<Longrightarrow> Q\""]]

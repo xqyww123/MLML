@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Markov_Models/Discrete_Time_Markov_Chain.thy", "lemma T_eq_bind': \"T x = do { y \\<leftarrow> measure_pmf (K x) ; \\<omega> \\<leftarrow> T y ; return S (y ## \\<omega>) }\""]]

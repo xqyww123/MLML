@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Linear_Programming/More_Jordan_Normal_Forms.thy", "lemma set_comprehension_list_comprehension: \"set [f i . i <- [x..<a]] = {f i |i. i \\<in> {x..<a}}\""]]

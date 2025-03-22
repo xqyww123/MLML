@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Dirichlet_Series/Dirichlet_Series_Analysis.thy", "lemma fds_abs_summable_zeta_iff [simp]: fixes s :: \"'a :: {banach, nat_power_normed_field}\" shows \"fds_abs_converges fds_zeta s \\<longleftrightarrow> s \\<bullet> 1 > (1 :: real)\""]]

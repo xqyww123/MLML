@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Universal_Turing_Machine/Recs.thy", "lemma ex2_lemma [simp]: \"rec_eval (rec_ex2 f) [x, y1, y2] = (if (\\<exists>z \\<le> x. 0 < rec_eval f [z, y1, y2]) then 1 else 0)\""]]

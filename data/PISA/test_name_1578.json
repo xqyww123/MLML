@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Abstract-Rewriting/Relative_Rewriting.thy", "lemma relto_into_relto_fun: assumes \"(a,b) \\<in> relto A B\" shows \"\\<exists> as sel m. relto_fun A B (Suc 0) as sel m (a,b)\""]]

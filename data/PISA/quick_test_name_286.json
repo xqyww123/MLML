@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gromov_Hyperbolicity/Busemann_Function.thy", "lemma dist_le_max_Busemann_functions [mono_intros]: assumes \"xi \\<noteq> eta\" shows \"dist x (y::'a::Gromov_hyperbolic_space) \\<le> 2 * real_of_ereal (extended_Gromov_product_at y xi eta) + max (Busemann_function_at xi x y) (Busemann_function_at eta x y) + 2 * deltaG(TYPE('a))\""]]

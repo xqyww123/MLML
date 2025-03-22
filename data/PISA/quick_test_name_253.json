@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Dirichlet_Series/Dirichlet_Series.thy", "lemma suminf_fds_zeta_aux: \"f 0 = 0 \\<Longrightarrow> (\\<Sum>n. fds_nth fds_zeta n / f n) = (\\<Sum>n. 1 / f n :: 'a :: real_normed_field)\""]]

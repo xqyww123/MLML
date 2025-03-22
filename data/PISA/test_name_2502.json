@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Pi_Calculus/Weak_Early_Step_Sim.thy", "lemma monotonic: fixes A :: \"(pi \\<times> pi) set\" and B :: \"(pi \\<times> pi) set\" and P :: pi and P' :: pi assumes \"P \\<leadsto>\\<guillemotleft>A\\<guillemotright> P'\" and \"A \\<subseteq> B\" shows \"P \\<leadsto>\\<guillemotleft>B\\<guillemotright> P'\""]]

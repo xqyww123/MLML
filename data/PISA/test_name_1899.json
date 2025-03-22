@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Bernoulli/Bernoulli_FPS.thy", "lemma bernoulli'_odd_eq_0: \"n \\<noteq> 1 \\<Longrightarrow> odd n \\<Longrightarrow> bernoulli' n = 0\""]]

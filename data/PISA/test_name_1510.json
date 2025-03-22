@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Simpl/Language.thy", "lemma flatten_block [simp]: \"flatten (block init bdy return result) = [block init bdy return result]\""]]

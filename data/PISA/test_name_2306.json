@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/CommonArith/Util_NatInf.thy", "lemma idiff_ile_mono: \"m \\<le> (n::enat) \\<Longrightarrow> m - l \\<le> n - l\""]]

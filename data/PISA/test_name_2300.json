@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Syntax_Independent_Logic/Deduction.thy", "lemma prv_imp_eqv_transi_rev: assumes \"\\<phi> \\<in> fmla\" and \"\\<chi>1 \\<in> fmla\" and \"\\<chi>2 \\<in> fmla\" assumes \"prv (imp \\<phi> \\<chi>2)\" and \"prv (eqv \\<chi>1 \\<chi>2)\" shows \"prv (imp \\<phi> \\<chi>1)\""]]

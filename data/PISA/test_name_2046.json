@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Jordan_Normal_Form/Matrix.thy", "lemma mat_eq_iff: \"(x = y) = (dim_row x = dim_row y \\<and> dim_col x = dim_col y \\<and> (\\<forall> i j. i < dim_row y \\<longrightarrow> j < dim_col y \\<longrightarrow> x $$ (i,j) = y $$ (i,j)))\" (is \"?l = ?r\")"]]

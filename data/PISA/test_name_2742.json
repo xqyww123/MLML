@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOLCF-Prelude/Data_List.thy", "lemma filter_filter [simp]: \"filter\\<cdot>P\\<cdot>(filter\\<cdot>Q\\<cdot>xs) = filter\\<cdot>(\\<Lambda> x. Q\\<cdot>x andalso P\\<cdot>x)\\<cdot>xs\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Probabilistic_Noninterference/Resumption_Based.thy", "lemma mC_ZOC_mono: assumes \"mC_ZOC theta c d s t I0 P F\" and \"theta \\<subseteq> theta'\" shows \"mC_ZOC theta' c d s t I0 P F\""]]

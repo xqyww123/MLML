@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/RSAPSS/EMSAPSS.thy", "lemma drop_bv_mapzip: assumes \"n <= length x\" \"length x = length y\" shows \"drop n (bv_mapzip f x y) = bv_mapzip f (drop n x) (drop n y)\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Word_Lemmas.thy", "lemma aligned_neq_into_no_overlap: fixes x :: \"'a::len word\" assumes neq: \"x \\<noteq> y\" and alx: \"is_aligned x sz\" and aly: \"is_aligned y sz\" shows \"{x .. x + (2 ^ sz - 1)} \\<inter> {y .. y + (2 ^ sz - 1)} = {}\""]]

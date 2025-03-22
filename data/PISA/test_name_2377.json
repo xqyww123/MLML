@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Markov_Models/Classifying_Markov_Chain_States.thy", "lemma f_0: \"f x y 0 = (if x = y then 1 else 0)\""]]

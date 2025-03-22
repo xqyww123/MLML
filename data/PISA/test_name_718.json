@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Safe_OCL/OCL_Basic_Types.thy", "lemma sup_least_basic_type: \"\\<tau> \\<le> \\<rho> \\<Longrightarrow> \\<sigma> \\<le> \\<rho> \\<Longrightarrow> \\<tau> \\<squnion> \\<sigma> \\<le> \\<rho>\" for \\<tau> \\<sigma> \\<rho> :: \"'a basic_type\""]]

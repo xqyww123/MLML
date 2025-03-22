@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/MSO_Regex_Equivalence/WS1S_Equivalence_Checking.thy", "lemma soundness: \"dual.check_eqv n \\<phi> \\<psi> \\<Longrightarrow> \\<Phi>.lang\\<^sub>W\\<^sub>S\\<^sub>1\\<^sub>S n \\<phi> = \\<Phi>.lang\\<^sub>W\\<^sub>S\\<^sub>1\\<^sub>S n \\<psi>\""]]

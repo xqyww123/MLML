@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JiveDataStoreModel/Isabelle_Store/Store.thy", "lemma alive_arr_len [simp]: \"isArrV x \\<Longrightarrow> alive (ref (arr_len x)) s = alive x s\""]]

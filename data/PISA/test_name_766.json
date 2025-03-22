@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LOFT/LinuxRouter_OpenFlow_Translation.thy", "lemma lr_of_tran_s1_split: \"lr_of_tran_s1 (a # rt) = (route2match a, output_iface (routing_action a)) # lr_of_tran_s1 rt\""]]

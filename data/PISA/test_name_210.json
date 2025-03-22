@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Vickrey_Clarke_Groves/MiscTools.thy", "lemma lm091: assumes \"runiq (P\\<inverse>)\" shows \"(P``((Domain P) - X)) \\<inter> (P``X) = {}\""]]

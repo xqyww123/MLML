@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/pGCL/Healthiness.thy", "lemma nearly_healthy_wlp_repeat: assumes h_a: \"nearly_healthy (wlp a)\" shows \"nearly_healthy (wlp (repeat n a))\" (is \"?X n\")"]]

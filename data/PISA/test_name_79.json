@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/Abstract_Substitution.thy", "lemma subst_cls_mono_mset: \"C \\<subseteq># D \\<Longrightarrow> C \\<cdot> \\<sigma> \\<subseteq># D \\<cdot> \\<sigma>\""]]

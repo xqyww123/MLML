@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Abstract-Hoare-Logics/Procs/PsHoare.thy", "lemma strengthen_pre: \"\\<lbrakk> \\<forall>z s. P' z s \\<longrightarrow> P z s; C\\<turnstile> {P}c{Q} \\<rbrakk> \\<Longrightarrow> C\\<turnstile> {P'}c{Q}\""]]

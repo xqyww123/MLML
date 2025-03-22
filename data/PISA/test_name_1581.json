@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Index/List_Index.thy", "lemma index_last[simp]: \"xs \\<noteq> [] \\<Longrightarrow> distinct xs \\<Longrightarrow> index xs (last xs) = length xs - 1\""]]

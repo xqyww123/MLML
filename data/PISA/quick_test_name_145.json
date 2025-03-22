@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ergodic_Theory/Measure_Preserving_Transformations.thy", "lemma vrestr_image: assumes \"x \\<in> f--`A\" shows \"x \\<in> space M\" \"f x \\<in> space M\" \"f x \\<in> A\""]]

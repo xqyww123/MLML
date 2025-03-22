@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/MM/JMM_Spec.thy", "lemma sync_with_change_prefix: assumes sw: \"P,E \\<turnstile> a \\<le>sw a'\" and prefix: \"ltake n E [\\<approx>] ltake n E'\" and an: \"enat a < n\" and a'n: \"enat a' < n\" shows \"P,E' \\<turnstile> a \\<le>sw a'\""]]

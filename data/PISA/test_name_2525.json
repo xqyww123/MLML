@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Compiler/J1State.thy", "lemma call1_callE: assumes \"call1 (obj\\<bullet>M(pns)) = \\<lfloor>(a, M', vs)\\<rfloor>\" obtains (CallObj) \"call1 obj = \\<lfloor>(a, M', vs)\\<rfloor>\" | (CallParams) v where \"obj = Val v\" \"calls1 pns = \\<lfloor>(a, M', vs)\\<rfloor>\" | (Call) \"obj = addr a\" \"pns = map Val vs\" \"M = M'\""]]

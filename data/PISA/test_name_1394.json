@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/BDD/NormalizeTotalProof.thy", "lemma (in Normalize_impl) Normalize_modifies: shows \"\\<forall>\\<sigma>. \\<Gamma>\\<turnstile>{\\<sigma>} \\<acute>p :== PROC Normalize (\\<acute>p) {t. t may_only_modify_globals \\<sigma> in [rep,mark,low,high,next]}\""]]

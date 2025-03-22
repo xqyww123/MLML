@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/EdmondsKarp_Maxflow/FordFulkerson_Algo.thy", "theorem fofu_partial_correct: \"fofu \\<le> (spec f. isMaxFlow f)\""]]

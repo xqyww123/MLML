@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Locally-Nameless-Sigma/Sigma/Sigma.thy", "lemma lc_body: fixes t s p assumes \"lc t\" and \"s \\<noteq> p\" shows \"body (\\<sigma>[s,p] t)\""]]

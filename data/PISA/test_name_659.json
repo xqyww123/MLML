@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOL-CSP/Process.thy", "lemma nonTickFree_n_frontTickFree: \"\\<lbrakk>\\<not> tickFree s; front_tickFree s \\<rbrakk> \\<Longrightarrow> \\<exists>t. s = t @ [tick]\""]]

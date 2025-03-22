@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Basic/Auxiliary.thy", "lemma rtrancl3p_converseD: \"rtrancl3p r a bs a' \\<Longrightarrow> rtrancl3p (converse3p r) a' (rev bs) a\""]]

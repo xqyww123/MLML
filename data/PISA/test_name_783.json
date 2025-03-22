@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binomial-Heaps/SkewBinomialHeap.thy", "lemma insertList_queue_invar: \"queue_invar q \\<Longrightarrow> queue_invar (insertList ts q)\""]]

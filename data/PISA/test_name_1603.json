@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOLCF-Prelude/examples/GHC_Rewrite_Rules.thy", "lemma cont_augment_body [simp]: \"cont (\\<lambda>g. Abs_cfun ((++) (Product_Type.snd (Rep_listfun g))))\""]]

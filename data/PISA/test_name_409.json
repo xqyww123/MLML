@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/DiscretePricing/CRR_Model.thy", "lemma (in CRR_market) geom_proc_filt_info': fixes f::\"bool stream \\<Rightarrow> 'b::{t0_space}\" assumes \"f \\<in> borel_measurable (G n)\" shows \"f w = f (pseudo_proj_False n w)\""]]

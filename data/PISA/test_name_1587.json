@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Functional_Ordered_Resolution_Prover/Deterministic_FO_Ordered_Resolution_Prover.thy", "lemma reduce_clauses_in_P: assumes c_in: \"C \\<in> fst ` set N\" and p_irred: \"\\<forall>(E, k) \\<in> set P. is_irreducible [C] E\" shows \"wstate_of_dstate (N, P @ P', Q, n) \\<leadsto>\\<^sub>w\\<^sup>* wstate_of_dstate (N, P @ reduce_all C P', Q, n)\""]]

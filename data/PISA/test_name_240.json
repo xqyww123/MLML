@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Equiv_Relation2.thy", "lemma in_quotientP_imp_non_empty: assumes \"equivP P \\<phi>\" and \"(P///\\<phi>) X\" shows \"X \\<noteq> {}\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automated_Stateful_Protocol_Verification/Term_Abstraction.thy", "lemma abs_in: assumes \"t \\<in> M\" shows \"t \\<cdot>\\<^sub>\\<alpha> \\<alpha> \\<in> M \\<cdot>\\<^sub>\\<alpha>\\<^sub>s\\<^sub>e\\<^sub>t \\<alpha>\""]]

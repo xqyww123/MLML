@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/FOL-Fitting/FOL_Fitting.thy", "lemma shift_eq [simp]: \\<open>i = j \\<Longrightarrow> (e\\<langle>i:T\\<rangle>) j = T\\<close>"]]

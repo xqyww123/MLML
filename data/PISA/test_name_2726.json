@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Launchbury/HOLCF-Meet.thy", "lemma below_meet2[simp]: fixes x y :: \"'a :: Finite_Meet_cpo\" assumes \"z \\<sqsubseteq> x\" shows \"(x \\<sqinter> z) = z\""]]

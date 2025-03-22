@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Launchbury/Terms.thy", "lemma fv_SmartLet[simp]: \"fv (SmartLet \\<Gamma> e) = (fv \\<Gamma> \\<union> fv e) - domA \\<Gamma>\""]]

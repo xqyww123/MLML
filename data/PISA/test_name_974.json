@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Octonions/Cross_Product_7.thy", "lemma scalar7_triple1: \"x \\<bullet> (y \\<times>\\<^sub>7 z) = y \\<bullet> (z \\<times>\\<^sub>7 x)\" and scalar7_triple2: \"x \\<bullet> (y \\<times>\\<^sub>7 z) = z \\<bullet> (x \\<times>\\<^sub>7 y ) \""]]

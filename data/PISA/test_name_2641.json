@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Locally-Nameless-Sigma/preliminary/FMap.thy", "theorem fmap_case: \"(F::('a -~> 'b)) = Map.empty \\<or> (\\<exists>x y (F'::('a -~> 'b)). F = F'(x \\<mapsto> y))\""]]

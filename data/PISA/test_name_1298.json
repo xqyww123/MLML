@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ordered_Resolution_Prover/Abstract_Substitution.thy", "lemma is_renaming_inv_renaming_cancel_cls[simp]: \"is_renaming \\<rho> \\<Longrightarrow> C \\<cdot> \\<rho> \\<cdot> inv_renaming \\<rho> = C\""]]

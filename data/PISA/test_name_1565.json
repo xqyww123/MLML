@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Group-Ring-Module/Algebra7.thy", "lemma (in Module) surjec_finitely_gen:\"\\<lbrakk>R module N; f \\<in> mHom R M N; surjec\\<^bsub>M,N\\<^esub> f; M fgover R\\<rbrakk> \\<Longrightarrow> N fgover R\""]]

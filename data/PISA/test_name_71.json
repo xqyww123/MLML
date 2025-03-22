@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/JinjaThreads/Framework/LTS.thy", "lemma silent_move2_into_silent_move: fixes tl assumes \"silent_move2 s tl s'\" shows \"s -\\<tau>\\<rightarrow> s'\""]]

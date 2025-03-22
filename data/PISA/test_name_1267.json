@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptHOL/Misc_CryptHOL.thy", "lemma Cons_in_nlists_Suc [simp]: \"x # xs \\<in> nlists A (Suc n) \\<longleftrightarrow> x \\<in> A \\<and> xs \\<in> nlists A n\""]]

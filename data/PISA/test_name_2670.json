@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nat-Interval-Logic/IL_TemporalOperators.thy", "lemma infin_imp_iNextStrong_eq_iNext: \"\\<lbrakk> infinite I; t0 \\<in> I \\<rbrakk> \\<Longrightarrow> (\\<circle>\\<^sub>S t t0 I. P t) = (\\<circle> t t0 I. P t)\""]]

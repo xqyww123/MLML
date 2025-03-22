@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Density_Compiler/PDF_Target_Semantics.thy", "lemma insert_var_0[simp]: \"insert_var 0 f x = case_nat x f\""]]

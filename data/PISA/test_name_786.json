@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/ZFC_in_HOL/Kirby.thy", "lemma mult_add_mem_0 [simp]: \"a*x \\<in> elts (a*y) \\<longleftrightarrow> x \\<in> elts y \\<and> 0 \\<in> elts a\""]]

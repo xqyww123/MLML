@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Winding_Number_Eval/Cauchy_Index_Theorem.thy", "lemma cindexE_linear_comp: assumes \"c\\<noteq>0\" shows \"cindexE lb ub (f o (\\<lambda>x. c*x+b)) = (if c>0 then cindexE (c*lb+b) (c*ub+b) f else - cindexE (c*ub+b) (c*lb+b) f)\""]]

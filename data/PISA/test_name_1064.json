@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Possibilistic_Noninterference/During_Execution.thy", "lemma siso_Sbis[simp]: assumes \"siso c\" shows \"c \\<approx>s c\""]]

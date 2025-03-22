@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/CryptHOL/Generat.thy", "lemma rel_witness_generat2: assumes \"rel_generat A C R x y\" shows \"rel_generat (\\<lambda>(a, b') b. b = b' \\<and> A a b') (\\<lambda>(c, d') d. d = d' \\<and> C c d') (\\<lambda>(r, s') s. s = s' \\<and> R r s') (rel_witness_generat (x, y)) y\""]]

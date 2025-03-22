@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Koenigsberg_Friendship/MoreGraph.thy", "lemma del_edge_undirected_degree_minus'[simp]: \"finite (edges g) \\<Longrightarrow> (v,e,v') \\<in> edges g \\<Longrightarrow> (v',e,v) \\<in> edges g \\<Longrightarrow> degree v' (del_unEdge v e v' g) =degree v' g- (1::nat)\""]]

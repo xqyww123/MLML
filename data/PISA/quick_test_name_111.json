@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Smooth_Manifolds/Analysis_More.thy", "lemma image_prod: \"(\\<lambda>(x, y). (f x, g y)) ` (A \\<times> B) = f ` A \\<times> g ` B\""]]

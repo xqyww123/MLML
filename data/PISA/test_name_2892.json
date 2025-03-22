@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/LTL_Master_Theorem/Code_Export.thy", "lemma min_dnf_rep_abs[simp]: \"min_dnf (Unf (rep_ltln\\<^sub>Q (abs_ltln\\<^sub>Q \\<phi>))) = min_dnf (Unf \\<phi>)\""]]

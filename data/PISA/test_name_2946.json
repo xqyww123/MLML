@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/HOLCF-Prelude/Data_Bool.thy", "lemma andalso_assoc [simp]: \"((x andalso y) andalso z) = (x andalso y andalso z)\""]]

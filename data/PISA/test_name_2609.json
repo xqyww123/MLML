@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QR_Decomposition/Gram_Schmidt.thy", "lemma Gram_Schmidt_column_k_row_code[code abstract]: \"vec_nth (Gram_Schmidt_column_k_row A k a) = (%b. (if b = from_nat k then (column b A - (\\<Sum>x\\<in>{column i A|i. i < b}. ((column b A) \\<bullet> x / (x \\<bullet> x)) *\\<^sub>R x)) else (column b A)) $ a)\""]]

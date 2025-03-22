@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Abstract-Rewriting/Relative_Rewriting.thy", "lemma rtrancl_list_conv: \"((s,t) \\<in> R^*) = (\\<exists>list. last (s # list) = t \\<and> (\\<forall>i. i < length list \\<longrightarrow> ((s # list) ! i, (s # list) ! Suc i) \\<in> R))\" (is \"?l = ?r\")"]]

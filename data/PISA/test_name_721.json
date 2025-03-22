@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Berlekamp_Zassenhaus/Finite_Field_Record_Based.thy", "lemma urel_integer_mult: assumes \"urel_integer x y\" \"urel_integer x' y'\" shows \"urel_integer (mult_p_integer pp x x') (mult_p p y y')\""]]

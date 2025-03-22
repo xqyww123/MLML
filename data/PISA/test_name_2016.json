@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Cauchy/CauchysMeanTheorem.thy", "lemma prod_list_split: fixes xs::\"real list\" shows \"\\<Prod>:xs = (\\<Prod>:(list_neq xs m) * \\<Prod>:(list_eq xs m))\""]]

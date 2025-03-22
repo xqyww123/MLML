@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Bernoulli/Bernoulli.thy", "lemma sum_of_powers_nat_aux: assumes \"real a = b / c\" \"real b' = b\" \"real c' = c\" shows \"a = b' div c'\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Well_Sorted_Terms.thy", "lemma wls_Op_simp[simp]: assumes \"goodInp inp\" and \"goodBinp binp\" shows \"wls s (Op delta inp binp) = (stOf delta = s \\<and> wlsInp delta inp \\<and> wlsBinp delta binp)\""]]

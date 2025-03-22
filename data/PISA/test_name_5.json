@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Groebner_Bases/Reduced_GB.thy", "lemma reduced_GB_is_reduced_GB_dgrad_p_set: assumes \"dickson_grading d\" and \"finite (component_of_term ` Keys F)\" and \"F \\<subseteq> dgrad_p_set d m\" shows \"is_reduced_GB (reduced_GB F)\""]]

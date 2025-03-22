@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Landau_Symbols/Group_Sort.thy", "lemma sorted_all_equal: \"(\\<And>x. x \\<in> set xs \\<Longrightarrow> x = y) \\<Longrightarrow> sorted xs\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Differential_Dynamic_Logic/Uniform_Renaming.thy", "lemma OUrename_preserves_ODE_vars:\"ORadmit ODE \\<Longrightarrow> {z. (swap x y z) \\<in> ODE_vars I ODE} = ODE_vars I (OUrename x y ODE)\""]]

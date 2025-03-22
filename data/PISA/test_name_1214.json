@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/List-Infinite/CommonSet/SetIntervalStep.thy", "lemma inext_iprev: \"iMin I \\<noteq> n \\<Longrightarrow> inext (iprev n I) I = n\""]]

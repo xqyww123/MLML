@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Linear_Inequalities/Cone.thy", "lemma cone_of_cols: fixes A :: \"'a mat\" and b :: \"'a vec\" assumes A: \"A \\<in> carrier_mat n nr\" and b: \"b \\<in> carrier_vec n\" shows \"b \\<in> cone (set (cols A)) \\<longleftrightarrow> (\\<exists> x. x \\<ge> 0\\<^sub>v nr \\<and> A *\\<^sub>v x = b)\""]]

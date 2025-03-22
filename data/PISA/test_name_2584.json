@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lambda_Free_RPOs/Lambda_Free_Util.thy", "lemma add_mset_lt_le_lt: \"a \\<le> b \\<Longrightarrow> A < B \\<Longrightarrow> add_mset a A < add_mset b B\" for a :: \"'a :: linorder\""]]

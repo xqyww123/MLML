@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Network_Security_Policy_Verification/vertex_example_simps.thy", "lemma unique_default_example_simp1: \"{(e1, e2). e1 = vertex_1 \\<and> e2 = vertex_2 \\<and> (e1 = vertex_1 \\<longrightarrow> e2 \\<noteq> vertex_2)} = {}\""]]

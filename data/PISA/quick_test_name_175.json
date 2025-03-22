@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/KBPs/Kripke.thy", "lemma sim_f_tc: assumes s: \"sim M M' f\" assumes uv': \"(u, v) \\<in> (\\<Union>a\\<in>as. relations M a)\\<^sup>+\" shows \"(f u, f v) \\<in> (\\<Union>a\\<in>as. relations M' a)\\<^sup>+\""]]

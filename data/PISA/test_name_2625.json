@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Program-Conflict-Analysis/Misc.thy", "lemma mset_le_subtract: \"(A::'a multiset)\\<subseteq>#B \\<Longrightarrow> A-C \\<subseteq># B-C\""]]

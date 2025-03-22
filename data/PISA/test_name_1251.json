@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Call_Arity/TTree.thy", "lemma paths_withoutI: assumes \"xs \\<in> paths t\" assumes \"x \\<notin> set xs\" shows \"xs \\<in> paths (without x t)\""]]

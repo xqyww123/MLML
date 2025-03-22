@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Incompleteness/SyntaxN.thy", "lemma Eq_Eats_I: \"H \\<turnstile> All i (Var i IN z IFF Var i IN t OR Var i EQ u) \\<Longrightarrow> atom i \\<sharp> (z,t,u) \\<Longrightarrow> H \\<turnstile> z EQ Eats t u\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Automatic_Refinement/Lib/Misc.thy", "lemma set_quicksort_by_rel [simp]: \"set (quicksort_by_rel R sl xs) = set (xs @ sl)\""]]

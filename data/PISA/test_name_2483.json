@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Binding_Syntax_Theory/Terms.thy", "theorem getEnv_vsubstEnv1[simp]: assumes \"ys \\<noteq> xs \\<or> y \\<noteq> x\" and \"rho xs x = None\" shows \"(rho &[y1 // y]_ys) xs x = None\""]]

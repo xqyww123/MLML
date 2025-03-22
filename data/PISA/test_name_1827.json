@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Gabow_SCC/Gabow_GBG.thy", "lemma gpush_refine: \"\\<lbrakk>(v',v)\\<in>Id; (s',s)\\<in>gstate_rel\\<rbrakk> \\<Longrightarrow> (gpush v' s',push v s)\\<in>gstate_rel\""]]

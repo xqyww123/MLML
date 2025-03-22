@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Iptables_Semantics/Alternative_Semantics.thy", "lemma r_call_eq: \"\\<Gamma> c = Some rs \\<Longrightarrow> matches \\<gamma> m p \\<Longrightarrow> \\<Gamma>,\\<gamma>,p\\<turnstile> [Rule m (Call c)] \\<Rightarrow>\\<^sub>r t \\<longleftrightarrow> \\<Gamma>,\\<gamma>,p\\<turnstile> rs \\<Rightarrow>\\<^sub>r t\""]]

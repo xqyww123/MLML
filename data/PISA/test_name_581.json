@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Complex_Geometry/Unit_Circle_Preserving_Moebius.thy", "lemma unit_disc_fix_moebius_uminus [simp]: assumes \"unit_disc_fix M\" shows \"unit_disc_fix (-M)\""]]

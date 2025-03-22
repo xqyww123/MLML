@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Ergodic_Theory/SG_Library_Complement.thy", "lemma tends_to_real_e: fixes u::\"nat \\<Rightarrow> real\" assumes \"u \\<longlonglongrightarrow> l\" \"e>0\" shows \"\\<exists>N. \\<forall>n>N. abs(u n -l) < e\""]]

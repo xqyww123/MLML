@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Nominal2/Atoms.thy", "lemma fixes a b::\"atom\" assumes \"sort_of a = sort_of b\" shows \"(a \\<rightleftharpoons> b) \\<bullet> (a, b) = (b, a)\""]]

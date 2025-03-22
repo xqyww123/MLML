@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Refine_Imperative_HOL/IICF/Impl/Heaps/IICF_Abs_Heapmap.thy", "lemma hm_remove_op_\\<alpha>_correct: \"hm_remove_op k hm \\<le>\\<^sub>n SPEC (\\<lambda>hm'. heapmap_\\<alpha> hm' = (heapmap_\\<alpha> hm)(k:=None))\""]]

@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Lower_Semicontinuous/Lower_Semicontinuous.thy", "lemma convex_lsc_improper: fixes f :: \"'a::euclidean_space \\<Rightarrow> ereal\" assumes \"convex_on UNIV f\" assumes \"~(proper f)\" assumes \"lsc f\" shows \"f x = \\<infinity> | f x = -\\<infinity>\""]]

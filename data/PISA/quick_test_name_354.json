@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Multirelations/C_Algebras.thy", "lemma vs_hom_meet: \"d (((x \\<cdot> 1\\<^sub>\\<pi>) \\<parallel> U) \\<sqinter> ((y \\<cdot> 1\\<^sub>\\<pi>) \\<parallel> U)) = d ((x \\<cdot> 1\\<^sub>\\<pi>) \\<parallel> U) \\<sqinter> d ((y \\<cdot> 1\\<^sub>\\<pi>) \\<parallel> U)\""]]

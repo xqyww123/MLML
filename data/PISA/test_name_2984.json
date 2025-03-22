@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Tycon/Monad.thy", "lemma fmapU_bindU [coerce_simp]: \"fmapU\\<cdot>f\\<cdot>(bindU\\<cdot>m\\<cdot>k) = bindU\\<cdot>m\\<cdot>(\\<Lambda> x. fmapU\\<cdot>f\\<cdot>(k\\<cdot>x))\""]]

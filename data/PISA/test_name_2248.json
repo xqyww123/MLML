@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Program-Conflict-Analysis/ConstraintSystems.thy", "lemma (in flowgraph) RUV_precise: \"(u,Ml,Me)\\<in>RUV_cs fg U V \\<Longrightarrow> \\<exists>w s' c'. (([u],{#}),w,(s',c'))\\<in>trcl (ntrp fg) \\<and> atUV U V ({#s'#}+c') \\<and> mon_loc fg w = Ml \\<and> mon_env fg w = Me\""]]

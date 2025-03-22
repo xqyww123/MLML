@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Affine_Arithmetic/Affine_Arithmetic_Auxiliarities.thy", "lemma rad_of_mono[simp]: \"rad_of x \\<le> rad_of y \\<longleftrightarrow> x \\<le> y\""]]

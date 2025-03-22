@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Neumann_Morgenstern_Utility/Neumann_Morgenstern_Utility_Theorem.thy", "lemma independent_vnmD4: assumes \"independent_vnm C P\" assumes \"refl_on C P\" assumes \"p \\<in> C\" and \"q \\<in> C\" and \"r \\<in> C\" and \"\\<alpha> \\<in> {0..1}\" and \"p \\<succeq>[P] q\" shows \"mix_pmf \\<alpha> p r \\<succeq>[P] mix_pmf \\<alpha> q r\""]]

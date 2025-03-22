@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/QR_Decomposition/Projections.thy", "lemma norm_normalize: assumes \"x \\<noteq> 0\" shows \"norm (normalize x) = 1\""]]

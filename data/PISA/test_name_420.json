@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Random_Graph_Subgraph_Threshold/Ugraph_Lemmas.thy", "lemma subgraph_isomorphic_post_iso_closed: \"\\<lbrakk> H \\<sqsubseteq> G; G \\<simeq> G' \\<rbrakk> \\<Longrightarrow> H \\<sqsubseteq> G'\""]]

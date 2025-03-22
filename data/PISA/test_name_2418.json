@@ -1,0 +1,1 @@
+[["/home/ywu/afp-2021-02-11/thys/Graph_Saturation/RulesAndChains.thy", "lemma extensibleD[elim]: assumes \"extensible R G f\" \"\\<And> g. graph_homomorphism (snd R) G g \\<Longrightarrow> agree_on (fst R) f g \\<Longrightarrow> thesis\" shows thesis"]]
