@@ -52,16 +52,17 @@ class MiniLang_Base:
         try:
             self.start_case(category, index)
         except CaseNotAvailable:
-            return Result.CASE_NOT_AVAILABLE
-        result = Result.FAIL
+            return (Result.CASE_NOT_AVAILABLE, None)
+        result = (Result.FAIL, None)
         for src in srcs:
             try:
-                response, error = self.repl.eval(src)
-                if not error and response:
-                    if not response[-1][3][3]:
-                        result = Result.SUCCESS
-                        break
-            except REPLFail:
+                _, finished = self.mini.eval(src)
+                if finished:
+                    result = (Result.SUCCESS, None)
+                    break
+            except REPLFail as E:
+                result = (Result.FAIL, E)
+                print(E)
                 pass
         return result
 
@@ -76,7 +77,7 @@ class MiniLang_Base:
         if self.mini:
             self.mini.close()
         self.mini = Mini(self.addr, 'HOL')
-        self.mini.eval(src)
+        self.mini.set_theory_and_goal(src)
         self.mini.set_timeout(900 * 1000)
 
     def reset(self):
@@ -116,6 +117,7 @@ class Isar_Base:
     def __init__(self, addr):
         self.addr = addr
         self.repl = Client(addr, 'HOL')
+        self.repl.record_state("init")
 
     def __enter__(self):
         self.repl.__enter__()
@@ -126,15 +128,17 @@ class Isar_Base:
         return None
 
     def move_to(self, file, line, column=0):
-        if self.repl:
-            self.repl.close()
-        self.repl = Client(self.addr, 'HOL')
+        self.repl.rollback("init")
+        #if self.repl:
+        #    self.repl.close()
+        #self.repl = Client(self.addr, 'HOL')
         self.repl.eval_file (os.path.abspath(file), line, column)
     
     def reset_eval(self, src):
-        if self.repl:
-            self.repl.close()
-        self.repl = Client(self.addr, 'HOL')
+        self.repl.rollback("init")
+        #if self.repl:
+        #    self.repl.close()
+        #self.repl = Client(self.addr, 'HOL')
         self.repl.eval(src)
 
     def start_case(self, category, index):
@@ -149,7 +153,6 @@ class Isar_Base:
         for src in srcs:
             try:
                 response, error = self.repl.eval(src, timeout=600000)
-                print(error)
                 if error:
                     result = (Result.FAIL, error)
                 elif response and not response[-1][3][3]:
@@ -164,7 +167,9 @@ class Isar_Base:
     def reset(self):
         if self.repl:
             self.repl.close()
-        self.repl = None
+        #self.repl = None
+        self.repl = Client(self.addr, 'HOL')
+        self.repl.record_state("init")
 
 class Isar_PISA(Isar_Base):
     def start_case(self, category, index):
@@ -181,14 +186,14 @@ class Isar_PISA(Isar_Base):
 #    print('self-testing')
 #
 #    with MiniLang_PISA("127.0.0.1:6666") as test:
-#        assert(test.validate("test", 0, ["END"]) == Result.SUCCESS)
-#        assert(test.validate("test", 29, ["END"]) == Result.CASE_NOT_AVAILABLE)
-#        assert(test.validate("test", 1, ["UNFOLD echelon_form_upt_k_def END WITH assms"]) == Result.SUCCESS)
+#        assert(test.validate("test", 0, ["END"])[0] == Result.SUCCESS)
+#        assert(test.validate("test", 29, ["END"])[0] == Result.CASE_NOT_AVAILABLE)
+#        assert(test.validate("test", 1, ["UNFOLD echelon_form_upt_k_def END WITH assms"])[0] == Result.SUCCESS)
 #
 #    with Isar_PISA("127.0.0.1:6666") as test:
-#        assert(test.validate("test", 0, ["by simp"]) == Result.SUCCESS)
-#        assert(test.validate("test", 29, ["by simp"]) == Result.CASE_NOT_AVAILABLE)
-#        assert(test.validate("test", 1, ["using assms unfolding echelon_form_upt_k_def by auto"]) == Result.SUCCESS)
+#        assert(test.validate("test", 0, ["by simp"])[0] == Result.SUCCESS)
+#        assert(test.validate("test", 29, ["by simp"])[0] == Result.CASE_NOT_AVAILABLE)
+#        assert(test.validate("test", 1, ["using assms unfolding echelon_form_upt_k_def by auto"])[0] == Result.SUCCESS)
 
 
 def preprocess_MiniF2F(addr):
@@ -218,43 +223,42 @@ def preprocess_MiniF2F(addr):
             return validation_set
         validate_set = mk_dataset('./data/miniF2F/isabelle/valid')
         test_set = mk_dataset('./data/miniF2F/isabelle/test')
-        with open('cache/miniF2F_validation.json', 'w', encoding='utf-8') as f:
+        with open('data/miniF2F_validation.json', 'w', encoding='utf-8') as f:
             json.dump(validate_set, f, ensure_ascii=False, indent=4)
-        with open('cache/miniF2F_test.json', 'w', encoding='utf-8') as f:
+        with open('data/miniF2F_test.json', 'w', encoding='utf-8') as f:
             json.dump(test_set, f, ensure_ascii=False, indent=4)
 
-#if not os.path.isfile('cache/miniF2F_validation.json') or not os.path.isfile('cache/miniF2F_test.json'):
-#    preprocess_MiniF2F("127.0.0.1:6666")
-#
-#if __name__ == "__main__":
-#    with open('cache/miniF2F_validation.json', 'r', encoding='utf-8') as f:
-#        MINIF2F_VALIDATION = json.load(f)
-#    with open('cache/miniF2F_test.json', 'r', encoding='utf-8') as f:
-#        MINIF2F_TEST = json.load(f)
-#
-#
-#class MiniLang_MiniF2F(MiniLang_Base):
-#    def start_case(self, category, index):
-#        if category not in ["test", "valid"]:
-#            raise ValueError(f"MiniLang_MiniF2F: only support test and valid category")
-#        dataset = MINIF2F_VALIDATION if category == "valid" else MINIF2F_TEST
-#        try:
-#            src = dataset[index]
-#        except KeyError:
-#            raise CaseNotAvailable(f"MiniLang_MiniF2F: case {index} not available")
-#        self.reset_eval(src)
-#
-#class Isar_MiniF2F(Isar_Base):
-#    def start_case(self, category, index):
-#        if category not in ["test", "valid"]:
-#            raise ValueError(f"Isar_MiniF2F: only support test and valid category") 
-#        dataset = MINIF2F_VALIDATION if category == "valid" else MINIF2F_TEST
-#        try:
-#            src = dataset[index]
-#        except KeyError:
-#            raise CaseNotAvailable(f"Isar_MiniF2F: case {index} not available")
-#        self.reset_eval(src)
-#
+if not os.path.isfile('data/miniF2F_validation.json') or not os.path.isfile('data/miniF2F_test.json'):
+    preprocess_MiniF2F("127.0.0.1:6666")
+
+if __name__ == "__main__":
+    with open('data/miniF2F_validation.json', 'r', encoding='utf-8') as f:
+        MINIF2F_VALIDATION = json.load(f)
+    with open('data/miniF2F_test.json', 'r', encoding='utf-8') as f:
+        MINIF2F_TEST = json.load(f)
+
+class MiniLang_MiniF2F(MiniLang_Base):
+    def start_case(self, category, index):
+        if category not in ["test", "valid"]:
+            raise ValueError(f"MiniLang_MiniF2F: only support test and valid category")
+        dataset = MINIF2F_VALIDATION if category == "valid" else MINIF2F_TEST
+        try:
+            src = dataset[index]
+        except KeyError:
+            raise CaseNotAvailable(f"MiniLang_MiniF2F: case {index} not available")
+        self.reset_eval(src)
+
+class Isar_MiniF2F(Isar_Base):
+    def start_case(self, category, index):
+        if category not in ["test", "valid"]:
+            raise ValueError(f"Isar_MiniF2F: only support test and valid category") 
+        dataset = MINIF2F_VALIDATION if category == "valid" else MINIF2F_TEST
+        try:
+            src = dataset[index]
+        except KeyError:
+            raise CaseNotAvailable(f"Isar_MiniF2F: case {index} not available")
+        self.reset_eval(src)
+
 #if __name__ == "__main__":
 #    print('self-testing MiniF2F')
 #    with MiniLang_MiniF2F("127.0.0.1:6666") as test:
@@ -267,7 +271,7 @@ def preprocess_MiniF2F(addr):
 #            UNFOLD y_def
 #            END WITH fact0 power2_eq_square algebra_simps
 #            """
-#            ]) == Result.SUCCESS)
+#            ])[0] == Result.SUCCESS)
 #
 #    with Isar_MiniF2F("127.0.0.1:6666") as test:
 #        assert(test.validate("valid", "aime_1983_p9", [
@@ -284,9 +288,9 @@ def preprocess_MiniF2F(addr):
 #    then show ?thesis unfolding y_def 
 #        by (auto simp:power2_eq_square algebra_simps)
 #    qed"""
-#        ]) == Result.SUCCESS)
-
-
+#        ])[0] == Result.SUCCESS)
+#
+#
 def eval_pisa(result_path, response_path, evaluator):
     success = 0
     unavailable = 0

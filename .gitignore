@@ -7,3 +7,5 @@ result.csv
 translation/results
 \#*#
 __pycache__
+.vscode
+evaluation/isar_pisa_result.db
