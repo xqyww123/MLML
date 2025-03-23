@@ -4,7 +4,6 @@ import logging
 import json
 from IsaREPL import Client, Position, REPLFail
 import csv
-import sys
 
 # Configure logging to print to screen
 logging.basicConfig(

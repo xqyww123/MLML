@@ -33,7 +33,8 @@ def PISA_prelude(index):
 class MiniLang_Base:
     def __init__(self, addr):
         self.addr = addr
-        self.mini = None
+        self.mini = Mini(self.addr, 'HOL')
+        self.timeout = 900 * 1000
 
     def __enter__(self):
         if self.mini:
@@ -56,34 +57,26 @@ class MiniLang_Base:
         result = (Result.FAIL, None)
         for src in srcs:
             try:
-                _, finished = self.mini.eval(src)
+                _, finished = self.mini.eval(src, self.timeout)
                 if finished:
                     result = (Result.SUCCESS, None)
                     break
             except REPLFail as E:
                 result = (Result.FAIL, E)
-                print(E)
                 pass
         return result
 
     def move_to(self, file, line, column):
-        if self.mini:
-            self.mini.close()
-        pos = (os.path.abspath(file), line, column)
-        self.mini = Mini(self.addr, 'HOL', pos)
-        self.mini.set_timeout(900 * 1000)
+        file = os.path.abspath(file)
+        self.mini.move_to(file, line, column)
 
     def reset_eval(self, src):
-        if self.mini:
-            self.mini.close()
-        self.mini = Mini(self.addr, 'HOL')
         self.mini.set_theory_and_goal(src)
-        self.mini.set_timeout(900 * 1000)
 
     def reset(self):
         if self.mini:
             self.mini.close()
-        self.mini = None
+        self.mini = Mini(self.addr, 'HOL')
 
 class MiniLang_PISA(MiniLang_Base):
     def start_case(self, category, index):
@@ -129,16 +122,10 @@ class Isar_Base:
 
     def move_to(self, file, line, column=0):
         self.repl.rollback("init")
-        #if self.repl:
-        #    self.repl.close()
-        #self.repl = Client(self.addr, 'HOL')
         self.repl.eval_file (os.path.abspath(file), line, column)
     
     def reset_eval(self, src):
         self.repl.rollback("init")
-        #if self.repl:
-        #    self.repl.close()
-        #self.repl = Client(self.addr, 'HOL')
         self.repl.eval(src)
 
     def start_case(self, category, index):
@@ -160,14 +147,12 @@ class Isar_Base:
                     break
             except REPLFail as E:
                 result = (Result.FAIL, E)
-                print(E)
                 pass
         return result
 
     def reset(self):
         if self.repl:
             self.repl.close()
-        #self.repl = None
         self.repl = Client(self.addr, 'HOL')
         self.repl.record_state("init")
 
