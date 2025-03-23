@@ -1,12 +1,15 @@
-[submodule "contrib/auto_sledgehammer"]
-	path = contrib/auto_sledgehammer
-	url = git@github.com:xqyww123/auto_sledgehammer.git
-[submodule "contrib/Isa-Mini"]
-	path = contrib/Isa-Mini
-	url = git@github.com:xqyww123/Isa-Mini.git
-[submodule "contrib/Isa-REPL"]
-	path = contrib/Isa-REPL
-	url = git@github.com:xqyww123/Isa-REPL.git
 [submodule "data/miniF2F"]
 	path = data/miniF2F
 	url = https://github.com/facebookresearch/miniF2F.git
+[submodule "contrib/auto_sledgehammer"]
+	path = contrib/auto_sledgehammer
+	url = git@github.com:xqyww123/auto_sledgehammer.git
+	branch = main
+[submodule "contrib/Isa-Mini"]
+	path = contrib/Isa-Mini
+	url = git@github.com:xqyww123/Isa-Mini.git
+	branch = Isabelle2024
+[submodule "contrib/Isa-REPL"]
+	path = contrib/Isa-REPL
+	url = git@github.com:xqyww123/Isa-REPL.git
+	branch = Isabelle2024
