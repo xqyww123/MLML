@@ -1,6 +1,6 @@
 #!/bin/bash
 
-git submodule update --init --recursive
+git submodule update --init --recursive --remote
 pip install -q gdown
 mkdir -p ./cache/downloads
 mkdir -p ./translation/results
