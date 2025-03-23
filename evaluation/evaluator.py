@@ -10,6 +10,7 @@ import logging
 from enum import Enum
 from data import prelude_of, PISA_DATA
 from sqlitedict import SqliteDict
+import threading
 
 class Result(Enum):
     SUCCESS = "SUCCESS"
@@ -30,7 +31,7 @@ def PISA_prelude(index):
     except KeyError:
         raise CaseNotAvailable(f"MiniLang_PISA: case {index} not available")
 
-class MiniLang_Base:
+class MiniLang_Base(threading.local):
     def __init__(self, addr):
         self.addr = addr
         self.mini = Mini(self.addr, 'HOL')
@@ -106,7 +107,7 @@ class MiniLang_PISA(MiniLang_Base):
 #        MiniLang_PISA.print_state(self.eval(src))
 
 
-class Isar_Base:
+class Isar_Base(threading.local):
     def __init__(self, addr):
         self.addr = addr
         self.repl = Client(addr, 'HOL')
