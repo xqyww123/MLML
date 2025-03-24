@@ -17,7 +17,7 @@ from .server import SERVERS, SERVER_INSTANCES
 logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler()
     ]
@@ -302,7 +302,8 @@ class Case:
         return ret
 
 
-def evaluate(result_path, cases, evaluator, category):
+# see ./evaluation/evaluator_top.py as an example
+def evaluate(result_path : str, cases : list[Case], evaluator : MiniLang_Base | Isar_Base, category : str):
     # Setup shared variables with thread-safe access
     success = 0
     unavailable = 0
