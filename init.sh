@@ -5,11 +5,7 @@ pip install -q gdown
 mkdir -p ./cache/downloads
 mkdir -p ./translation/results
 
-# Check if current directory is in PYTHONPATH and add if not
-if [[ ":$PYTHONPATH:" != *":$(pwd):"* ]]; then
-    export PYTHONPATH="$PYTHONPATH:$(pwd)"
-fi
-
+source ./tools/init.sh
 
 if [ ! -d "./contrib/Isabelle2024" ]; then
     echo "Downloading Isabelle2024"
