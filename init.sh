@@ -5,7 +5,7 @@ pip install -q gdown
 mkdir -p ./cache/downloads
 mkdir -p ./translation/results
 
-source ./tools/envir.sh
+source ./envir.sh
 
 if [ ! -d "./contrib/Isabelle2024" ]; then
     echo "Downloading Isabelle2024"
