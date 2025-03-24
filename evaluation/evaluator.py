@@ -11,6 +11,10 @@ from enum import Enum
 from data import prelude_of, PISA_DATA
 from sqlitedict import SqliteDict
 import threading
+import concurrent.futures
+import queue  # Add standard queue module
+import time
+from tools import logger, SERVERS, SERVER_INSTANCES
 
 class Result(Enum):
     SUCCESS = "SUCCESS"
@@ -31,7 +35,7 @@ def PISA_prelude(index):
     except KeyError:
         raise CaseNotAvailable(f"MiniLang_PISA: case {index} not available")
 
-class MiniLang_Base(threading.local):
+class MiniLang_Base:
     def __init__(self, addr):
         self.addr = addr
         self.mini = Mini(self.addr, 'HOL')
@@ -95,19 +99,19 @@ class MiniLang_PISA(MiniLang_Base):
 #        ret, finished = response
 #        state = Mini.parse_prooftree(ret[2])
 #        new_items = Mini.parse_item(ret[0])
-#        rich.print_json(json.dumps(state, indent=2))
+#        logger.info(json.dumps(state, indent=2))
 #        if ret[1]:
-#            console.print('enter case ' + ret[1], style='bold grey66')
+#            logger.info('enter case ' + ret[1])
 #        if ret[0][0] or ret[0][1]:
-#            console.print('newly introduced: ' + json.dumps(new_items, indent=2), style='bold grey66')
+#            logger.info('newly introduced: ' + json.dumps(new_items, indent=2))
 #        if finished:
-#            console.print('All goals are proven', style='bold green')
+#            logger.info('All goals are proven')
 #
 #    def pretty_print(self, src):
 #        MiniLang_PISA.print_state(self.eval(src))
 
 
-class Isar_Base(threading.local):
+class Isar_Base:
     def __init__(self, addr):
         self.addr = addr
         self.repl = Client(addr, 'HOL')
@@ -169,7 +173,7 @@ class Isar_PISA(Isar_Base):
 
 
 #if __name__ == "__main__":
-#    print('self-testing')
+#    logger.info('self-testing')
 #
 #    with MiniLang_PISA("127.0.0.1:6666") as test:
 #        assert(test.validate("test", 0, ["END"])[0] == Result.SUCCESS)
@@ -246,7 +250,7 @@ class Isar_MiniF2F(Isar_Base):
         self.reset_eval(src)
 
 #if __name__ == "__main__":
-#    print('self-testing MiniF2F')
+#    logger.info('self-testing MiniF2F')
 #    with MiniLang_MiniF2F("127.0.0.1:6666") as test:
 #        assert(test.validate("valid", "aime_1983_p9", [
 #            r"""DEFINE y where "y=x * sin x"
@@ -278,47 +282,103 @@ class Isar_MiniF2F(Isar_Base):
 #
 #
 def eval_pisa(result_path, response_path, evaluator):
+    # Setup shared variables with thread-safe access
     success = 0
     unavailable = 0
     total = 0
-    results = []
-    def print_state():
-        success_rate = success / (total-unavailable) if total - unavailable > 0 else 0
-        unavailable_rate = unavailable / total if total > 0 else 0
-        print(f"Success: {success_rate}, Unavailable: {unavailable_rate}")
+    results = {}
+    lock = threading.Lock()
+
+    def log_state():
+        with lock:
+            success_rate = success / (total-unavailable) if total - unavailable > 0 else 0
+            unavailable_rate = unavailable / total if total > 0 else 0
+            logger.info(f"Success: {success_rate:.3f}, Unavailable: {unavailable_rate:.3f}")
+            
     with SqliteDict(result_path, autocommit=True) as db:
-        with evaluator as test:
-            with open(response_path, "r", encoding="utf-8") as f: 
-                for line in f:
-                    data = json.loads(line)
-                    print(f"evaluating {data['index']}")
-                    if data["index"] in db and db[data["index"]] != Result.CASE_NOT_AVAILABLE and db[data['index']] != 0:
-                        result, err = db[data["index"]]
-                    else:
-                        try:
-                            result, err = test.validate("test", data["index"], [data["response"]])
-                            db[data["index"]] = (result, err)
-                        except REPLFail as E:
-                            test.reset()
-                            print(E)
-                            result = Result.CASE_NOT_AVAILABLE
-                    if result == Result.SUCCESS:
-                        success += 1
-                    elif result == Result.CASE_NOT_AVAILABLE:
-                        unavailable += 1
-                    total += 1
-                    results.append(result)
-                    print_state()
-    print_state()
+        # Create a task queue from all cases
+        task_queue = queue.Queue()
+        with open(response_path, "r", encoding="utf-8") as f: 
+            for line in f:
+                task_queue.put(json.loads(line))
+
+        def eval_server(server_addr):
+            nonlocal success, unavailable, total, results
+            while not task_queue.empty():
+                logger.info(f"Connecting to server {server_addr}")
+                try:
+                    with evaluator(server_addr) as test:
+                        while True:
+                            try:
+                                # Get next task from queue with timeout
+                                case = task_queue.get(timeout=1)
+                            except queue.Empty:
+                                # No more tasks in queue
+                                return
+                            
+                            try:
+                                logger.info(f"Server {server_addr} evaluating {case['index']}")
+                                
+                                # Check if result already exists in database
+                                if case["index"] in db and db[case["index"]] != Result.CASE_NOT_AVAILABLE and db[case['index']] != 0:
+                                    result, err = db[case["index"]]
+                                else:
+                                    try:
+                                        result, err = test.validate("test", case["index"], [case["response"]])
+                                        db[case["index"]] = (result, err)
+                                    except REPLFail as E:
+                                        test.reset()
+                                        logger.error(f"REPLFail error: {E}")
+                                        result = Result.CASE_NOT_AVAILABLE
+                            except Exception as e:
+                                logger.error(f"Error processing case {case['index']}: {str(e)}")
+                                # Put the task back in the queue to retry
+                                task_queue.put(case)
+                                break
+                            finally:
+                                # Mark task as done
+                                task_queue.task_done()
+                                    
+                            with lock:
+                                # Update statistics
+                                if result == Result.SUCCESS:
+                                    success += 1
+                                elif result == Result.CASE_NOT_AVAILABLE:
+                                    unavailable += 1
+                                
+                                total += 1
+                                results[case["index"]] = result
+                                
+                            log_state()
+                except ConnectionRefusedError:
+                    logger.error(f"Fail to connect to {server_addr}. Retrying in 10 seconds...")
+                    time.sleep(10)
+                except Exception as e:
+                    logger.error(f"Worker thread for server {server_addr} encountered an error: {str(e)}. Retrying in 10 seconds...")
+                    time.sleep(10)
+        
+        # Create and start worker threads for each server
+        threads = []
+        for server_addr in SERVER_INSTANCES:
+            thread = threading.Thread(target=eval_server, args=(server_addr,))
+            thread.daemon = True  # Make threads daemon so they exit if main thread exits
+            threads.append(thread)
+            thread.start()
+            
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
+
+    log_state()
     return results
 
 
 if __name__ == "__main__":
-    print('self-test passed')
+    logger.info('self-test passed')
 if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "eval-mini-pisa":
-    eval_pisa('./evaluation/minilang_pisa_result.db', './evaluation/minilang_response.jsonl', MiniLang_PISA("127.0.0.1:6666"))
+    eval_pisa('./evaluation/minilang_pisa_result.db', './evaluation/minilang_response.jsonl', MiniLang_PISA)
 elif __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "eval-isar-pisa":
-    eval_pisa('./evaluation/isar_pisa_result.db', './evaluation/isar_response.jsonl', Isar_PISA("127.0.0.1:6666"))
+    eval_pisa('./evaluation/isar_pisa_result.db', './evaluation/isar_response.jsonl', Isar_PISA)
 elif __name__ == "__main__":
-    print("Usage: python lib_test.py eval-mini-pisa|eval-isar-pisa")
+    logger.info("Usage: python lib_test.py eval-mini-pisa|eval-isar-pisa")
     exit()

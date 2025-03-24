@@ -1,9 +1,6 @@
 #!/bin/bash
 
-# Check if current directory is in PYTHONPATH and add if not
-if [[ ":$PYTHONPATH:" != *":$(pwd):"* ]]; then
-    export PYTHONPATH="$PYTHONPATH:$(pwd)"
-fi
+source ./tools/envir.sh
 
 BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
