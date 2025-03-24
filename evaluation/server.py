@@ -85,7 +85,8 @@ def launch_server(server):
             numprocs = CFG_SERVERS[server][1]
             ssh_command = f"ssh {host} 'cd {pwd} && " + \
                 f"mkdir -p ./cache/repl_tmps/{port} && " + \
-                f"source ./tools/envir.sh && " + \
+                f"./init.sh && " + \
+                f"source ./envir.sh && " + \
                 f"nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} HOL {pwd}/cache/repl_tmps/{port} -o threads={numprocs} > ./cache/repl_tmps/{port}/log.txt 2>&1 &'"
             
             # Log the command being executed
