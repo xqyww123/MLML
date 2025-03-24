@@ -5,7 +5,7 @@ source ./tools/envir.sh
 BASE_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 while true; do
-    $BASE_DIR/evaluation/evaluator.py "$@"
+    $BASE_DIR/evaluation/evaluator_top.py "$@"
     exit_status=$?
 
     if [ $exit_status -eq 0 ]; then

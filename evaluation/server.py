@@ -113,7 +113,7 @@ def launch_server(server):
     return (True, server, "Already running")
 
 SERVERS = {}
-SERVERS_INSTANCES = []
+SERVER_INSTANCES = []
 
 def launch_servers():
     """Launch all REPL servers in parallel using ThreadPoolExecutor."""
@@ -139,7 +139,7 @@ def launch_servers():
                 success, server, message = future.result()
                 if success:
                     SERVERS[server] = CFG_SERVERS[server]
-                    SERVERS_INSTANCES.extend([server] * CFG_SERVERS[server][0])
+                    SERVER_INSTANCES.extend([server] * CFG_SERVERS[server][0])
                     success_count += 1
             except Exception as e:
                 logger.error(f"Server {server} launch raised an exception: {str(e)}")

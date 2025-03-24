@@ -1,5 +1,3 @@
-#!/bin/python
-
 import json
 import os
 import sys
@@ -14,7 +12,16 @@ import threading
 import concurrent.futures
 import queue  # Add standard queue module
 import time
-from .server import logger, SERVERS, SERVER_INSTANCES
+from .server import SERVERS, SERVER_INSTANCES
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
 
 class Result(Enum):
     SUCCESS = "SUCCESS"
@@ -286,11 +293,12 @@ class Case:
         self.code = code
 
     @staticmethod
-    def PISA_file(result_path):
+    def PISA_file(response_path):
         ret = []
-        with SqliteDict(result_path, autocommit=True) as db:
-            for index, result in db.items():
-                ret.append(Case(index, result))
+        with open(response_path, "r", encoding="utf-8") as f: 
+                for line in f:
+                    data = json.loads(line)
+                    ret.append(Case(data["index"], data["response"]))
         return ret
 
 
@@ -382,18 +390,7 @@ def evaluate(result_path, cases, evaluator, category):
         for thread in threads:
             thread.join()
 
+    logger.info(f"Evaluation complete. Processed {total}/{len(cases)} cases.")
     log_state()
     return results
 
-
-if __name__ == "__main__":
-    logger.info('self-test passed')
-if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "eval-mini-pisa":
-    cases = Case.PISA_file('./evaluation/minilang_pisa_result.db')
-    evaluate('./evaluation/minilang_pisa_result.db', cases, MiniLang_PISA, "test")
-elif __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "eval-isar-pisa":
-    cases = Case.PISA_file('./evaluation/isar_pisa_result.db')
-    evaluate('./evaluation/isar_pisa_result.db', cases, Isar_PISA, "test")
-elif __name__ == "__main__":
-    print("Usage: python evaluation/evaluator.py eval-mini-pisa|eval-isar-pisa")
-    exit()
