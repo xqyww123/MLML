@@ -8,7 +8,7 @@
 [submodule "contrib/Isa-Mini"]
 	path = contrib/Isa-Mini
 	url = git@github.com:xqyww123/Isa-Mini.git
-	branch = Isabelle2024
+	branch = Isabelle2024-ML
 [submodule "contrib/Isa-REPL"]
 	path = contrib/Isa-REPL
 	url = git@github.com:xqyww123/Isa-REPL.git
