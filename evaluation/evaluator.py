@@ -14,7 +14,7 @@ import threading
 import concurrent.futures
 import queue  # Add standard queue module
 import time
-from evaluation import logger, SERVERS, SERVER_INSTANCES
+from .server import logger, SERVERS, SERVER_INSTANCES
 
 class Result(Enum):
     SUCCESS = "SUCCESS"
