@@ -14,7 +14,7 @@ import threading
 import concurrent.futures
 import queue  # Add standard queue module
 import time
-from tools import logger, SERVERS, SERVER_INSTANCES
+from evaluation import logger, SERVERS, SERVER_INSTANCES
 
 class Result(Enum):
     SUCCESS = "SUCCESS"
@@ -279,9 +279,22 @@ class Isar_MiniF2F(Isar_Base):
 #        by (auto simp:power2_eq_square algebra_simps)
 #    qed"""
 #        ])[0] == Result.SUCCESS)
-#
-#
-def eval_pisa(result_path, response_path, evaluator):
+
+class Case:
+    def __init__(self, index, code):
+        self.index = index
+        self.code = code
+
+    @staticmethod
+    def PISA_file(result_path):
+        ret = []
+        with SqliteDict(result_path, autocommit=True) as db:
+            for index, result in db.items():
+                ret.append(Case(index, result))
+        return ret
+
+
+def evaluate(result_path, cases, evaluator, category):
     # Setup shared variables with thread-safe access
     success = 0
     unavailable = 0
@@ -295,13 +308,13 @@ def eval_pisa(result_path, response_path, evaluator):
             unavailable_rate = unavailable / total if total > 0 else 0
             logger.info(f"Success: {success_rate:.3f}, Unavailable: {unavailable_rate:.3f}")
             
-    with SqliteDict(result_path, autocommit=True) as db:
-        # Create a task queue from all cases
-        task_queue = queue.Queue()
-        with open(response_path, "r", encoding="utf-8") as f: 
-            for line in f:
-                task_queue.put(json.loads(line))
+    # Create a task queue from all cases
+    task_queue = queue.Queue()
+    for case in cases:
+        task_queue.put(case)
 
+    logger.info(f"Starting {evaluator.__name__} evaluation of {len(cases)} {category} cases. The result will be saved to {result_path}")
+    with SqliteDict(result_path, autocommit=True) as db:
         def eval_server(server_addr):
             nonlocal success, unavailable, total, results
             while not task_queue.empty():
@@ -311,27 +324,27 @@ def eval_pisa(result_path, response_path, evaluator):
                         while True:
                             try:
                                 # Get next task from queue with timeout
-                                case = task_queue.get(timeout=1)
+                                case : Case = task_queue.get(timeout=1)
                             except queue.Empty:
                                 # No more tasks in queue
                                 return
                             
                             try:
-                                logger.info(f"Server {server_addr} evaluating {case['index']}")
+                                logger.info(f"Server {server_addr} evaluating {case.index}")
                                 
                                 # Check if result already exists in database
-                                if case["index"] in db and db[case["index"]] != Result.CASE_NOT_AVAILABLE and db[case['index']] != 0:
-                                    result, err = db[case["index"]]
+                                if case.index in db and db[case.index] != Result.CASE_NOT_AVAILABLE and db[case.index] != 0:
+                                    result, err = db[case.index]
                                 else:
                                     try:
-                                        result, err = test.validate("test", case["index"], [case["response"]])
-                                        db[case["index"]] = (result, err)
+                                        result, err = test.validate(category, case.index, [case.code])
+                                        db[case.index] = (result, err)
                                     except REPLFail as E:
                                         test.reset()
                                         logger.error(f"REPLFail error: {E}")
                                         result = Result.CASE_NOT_AVAILABLE
                             except Exception as e:
-                                logger.error(f"Error processing case {case['index']}: {str(e)}")
+                                logger.error(f"Error processing case {case.index}: {str(e)}")
                                 # Put the task back in the queue to retry
                                 task_queue.put(case)
                                 break
@@ -347,7 +360,7 @@ def eval_pisa(result_path, response_path, evaluator):
                                     unavailable += 1
                                 
                                 total += 1
-                                results[case["index"]] = result
+                                results[case.index] = result
                                 
                             log_state()
                 except ConnectionRefusedError:
@@ -376,9 +389,11 @@ def eval_pisa(result_path, response_path, evaluator):
 if __name__ == "__main__":
     logger.info('self-test passed')
 if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "eval-mini-pisa":
-    eval_pisa('./evaluation/minilang_pisa_result.db', './evaluation/minilang_response.jsonl', MiniLang_PISA)
+    cases = Case.PISA_file('./evaluation/minilang_pisa_result.db')
+    evaluate('./evaluation/minilang_pisa_result.db', cases, MiniLang_PISA, "test")
 elif __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "eval-isar-pisa":
-    eval_pisa('./evaluation/isar_pisa_result.db', './evaluation/isar_response.jsonl', Isar_PISA)
+    cases = Case.PISA_file('./evaluation/isar_pisa_result.db')
+    evaluate('./evaluation/isar_pisa_result.db', cases, Isar_PISA, "test")
 elif __name__ == "__main__":
-    logger.info("Usage: python lib_test.py eval-mini-pisa|eval-isar-pisa")
+    print("Usage: python evaluation/evaluator.py eval-mini-pisa|eval-isar-pisa")
     exit()
