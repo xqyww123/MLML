@@ -45,7 +45,7 @@ def PISA_prelude(index):
 class MiniLang_Base:
     def __init__(self, addr):
         self.addr = addr
-        self.mini = Mini(self.addr, 'HOL')
+        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False)
         self.timeout = 900 * 1000
 
     def __enter__(self):
@@ -88,7 +88,7 @@ class MiniLang_Base:
     def reset(self):
         if self.mini:
             self.mini.close()
-        self.mini = Mini(self.addr, 'HOL')
+        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False)
 
 class MiniLang_PISA(MiniLang_Base):
     def start_case(self, category, index):
@@ -346,11 +346,13 @@ def evaluate(result_path : str, cases : list[Case], evaluator : MiniLang_Base | 
                                     result, err = db[case.index]
                                 else:
                                     try:
+                                        if case.index == 316:
+                                            pass
                                         result, err = test.validate(category, case.index, [case.code])
                                         db[case.index] = (result, err)
                                     except REPLFail as E:
                                         test.reset()
-                                        logger.error(f"REPLFail error: {E}")
+                                        logger.error(f"REPLFail error @ {case.index}: {E}")
                                         result = Result.CASE_NOT_AVAILABLE
                             except Exception as e:
                                 logger.error(f"Error processing case {case.index}: {str(e)}")
