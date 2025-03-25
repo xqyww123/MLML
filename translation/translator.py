@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
+
 import logging
-from evaluation.server import SERVER
+from evaluation.server import SERVERS
 from sqlitedict import SqliteDict
 import msgpack as mp
 import sys
@@ -18,7 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 SERVER_INSTANCES = []
-for server, (_, numproc) in SERVER:
+for server, (_, numproc) in SERVERS.items():
     numconn = max(int (numproc * 0.6), 1)
     SERVER_INSTANCES.extend([server] * numconn)
 
@@ -82,14 +84,14 @@ def translate(result_path : str):
                                 mp.pack(run, c.cout)
                                 c.cout.flush()
                             case (1, pos_spec, pos_prf, origin, err):
-                                logger.error(f"{norm_file(pos_spec[3][1])}:{pos_spec[0]} fails")
+                                logger.error(f"[{finished_tasks}/{total_tasks}] - {server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} fails")
                                 logger.error(err)
                                 pos_spec = encode_pos(pos_spec)
                                 pos_prf = encode_pos(pos_prf)
                                 db[pos_spec] = (False, err, origin, pos_prf)
                                 db.commit()
                             case (2, pos_spec, pos_prf, origin, ret):
-                                logger.info(f"{norm_file(pos_spec[3][1])}:{pos_spec[0]} succeeds")
+                                logger.info(f"[{finished_tasks}/{total_tasks}] - {server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} succeeds")
                                 logger.info(ret['refined'])
                                 pos_spec = encode_pos(pos_spec)
                                 pos_prf = encode_pos(pos_prf)
@@ -114,9 +116,9 @@ def translate(result_path : str):
                 db[rpath] = True
                 db.commit()
                 logger.info(f"[{finished_tasks}/{total_tasks}] - {server} - finished {rpath}")
-                finished_tasks += 1
 
         def worker(server):
+            nonlocal finished_tasks
             while True:
                 try:
                     rpath = task_queue.get(timeout=1)
@@ -130,6 +132,7 @@ def translate(result_path : str):
                             success = True
                         except Exception as e:
                             logger.error(f"[{finished_tasks}/{total_tasks}] - {server} - Error translating {rpath}: {e}")
+                            time.sleep(10)
                 finally:
                     if success:
                         finished_tasks += 1
@@ -149,3 +152,5 @@ def translate(result_path : str):
         for thread in threads:
             thread.join()
 
+if __name__ == "__main__":
+    translate('./cache/translation/results.db')
