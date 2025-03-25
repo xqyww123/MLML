@@ -8,8 +8,12 @@ import concurrent.futures
 import threading
 
 logger = logging.getLogger(__name__)
+# Read the logging level from an environment variable, default to INFO if not set.
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+
+# Configure logging using the specified log level.
 logging.basicConfig(
-    level=logging.INFO,
+    level=log_level,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler()
@@ -64,10 +68,12 @@ except FileNotFoundError:
 
 def test_server(addr):
     try:
-        with Client(addr, 'HOL') as client:
+        with Client(addr, 'HOL', timeout=3) as client:
             client.num_processor()
             return True
-    except ConnectionRefusedError:
+    except TimeoutError:
+        return False
+    except ConnectionError:
         return False
     except REPLFail:
         return False
@@ -85,8 +91,8 @@ def launch_server(server):
             numprocs = CFG_SERVERS[server][1]
             ssh_command = f"ssh {host} 'cd {pwd} && " + \
                 f"mkdir -p ./cache/repl_tmps/{port} && " + \
-                f"./init.sh && " + \
                 f"source ./envir.sh && " + \
+                f"(fuser -n tcp -k {port} || true) && " + \
                 f"nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} HOL {pwd}/cache/repl_tmps/{port} -o threads={numprocs} > ./cache/repl_tmps/{port}/log.txt 2>&1 &'"
             
             # Log the command being executed
