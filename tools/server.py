@@ -105,16 +105,16 @@ def launch_server(server, retry=20):
             # Wait for the server to start (try up to 60 times)
             for attempt in range(30):
                 if test_server(server):
-                    logger.info(f"Server on {host}:{port} started after {attempt+1} attempts")
-                    return (True, server, f"Started successfully after {attempt+1} attempts")
-                logger.debug(f"Waiting for server {host}:{port} to start (attempt {attempt+1}/60)")
+                    logger.info(f"Server on {host}:{port} started after {(attempt+1)*10} seconds")
+                    return (True, server, f"Started successfully after {(attempt+1)*10} seconds")
+                logger.debug(f"Waiting for server {host}:{port} to start (attempt {attempt+1}/30)")
                 time.sleep(10)
             
-            logger.warning(f"Server on {host}:{port} failed to start after 30 attempts")
+            logger.warning(f"Server on {host}:{port} failed to start after 300 seconds")
             if retry > 0:
                 return launch_server(server, retry - 1)
             else:
-                return (False, server, "Failed to start after 60 attempts")
+                return (False, server, "Failed to start after 300 seconds")
         except Exception as e:
             error_msg = str(e)
             logger.error(f"Failed to launch server on {host}:{port}: {error_msg}, retrying...")
@@ -245,9 +245,79 @@ supervisor = ServerSupervisor(check_interval=10)  # Check every 10 seconds
 supervisor.start()
 
 # Register an atexit handler to stop the supervisor gracefully when the program exits
-import atexit
-atexit.register(supervisor.stop)
+#import atexit
+#atexit.register(supervisor.stop)
 
-if __name__ == "__main__":
-    time.sleep(1000000)
+def restart_all_servers():
+    """Restart all servers by killing existing processes and waiting for supervisor to bring them back online"""
+    logger.info("Killing all server processes for supervisor-managed restart...")
+    
+    # Kill all existing server processes
+    killed_servers = []
+    for server_addr in CFG_SERVERS.keys():
+        try:
+            # Parse the server address to get host and port
+            if ':' in server_addr:
+                host, port = server_addr.split(':')
+                
+                # Use SSH to run fuser for all hosts
+                try:
+                    cmd = f"ssh {host} 'fuser -k {port}/tcp'"
+                    result = subprocess.run(
+                        cmd,
+                        shell=True,
+                        check=False,
+                        stderr=subprocess.PIPE,
+                        stdout=subprocess.PIPE
+                    )
+                    if result.returncode == 0:
+                        logger.info(f"Killed server process on {host}:{port}")
+                        killed_servers.append(server_addr)
+                    else:
+                        logger.warning(f"No process found on {host}:{port} or failed to kill: {result.stderr.decode()}")
+                except Exception as e:
+                    logger.error(f"SSH command failed for {host}:{port}: {str(e)}")
+            else:
+                logger.error(f"Invalid server address format: {server_addr}")
+        except Exception as e:
+            logger.error(f"Error killing server {server_addr}: {str(e)}")
+    
+    if not killed_servers:
+        logger.warning("No servers were killed, nothing to restart")
+        return 0, 0
+    
+    killed_count = len(killed_servers)
+    logger.info(f"Killed {killed_count} server processes. Waiting for supervisor to restart them...")
+    
+    # Wait for each server to come back online
+    success_count = 0
+    failed_servers = []
+    
+    # Test each server with up to 30 attempts
+    for server in killed_servers:
+        server_online = False
+        max_attempts = 30
+        
+        for attempt in range(1, max_attempts + 1):
+            if test_server(server):
+                logger.info(f"Server {server} is back online after {attempt*10} seconds")
+                success_count += 1
+                server_online = True
+                break
+            
+            if attempt < max_attempts:
+                logger.debug(f"Server {server} still offline, waiting... (attempt {attempt}/{max_attempts})")
+                time.sleep(10)  # Wait 10 seconds between attempts
+        
+        if not server_online:
+            logger.warning(f"Server {server} failed to restart after {max_attempts*10} seconds")
+            failed_servers.append(server)
+    
+    # Final summary
+    if success_count == killed_count:
+        logger.info(f"All {killed_count} servers successfully restarted")
+    else:
+        logger.warning(f"Restart summary: {success_count}/{killed_count} servers online, {len(failed_servers)} failed")
+    
+    return success_count, len(failed_servers)
 
