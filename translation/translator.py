@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
-from evaluation.server import SERVERS
+from tools.server import SERVERS
 from sqlitedict import SqliteDict
 import msgpack as mp
 import sys
@@ -47,8 +47,24 @@ def encode_pos2 (pos):
 
 def translate(result_path : str):
 
-    total_tasks = 0
-    finished_tasks = 0
+    total_theories = 0
+    finished_theories = 0
+    total_goals = 0
+    finished_goals = {}
+
+    def add_goal(ret):
+        for cat in ret:
+            if cat in finished_goals:
+                finished_goals[cat] += 1
+            else:
+                finished_goals[cat] = 1
+
+    def report():
+        s = [f"theories: {finished_theories/total_theories*100:.2f}%, goals: {total_goals}"]
+        for cat, count in finished_goals.items():
+            s.append(f"{cat}: {count / total_goals * 100:.2f}%")
+        logger.info(", ".join(s))
+
     task_queue = queue.Queue()
     with open('translation/targets', "r", encoding="utf-8") as f:
         for line in f:
@@ -56,7 +72,7 @@ def translate(result_path : str):
             if not line:
                 continue
             task_queue.put(line)
-            total_tasks += 1
+            total_theories += 1
 
     with SqliteDict(result_path) as db:
         def translate_one(server, rpath):
@@ -72,30 +88,50 @@ def translate(result_path : str):
                 c.run_ML("Minilang_Translator.MS_Translator_Top", INIT_SCRIPT)
 
                 def interact():
+                    nonlocal total_goals, finished_goals
                     while True:
                         match c.unpack.unpack():
                             case (0, pos):
                                 pos = encode_pos(pos)
-                                run = False
                                 try:
-                                    run = not db[pos][0]
+                                    ret, errs, pos_prf = db[pos]
+                                    run = False
+                                    total_goals += 1
+                                    for cat in ret:
+                                        if cat in finished_goals:
+                                            finished_goals[cat] += 1
+                                        else:
+                                            finished_goals[cat] = 1
                                 except KeyError:
                                     run = True
                                 mp.pack(run, c.cout)
                                 c.cout.flush()
                             #case (1, pos_spec, pos_prf, origin, err):
-                            #    logger.error(f"[{finished_tasks/total_tasks*100:.2f}%] - {server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} fails")
+                            #    total_goals += 1
+                            #    logger.error(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} fails")
                             #    logger.error(err)
+                            #    report()
                             #    pos_spec = encode_pos(pos_spec)
                             #    pos_prf = encode_pos(pos_prf)
                             #    db[pos_spec] = (False, err, origin, pos_prf)
                             #    db.commit()
                             case (2, pos_spec, pos_prf, ret, errs):
-                                logger.info(f"[{finished_tasks/total_tasks*100:.2f}%] - {server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} succeeds")
-                                logger.info(ret['refined'])
+                                total_goals += 1
+                                if errs:
+                                    logger.error(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} fails")
+                                    for err in errs:
+                                        logger.error(err)
+                                else:
+                                    logger.info(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} succeeds")
+                                for cat in ret:
+                                    if cat in finished_goals:
+                                        finished_goals[cat] += 1
+                                    else:
+                                        finished_goals[cat] = 1
+                                report()
                                 pos_spec = encode_pos(pos_spec)
                                 pos_prf = encode_pos(pos_prf)
-                                db[pos_spec] = (True, ret, origin, pos_prf)
+                                db[pos_spec] = (ret, errs, pos_prf)
                                 db.commit()
                             case 3:
                                 break
@@ -109,16 +145,16 @@ def translate(result_path : str):
                                 raise Exception("Invalid message " + X)
 
                 c.run_app("Minilang-Translator")
-                logger.info(f"[{finished_tasks/total_tasks*100:.2f}%] - {server} - translating {rpath}")
+                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - translating {rpath}")
                 mp.pack(path, c.cout)
                 c.cout.flush()
                 interact()
                 db[rpath] = True
                 db.commit()
-                logger.info(f"[{finished_tasks/total_tasks*100:.2f}%] - {server} - finished {rpath}")
+                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - finished {rpath}")
 
         def worker(server):
-            nonlocal finished_tasks
+            nonlocal finished_theories
             while True:
                 try:
                     rpath = task_queue.get(timeout=1)
@@ -131,11 +167,11 @@ def translate(result_path : str):
                             translate_one(server, rpath)
                             success = True
                         except Exception as e:
-                            logger.error(f"[{finished_tasks/total_tasks*100:.2f}%] - {server} - Error translating {rpath}: {e}")
+                            logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {rpath}: {e}")
                             time.sleep(10)
                 finally:
                     if success:
-                        finished_tasks += 1
+                        finished_theories += 1
                         task_queue.task_done()
                     else:
                         task_queue.put(rpath)
