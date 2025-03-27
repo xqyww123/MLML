@@ -83,15 +83,15 @@ def translate(result_path : str):
                                     run = True
                                 mp.pack(run, c.cout)
                                 c.cout.flush()
-                            case (1, pos_spec, pos_prf, origin, err):
-                                logger.error(f"[{finished_tasks}/{total_tasks}] - {server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} fails")
-                                logger.error(err)
-                                pos_spec = encode_pos(pos_spec)
-                                pos_prf = encode_pos(pos_prf)
-                                db[pos_spec] = (False, err, origin, pos_prf)
-                                db.commit()
-                            case (2, pos_spec, pos_prf, origin, ret):
-                                logger.info(f"[{finished_tasks}/{total_tasks}] - {server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} succeeds")
+                            #case (1, pos_spec, pos_prf, origin, err):
+                            #    logger.error(f"[{finished_tasks/total_tasks*100:.2f}%] - {server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} fails")
+                            #    logger.error(err)
+                            #    pos_spec = encode_pos(pos_spec)
+                            #    pos_prf = encode_pos(pos_prf)
+                            #    db[pos_spec] = (False, err, origin, pos_prf)
+                            #    db.commit()
+                            case (2, pos_spec, pos_prf, ret, errs):
+                                logger.info(f"[{finished_tasks/total_tasks*100:.2f}%] - {server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} succeeds")
                                 logger.info(ret['refined'])
                                 pos_spec = encode_pos(pos_spec)
                                 pos_prf = encode_pos(pos_prf)
@@ -109,13 +109,13 @@ def translate(result_path : str):
                                 raise Exception("Invalid message " + X)
 
                 c.run_app("Minilang-Translator")
-                logger.info(f"[{finished_tasks}/{total_tasks}] - {server} - translating {rpath}")
+                logger.info(f"[{finished_tasks/total_tasks*100:.2f}%] - {server} - translating {rpath}")
                 mp.pack(path, c.cout)
                 c.cout.flush()
                 interact()
                 db[rpath] = True
                 db.commit()
-                logger.info(f"[{finished_tasks}/{total_tasks}] - {server} - finished {rpath}")
+                logger.info(f"[{finished_tasks/total_tasks*100:.2f}%] - {server} - finished {rpath}")
 
         def worker(server):
             nonlocal finished_tasks
@@ -131,7 +131,7 @@ def translate(result_path : str):
                             translate_one(server, rpath)
                             success = True
                         except Exception as e:
-                            logger.error(f"[{finished_tasks}/{total_tasks}] - {server} - Error translating {rpath}: {e}")
+                            logger.error(f"[{finished_tasks/total_tasks*100:.2f}%] - {server} - Error translating {rpath}: {e}")
                             time.sleep(10)
                 finally:
                     if success:
