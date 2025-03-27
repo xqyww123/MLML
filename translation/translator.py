@@ -128,6 +128,7 @@ def translate(result_path : str):
                                         finished_goals[cat] += 1
                                     else:
                                         finished_goals[cat] = 1
+                                logger.info(ret['isar-SH'])
                                 report()
                                 pos_spec = encode_pos(pos_spec)
                                 pos_prf = encode_pos(pos_prf)
