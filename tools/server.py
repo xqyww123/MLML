@@ -213,7 +213,10 @@ class ServerSupervisor:
         
         # Check status of all servers
         for server in list(SERVERS.keys()):
-            is_running = test_server(server)
+            for _ in range(5):
+                is_running = test_server(server)
+                if is_running:
+                    break
             server_status.append(f"{server}: {'UP' if is_running else 'DOWN'}")
             if not is_running:
                 servers_to_restart.append(server)
