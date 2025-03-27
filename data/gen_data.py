@@ -15,19 +15,19 @@ logging.basicConfig(
 if not os.path.exists('cache'):
     os.makedirs('cache')
 
-def merge_translation_results():
-    db_files = [f for f in os.listdir('./translation/results') if f.endswith('.db')]
-
-    with SqliteDict('cache/translation_result.db') as merged_db:
-        for db_file in db_files:
-            with SqliteDict(f'./translation/results/{db_file}') as db:
-                for key, value in db.items():
-                    merged_db[key] = value
-        merged_db.commit()
-
-if not os.path.exists('cache/translation_result.db'):
-    logging.info('Merging translation_result.db')
-    merge_translation_results()
+#def merge_translation_results():
+#    db_files = [f for f in os.listdir('./translation/results') if f.endswith('.db')]
+#
+#    with SqliteDict('cache/translation_result.db') as merged_db:
+#        for db_file in db_files:
+#            with SqliteDict(f'./translation/results/{db_file}') as db:
+#                for key, value in db.items():
+#                    merged_db[key] = value
+#        merged_db.commit()
+#
+#if not os.path.exists('cache/translation_result.db'):
+#    logging.info('Merging translation_result.db')
+#    merge_translation_results()
 
 with open('./data/theories.json', 'r') as f:
     # key: long name

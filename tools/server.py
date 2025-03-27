@@ -68,17 +68,17 @@ except FileNotFoundError:
 
 def test_server(addr):
     try:
-        with Client(addr, 'HOL', timeout=3) as client:
+        with Client(addr, 'HOL', timeout=10) as client:
             client.num_processor()
             return True
-    except TimeoutError:
-        return False
-    except ConnectionError:
-        return False
-    except REPLFail:
+    except KeyboardInterrupt as E:
+        raise E
+    except InterruptedError as E:
+        raise E
+    except Exception:
         return False
 
-def launch_server(server):
+def launch_server(server, retry=20):
     if test_server(server):
         logger.info(f"Server on {server} is already running")
         return (True, server, "Already running")
@@ -103,18 +103,21 @@ def launch_server(server):
             logger.info(f"Command sent to {host}:{port}")
 
             # Wait for the server to start (try up to 60 times)
-            for attempt in range(60):
+            for attempt in range(30):
                 if test_server(server):
                     logger.info(f"Server on {host}:{port} started after {attempt+1} attempts")
                     return (True, server, f"Started successfully after {attempt+1} attempts")
                 logger.debug(f"Waiting for server {host}:{port} to start (attempt {attempt+1}/60)")
                 time.sleep(10)
             
-            logger.warning(f"Server on {host}:{port} failed to start after 60 attempts")
-            return (False, server, "Failed to start after 60 attempts")
+            logger.warning(f"Server on {host}:{port} failed to start after 30 attempts")
+            if retry > 0:
+                return launch_server(server, retry - 1)
+            else:
+                return (False, server, "Failed to start after 60 attempts")
         except Exception as e:
             error_msg = str(e)
-            logger.error(f"Failed to launch server on {host}:{port}: {error_msg}")
+            logger.error(f"Failed to launch server on {host}:{port}: {error_msg}, retrying...")
             return (False, server, f"Error: {error_msg}")
     # Add the server to the SERVERS dictionary
     return (True, server, "Already running")
@@ -191,7 +194,7 @@ class ServerSupervisor:
                 
             self.is_running = False
             if self.supervisor_thread:
-                self.supervisor_thread.join(timeout=5)
+                self.supervisor_thread.join(timeout=30)
                 logger.info("Server supervisor stopped")
     
     def _supervision_loop(self):

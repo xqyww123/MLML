@@ -12,7 +12,7 @@ import threading
 import concurrent.futures
 import queue  # Add standard queue module
 import time
-from .server import SERVERS, SERVER_INSTANCES
+from tools.server import SERVERS, SERVER_INSTANCES
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(

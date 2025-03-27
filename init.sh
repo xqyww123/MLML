@@ -4,6 +4,7 @@ git submodule update --init --recursive --remote
 pip install -q gdown
 mkdir -p ./cache/downloads
 mkdir -p ./translation/results
+mkdir -p ./cache/translation/tmp
 
 source ./envir.sh
 
