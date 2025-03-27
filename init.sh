@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "Initializing system..."
 git submodule update --init --recursive --remote
 pip install -q gdown
 mkdir -p ./cache/downloads
