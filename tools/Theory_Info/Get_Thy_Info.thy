@@ -1,6 +1,8 @@
 theory Get_Thy_Info
-  imports Isa_REPL.Isa_REPL
-begin
+  imports Isa_REPL.Isa_REPL "HOL-Analysis.Convex"
+begin 
+
+declare [[ML_print_depth = 1000]]
 
 ML \<open>
 
@@ -16,9 +18,9 @@ fun dump () =
       val _ = BinIO.closeOut sf
 
       val tf = BinIO.openOut "./theories.msgpack"
-      fun pack_header {name, imports, ...} =
-          packPair (packString, packList packString) (fst name, map fst imports)
-      val tpacker = packPairList (packString, packPair (pack_header, packString o Path.implode)) o Symtab.dest
+      fun pack_tinfo {path, imports, ...} =
+          packPair (packString, packList packString) (Path.implode path, imports)
+      val tpacker = packPairList (packString, pack_tinfo) o Symtab.dest
       val _ = tpacker tinfo (BinIO.getOutstream tf)
       val _ = BinIO.closeOut tf
    in ()
@@ -27,6 +29,8 @@ fun dump () =
 \<close>
 
 ML \<open>dump ()\<close>
+
+ML \<open>Thy_Info.master_directory "HOL-Analysis.Convex"\<close>
 
 ML \<open>error "IGNORE THIS ERROR"\<close>
 

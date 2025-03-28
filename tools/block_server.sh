@@ -1,4 +1,6 @@
 #! /bin/bash
+echo "This is a development tool used to test the error-rescue mechanism when a server is offline."
+
 if [ "$EUID" -ne 0 ]; then
     echo "This script must be run as root"
     exit 1
