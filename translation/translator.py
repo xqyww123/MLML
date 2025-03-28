@@ -65,14 +65,28 @@ def translate(result_path : str):
             s.append(f"{cat}: {count / total_goals * 100:.2f}%")
         logger.info(", ".join(s))
 
-    task_queue = queue.Queue()
+    all_tasks = []
     with open('translation/targets', "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
-            task_queue.put(line)
+            all_tasks.append(line)
             total_theories += 1
+    # Group tasks by directory
+    grouped_tasks = {}
+    for task in all_tasks:
+        # Get the directory part of the path
+        directory = os.path.dirname(task)
+        if directory not in grouped_tasks:
+            grouped_tasks[directory] = []
+        grouped_tasks[directory].append(task)
+
+    for directory, tasks in grouped_tasks.items():
+        logger.debug(f"Directory '{directory}': {len(tasks)} tasks")
+    task_queue = queue.Queue()
+    for directory, tasks in grouped_tasks.items():
+        task_queue.put(tasks)
 
     with SqliteDict(result_path) as db:
         def translate_one(server, rpath):
@@ -96,12 +110,6 @@ def translate(result_path : str):
                                 try:
                                     ret, errs, pos_prf = db[pos]
                                     run = False
-                                    total_goals += 1
-                                    for cat in ret:
-                                        if cat in finished_goals:
-                                            finished_goals[cat] += 1
-                                        else:
-                                            finished_goals[cat] = 1
                                 except KeyError:
                                     run = True
                                 mp.pack(run, c.cout)
@@ -159,24 +167,33 @@ def translate(result_path : str):
             nonlocal finished_theories
             while True:
                 try:
-                    rpath = task_queue.get(timeout=1)
+                    group = task_queue.get(timeout=1)
                 except queue.Empty:
                     return
-                success = False
+                
+                remaining_tasks = []
                 try:
-                    while not success:
-                        try:
-                            translate_one(server, rpath)
-                            success = True
-                        except Exception as e:
-                            logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {rpath}: {e}")
-                            time.sleep(10)
+                    for rpath in group:
+                        success = False
+                        for _ in range(3):
+                            try:
+                                translate_one(server, rpath)
+                                success = True
+                                finished_theories += 1
+                                break
+                            except Exception as e:
+                                logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {rpath}: {e}")
+                                time.sleep(10)
+                            finally:
+                                if not success:
+                                    remaining_tasks.append(rpath)
                 finally:
-                    if success:
-                        finished_theories += 1
-                        task_queue.task_done()
-                    else:
-                        task_queue.put(rpath)
+                    # Mark the current group as done and requeue any failed tasks
+                    task_queue.task_done()
+                    
+                    # Put any remaining tasks back in the queue
+                    if remaining_tasks:
+                        task_queue.put(remaining_tasks)
 
         # Create and start worker threads for each server
         threads = []
