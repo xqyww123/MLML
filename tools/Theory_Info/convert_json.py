@@ -24,7 +24,7 @@ def parse_session (data):
 
 sessions = {s: parse_session(raw_sessions[s]) for s in raw_sessions}
 # Write to JSON with pretty formatting
-with open('sessions.json', 'w') as f:
+with open('./data/sessions.json', 'w') as f:
     json.dump(sessions, f, indent=2)
 
 
@@ -33,11 +33,11 @@ with open('theories.msgpack', 'rb') as f:
 
 def parse_theory (data):
     return {
-        'deps': data[0][1],
-        'path': norm_file(data[1]),
+        'deps': data[1],
+        'path': norm_file(data[0]),
     }
 
 theories = {t: parse_theory(raw_theories[t]) for t in raw_theories}
 
-with open('theories.json', 'w') as f:
+with open('./data/theories.json', 'w') as f:
     json.dump(theories, f, indent=2)

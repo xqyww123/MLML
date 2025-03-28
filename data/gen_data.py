@@ -59,20 +59,12 @@ def topological_sort():
             return ranks[thy]
         else:
             rank = 0
-            try:
-                for dep in deps_of(thy):
-                    rank = max(rank, ranking(dep))
-                rank += 1
-            except KeyError:
-                pass
+            for dep in deps_of(thy):
+                rank = max(rank, ranking(dep))
+            rank += 1
             ranks[thy] = rank
             return rank
-    for file, thys in THEORIES.items():
-        rank = 0
-        for thy in thys:
-            rank = max(rank, ranking(thy))
-        ranks[file] = rank
-    sorted_thy = sorted(THEORIES, key=lambda x: ranks[x])
+    sorted_thy = sorted(THEORIES, key=lambda x: ranking(x))
     with open('cache/sorted_thy.txt', 'w') as f:
         for thy in sorted_thy:
             f.write(f"{thy}\n")
