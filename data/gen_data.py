@@ -29,6 +29,9 @@ if not os.path.exists('cache'):
 #    logging.info('Merging translation_result.db')
 #    merge_translation_results()
 
+with open('./data/sessions.json', 'r') as f:
+    SESSIONS = json.load(f)
+
 with open('./data/theories.json', 'r') as f:
     # key: long name
     # value: {'deps':[long names], 'path':file_name}
@@ -45,6 +48,30 @@ def deps_of(thy):
         return THEORIES[thy]['deps']
     except KeyError:
         return []
+
+def session_of(thy):
+    return '.'.join(thy.split('.')[:-1])
+
+def short_name_of(thy):
+    return thy.split('.')[-1]
+
+def all_deps_of(thy, ret=set()):
+    for dep in deps_of(thy):
+        if dep not in ret:
+            ret.add(dep)
+            ret.update(all_deps_of(dep, ret))
+    return ret
+
+def all_theories_in_session(session_name):
+    ret = set()
+    try:
+        thys = SESSIONS[session_name]['theories']
+    except KeyError:
+        thys = SESSIONS[session_name]
+    for thy in thys:
+        ret.add(thy)
+        ret.update(all_deps_of(thy))
+    return ret
 
 def location_of(thy):
     try:
