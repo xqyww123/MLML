@@ -2313,6 +2313,16 @@
       "Minilang.Minilang_Base"
     ]
   },
+  "Naproche": {
+    "deps": [
+      "HOL",
+      "Haskell"
+    ],
+    "theories": [
+      "Naproche.Build",
+      "Naproche.Naproche"
+    ]
+  },
   "Nominal2": {
     "deps": [
       "HOL",
@@ -6496,6 +6506,14 @@
       "Myhill-Nerode.Myhill",
       "Myhill-Nerode.Closures",
       "Myhill-Nerode.Closures2"
+    ]
+  },
+  "Naproche-Test": {
+    "deps": [
+      "Naproche"
+    ],
+    "theories": [
+      "Naproche-Test.Test"
     ]
   },
   "Nash_Williams": {
