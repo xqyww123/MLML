@@ -2,8 +2,6 @@ theory Get_Thy_Info
   imports Isa_REPL.Isa_REPL "HOL-Analysis.Convex"
 begin 
 
-declare [[ML_print_depth = 1000]]
-
 ML \<open>
 
 fun dump () =
@@ -29,8 +27,6 @@ fun dump () =
 \<close>
 
 ML \<open>dump ()\<close>
-
-ML \<open>Thy_Info.master_directory "HOL-Analysis.Convex"\<close>
 
 ML \<open>error "IGNORE THIS ERROR"\<close>
 

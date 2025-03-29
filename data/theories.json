@@ -4121,6 +4121,13 @@
     ],
     "path": "./contrib/afp-2025-02-12/thys/Menger/Helpers.thy"
   },
+  "Naproche.Build": {
+    "deps": [
+      "Haskell.Haskell",
+      "Naproche.Naproche"
+    ],
+    "path": "./contrib/Isabelle2024/contrib/naproche-20240519/Isabelle/Main/Build.thy"
+  },
   "Nominal2.Atoms": {
     "deps": [
       "Nominal2.Nominal2_Base"
@@ -4910,6 +4917,12 @@
       "HRB-Slicing.Postdomination"
     ],
     "path": "./contrib/afp-2025-02-12/thys/HRB-Slicing/StaticInter/SDG.thy"
+  },
+  "Haskell.Haskell": {
+    "deps": [
+      "Main"
+    ],
+    "path": "./contrib/Isabelle2024/src/Tools/Haskell/Haskell.thy"
   },
   "Heard_Of.UvDefs": {
     "deps": [
@@ -7875,7 +7888,7 @@
     "deps": [
       "Auto_Sledgehammer.Auto_Sledgehammer"
     ],
-    "path": "../Isa-REPL/Isa_REPL.thy"
+    "path": "./contrib/Isa-REPL/Isa_REPL.thy"
   },
   "Isabelle_C.C_Eval": {
     "deps": [
@@ -8182,7 +8195,7 @@
       "Minilang.Minilang_Base",
       "Auto_Sledgehammer.Auto_Sledgehammer"
     ],
-    "path": "../Isa-Mini/Minilang.thy"
+    "path": "./contrib/Isa-Mini/Minilang.thy"
   },
   "Monad_Memo_DP.CYK": {
     "deps": [
@@ -8201,6 +8214,13 @@
       "Nano_JSON.Nano_JSON_Main"
     ],
     "path": "./contrib/afp-2025-02-12/thys/Nano_JSON/Example.thy"
+  },
+  "Naproche.Naproche": {
+    "deps": [
+      "Main",
+      "Naproche.ZFC_Rudiments"
+    ],
+    "path": "./contrib/Isabelle2024/contrib/naproche-20240519/Isabelle/Main/Naproche.thy"
   },
   "Native_Word.Uint8": {
     "deps": [
@@ -8755,7 +8775,9 @@
     "path": "./contrib/afp-2025-02-12/thys/Buildings/Building.thy"
   },
   "BurrowsWheeler.BWT": {
-    "deps": [],
+    "deps": [
+      "BurrowsWheeler.SA_Util"
+    ],
     "path": "./contrib/afp-2025-02-12/thys/BurrowsWheeler/bwt/BWT.thy"
   },
   "CCS.Weak_Cong_Pres": {
@@ -9929,6 +9951,12 @@
       "Menger.Graph"
     ],
     "path": "./contrib/afp-2025-02-12/thys/Menger/Separations.thy"
+  },
+  "Naproche-Test.Test": {
+    "deps": [
+      "Naproche.Naproche"
+    ],
+    "path": "./contrib/Isabelle2024/contrib/naproche-20240519/Isabelle/Test/Test.thy"
   },
   "Native_Word.Uint16": {
     "deps": [
@@ -18771,7 +18799,7 @@
     "deps": [
       "HOL.HOL"
     ],
-    "path": "../Isa-Mini/Minilang_Base.thy"
+    "path": "./contrib/Isa-Mini/Minilang_Base.thy"
   },
   "Minsky_Machines.Minsky": {
     "deps": [
@@ -18831,6 +18859,12 @@
       "Complex_Main"
     ],
     "path": "./contrib/afp-2025-02-12/thys/Nano_JSON/Example_Real.thy"
+  },
+  "Naproche.ZFC_Rudiments": {
+    "deps": [
+      "Main"
+    ],
+    "path": "./contrib/Isabelle2024/contrib/naproche-20240519/Isabelle/Main/ZFC_Rudiments.thy"
   },
   "Nominal2.Nominal2_Base": {
     "deps": [
@@ -29064,7 +29098,7 @@
       "Minilang.Minilang",
       "Isa_REPL.Isa_REPL"
     ],
-    "path": "../Isa-Mini/REPL/Minilang_Top.thy"
+    "path": "./contrib/Isa-Mini/REPL/Minilang_Top.thy"
   },
   "Monad_Memo_DP.All_Examples": {
     "deps": [
@@ -33222,7 +33256,9 @@
   },
   "BurrowsWheeler.BWT_SA_Corres": {
     "deps": [
-      "BurrowsWheeler.BWT"
+      "BurrowsWheeler.BWT",
+      "BurrowsWheeler.SA_Count",
+      "BurrowsWheeler.Rotated_Substring"
     ],
     "path": "./contrib/afp-2025-02-12/thys/BurrowsWheeler/bwt/BWT_SA_Corres.thy"
   },
@@ -47208,7 +47244,7 @@
     "deps": [
       "Minilang.Minilang"
     ],
-    "path": "../Isa-Mini/translator/MS_Translator.thy"
+    "path": "./contrib/Isa-Mini/translator/MS_Translator.thy"
   },
   "Modal_Logics_for_NTS.Weak_Formula": {
     "deps": [
@@ -50266,7 +50302,7 @@
     "deps": [
       "HOL.Sledgehammer"
     ],
-    "path": "../auto_sledgehammer/Auto_Sledgehammer.thy"
+    "path": "./contrib/auto_sledgehammer/Auto_Sledgehammer.thy"
   },
   "Automatic_Refinement.Autoref_Id_Ops": {
     "deps": [
@@ -55883,7 +55919,7 @@
       "Minilang_Translator.MS_Translator",
       "Isa_REPL.Isa_REPL"
     ],
-    "path": "../Isa-Mini/translator/MS_Translator_Top.thy"
+    "path": "./contrib/Isa-Mini/translator/MS_Translator_Top.thy"
   },
   "Minkowskis_Theorem.Minkowskis_Theorem": {
     "deps": [
