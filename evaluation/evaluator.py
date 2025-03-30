@@ -6,7 +6,7 @@ from Isa_Mini import Mini
 import csv
 import logging
 from enum import Enum
-from data import prelude_of, PISA_DATA
+from data.isabelle import prelude_of, PISA_DATA, get_ISAR_PROOFS
 from sqlitedict import SqliteDict
 import threading
 import concurrent.futures
@@ -92,6 +92,9 @@ class MiniLang_Base:
 
 class MiniLang_PISA(MiniLang_Base):
     def start_case(self, category, index):
+        """
+        index is the index of the case in the PISA dataset, from 0 to 2999
+        """
         if category != "test":
             raise ValueError(f"MiniLang_PISA: only support test category")
         try:
@@ -169,7 +172,10 @@ class Isar_Base:
         self.repl.record_state("init")
 
 class Isar_PISA(Isar_Base):
-    def start_case(self, category, index):
+    def start_case(self, category, index : int):
+        """
+        index is the index of the case in the PISA dataset, from 0 to 2999
+        """
         if category != "test":
             raise ValueError(f"Isar_PISA: only support test category")
         try:
@@ -177,6 +183,23 @@ class Isar_PISA(Isar_Base):
         except KeyError:
             raise CaseNotAvailable(f"Isar_PISA: case {index} not available")
         self.move_to(pos.file, pos.line, pos.column)
+
+class Isar(Isar_Base):
+    def all_cases(self):
+        ISAR_PROOFS = get_ISAR_PROOFS()
+        return ISAR_PROOFS.keys()
+
+    def start_case(self, category, index : Position):
+        """
+        index is the position of the target goal to be evaluated.
+        You could call `all_cases()` to get the positions of all available training cases.
+        """
+        if category != "train":
+            raise ValueError(f"Isar: only support train category")
+        ISAR_PROOFS = get_ISAR_PROOFS()
+        if index not in ISAR_PROOFS:
+            raise ValueError(f"Isar: {index} is not a training case")
+        self.move_to(index.file, index.line)
 
 
 #if __name__ == "__main__":
@@ -235,7 +258,7 @@ if __name__ == "__main__":
         MINIF2F_TEST = json.load(f)
 
 class MiniLang_MiniF2F(MiniLang_Base):
-    def start_case(self, category, index):
+    def start_case(self, category, index : int):
         if category not in ["test", "valid"]:
             raise ValueError(f"MiniLang_MiniF2F: only support test and valid category")
         dataset = MINIF2F_VALIDATION if category == "valid" else MINIF2F_TEST
@@ -246,7 +269,7 @@ class MiniLang_MiniF2F(MiniLang_Base):
         self.reset_eval(src)
 
 class Isar_MiniF2F(Isar_Base):
-    def start_case(self, category, index):
+    def start_case(self, category, index : int):
         if category not in ["test", "valid"]:
             raise ValueError(f"Isar_MiniF2F: only support test and valid category") 
         dataset = MINIF2F_VALIDATION if category == "valid" else MINIF2F_TEST
@@ -397,3 +420,8 @@ def evaluate(result_path : str, cases : list[Case], evaluator : MiniLang_Base | 
     log_state()
     return results
 
+# examples of evaluation
+#   evaluate('./evaluation/isar_result.db',          cases, Isar,          "training")
+#   evaluate('./evaluation/minilang_pisa_result.db', cases, MiniLang_PISA, "test")
+#   evaluate('./evaluation/isar_pisa_result.db',     cases, Isar_PISA,     "test")
+# where cases is a list of Case objects

@@ -1,1 +1,1 @@
-from .gen_data import *
+from .isabelle import *
