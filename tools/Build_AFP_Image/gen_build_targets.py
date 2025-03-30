@@ -1,6 +1,6 @@
 import sys
 import os
-from data.gen_data import THEORIES, all_theories_in_session, all_deps_of, deps_of, session_of, short_name_of
+from data.isabelle import THEORIES, all_theories_in_session, all_deps_of, deps_of, session_of, short_name_of
 
 BASE = 'HOL-Library'
 BASE_THEORIES = all_theories_in_session(BASE)

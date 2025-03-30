@@ -4,6 +4,7 @@ import logging
 import json
 from IsaREPL import Client, Position, REPLFail
 import csv
+import sys
 
 # Configure logging to print to screen
 logging.basicConfig(
@@ -14,20 +15,6 @@ logging.basicConfig(
 
 if not os.path.exists('cache'):
     os.makedirs('cache')
-
-#def merge_translation_results():
-#    db_files = [f for f in os.listdir('./translation/results') if f.endswith('.db')]
-#
-#    with SqliteDict('cache/translation_result.db') as merged_db:
-#        for db_file in db_files:
-#            with SqliteDict(f'./translation/results/{db_file}') as db:
-#                for key, value in db.items():
-#                    merged_db[key] = value
-#        merged_db.commit()
-#
-#if not os.path.exists('cache/translation_result.db'):
-#    logging.info('Merging translation_result.db')
-#    merge_translation_results()
 
 with open('./data/sessions.json', 'r') as f:
     SESSIONS = json.load(f)
@@ -105,13 +92,14 @@ with open('cache/sorted_thy.txt', 'r') as f:
 
 def collect_declarations():
     declarations = {}
-    with SqliteDict('./cache/translation_result.db') as db:
+    with SqliteDict('./cache/translation/declarations.db') as db:
         for key, command in db.items():
             match key.split(':'):
-                case (file,line,pos):
+                case (file,line,ofs):
+                    # this `ofs` is the offset in the entire file stream, instead of the line.
                     if file not in declarations:
                         declarations[file] = []
-                    declarations[file].append((int(line), int(pos), command))
+                    declarations[file].append((int(line), int(ofs), command))
     declarations = {k: sorted(v, key=lambda x: x[1]) for k, v in declarations.items()}
     with open('cache/declarations.json', 'w') as f:
         json.dump(declarations, f)
@@ -130,27 +118,23 @@ def prelude_of(file, line):
         prelude0 = [x[2] for x in DECLARATIONS[file] if x[0] < line]
     except KeyError:
         pass
-    dep_thys = []
+    dep_thys = set()
     try:
         thys = THEORIES_IN_FILE[file]
     except KeyError:
         thys = []
     for thy in thys:
         try:
-            dep_thys += deps_of(thy)
+            dep_thys.update(deps_of(thy))
         except KeyError:
             pass
-    deps = []
-    for y in dep_thys:
-        for x in y:
-            try:
-                deps.append(location_of(x))
-            except KeyError:
-                pass
     prelude = []
-    for dep in deps:
-        for decl in DECLARATIONS[dep]:
-            prelude.append(decl[2])
+    for dep in dep_thys:
+        try:
+            for decl in DECLARATIONS[location_of(dep)]:
+                prelude.append(decl[2])
+        except KeyError:
+            pass
     prelude += prelude0
     return '\n'.join(prelude)
 
@@ -223,7 +207,7 @@ def preprocess_PISA(addr):
 
 def read_pisa_data():
     data = {}
-    PISA_POS = {}
+    PISA_AT = {}
     csv_file_path = "data/pisa_test.csv"
     # Check if the CSV file exists
     if not os.path.isfile(csv_file_path):
@@ -234,62 +218,92 @@ def read_pisa_data():
         csv_reader = csv.reader(csvfile)
         next(csv_reader)  # Skip the header
         for row in csv_reader:
-            index, position_before, position, statement = row
-            pos_before = Position.from_s(position_before)
-            pos = Position.from_s(position)
-            data[int(index)] = (pos_before, pos, statement)
-            PISA_POS[(pos.file, pos.line)] = int(index)
-    return data, PISA_POS
+            index, pos_spec, pos_proof, statement = row
+            pos_spec = Position.from_s(pos_spec)
+            pos_proof = Position.from_s(pos_proof)
+            data[int(index)] = (pos_spec, pos_proof, statement)
+            PISA_AT[(pos_spec.file, pos_spec.line)] = int(index)
+    return data, PISA_AT
 
-PISA_DATA, PISA_POS = read_pisa_data()
+PISA_DATA, PISA_AT = read_pisa_data()
 
 #ISAR_PROOFS = SqliteDict('isar_proofs.db')
 #ISAR_PROOF_LEN = len(ISAR_PROOFS)
-#
-#def gen_fine_tune_data_isar():
-#    with open('cache/fine_tune_data_isar.jsonl', 'w') as f:
-#        for proof_pos, (spec_pos, spec, proof) in ISAR_PROOFS.items():
-#            proof_pos = Position.from_s(proof_pos)
-#            if (proof_pos.file, proof_pos.line) not in PISA_POS:
-#                f.write(json.dumps({'prelude': prelude_of(proof_pos.file, proof_pos.line),
-#                                    'goal': spec,
-#                                    'proof': proof}) + '\n')
-#    print(f"Generated {ISAR_PROOF_LEN} fine-tune cases in cache/fine_tune_data_isar.jsonl")
-#
-#if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'fine-tune-isar':
-#    gen_fine_tune_data_isar()
-#    exit()
-#
-#def gen_cases():
-#    goal_of = {}
-#    with open('cache/goal_of.txt', 'w') as f:
-#        for proof_pos, (spec_pos, spec, proof) in ISAR_PROOFS.items():
-#            proof_pos = Position.from_s(proof_pos)
-#            goal_of[(proof_pos.file, proof_pos.line)] = spec
-#            f.write(f"{proof_pos.file}:{proof_pos.line}:{spec}\n")
-#    num = 0
-#    with open('cache/fine_tune_data_minilang.jsonl', 'w') as f:
-#        with SqliteDict('cache/results.db') as db:
-#            for key, value in db.items():
-#                match key.split(':'):
-#                    case (file,line):
-#                        if value[0] and (file, int(line)) not in PISA_POS:
-#                            try:
-#                                prelude = prelude_of(file, int(line))
-#                                num += 1
-#                                f.write(json.dumps({
-#                                    'prelude': prelude,
-#                                    'goal': goal_of[(file, int(line))],
-#                                    'proof': value[1]['refined']
-#                                }) + '\n')
-#                            except KeyError:
-#                                pass
-#    print(f"Generated {num} cases in cache/fine_tune_data_minilang.jsonl")
-#
-#if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'fine-tune-minilang':
-#    gen_cases()
-#    exit()
-#
+
+def get_ISAR_PROOFS():
+    global ISAR_PROOFS_CACHE
+    if ISAR_PROOFS_CACHE is not None:
+        return ISAR_PROOFS_CACHE
+    ISAR_PROOFS = {}
+    with SqliteDict('./cache/translation/results.db') as db:
+        for key, value in db.items():
+            match key.split(':'):
+                case (file,line):
+                    spec_pos = Position(int(line),0,file)
+                    (data, _, proof_pos) = value
+                    proof_pos = Position.from_s(proof_pos)
+                    ISAR_PROOFS[spec_pos] = (proof_pos, data['goal'], data['origin'])
+    ISAR_PROOFS_CACHE = ISAR_PROOFS
+    return ISAR_PROOFS
+
+def get_ISAR_TRAINING_DATA():
+    global ISAR_TRAINING_DATA_CACHE
+    if ISAR_TRAINING_DATA_CACHE is not None:
+        return ISAR_TRAINING_DATA_CACHE
+    ISAR_PROOFS = get_ISAR_PROOFS()
+    ISAR_TRAINING_DATA = {
+        spec_pos: (proof_pos, data['goal'], data['origin'])
+        for spec_pos, (proof_pos, data, _) in ISAR_PROOFS.items()
+        if (spec_pos.file, spec_pos.line) not in PISA_AT
+    }
+    ISAR_TRAINING_DATA_CACHE = ISAR_TRAINING_DATA
+    return ISAR_TRAINING_DATA
+
+def gen_fine_tune_data_isar():
+    ISAR_TRAINING_DATA = get_ISAR_TRAINING_DATA()
+    count = 0
+    with open('cache/fine_tune_data_isar.jsonl', 'w') as f:
+        for spec_pos, (proof_pos, spec, proof) in ISAR_TRAINING_DATA.items():
+            f.write(json.dumps({'prelude': prelude_of(spec_pos.file, spec_pos.line),
+                                'goal': spec,
+                                'proof': proof}) + '\n')
+            count += 1
+    print(f"Generated {count} fine-tune cases in cache/fine_tune_data_isar.jsonl")
+
+if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'fine-tune-isar-data':
+    gen_fine_tune_data_isar()
+    exit()
+
+def gen_cases():
+    ISAR_TRAINING_DATA = get_ISAR_TRAINING_DATA()
+    goal_of = {}
+    with open('cache/goal_of.txt', 'w') as f:
+        for spec_pos, (proof_pos, spec, proof) in ISAR_TRAINING_DATA.items():
+            goal_of[(proof_pos.file, proof_pos.line)] = spec
+            f.write(f"{proof_pos.file}:{proof_pos.line}:{spec}\n")
+    num = 0
+    with open('cache/fine_tune_data_minilang.jsonl', 'w') as f:
+        with SqliteDict('cache/translation/results.db') as db:
+            for key, value in db.items():
+                match key.split(':'):
+                    case (file,line):
+                        try:
+                            (data, _, _) = value
+                            prelude = prelude_of(file, int(line))
+                            num += 1
+                            f.write(json.dumps({
+                                'prelude': prelude,
+                                'goal': data['goal'],
+                                'proof': data['refined']
+                            }) + '\n')
+                        except KeyError:
+                            pass
+    print(f"Generated {num} cases in cache/fine_tune_data_minilang.jsonl")
+
+if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'fine-tune-minilang-data':
+    gen_cases()
+    exit()
+
 #def gen_test_cases():
 #    num = 0
 #    with open('cache/test_data_pisa.jsonl', 'w') as f:

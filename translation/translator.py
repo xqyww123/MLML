@@ -24,9 +24,25 @@ for server, (_, numproc) in SERVERS.items():
     numconn = max(int (numproc * 0.6), 1)
     SERVER_INSTANCES.extend([server] * numconn)
 
+
+KNOWN_TRANSLATION_TARGETS = {"origin", "isar-SH", "isar-SH*", "refined", "raw", "reord_raw", "reord_refined", 'goal'}
+
+if len(sys.argv) > 1:
+    translation_targets = sys.argv[1:]
+    quotes = ['\"' + t + '\"' for t in translation_targets]
+    translation_target_str = f"[{', '.join(quotes)}] "
+else:
+    logger.error("Translation targets must be provided.\n"
+                 "Available targets: " + ", ".join(KNOWN_TRANSLATION_TARGETS))
+    exit(1)
+if any(target not in KNOWN_TRANSLATION_TARGETS for target in translation_targets):
+    logger.error("Unknown translation targets: " + ", ".join(translation_targets) +
+                "\nAvailable targets: " + ", ".join(KNOWN_TRANSLATION_TARGETS))
+    exit(1)
+
 os.makedirs(f"{os.getcwd()}/cache/translation/tmp", exist_ok=True)
 INIT_SCRIPT = f"""
-ML_Translator_Top.init_translator (Path.explode "{os.getcwd()}/cache/translation/tmp") (ML_Translator_Top.interactive_reporter());
+ML_Translator_Top.init_translator {translation_target_str} (Path.explode "{os.getcwd()}/cache/translation/tmp") (ML_Translator_Top.interactive_reporter());
 REPL_Server.register_app "Minilang-Translator" ML_Translator_Top.REPL_App
 """
 
@@ -45,7 +61,7 @@ def encode_pos (pos):
 def encode_pos2 (pos):
     return f'{norm_file(pos[3][1])}:{pos[0]}:{pos[1]}'
 
-def translate(result_path : str):
+def translate():
 
     total_theories = 0
     finished_theories = 0
@@ -88,124 +104,115 @@ def translate(result_path : str):
     for directory, tasks in grouped_tasks.items():
         task_queue.put(tasks)
 
-    with SqliteDict(result_path) as db:
-        def translate_one(server, rpath):
-            path=os.path.abspath(rpath)
-            rpath=norm_file(path)
-            if rpath in db:
-                logger.info(f"skipped {rpath}")
-                return
-            with Client(server, 'HOL') as c:
-                c.set_register_thy(False)
-                c.set_trace(False)
-                c.load_theory(['Minilang_Translator.MS_Translator_Top'])
-                c.run_ML("Minilang_Translator.MS_Translator_Top", INIT_SCRIPT)
-
-                def interact():
-                    nonlocal total_goals, finished_goals
-                    while True:
-                        match c.unpack.unpack():
-                            case (0, pos):
-                                pos = encode_pos(pos)
-                                try:
-                                    ret, errs, pos_prf = db[pos]
-                                    run = False
-                                except KeyError:
-                                    run = True
-                                mp.pack(run, c.cout)
-                                c.cout.flush()
-                            #case (1, pos_spec, pos_prf, origin, err):
-                            #    total_goals += 1
-                            #    logger.error(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} fails")
-                            #    logger.error(err)
-                            #    report()
-                            #    pos_spec = encode_pos(pos_spec)
-                            #    pos_prf = encode_pos(pos_prf)
-                            #    db[pos_spec] = (False, err, origin, pos_prf)
-                            #    db.commit()
-                            case (2, pos_spec, pos_prf, ret, errs):
-                                total_goals += 1
-                                if errs:
-                                    logger.error(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} fails")
-                                    for err in errs:
-                                        logger.error(err)
-                                else:
-                                    logger.info(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} succeeds")
-                                for cat in ret:
-                                    if cat in finished_goals:
-                                        finished_goals[cat] += 1
-                                    else:
-                                        finished_goals[cat] = 1
-                                if 'isar-SH*' in ret:
-                                    logger.info(ret['isar-SH*'])
-                                report()
-                                pos_spec = encode_pos(pos_spec)
-                                pos_prf = encode_pos(pos_prf)
-                                db[pos_spec] = (ret, errs, pos_prf)
-                                db.commit()
-                            case 3:
-                                break
-                            case (4, pos, src):
-                                pos = encode_pos2(pos)
-                                db[pos] = src
-                            case (5, pos, header):
-                                pos = encode_pos(pos)
-                                db[':header:'+pos] = header
-                            case X:
-                                raise Exception("Invalid message " + X)
-
-                c.run_app("Minilang-Translator")
-                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - translating {rpath}")
-                mp.pack(path, c.cout)
-                c.cout.flush()
-                interact()
-                db[rpath] = True
-                db.commit()
-                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - finished {rpath}")
-
-        def worker(server):
-            nonlocal finished_theories
-            while True:
-                try:
-                    group = task_queue.get(timeout=1)
-                except queue.Empty:
+    with SqliteDict('./cache/translation/results.db') as db:
+        with SqliteDict('./cache/translation/declarations.db', autocommit=True) as db_decl:
+            def translate_one(server, rpath):
+                path=os.path.abspath(rpath)
+                rpath=norm_file(path)
+                if rpath in db_decl:
+                    logger.info(f"skipped {rpath}")
                     return
-                
-                remaining_tasks = []
-                try:
-                    for rpath in group:
-                        success = False
-                        for _ in range(3):
-                            try:
-                                translate_one(server, rpath)
-                                success = True
-                                finished_theories += 1
-                                break
-                            except Exception as e:
-                                logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {rpath}: {e}")
-                                time.sleep(10)
-                            finally:
-                                if not success:
-                                    remaining_tasks.append(rpath)
-                finally:
-                    # Mark the current group as done and requeue any failed tasks
-                    task_queue.task_done()
-                    
-                    # Put any remaining tasks back in the queue
-                    if remaining_tasks:
-                        task_queue.put(remaining_tasks)
+                with Client(server, 'HOL') as c:
+                    c.set_register_thy(False)
+                    c.set_trace(False)
+                    c.load_theory(['Minilang_Translator.MS_Translator_Top'])
+                    c.run_ML("Minilang_Translator.MS_Translator_Top", INIT_SCRIPT)
 
-        # Create and start worker threads for each server
-        threads = []
-        for server_addr in SERVER_INSTANCES:
-            thread = threading.Thread(target=worker, args=(server_addr,))
-            thread.daemon = True  # Make threads daemon so they exit if main thread exits
-            threads.append(thread)
-            thread.start()
-            
-        # Wait for all threads to complete
-        for thread in threads:
-            thread.join()
+                    def interact():
+                        nonlocal total_goals, finished_goals
+                        while True:
+                            match c.unpack.unpack():
+                                case (0, pos):
+                                    pos = encode_pos(pos)
+                                    try:
+                                        ret, errs, pos_prf = db[pos]
+                                        run = not all(target in ret for target in translation_targets)
+                                    except KeyError:
+                                        run = True
+                                    mp.pack(run, c.cout)
+                                    c.cout.flush()
+                                case (2, pos_spec, pos_prf, ret, errs):
+                                    total_goals += 1
+                                    if errs:
+                                        logger.error(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} fails")
+                                        for err in errs:
+                                            logger.error(err)
+                                    else:
+                                        logger.info(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} succeeds")
+                                    for cat in ret:
+                                        if cat in finished_goals:
+                                            finished_goals[cat] += 1
+                                        else:
+                                            finished_goals[cat] = 1
+                                    if 'isar-SH*' in ret:
+                                        logger.info(ret['isar-SH*'])
+                                    report()
+                                    pos_spec = encode_pos(pos_spec)
+                                    pos_prf = encode_pos(pos_prf)
+                                    db[pos_spec] = (ret, errs, pos_prf)
+                                    db.commit()
+                                case 3:
+                                    break
+                                case (4, pos, src):
+                                    # declarations
+                                    pos = encode_pos2(pos)
+                                    db_decl[pos] = src
+                                case (5, pos, header):
+                                    pos = encode_pos(pos)
+                                    db_decl[':header:'+pos] = header
+                                case X:
+                                    raise Exception("Invalid message " + str(X))
+
+                    c.run_app("Minilang-Translator")
+                    logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - translating {rpath}")
+                    mp.pack((path, translation_targets), c.cout)
+                    c.cout.flush()
+                    interact()
+                    db_decl[rpath] = True
+                    db_decl.commit()
+                    logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - finished {rpath}")
+
+            def worker(server):
+                nonlocal finished_theories
+                while True:
+                    try:
+                        group = task_queue.get(timeout=1)
+                    except queue.Empty:
+                        return
+                    
+                    try:
+                        # Create a copy of the group for iteration
+                        for rpath in group[:]:
+                            success = False
+                            for _ in range(3):
+                                try:
+                                    translate_one(server, rpath)
+                                    success = True
+                                    finished_theories += 1
+                                    group.remove(rpath)  # Remove succeeded task from group
+                                    break
+                                except Exception as e:
+                                    logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {rpath}: {e}")
+                                    time.sleep(10)
+                    finally:
+                        # Mark the current group as done and requeue any remaining failed tasks
+                        task_queue.task_done()
+                        
+                        # Put any remaining tasks back in the queue
+                        if group:
+                            task_queue.put(group)
+
+            # Create and start worker threads for each server
+            threads = []
+            for server_addr in SERVER_INSTANCES:
+                thread = threading.Thread(target=worker, args=(server_addr,))
+                thread.daemon = True  # Make threads daemon so they exit if main thread exits
+                threads.append(thread)
+                thread.start()
+                
+            # Wait for all threads to complete
+            for thread in threads:
+                thread.join()
 
 if __name__ == "__main__":
-    translate('./cache/translation/results.db')
+    translate()
