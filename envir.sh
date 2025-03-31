@@ -11,4 +11,4 @@ if [[ "$PATH" != "$(pwd)/contrib/Isabelle2024/bin"* ]]; then
     export PATH="$(pwd)/contrib/Isabelle2024/bin:$PATH"
 fi
 
-eval $(opam env --switch=default)
+#eval $(opam env --switch=default)
