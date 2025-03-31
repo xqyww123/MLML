@@ -97,7 +97,7 @@ def launch_server(server, retry=20):
                 if test_server(server):
                     logger.info(f"Server on {host}:{port} started after {(attempt+1)*10} seconds")
                     return (True, server, f"Started successfully after {(attempt+1)*10} seconds")
-                logger.debug(f"Waiting for server {host}:{port} to start (attempt {attempt+1}/30)")
+                logger.info(f"Waiting for server {host}:{port} to start (attempt {attempt+1}/30)")
                 time.sleep(10)
             
             logger.warning(f"Server on {host}:{port} failed to start after 300 seconds")
