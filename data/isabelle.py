@@ -30,6 +30,16 @@ with open('./data/theories.json', 'r') as f:
             THEORIES_IN_FILE[path] = []
         THEORIES_IN_FILE[path].append(long_name)
 
+INFLUENCES = {}
+for thy, info in THEORIES.items():
+    if thy not in INFLUENCES:
+        INFLUENCES[thy] = set()
+    deps = info['deps']
+    for dep in deps:
+        if dep not in INFLUENCES:
+            INFLUENCES[dep] = set()
+        INFLUENCES[dep].add(thy)
+
 def deps_of(thy):
     try:
         return THEORIES[thy]['deps']

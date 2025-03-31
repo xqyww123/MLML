@@ -12,7 +12,7 @@ import threading
 import concurrent.futures
 import queue  # Add standard queue module
 import time
-from tools.server import SERVERS, SERVER_INSTANCES
+from tools.server import SERVERS
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -22,6 +22,10 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+SERVER_INSTANCES = []
+for server, data in SERVERS.items():
+    SERVER_INSTANCES.extend([server] * data["num-evaluator"])
 
 class Result(Enum):
     SUCCESS = "SUCCESS"
