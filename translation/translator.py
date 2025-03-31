@@ -20,9 +20,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 SERVER_INSTANCES = []
-for server, (_, numproc) in SERVERS.items():
-    numconn = max(int (numproc * 0.6), 1)
-    SERVER_INSTANCES.extend([server] * numconn)
+for server, data in SERVERS.items():
+    SERVER_INSTANCES.extend([server] * data["num-translator"])
 
 
 KNOWN_TRANSLATION_TARGETS = {"origin", "isar-SH", "isar-SH*", "refined", "raw", "reord_raw", "reord_refined", 'goal'}

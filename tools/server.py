@@ -24,46 +24,36 @@ CFG_SERVERS = {}
 try:
     with open('./config/evaluation_servers.csv', 'r') as f:
         csv_reader = csv.reader(f)
+        # Read the first row as headers
+        headers = next(csv_reader, None)
         for row in csv_reader:
             # Skip empty rows or comment rows
             if not row or row[0].startswith('#'):
                 continue
                 
-            # Check if the row has at least two columns (server, instances)
-            if len(row) >= 2:
-                server = row[0].strip()
-                try:
-                    # Parse the number of instances, default to 1 if invalid
-                    instances = int(row[1].strip())
-                    if instances <= 0:
-                        logger.warning(f"Invalid instance count {instances} for server {server}, defaulting to 1")
-                        instances = 1
-                except ValueError:
-                    logger.warning(f"Invalid instance count format for server {server}, defaulting to 1")
-                    instances = 1
-
-                try:
-                    # Parse the number of instances, default to 1 if invalid
-                    numprocs = int(row[2].strip())
-                    if numprocs <= 0:
-                        logger.warning(f"Invalid numprocs {numprocs} for server {server}, defaulting to 1")
-                        numprocs = 1
-                except ValueError:
-                    logger.warning(f"Invalid numprocs format for server {server}, defaulting to 1")
-                    numprocs = 1
-                
-                
-                CFG_SERVERS[server] = (instances, numprocs)
-            else:
-                # Handle the case where only the server is specified (assume 1 instance)
-                server = row[0].strip()
-                if server:
-                    CFG_SERVERS[server] = (1, 1)
+            # Create a dictionary that maps from headers to data for the current row
+            row_data = {}
+            for i, header in enumerate(headers):
+                if i < len(row):
+                    data = row[i].strip()
+                    if i >= 1:
+                        data = int(data)
+                    row_data[header.strip()] = data
+                else:
+                    # If the row doesn't have a value for this header, set it to empty string
+                    row_data[header.strip()] = ""
+            
+            CFG_SERVERS[row_data["server"]] = row_data
                     
         logger.info(f"Loaded {len(CFG_SERVERS)} servers from ./config/evaluation_servers.csv")
 except FileNotFoundError:
     logger.warning("No server configuration found. Using default server.")
-    CFG_SERVERS["127.0.0.1:6666"] = (1, 8)
+    CFG_SERVERS["127.0.0.1:6666"] = {
+        "server": "127.0.0.1:6666",
+        "numprocs": 8,
+        "num-translator": 3,
+        "num-evaluator": 4
+    }
 
 
 def test_server(addr):
@@ -88,7 +78,7 @@ def launch_server(server, retry=20):
         try:
             # Construct the SSH command to launch the REPL server
             # ./contrib/Isa-REPL/repl_server_watch_dog.sh 0.0.0.0:6666 HOL /tmp/repl_outputs -o threads=32
-            numprocs = CFG_SERVERS[server][1]
+            numprocs = CFG_SERVERS[server]["numprocs"]
             ssh_command = f"ssh {host} 'cd {pwd} && " + \
                 f"mkdir -p ./cache/repl_tmps/{port} && " + \
                 f"source ./envir.sh && " + \
@@ -123,7 +113,6 @@ def launch_server(server, retry=20):
     return (True, server, "Already running")
 
 SERVERS = {}
-SERVER_INSTANCES = []
 
 def launch_servers():
     """Launch all REPL servers in parallel using ThreadPoolExecutor."""
@@ -149,7 +138,6 @@ def launch_servers():
                 success, server, message = future.result()
                 if success:
                     SERVERS[server] = CFG_SERVERS[server]
-                    SERVER_INSTANCES.extend([server] * CFG_SERVERS[server][0])
                     success_count += 1
             except Exception as e:
                 logger.error(f"Server {server} launch raised an exception: {str(e)}")
@@ -251,10 +239,8 @@ supervisor.start()
 #import atexit
 #atexit.register(supervisor.stop)
 
-def restart_all_servers():
-    """Restart all servers by killing existing processes and waiting for supervisor to bring them back online"""
+def kill_all_servers():
     logger.info("Killing all server processes for supervisor-managed restart...")
-    
     # Kill all existing server processes
     killed_servers = []
     for server_addr in CFG_SERVERS.keys():
@@ -284,13 +270,20 @@ def restart_all_servers():
                 logger.error(f"Invalid server address format: {server_addr}")
         except Exception as e:
             logger.error(f"Error killing server {server_addr}: {str(e)}")
-    
+
     if not killed_servers:
         logger.warning("No servers were killed, nothing to restart")
         return 0, 0
     
     killed_count = len(killed_servers)
     logger.info(f"Killed {killed_count} server processes. Waiting for supervisor to restart them...")
+
+    return killed_servers
+
+def restart_all_servers():
+    """Restart all servers by killing existing processes and waiting for supervisor to bring them back online"""
+
+    killed_servers = kill_all_servers()
     
     # Wait for each server to come back online
     success_count = 0

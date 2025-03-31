@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo "Initializing system..."
+git pull
 git submodule update --init --recursive --remote
 pip install -q gdown
 mkdir -p ./cache/downloads
@@ -25,9 +26,10 @@ fi
 
 if ! command -v opam &> /dev/null; then
     echo "Error: opam is not installed or not in your PATH. Lauching the installer..."
+    bash -c "sh <(curl -fsSL https://opam.ocaml.org/install.sh)" && echo "It seems opam is installed successfully. Please ENSURE opam is in your PATH and re-run this script."
     echo "Note: The MLML is smart enough and configures the environment for you."
     echo "If the installation asks you if you want to insert <eval \$(opam env --switch=default)> into your ~/.bashrc, this NOT required for MLML."
-    bash -c "sh <(curl -fsSL https://opam.ocaml.org/install.sh)" && echo "It seems opam is installed successfully. Please ENSURE opam is in your PATH and re-run this script."
+    opam init
     exit 1
 fi
 
