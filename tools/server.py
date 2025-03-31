@@ -83,7 +83,7 @@ def launch_server(server, retry=20):
                 f"mkdir -p ./cache/repl_tmps/{port} && " + \
                 f"source ./envir.sh && " + \
                 f"(fuser -n tcp -k {port} || true) && " + \
-                f"nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} HOL {pwd}/cache/repl_tmps/{port} -o threads={numprocs} > ./cache/repl_tmps/{port}/log.txt 2>&1 &'"
+                f"nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} HOL {pwd}/cache/repl_tmps/{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &'"
             
             # Log the command being executed
             logger.info(f"Launching server on {host}:{port} with command: {ssh_command}")
