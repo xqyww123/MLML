@@ -7,7 +7,7 @@ import subprocess
 import threading
 
 N = 24
-node_list = [f"cn-{i:02d}" for i in range(N)]
+node_list = [f"cn-{i:02d}" for i in range(1,N+1)]
 
 
 def check_node(node):
