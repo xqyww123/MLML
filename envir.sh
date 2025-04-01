@@ -10,5 +10,3 @@ if [[ "$PATH" != "$(pwd)/contrib/Isabelle2024/bin"* ]]; then
     # Add Isabelle as the first entry
     export PATH="$(pwd)/contrib/Isabelle2024/bin:$PATH"
 fi
-
-#eval $(opam env --switch=default)

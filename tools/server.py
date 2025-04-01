@@ -2,10 +2,12 @@ import logging
 import csv
 import os
 import subprocess
+import atexit
 from IsaREPL import Client, REPLFail
 import time
 import concurrent.futures
 import threading
+from . import slum
 
 logger = logging.getLogger(__name__)
 # Read the logging level from an environment variable, default to INFO if not set.
@@ -55,6 +57,25 @@ except FileNotFoundError:
         "num-evaluator": 4
     }
 
+SERVERS = CFG_SERVERS.copy()
+
+# Read the cluster configuration from environment variable, default to 'local' if not set
+CLUSTER = os.getenv("CLUSTER", "ssh")
+match CLUSTER:
+    case "ssh":
+        pass
+    case "slurm":
+        logger.info("Allocating servers for SLURM...")
+        slum.alloc_servers(SERVERS.keys())
+        time.sleep(15)
+        allocated_servers = slum.allocated_servers()
+        for server in SERVERS.keys():
+            if server not in allocated_servers:
+                logger.warning(f"Server {server} not allocated, skipping")
+                SERVERS.pop(server)
+        logger.info(f"{len(SERVERS)}/{len(CFG_SERVERS)} servers are allocated for SLURM")
+    case _:
+        raise ValueError(f"Invalid cluster configuration: {CLUSTER}")
 
 def test_server(addr):
     try:
@@ -65,10 +86,11 @@ def test_server(addr):
         raise E
     except InterruptedError as E:
         raise E
-    except Exception:
+    except Exception as E:
+        logger.error(f"Cannot connect to server {addr}: {E}")
         return False
 
-def launch_server(server, retry=20):
+def launch_server(server, retry=6, timeout=300):
     if test_server(server):
         logger.info(f"Server on {server} is already running")
         return (True, server, "Already running")
@@ -78,7 +100,7 @@ def launch_server(server, retry=20):
         try:
             # Construct the SSH command to launch the REPL server
             # ./contrib/Isa-REPL/repl_server_watch_dog.sh 0.0.0.0:6666 HOL /tmp/repl_outputs -o threads=32
-            numprocs = CFG_SERVERS[server]["numprocs"]
+            numprocs = SERVERS[server]["numprocs"]
             ssh_command = f"ssh {host} 'cd {pwd} && " + \
                 f"mkdir -p ./cache/repl_tmps/{host}_{port} && " + \
                 f"source ./envir.sh && " + \
@@ -93,62 +115,34 @@ def launch_server(server, retry=20):
             logger.info(f"Command sent to {host}:{port}")
 
             # Wait for the server to start (try up to 60 times)
-            for attempt in range(30):
+            print(timeout//10)
+            for attempt in range(timeout//10):
                 if test_server(server):
                     logger.info(f"Server on {host}:{port} started after {(attempt+1)*10} seconds")
                     return (True, server, f"Started successfully after {(attempt+1)*10} seconds")
-                logger.info(f"Waiting for server {host}:{port} to start (attempt {attempt+1}/30)")
+                logger.info(f"Waiting for server {host}:{port} to start ({(attempt+1)*10}/{timeout} seconds)")
                 time.sleep(10)
             
-            logger.warning(f"Server on {host}:{port} failed to start after 300 seconds")
-            if retry > 0:
-                return launch_server(server, retry - 1)
+            if retry > 1:
+                logger.warning(f"Server on {host}:{port} failed to start after {timeout} seconds, retrying...")
+                return launch_server(server, retry-1, timeout)
             else:
-                return (False, server, "Failed to start after 300 seconds")
+                logger.warning(f"Server on {host}:{port} failed to start after {retry}*{timeout} seconds")
+                return (False, server, f"Failed to start after {retry}*{timeout} seconds")
         except Exception as e:
             error_msg = str(e)
             logger.error(f"Failed to launch server on {host}:{port}: {error_msg}, retrying...")
             return (False, server, f"Error: {error_msg}")
-    # Add the server to the SERVERS dictionary
-    return (True, server, "Already running")
-
-SERVERS = {}
-
-def launch_servers():
-    """Launch all REPL servers in parallel using ThreadPoolExecutor."""
-    # Get the list of servers to launch
-    servers_to_launch = list(CFG_SERVERS.keys())
-    
-    if not servers_to_launch:
-        logger.warning("No servers to launch")
-        return
-        
-    logger.info(f"Launching {len(servers_to_launch)} servers")
-    
-    # Use a ThreadPoolExecutor to launch servers in parallel
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(servers_to_launch)) as executor:
-        # Submit all tasks and map them to their servers for tracking
-        future_to_server = {executor.submit(launch_server, server): server for server in servers_to_launch}
-        
-        # Process results as they complete
-        success_count = 0
-        for future in concurrent.futures.as_completed(future_to_server):
-            server = future_to_server[future]
-            try:
-                success, server, message = future.result()
-                if success:
-                    SERVERS[server] = CFG_SERVERS[server]
-                    success_count += 1
-            except Exception as e:
-                logger.error(f"Server {server} launch raised an exception: {str(e)}")
-    
-    # Final report
-    logger.info(f"Server launch complete: {success_count}/{len(servers_to_launch)} servers running")
-
-launch_servers()
 
 class ServerSupervisor:
     """Class to monitor and maintain server health"""
+    _instance = None
+    _initialized = False
+    
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(ServerSupervisor, cls).__new__(cls)
+        return cls._instance
     
     def __init__(self, check_interval=10):
         """
@@ -157,10 +151,12 @@ class ServerSupervisor:
         Args:
             check_interval: Time in seconds between health checks (default: 60)
         """
-        self.check_interval = check_interval
-        self.is_running = False
-        self.supervisor_thread = None
-        self._lock = threading.Lock()  # Lock for thread-safe operations
+        if not self._initialized:
+            self.check_interval = check_interval
+            self.is_running = False
+            self.supervisor_thread = None
+            self._lock = threading.Lock()  # Lock for thread-safe operations
+            self._initialized = True
     
     def start(self):
         """Start the server supervision in a background thread"""
@@ -231,9 +227,38 @@ class ServerSupervisor:
             logger.error(f"Error while restarting server {server}: {str(e)}")
 
 
-# Initialize and start the server supervisor
-supervisor = ServerSupervisor(check_interval=10)  # Check every 10 seconds
-supervisor.start()
+def launch_servers():
+    """Launch all REPL servers in parallel using ThreadPoolExecutor."""
+    # Get the list of servers to launch
+    servers_to_launch = list(SERVERS.keys())
+    
+    if not servers_to_launch:
+        logger.warning("No servers to launch")
+        return
+        
+    logger.info(f"Launching {len(servers_to_launch)} servers")
+    
+    # Use a ThreadPoolExecutor to launch servers in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(servers_to_launch)) as executor:
+        # Submit all tasks and map them to their servers for tracking
+        future_to_server = {executor.submit(lambda s: launch_server(s, retry=1, timeout=120), server): server for server in servers_to_launch}
+        
+        # Process results as they complete
+        success_count = 0
+        for future in concurrent.futures.as_completed(future_to_server):
+            server = future_to_server[future]
+            try:
+                success, server, message = future.result()
+                if success:
+                    success_count += 1
+            except Exception as e:
+                logger.error(f"Server {server} launch raised an exception: {str(e)}")
+    
+    # Final report
+    logger.info(f"Server launch complete: {success_count}/{len(servers_to_launch)} servers running")
+    # Initialize and start the server supervisor
+    supervisor = ServerSupervisor(check_interval=10)  # Check every 10 seconds
+    supervisor.start()
 
 # Register an atexit handler to stop the supervisor gracefully when the program exits
 #import atexit
@@ -243,7 +268,7 @@ def kill_all_servers():
     logger.info("Killing all server processes for supervisor-managed restart...")
     # Kill all existing server processes
     killed_servers = []
-    for server_addr in CFG_SERVERS.keys():
+    for server_addr in SERVERS.keys():
         try:
             # Parse the server address to get host and port
             if ':' in server_addr:
@@ -263,7 +288,11 @@ def kill_all_servers():
                         logger.info(f"Killed server process on {host}:{port}")
                         killed_servers.append(server_addr)
                     else:
-                        logger.warning(f"No process found on {host}:{port} or failed to kill: {result.stderr.decode()}")
+                        message = result.stderr.decode()
+                        if message.strip() == "":
+                            logger.warning(f"{host}:{port} not running")
+                        else:
+                            logger.warning(f"{host}:{port} failed to kill: {message}")
                 except Exception as e:
                     logger.error(f"SSH command failed for {host}:{port}: {str(e)}")
             else:
