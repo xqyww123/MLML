@@ -32,7 +32,7 @@ try:
             # Skip empty rows or comment rows
             if not row or row[0].startswith('#'):
                 continue
-                
+
             # Create a dictionary that maps from headers to data for the current row
             row_data = {}
             for i, header in enumerate(headers):
@@ -44,9 +44,9 @@ try:
                 else:
                     # If the row doesn't have a value for this header, set it to empty string
                     row_data[header.strip()] = ""
-            
+
             CFG_SERVERS[row_data["server"]] = row_data
-                    
+
         logger.info(f"Loaded {len(CFG_SERVERS)} servers from ./config/evaluation_servers.csv")
 except FileNotFoundError:
     logger.warning("No server configuration found. Using default server.")
@@ -66,13 +66,15 @@ match CLUSTER:
         pass
     case "slurm":
         logger.info("Allocating servers for SLURM...")
-        slum.alloc_servers(SERVERS.keys())
+        server_names = list(map(lambda x: x.split(":")[0], SERVERS.keys()))
+        print(server_names)
+        slum.alloc_servers(server_names)
         time.sleep(15)
         allocated_servers = slum.allocated_servers()
         for server in SERVERS.keys():
             if server not in allocated_servers:
                 logger.warning(f"Server {server} not allocated, skipping")
-                SERVERS.pop(server)
+                # SERVERS.pop(server)
         logger.info(f"{len(SERVERS)}/{len(CFG_SERVERS)} servers are allocated for SLURM")
     case _:
         raise ValueError(f"Invalid cluster configuration: {CLUSTER}")
@@ -106,10 +108,10 @@ def launch_server(server, retry=6, timeout=300):
                 f"source ./envir.sh && " + \
                 f"(fuser -n tcp -k {port} || true) && " + \
                 f"nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} HOL {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &'"
-            
+
             # Log the command being executed
             logger.info(f"Launching server on {host}:{port} with command: {ssh_command}")
-            
+
             # Execute the SSH command in a subprocess
             subprocess.Popen(ssh_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             logger.info(f"Command sent to {host}:{port}")
@@ -122,7 +124,7 @@ def launch_server(server, retry=6, timeout=300):
                     return (True, server, f"Started successfully after {(attempt+1)*10} seconds")
                 logger.info(f"Waiting for server {host}:{port} to start ({(attempt+1)*10}/{timeout} seconds)")
                 time.sleep(10)
-            
+
             if retry > 1:
                 logger.warning(f"Server on {host}:{port} failed to start after {timeout} seconds, retrying...")
                 return launch_server(server, retry-1, timeout)
@@ -138,16 +140,16 @@ class ServerSupervisor:
     """Class to monitor and maintain server health"""
     _instance = None
     _initialized = False
-    
+
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
             cls._instance = super(ServerSupervisor, cls).__new__(cls)
         return cls._instance
-    
+
     def __init__(self, check_interval=10):
         """
         Initialize the server supervisor
-        
+
         Args:
             check_interval: Time in seconds between health checks (default: 60)
         """
@@ -157,44 +159,44 @@ class ServerSupervisor:
             self.supervisor_thread = None
             self._lock = threading.Lock()  # Lock for thread-safe operations
             self._initialized = True
-    
+
     def start(self):
         """Start the server supervision in a background thread"""
         with self._lock:
             if self.is_running:
                 logger.info("Server supervisor is already running")
                 return
-                
+
             self.is_running = True
             self.supervisor_thread = threading.Thread(target=self._supervision_loop, daemon=True)
             self.supervisor_thread.start()
             logger.info(f"Server supervisor started, checking every {self.check_interval} seconds")
-    
+
     def stop(self):
         """Stop the server supervision"""
         with self._lock:
             if not self.is_running:
                 return
-                
+
             self.is_running = False
             if self.supervisor_thread:
                 self.supervisor_thread.join(timeout=30)
                 logger.info("Server supervisor stopped")
-    
+
     def _supervision_loop(self):
         """Main supervision loop that checks server health periodically"""
         while self.is_running:
             self._check_and_restart_servers()
             # Sleep for the specified interval
             time.sleep(self.check_interval)
-    
+
     def _check_and_restart_servers(self):
         """Check health of all servers and restart any that are down"""
         logger.debug("Running server health check...")
-        
+
         server_status = []
         servers_to_restart = []
-        
+
         # Check status of all servers
         for server in list(SERVERS.keys()):
             for _ in range(5):
@@ -204,17 +206,17 @@ class ServerSupervisor:
             server_status.append(f"{server}: {'UP' if is_running else 'DOWN'}")
             if not is_running:
                 servers_to_restart.append(server)
-        
+
         # Log status summary
         logger.debug(f"Server health status: {', '.join(server_status)}")
-        
+
         # Restart any servers that are down
         if servers_to_restart:
             logger.warning(f"Detected {len(servers_to_restart)} servers down: {', '.join(servers_to_restart)}")
             for server in servers_to_restart:
                 logger.info(f"Attempting to restart server {server}")
                 self._restart_server(server)
-        
+
     def _restart_server(self, server):
         """Restart a specific server"""
         try:
@@ -231,18 +233,18 @@ def launch_servers():
     """Launch all REPL servers in parallel using ThreadPoolExecutor."""
     # Get the list of servers to launch
     servers_to_launch = list(SERVERS.keys())
-    
+
     if not servers_to_launch:
         logger.warning("No servers to launch")
         return
-        
+
     logger.info(f"Launching {len(servers_to_launch)} servers")
-    
+
     # Use a ThreadPoolExecutor to launch servers in parallel
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(servers_to_launch)) as executor:
         # Submit all tasks and map them to their servers for tracking
         future_to_server = {executor.submit(lambda s: launch_server(s, retry=1, timeout=120), server): server for server in servers_to_launch}
-        
+
         # Process results as they complete
         success_count = 0
         for future in concurrent.futures.as_completed(future_to_server):
@@ -253,7 +255,7 @@ def launch_servers():
                     success_count += 1
             except Exception as e:
                 logger.error(f"Server {server} launch raised an exception: {str(e)}")
-    
+
     # Final report
     logger.info(f"Server launch complete: {success_count}/{len(servers_to_launch)} servers running")
     # Initialize and start the server supervisor
@@ -273,7 +275,7 @@ def kill_all_servers():
             # Parse the server address to get host and port
             if ':' in server_addr:
                 host, port = server_addr.split(':')
-                
+
                 # Use SSH to run fuser for all hosts
                 try:
                     cmd = f"ssh {host} 'fuser -k {port}/tcp'"
@@ -303,7 +305,7 @@ def kill_all_servers():
     if not killed_servers:
         logger.warning("No servers were killed, nothing to restart")
         return 0, 0
-    
+
     killed_count = len(killed_servers)
     logger.info(f"Killed {killed_count} server processes. Waiting for supervisor to restart them...")
 
@@ -313,36 +315,36 @@ def restart_all_servers():
     """Restart all servers by killing existing processes and waiting for supervisor to bring them back online"""
 
     killed_servers = kill_all_servers()
-    
+
     # Wait for each server to come back online
     success_count = 0
     failed_servers = []
-    
+
     # Test each server with up to 30 attempts
     for server in killed_servers:
         server_online = False
         max_attempts = 30
-        
+
         for attempt in range(1, max_attempts + 1):
             if test_server(server):
                 logger.info(f"Server {server} is back online after {attempt*10} seconds")
                 success_count += 1
                 server_online = True
                 break
-            
+
             if attempt < max_attempts:
                 logger.debug(f"Server {server} still offline, waiting... (attempt {attempt}/{max_attempts})")
                 time.sleep(10)  # Wait 10 seconds between attempts
-        
+
         if not server_online:
             logger.warning(f"Server {server} failed to restart after {max_attempts*10} seconds")
             failed_servers.append(server)
-    
+
     # Final summary
     if success_count == killed_count:
         logger.info(f"All {killed_count} servers successfully restarted")
     else:
         logger.warning(f"Restart summary: {success_count}/{killed_count} servers online, {len(failed_servers)} failed")
-    
+
     return success_count, len(failed_servers)
 
