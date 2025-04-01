@@ -347,6 +347,10 @@ def evaluation_engine():
                         except REPLFail as E:
                             evaluator.reset()
                             logger.error(f"REPLFail error @ {req.case.index}: {E}")
+                    except ConnectionError:
+                        logger.error(f"Fail to connect to {server_addr}. Retrying in 10 seconds...")
+                        task_queue.put(req)
+                        time.sleep(10)
                     except Exception as e:
                         logger.error(f"Error processing case {req.case.index}: {str(e)}")
                         if req.retry > 0:
