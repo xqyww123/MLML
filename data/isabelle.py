@@ -330,3 +330,55 @@ if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'fine-tune-mi
 #    gen_test_cases()
 #    exit()
 #
+
+def preprocess_MiniF2F(addr):
+    with Client(addr, 'HOL') as c:
+        def parse(path):
+            with open(path, 'r', encoding='utf-8') as file:
+                commands = c.fast_lex(file.read())
+            # Find the first theorem command
+            theorem_index = -1
+            for idx, (_, command) in enumerate(commands):
+                if command.strip().startswith("theorem"):
+                    theorem_index = idx
+                    break
+
+            if theorem_index == -1:
+                raise Exception(f"MiniF2F: No theorem found in {path}")
+            
+            src = '\n'.join([command[1] for command in commands[:theorem_index+1]])
+            return src
+        def mk_dataset(path):
+            validate_files = [f for f in os.listdir(path)]
+            validation_set = {}
+            for file in validate_files:
+                src = parse(f'{path}/{file}')
+                name, _ = os.path.splitext(os.path.basename(file))
+                validation_set[name] = src
+            return validation_set
+        validate_set = mk_dataset('./data/miniF2F/isabelle/valid')
+        test_set = mk_dataset('./data/miniF2F/isabelle/test')
+        with open('data/miniF2F_validation.json', 'w', encoding='utf-8') as f:
+            json.dump(validate_set, f, ensure_ascii=False, indent=4)
+        with open('data/miniF2F_test.json', 'w', encoding='utf-8') as f:
+            json.dump(test_set, f, ensure_ascii=False, indent=4)
+
+if not os.path.isfile('data/miniF2F_validation.json') or not os.path.isfile('data/miniF2F_test.json'):
+    preprocess_MiniF2F("127.0.0.1:6666")
+
+_MINIF2F_VALIDATION = None
+_MINIF2F_TEST = None
+
+def get_MINIF2F_VALIDATION():
+    global _MINIF2F_VALIDATION
+    if _MINIF2F_VALIDATION is None:
+        with open('data/miniF2F_validation.json', 'r', encoding='utf-8') as f:
+            _MINIF2F_VALIDATION = json.load(f)
+    return _MINIF2F_VALIDATION
+
+def get_MINIF2F_TEST():
+    global _MINIF2F_TEST
+    if _MINIF2F_TEST is None:
+        with open('data/miniF2F_test.json', 'r', encoding='utf-8') as f:
+            _MINIF2F_TEST = json.load(f)
+    return _MINIF2F_TEST

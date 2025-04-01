@@ -182,7 +182,7 @@ class ServerSupervisor:
 
         # Check status of all servers
         for server in list(SERVERS.keys()):
-            for _ in range(5):
+            for _ in range(10):
                 is_running = test_server(server)
                 if is_running:
                     break
