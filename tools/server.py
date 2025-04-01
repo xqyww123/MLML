@@ -230,7 +230,7 @@ def launch_servers():
         case "slurm":
             atexit.register(slum.free_servers)
             logger.info("Allocating servers for SLURM...")
-            server_names = list(map(lambda x: x.split(":")[0], SERVERS.keys()))
+            server_names = list(set(map(lambda x: x.split(":")[0], SERVERS.keys())))
             print(server_names)
             slum.alloc_servers(server_names)
             time.sleep(15)

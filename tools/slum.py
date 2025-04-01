@@ -9,7 +9,7 @@ import threading
 def allocated_servers():
     cmd = f"squeue -u haonan.li"
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    return result.stdout.strip().split("\n")
+    return result.stdout.strip()
 
 def check_node(node):
     # Get list of running jobs for the user
