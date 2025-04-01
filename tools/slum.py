@@ -25,7 +25,7 @@ def alloc_server(node):
 
 def alloc_servers(node_list):
     for node in node_list:
-        thread = threading.Thread(target=alloc_server, args=(node,), stack_size=32768)
+        thread = threading.Thread(target=alloc_server, args=(node,))
         thread.start()
 
 

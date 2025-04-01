@@ -217,6 +217,4 @@ def translate():
 
 if __name__ == "__main__":
     launch_servers()
-    if CLUSTER == "slurm":
-        atexit.register(slum.free_servers)
     translate()

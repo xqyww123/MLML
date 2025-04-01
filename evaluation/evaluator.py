@@ -12,7 +12,7 @@ import threading
 import concurrent.futures
 import queue  # Add standard queue module
 import time
-from tools.server import SERVERS
+from tools.server import launch_servers, SERVERS
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -22,6 +22,8 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+launch_servers()
 
 SERVER_INSTANCES = []
 for server, data in SERVERS.items():
@@ -141,7 +143,7 @@ class Isar_Base:
 
     def move_to(self, file, line, column=0):
         self.repl.rollback("init")
-        self.repl.eval_file (os.path.abspath(file), line, column)
+        self.repl.file (os.path.abspath(file), line, column, cache_position=True, use_cache=True)
     
     def reset_eval(self, src):
         self.repl.rollback("init")
