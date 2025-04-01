@@ -61,23 +61,6 @@ SERVERS = CFG_SERVERS.copy()
 
 # Read the cluster configuration from environment variable, default to 'local' if not set
 CLUSTER = os.getenv("CLUSTER", "ssh")
-match CLUSTER:
-    case "ssh":
-        pass
-    case "slurm":
-        logger.info("Allocating servers for SLURM...")
-        server_names = list(map(lambda x: x.split(":")[0], SERVERS.keys()))
-        print(server_names)
-        slum.alloc_servers(server_names)
-        time.sleep(15)
-        allocated_servers = slum.allocated_servers()
-        for server in SERVERS.keys():
-            if server not in allocated_servers:
-                logger.warning(f"Server {server} not allocated, skipping")
-                # SERVERS.pop(server)
-        logger.info(f"{len(SERVERS)}/{len(CFG_SERVERS)} servers are allocated for SLURM")
-    case _:
-        raise ValueError(f"Invalid cluster configuration: {CLUSTER}")
 
 def test_server(addr):
     try:
@@ -229,9 +212,37 @@ class ServerSupervisor:
             logger.error(f"Error while restarting server {server}: {str(e)}")
 
 
+# Add this near the top of the file with other global variables
+_launch_servers_called = False
+
 def launch_servers():
     """Launch all REPL servers in parallel using ThreadPoolExecutor."""
+    global _launch_servers_called
+
+    if _launch_servers_called:
+        logger.warning("launch_servers has already been called. Ignoring subsequent calls.")
+        return
+
     # Get the list of servers to launch
+    match CLUSTER:
+        case "ssh":
+            pass
+        case "slurm":
+            atexit.register(slum.free_servers)
+            logger.info("Allocating servers for SLURM...")
+            server_names = list(map(lambda x: x.split(":")[0], SERVERS.keys()))
+            print(server_names)
+            slum.alloc_servers(server_names)
+            time.sleep(15)
+            allocated_servers = slum.allocated_servers()
+            for server in SERVERS.keys():
+                if server not in allocated_servers:
+                    logger.warning(f"Server {server} not allocated, skipping")
+                    # SERVERS.pop(server)
+            logger.info(f"{len(SERVERS)}/{len(CFG_SERVERS)} servers are allocated for SLURM")
+        case _:
+            raise ValueError(f"Invalid cluster configuration: {CLUSTER}")
+
     servers_to_launch = list(SERVERS.keys())
 
     if not servers_to_launch:
@@ -261,6 +272,9 @@ def launch_servers():
     # Initialize and start the server supervisor
     supervisor = ServerSupervisor(check_interval=10)  # Check every 10 seconds
     supervisor.start()
+
+    _launch_servers_called = True
+
 
 # Register an atexit handler to stop the supervisor gracefully when the program exits
 #import atexit
