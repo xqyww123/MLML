@@ -6,13 +6,14 @@ from Isa_Mini import Mini
 import csv
 import logging
 from enum import Enum
-from data.isabelle import prelude_of, PISA_DATA, get_ISAR_PROOFS
+from data.isabelle import prelude_of, PISA_DATA, get_ISAR_PROOFS, get_MINIF2F_VALIDATION, get_MINIF2F_TEST
 from sqlitedict import SqliteDict
 import threading
 import concurrent.futures
 import queue  # Add standard queue module
 import time
 from tools.server import launch_servers, SERVERS
+from typing import Callable, Tuple
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -29,10 +30,19 @@ SERVER_INSTANCES = []
 for server, data in SERVERS.items():
     SERVER_INSTANCES.extend([server] * data["num-evaluator"])
 
-class Result(Enum):
+class Status(Enum):
     SUCCESS = "SUCCESS"
     FAIL = "FAIL"
     CASE_NOT_AVAILABLE = "CASE_NOT_AVAILABLE"
+    NOT_FINISHED = "NOT_FINISHED"
+
+class Result:
+    def __init__(self, status : Status, error : Exception | None):
+        self.status = status
+        self.error = error
+
+    def __str__(self):
+        return f"{self.status} {self.error}"
 
 class CaseNotAvailable(Exception):
     """Exception raised when a test case is not available."""
@@ -40,15 +50,40 @@ class CaseNotAvailable(Exception):
         self.message = message
         super().__init__(self.message)
 
-def PISA_prelude(index):
-    try:
-        pos_before, pos, statement = PISA_DATA[index]
-        prelude = prelude_of(pos_before.file, pos_before.line)
-        return prelude
-    except KeyError:
-        raise CaseNotAvailable(f"MiniLang_PISA: case {index} not available")
+class Case:
+    def __init__(self, index, code):
+        self.index = index
+        self.code = code
 
-class MiniLang_Base:
+    @staticmethod
+    def PISA_file(response_path):
+        ret = []
+        with open(response_path, "r", encoding="utf-8") as f: 
+                for line in f:
+                    data = json.loads(line)
+                    ret.append(Case(data["index"], data["response"]))
+        return ret
+
+class Evaluator:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return None
+    
+    def all_cases(self) -> enumerate[Case]:
+        raise NotImplementedError("all_cases must be implemented by subclass")
+    
+    def start_case(self, index) -> None:
+        raise NotImplementedError("start_case must be implemented by subclass")
+    
+    def validate(self, index, srcs : enumerate[str]) -> Result:
+        raise NotImplementedError("validate must be implemented by subclass")
+
+    def reset(self) -> None:
+        raise NotImplementedError("reset must be implemented by subclass")
+
+class MiniLang_Base(Evaluator):
     def __init__(self, addr):
         self.addr = addr
         self.mini = Mini(self.addr, 'HOL', ML_base_injection=False)
@@ -57,30 +92,29 @@ class MiniLang_Base:
     def __enter__(self):
         if self.mini:
             self.mini.__enter__()
+        super().__enter__()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         if self.mini:
             self.mini.__exit__(exc_type, exc_value, traceback)
+        super().__exit__(exc_type, exc_value, traceback)
         return None
     
-    def start_case(self, category, index):
-        raise NotImplementedError("start_case must be implemented by subclass")
-    
-    def validate(self, category, index, srcs):
+    def validate(self, index, srcs):
         try:
-            self.start_case(category, index)
+            self.start_case(index)
         except CaseNotAvailable:
-            return (Result.CASE_NOT_AVAILABLE, None)
-        result = (Result.FAIL, None)
+            return Result(Status.CASE_NOT_AVAILABLE, None)
+        result = Result(Status.FAIL, None)
         for src in srcs:
             try:
                 _, finished = self.mini.eval(src, self.timeout)
                 if finished:
-                    result = (Result.SUCCESS, None)
+                    result = Result(Status.SUCCESS, None)
                     break
             except REPLFail as E:
-                result = (Result.FAIL, E)
+                result = Result(Status.FAIL, E)
                 pass
         return result
 
@@ -97,12 +131,13 @@ class MiniLang_Base:
         self.mini = Mini(self.addr, 'HOL', ML_base_injection=False)
 
 class MiniLang_PISA(MiniLang_Base):
-    def start_case(self, category, index):
+    def all_cases(self):
+        return range(len(PISA_DATA))
+
+    def start_case(self, index):
         """
         index is the index of the case in the PISA dataset, from 0 to 2999
         """
-        if category != "test":
-            raise ValueError(f"MiniLang_PISA: only support test category")
         try:
             pos_before, pos, statement = PISA_DATA[index]
         except KeyError:
@@ -127,7 +162,7 @@ class MiniLang_PISA(MiniLang_Base):
 #        MiniLang_PISA.print_state(self.eval(src))
 
 
-class Isar_Base:
+class Isar_Base(Evaluator):
     def __init__(self, addr):
         self.addr = addr
         self.repl = Client(addr, 'HOL')
@@ -135,10 +170,12 @@ class Isar_Base:
 
     def __enter__(self):
         self.repl.__enter__()
+        super().__enter__()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.repl.__exit__(exc_type, exc_value, traceback)
+        super().__exit__(exc_type, exc_value, traceback)
         return None
 
     def move_to(self, file, line, column=0):
@@ -149,25 +186,22 @@ class Isar_Base:
         self.repl.rollback("init")
         self.repl.eval(src)
 
-    def start_case(self, category, index):
-        raise NotImplementedError("start_case must be implemented by subclass")
-
-    def validate(self, category, index, srcs):
+    def validate(self, index, srcs):
         try:
-            self.start_case(category, index)
+            self.start_case(index)
         except CaseNotAvailable:
-            return (Result.CASE_NOT_AVAILABLE, None)
-        result = (Result.FAIL, None)
+            return Result(Status.CASE_NOT_AVAILABLE, None)
+        result = Result(Status.FAIL, None)
         for src in srcs:
             try:
                 response, error = self.repl.eval(src, timeout=600000)
                 if error:
-                    result = (Result.FAIL, error)
+                    result = Result(Status.FAIL, error)
                 elif response and not response[-1][3][3]:
-                    result = (Result.SUCCESS, None)
+                    result = Result(Status.SUCCESS, None)
                     break
             except REPLFail as E:
-                result = (Result.FAIL, E)
+                result = Result(Status.FAIL, E)
                 pass
         return result
 
@@ -178,12 +212,13 @@ class Isar_Base:
         self.repl.record_state("init")
 
 class Isar_PISA(Isar_Base):
-    def start_case(self, category, index : int):
+    def all_cases(self):
+        return range(len(PISA_DATA))
+
+    def start_case(self, index : int):
         """
         index is the index of the case in the PISA dataset, from 0 to 2999
         """
-        if category != "test":
-            raise ValueError(f"Isar_PISA: only support test category")
         try:
             pos_before, pos, statement = PISA_DATA[index]
         except KeyError:
@@ -195,13 +230,11 @@ class Isar(Isar_Base):
         ISAR_PROOFS = get_ISAR_PROOFS()
         return ISAR_PROOFS.keys()
 
-    def start_case(self, category, index : Position):
+    def start_case(self, index : Position):
         """
         index is the position of the target goal to be evaluated.
         You could call `all_cases()` to get the positions of all available training cases.
         """
-        if category != "train":
-            raise ValueError(f"Isar: only support train category")
         ISAR_PROOFS = get_ISAR_PROOFS()
         if index not in ISAR_PROOFS:
             raise ValueError(f"Isar: {index} is not a training case")
@@ -221,66 +254,26 @@ class Isar(Isar_Base):
 #        assert(test.validate("test", 29, ["by simp"])[0] == Result.CASE_NOT_AVAILABLE)
 #        assert(test.validate("test", 1, ["using assms unfolding echelon_form_upt_k_def by auto"])[0] == Result.SUCCESS)
 
-
-def preprocess_MiniF2F(addr):
-    with Client(addr, 'HOL') as c:
-        def parse(path):
-            with open(path, 'r', encoding='utf-8') as file:
-                commands = c.fast_lex(file.read())
-            # Find the first theorem command
-            theorem_index = -1
-            for idx, (_, command) in enumerate(commands):
-                if command.strip().startswith("theorem"):
-                    theorem_index = idx
-                    break
-
-            if theorem_index == -1:
-                raise Exception(f"MiniF2F: No theorem found in {path}")
-            
-            src = '\n'.join([command[1] for command in commands[:theorem_index+1]])
-            return src
-        def mk_dataset(path):
-            validate_files = [f for f in os.listdir(path)]
-            validation_set = {}
-            for file in validate_files:
-                src = parse(f'{path}/{file}')
-                name, _ = os.path.splitext(os.path.basename(file))
-                validation_set[name] = src
-            return validation_set
-        validate_set = mk_dataset('./data/miniF2F/isabelle/valid')
-        test_set = mk_dataset('./data/miniF2F/isabelle/test')
-        with open('data/miniF2F_validation.json', 'w', encoding='utf-8') as f:
-            json.dump(validate_set, f, ensure_ascii=False, indent=4)
-        with open('data/miniF2F_test.json', 'w', encoding='utf-8') as f:
-            json.dump(test_set, f, ensure_ascii=False, indent=4)
-
-if not os.path.isfile('data/miniF2F_validation.json') or not os.path.isfile('data/miniF2F_test.json'):
-    preprocess_MiniF2F("127.0.0.1:6666")
-
-if __name__ == "__main__":
-    with open('data/miniF2F_validation.json', 'r', encoding='utf-8') as f:
-        MINIF2F_VALIDATION = json.load(f)
-    with open('data/miniF2F_test.json', 'r', encoding='utf-8') as f:
-        MINIF2F_TEST = json.load(f)
-
 class MiniLang_MiniF2F(MiniLang_Base):
-    def start_case(self, category, index : int):
+    def start_case(self, index : Tuple[str, int]):
+        category, idx = index
         if category not in ["test", "valid"]:
-            raise ValueError(f"MiniLang_MiniF2F: only support test and valid category")
-        dataset = MINIF2F_VALIDATION if category == "valid" else MINIF2F_TEST
+            raise ValueError(f"Isar_MiniF2F: only support test and valid category") 
+        dataset = get_MINIF2F_VALIDATION() if category == "valid" else get_MINIF2F_TEST()
         try:
-            src = dataset[index]
+            src = dataset[idx]
         except KeyError:
             raise CaseNotAvailable(f"MiniLang_MiniF2F: case {index} not available")
         self.reset_eval(src)
 
 class Isar_MiniF2F(Isar_Base):
-    def start_case(self, category, index : int):
+    def start_case(self, index : Tuple[str, int]):
+        category, idx = index
         if category not in ["test", "valid"]:
             raise ValueError(f"Isar_MiniF2F: only support test and valid category") 
-        dataset = MINIF2F_VALIDATION if category == "valid" else MINIF2F_TEST
+        dataset = get_MINIF2F_VALIDATION() if category == "valid" else get_MINIF2F_TEST()
         try:
-            src = dataset[index]
+            src = dataset[idx]
         except KeyError:
             raise CaseNotAvailable(f"Isar_MiniF2F: case {index} not available")
         self.reset_eval(src)
@@ -316,115 +309,124 @@ class Isar_MiniF2F(Isar_Base):
 #    qed"""
 #        ])[0] == Result.SUCCESS)
 
-class Case:
-    def __init__(self, index, code):
-        self.index = index
-        self.code = code
 
-    @staticmethod
-    def PISA_file(response_path):
-        ret = []
-        with open(response_path, "r", encoding="utf-8") as f: 
-                for line in f:
-                    data = json.loads(line)
-                    ret.append(Case(data["index"], data["response"]))
-        return ret
+class Request:
+    def __init__(
+            self, 
+            case : Case, 
+            evaluator : Evaluator, 
+            callback, # : Callable[[Request, Result], None], 
+            retry=5
+        ): # type: ignore
+        self.case = case
+        self.callback = callback
+        self.evaluator = evaluator
+        self.retry = retry
 
+def evaluation_engine():
+    task_queue = queue.Queue()
 
-# see ./evaluation/evaluator_top.py as an example
-def evaluate(result_path : str, cases : list[Case], evaluator : MiniLang_Base | Isar_Base, category : str):
-    # Setup shared variables with thread-safe access
+    def eval_server(server_addr):
+        while True:
+            try:
+                while True:
+                    try:
+                        # Get next task from queue with timeout
+                        req : Request = task_queue.get(timeout=1)
+                    except queue.Empty:
+                        # No more tasks in queue
+                        time.sleep(1)
+                        continue
+                    
+                    try:
+                        logger.info(f"Server {server_addr} evaluating {req.case.index}")
+                        evaluator = req.evaluator(server_addr)
+                        try:
+                            result = evaluator.validate(req.case.index, [req.case.code])
+                            req.callback(req, result)
+                        except REPLFail as E:
+                            evaluator.reset()
+                            logger.error(f"REPLFail error @ {req.case.index}: {E}")
+                    except Exception as e:
+                        logger.error(f"Error processing case {req.case.index}: {str(e)}")
+                        if req.retry > 0:
+                            req.retry -= 1
+                            task_queue.put(req)
+                            break
+                        else:
+                            req.callback(Result(Status.CASE_NOT_AVAILABLE, e))
+                    finally:
+                        task_queue.task_done()
+            except ConnectionRefusedError:
+                logger.error(f"Fail to connect to {server_addr}. Retrying in 10 seconds...")
+                time.sleep(10)
+            except Exception as e:
+                logger.error(f"Worker thread for server {server_addr} encountered an error: {str(e)}. Retrying in 10 seconds...")
+                time.sleep(10)
+        
+    # Create and start worker threads for each server
+    threads = []
+    for server_addr in SERVER_INSTANCES:
+        thread = threading.Thread(target=eval_server, args=(server_addr,))
+        thread.daemon = True  # Make threads daemon so they exit if main thread exits
+        threads.append(thread)
+        thread.start()
+        
+    return (task_queue, threads)
+
+(task_queue, evaluator_threads) = evaluation_engine()
+
+def evaluate(case : Case, evaluator : Evaluator, retry=5) -> concurrent.futures.Future[Result]:
+    future = concurrent.futures.Future()
+
+    def callback(req : Request, result : Result):
+        if not future.done():
+            future.set_result(result)
+    
+    task_queue.put(Request(case, evaluator, callback, retry=retry))
+    return future
+
+def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluator):
     success = 0
     unavailable = 0
     total = 0
     results = {}
     lock = threading.Lock()
+    futures = []
 
-    def log_state():
-        with lock:
-            success_rate = success / (total-unavailable) if total - unavailable > 0 else 0
-            unavailable_rate = unavailable / total if total > 0 else 0
-            logger.info(f"Success: {success_rate:.3f}, Unavailable: {unavailable_rate:.3f}")
-            
-    # Create a task queue from all cases
-    task_queue = queue.Queue()
-    for case in cases:
-        task_queue.put(case)
-
-    logger.info(f"Starting {evaluator.__name__} evaluation of {len(cases)} {category} cases. The result will be saved to {result_path}")
     with SqliteDict(result_path, autocommit=True) as db:
-        def eval_server(server_addr):
+        def callback(case : Case, result : Result):
             nonlocal success, unavailable, total, results
-            while not task_queue.empty():
-                logger.info(f"Connecting to server {server_addr}")
-                try:
-                    with evaluator(server_addr) as test:
-                        while True:
-                            try:
-                                # Get next task from queue with timeout
-                                case : Case = task_queue.get(timeout=1)
-                            except queue.Empty:
-                                # No more tasks in queue
-                                return
-                            
-                            try:
-                                logger.info(f"Server {server_addr} evaluating {case.index}")
-                                
-                                # Check if result already exists in database
-                                if case.index in db and db[case.index] != Result.CASE_NOT_AVAILABLE and db[case.index] != 0:
-                                    result, err = db[case.index]
-                                else:
-                                    try:
-                                        if case.index == 316:
-                                            pass
-                                        result, err = test.validate(category, case.index, [case.code])
-                                        db[case.index] = (result, err)
-                                    except REPLFail as E:
-                                        test.reset()
-                                        logger.error(f"REPLFail error @ {case.index}: {E}")
-                                        result = Result.CASE_NOT_AVAILABLE
-                            except Exception as e:
-                                logger.error(f"Error processing case {case.index}: {str(e)}")
-                                # Put the task back in the queue to retry
-                                task_queue.put(case)
-                                break
-                            finally:
-                                # Mark task as done
-                                task_queue.task_done()
-                                    
-                            with lock:
-                                # Update statistics
-                                if result == Result.SUCCESS:
-                                    success += 1
-                                elif result == Result.CASE_NOT_AVAILABLE:
-                                    unavailable += 1
-                                
-                                total += 1
-                                results[case.index] = result
-                                
-                            log_state()
-                except ConnectionRefusedError:
-                    logger.error(f"Fail to connect to {server_addr}. Retrying in 10 seconds...")
-                    time.sleep(10)
-                except Exception as e:
-                    logger.error(f"Worker thread for server {server_addr} encountered an error: {str(e)}. Retrying in 10 seconds...")
-                    time.sleep(10)
-        
-        # Create and start worker threads for each server
-        threads = []
-        for server_addr in SERVER_INSTANCES:
-            thread = threading.Thread(target=eval_server, args=(server_addr,))
-            thread.daemon = True  # Make threads daemon so they exit if main thread exits
-            threads.append(thread)
-            thread.start()
-            
-        # Wait for all threads to complete
-        for thread in threads:
-            thread.join()
+            with lock:
+                db[case.index] = result
+                db.commit()
 
-    logger.info(f"Evaluation complete. Processed {total}/{len(cases)} cases.")
-    log_state()
+                if result.status == Status.SUCCESS:
+                    success += 1
+                elif result.status == Status.CASE_NOT_AVAILABLE:
+                    unavailable += 1
+                    
+                total += 1
+                results[case.index] = result
+                
+                success_rate = success / (total-unavailable) if total - unavailable > 0 else 0
+                unavailable_rate = unavailable / total if total > 0 else 0
+                logger.info(f"Success: {success_rate:.3f}, Unavailable: {unavailable_rate:.3f}")
+
+        for case in cases:
+            if case.index in db and db[case.index].status != Status.CASE_NOT_AVAILABLE:
+                results[case.index] = db[case.index]
+                callback(case, db[case.index])
+            else:
+                future = evaluate(case, evaluator,  retry=5)
+                future.add_done_callback(lambda f: callback(case, f.result()))
+                futures.append(future)
+
+        for future in futures:
+            future.result()
+
     return results
+
 
 # examples of evaluation
 #   evaluate('./evaluation/isar_result.db',          cases, Isar,          "training")
