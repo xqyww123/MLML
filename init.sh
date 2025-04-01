@@ -33,6 +33,5 @@ isabelle components -u ./tools/Build_AFP_Image/AFP-DEP1/ || exit 1
 
 isabelle ocaml_setup
 isabelle ghc_setup
-isabelle ghc_setup
 
 echo "System initialized"
