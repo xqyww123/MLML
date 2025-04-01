@@ -1,4 +1,4 @@
-session "AFP-DEP1-10" = "AFP-DEP1-9" +
+session "AFP-DEP1-10" = "AFP-DEP1-9-1" +
 sessions
   "Jordan_Hoelder"
   "WebAssembly"

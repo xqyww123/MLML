@@ -1,2 +1,0 @@
-# ISABELLE_TOOL_JAVA_OPTIONS="-Xms4g -Xmx384g -Xss64m"
-# ML_OPTIONS="--minheap 4G --maxheap 24G"
