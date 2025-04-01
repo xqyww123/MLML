@@ -65,16 +65,15 @@ match CLUSTER:
     case "ssh":
         pass
     case "slurm":
-        logger.info("Allocating servers for SLURM")
+        logger.info("Allocating servers for SLURM...")
         slum.alloc_servers(SERVERS.keys())
-        time.sleep(10)
+        time.sleep(15)
         allocated_servers = slum.allocated_servers()
         for server in SERVERS.keys():
             if server not in allocated_servers:
                 logger.warning(f"Server {server} not allocated, skipping")
                 SERVERS.pop(server)
-        logger.info(f"Allocated {len(SERVERS)} servers for SLURM")
-        atexit.register(slum.free_servers)
+        logger.info(f"{len(SERVERS)}/{len(CFG_SERVERS)} servers are allocated for SLURM")
     case _:
         raise ValueError(f"Invalid cluster configuration: {CLUSTER}")
 
@@ -87,10 +86,11 @@ def test_server(addr):
         raise E
     except InterruptedError as E:
         raise E
-    except Exception:
+    except Exception as E:
+        logger.error(f"Cannot connect to server {addr}: {E}")
         return False
 
-def launch_server(server):
+def launch_server(server, retry=6, timeout=300):
     if test_server(server):
         logger.info(f"Server on {server} is already running")
         return (True, server, "Already running")
@@ -115,56 +115,34 @@ def launch_server(server):
             logger.info(f"Command sent to {host}:{port}")
 
             # Wait for the server to start (try up to 60 times)
-            for attempt in range(5):
+            print(timeout//10)
+            for attempt in range(timeout//10):
                 if test_server(server):
                     logger.info(f"Server on {host}:{port} started after {(attempt+1)*10} seconds")
                     return (True, server, f"Started successfully after {(attempt+1)*10} seconds")
-                logger.info(f"Waiting for server {host}:{port} to start (attempt {attempt+1}/30)")
+                logger.info(f"Waiting for server {host}:{port} to start ({(attempt+1)*10}/{timeout} seconds)")
                 time.sleep(10)
             
-            logger.warning(f"Server on {host}:{port} failed to start after 300 seconds")
-            return (False, server, "Failed to start after 300 seconds")
+            if retry > 1:
+                logger.warning(f"Server on {host}:{port} failed to start after {timeout} seconds, retrying...")
+                return launch_server(server, retry-1, timeout)
+            else:
+                logger.warning(f"Server on {host}:{port} failed to start after {retry}*{timeout} seconds")
+                return (False, server, f"Failed to start after {retry}*{timeout} seconds")
         except Exception as e:
             error_msg = str(e)
             logger.error(f"Failed to launch server on {host}:{port}: {error_msg}, retrying...")
             return (False, server, f"Error: {error_msg}")
 
-def launch_servers():
-    """Launch all REPL servers in parallel using ThreadPoolExecutor."""
-    # Get the list of servers to launch
-    servers_to_launch = list(SERVERS.keys())
-    
-    if not servers_to_launch:
-        logger.warning("No servers to launch")
-        return
-        
-    logger.info(f"Launching {len(servers_to_launch)} servers")
-    
-    # Use a ThreadPoolExecutor to launch servers in parallel
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(servers_to_launch)) as executor:
-        # Submit all tasks and map them to their servers for tracking
-        future_to_server = {executor.submit(launch_server, server): server for server in servers_to_launch}
-        
-        # Process results as they complete
-        success_count = 0
-        for future in concurrent.futures.as_completed(future_to_server):
-            server = future_to_server[future]
-            try:
-                success, server, message = future.result()
-                if success:
-                    success_count += 1
-                else:
-                    SERVERS.pop(server)
-            except Exception as e:
-                logger.error(f"Server {server} launch raised an exception: {str(e)}")
-    
-    # Final report
-    logger.info(f"Server launch complete: {success_count}/{len(servers_to_launch)} servers running")
-
-launch_servers()
-
 class ServerSupervisor:
     """Class to monitor and maintain server health"""
+    _instance = None
+    _initialized = False
+    
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(ServerSupervisor, cls).__new__(cls)
+        return cls._instance
     
     def __init__(self, check_interval=10):
         """
@@ -173,10 +151,12 @@ class ServerSupervisor:
         Args:
             check_interval: Time in seconds between health checks (default: 60)
         """
-        self.check_interval = check_interval
-        self.is_running = False
-        self.supervisor_thread = None
-        self._lock = threading.Lock()  # Lock for thread-safe operations
+        if not self._initialized:
+            self.check_interval = check_interval
+            self.is_running = False
+            self.supervisor_thread = None
+            self._lock = threading.Lock()  # Lock for thread-safe operations
+            self._initialized = True
     
     def start(self):
         """Start the server supervision in a background thread"""
@@ -247,9 +227,38 @@ class ServerSupervisor:
             logger.error(f"Error while restarting server {server}: {str(e)}")
 
 
-# Initialize and start the server supervisor
-supervisor = ServerSupervisor(check_interval=10)  # Check every 10 seconds
-supervisor.start()
+def launch_servers():
+    """Launch all REPL servers in parallel using ThreadPoolExecutor."""
+    # Get the list of servers to launch
+    servers_to_launch = list(SERVERS.keys())
+    
+    if not servers_to_launch:
+        logger.warning("No servers to launch")
+        return
+        
+    logger.info(f"Launching {len(servers_to_launch)} servers")
+    
+    # Use a ThreadPoolExecutor to launch servers in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(servers_to_launch)) as executor:
+        # Submit all tasks and map them to their servers for tracking
+        future_to_server = {executor.submit(lambda s: launch_server(s, retry=1, timeout=120), server): server for server in servers_to_launch}
+        
+        # Process results as they complete
+        success_count = 0
+        for future in concurrent.futures.as_completed(future_to_server):
+            server = future_to_server[future]
+            try:
+                success, server, message = future.result()
+                if success:
+                    success_count += 1
+            except Exception as e:
+                logger.error(f"Server {server} launch raised an exception: {str(e)}")
+    
+    # Final report
+    logger.info(f"Server launch complete: {success_count}/{len(servers_to_launch)} servers running")
+    # Initialize and start the server supervisor
+    supervisor = ServerSupervisor(check_interval=10)  # Check every 10 seconds
+    supervisor.start()
 
 # Register an atexit handler to stop the supervisor gracefully when the program exits
 #import atexit
@@ -279,7 +288,11 @@ def kill_all_servers():
                         logger.info(f"Killed server process on {host}:{port}")
                         killed_servers.append(server_addr)
                     else:
-                        logger.warning(f"No process found on {host}:{port} or failed to kill: {result.stderr.decode()}")
+                        message = result.stderr.decode()
+                        if message.strip() == "":
+                            logger.warning(f"{host}:{port} not running")
+                        else:
+                            logger.warning(f"{host}:{port} failed to kill: {message}")
                 except Exception as e:
                     logger.error(f"SSH command failed for {host}:{port}: {str(e)}")
             else:
