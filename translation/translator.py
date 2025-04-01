@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
-from tools.server import SERVERS
+from tools.server import SERVERS, CLUSTER, launch_servers
 from sqlitedict import SqliteDict
 import msgpack as mp
 import sys
@@ -11,6 +11,8 @@ import threading
 import time
 from IsaREPL import Client
 import queue
+import atexit
+from tools import slum
 
 logging.basicConfig(
     level=logging.INFO,
@@ -214,4 +216,7 @@ def translate():
                 thread.join()
 
 if __name__ == "__main__":
+    launch_servers()
+    if CLUSTER == "slurm":
+        atexit.register(slum.free_servers)
     translate()

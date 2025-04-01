@@ -24,23 +24,14 @@ if [ ! -d "./contrib/afp-2025-02-12" ]; then
     tar -xzf ./cache/downloads/afp-2025-02-12.tar.gz -C ./contrib
 fi
 
-#if ! command -v opam &> /dev/null; then
-#    echo "Error: opam is not installed or not in your PATH. Lauching the installer..."
-#    bash -c "sh <(curl -fsSL https://opam.ocaml.org/install.sh)" && echo "It seems opam is installed successfully. Please ENSURE opam is in your PATH and re-run this script."
-#    echo "Note: The MLML is smart enough and configures the environment for you."
-#    echo "If the installation asks you if you want to insert <eval \$(opam env --switch=default)> into your ~/.bashrc, this NOT required for MLML."
-#    opam init
-#    exit 1
-#fi
-#
-#eval $(opam env --switch=default)
-#opam install zarith -y
-
 rm -f  $(isabelle getenv -b ISABELLE_HOME_USER)/etc/components 2>/dev/null
 isabelle components -u ./contrib/afp-2025-02-12/thys || exit 1
 isabelle components -u ./contrib/Isa-REPL || exit 1
 isabelle components -u ./contrib/Isa-Mini || exit 1
 isabelle components -u ./contrib/auto_sledgehammer || exit 1
 isabelle components -u ./tools/Build_AFP_Image/AFP-DEP1/ || exit 1
+
+isabelle ocaml_setup
+isabelle ghc_setup
 
 echo "System initialized"

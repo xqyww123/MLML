@@ -1,6 +1,7 @@
 {
   "extraPaths": [
     "./evaluation",
-    "./data"
+    "./data",
+    "./tools"
   ],
 } 
