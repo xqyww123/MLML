@@ -9,3 +9,4 @@ translation/results
 __pycache__
 .vscode
 evaluation/isar_pisa_result.db
+config/evaluation_servers.csv
