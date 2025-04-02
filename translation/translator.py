@@ -12,7 +12,7 @@ import time
 from IsaREPL import Client
 import queue
 import atexit
-from . import slurm
+import tools.slurm as slurm
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,6 +36,7 @@ else:
     logger.error("Translation targets must be provided.\n"
                  "Available targets: " + ", ".join(KNOWN_TRANSLATION_TARGETS))
     exit(1)
+
 if any(target not in KNOWN_TRANSLATION_TARGETS for target in translation_targets):
     logger.error("Unknown translation targets: " + ", ".join(translation_targets) +
                 "\nAvailable targets: " + ", ".join(KNOWN_TRANSLATION_TARGETS))
@@ -110,7 +111,7 @@ def translate():
             def translate_one(server, rpath):
                 path=os.path.abspath(rpath)
                 rpath=norm_file(path)
-                if rpath in db_decl:
+                if all(f"{rpath}:{target}" in db_decl for target in translation_targets):
                     logger.info(f"skipped {rpath}")
                     return
                 with Client(server, 'HOL') as c:
@@ -128,7 +129,7 @@ def translate():
                                     run = False
                                     for target in translation_targets:
                                         key = f"{pos}:{target}"
-                                        if key in db and db[key][1]:
+                                        if key not in db or db[key][1]:
                                             run = True
                                             break
                                     mp.pack(run, c.cout)
@@ -138,18 +139,17 @@ def translate():
                                     pos_spec = encode_pos(pos_spec)
                                     pos_prf = encode_pos(pos_prf)
                                     if all(not err for _, (_, err) in ret.items()):
-                                        logger.info(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} succeeds")
+                                        logger.info(f"{server} - {pos_spec} succeeds")
+                                        logger.info(ret[translation_targets[0]][0])
                                     for cat, (src, err) in ret.items():
                                         db[f"{pos_spec}:{cat}"] = (src, err, pos_prf)
                                         if err:
-                                            logger.info(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} {cat} fails: {err}")
+                                            logger.info(f"{server} - {pos_spec} - {cat} fails: {err}")
                                         else:
                                             if cat in finished_goals:
                                                 finished_goals[cat] += 1
                                             else:
                                                 finished_goals[cat] = 1
-                                    if 'isar-SH*' in ret:
-                                        logger.info(ret['isar-SH*'])
                                     report()
                                     db.commit()
                                 case 3:
@@ -169,7 +169,8 @@ def translate():
                     mp.pack((path, translation_targets), c.cout)
                     c.cout.flush()
                     interact()
-                    db_decl[rpath] = True
+                    for target in translation_targets:
+                        db_decl[f"{rpath}:{target}"] = True
                     db_decl.commit()
                     logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - finished {rpath}")
 

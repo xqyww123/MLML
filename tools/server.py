@@ -62,7 +62,7 @@ SERVERS = CFG_SERVERS.copy()
 # Read the cluster configuration from environment variable, default to 'local' if not set
 CLUSTER = os.getenv("CLUSTER", "ssh")
 
-def test_server(addr):
+def test_server(addr, timeout_retry=10):
     try:
         with Client(addr, 'HOL', timeout=10) as client:
             client.num_processor()
@@ -71,6 +71,13 @@ def test_server(addr):
         raise E
     except InterruptedError as E:
         raise E
+    except TimeoutError as E:
+        if timeout_retry > 0:
+            logger.error(f"Cannot connect to server {addr}: {E}")
+            return test_server(addr, timeout_retry-1)
+        else:
+            logger.error(f"Cannot connect to server {addr}: {E}")
+            return False
     except Exception as E:
         logger.error(f"Cannot connect to server {addr}: {E}")
         return False
@@ -97,7 +104,7 @@ def launch_server(server, retry=6, timeout=300):
 
             # Execute the SSH command in a subprocess
             subprocess.Popen(ssh_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            logger.info(f"Command sent to {host}:{port}")
+            logger.info(f"Command sent to {host}:{port}. It typically takes 90 seconds to start.")
 
             # Wait for the server to start (try up to 60 times)
             print(timeout//10)
@@ -105,7 +112,11 @@ def launch_server(server, retry=6, timeout=300):
                 if test_server(server):
                     logger.info(f"Server on {host}:{port} started after {(attempt+1)*10} seconds")
                     return (True, server, f"Started successfully after {(attempt+1)*10} seconds")
-                logger.info(f"Waiting for server {host}:{port} to start ({(attempt+1)*10}/{timeout} seconds)")
+                if attempt <= 9:
+                    msg = f"Waiting for server {host}:{port} to start ({(attempt+1)*10}/{timeout} seconds). Calm down, it typically takes 90 seconds to start."
+                else:
+                    msg = f"Waiting for server {host}:{port} to start ({(attempt+1)*10}/{timeout} seconds). Maybe it is not working, check the log file ./cache/repl_tmps/{host}_{port}/log.txt"
+                logger.info(msg)
                 time.sleep(10)
 
             if retry > 1:
