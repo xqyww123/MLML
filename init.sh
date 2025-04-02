@@ -19,6 +19,20 @@ if [ ! -d "./contrib/Isabelle2024" ] || [ ! -d "./contrib/afp-2025-02-12" ]; the
     tar -xzf ./cache/downloads/Isabelle2024_and_afp-2025-02-12.tar.gz -C ./contrib
 fi
 
+# Ask user for maximum memory allocation for Isabelle
+read -p "Enter memory limit (in GB) for Isabelle (default: 50): " isabelle_memory
+isabelle_memory=${isabelle_memory:-50}
+
+# Validate that isabelle_memory is a positive integer and not less than 30
+if ! [[ "$isabelle_memory" =~ ^[0-9]+$ ]] || [ "$isabelle_memory" -lt 30 ]; then
+    echo "Error: Memory limit must be a positive integer greater or equal than 30GB"
+    exit 1
+fi
+
+echo "ML_OPTIONS='--minheap 4G --maxheap ${isabelle_memory}G'" > $(isabelle getenv -b ISABELLE_HOME_USER)/etc/settings
+echo "Setting Isabelle memory limit to ${isabelle_memory}GB"
+
+
 rm -f  $(isabelle getenv -b ISABELLE_HOME_USER)/etc/components 2>/dev/null
 isabelle components -u ./contrib/afp-2025-02-12/thys || exit 1
 isabelle components -u ./contrib/Isa-REPL || exit 1
