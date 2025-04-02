@@ -30,7 +30,6 @@ isabelle components -u ./contrib/afp-2025-02-12/thys || exit 1
 isabelle components -u ./contrib/Isa-REPL || exit 1
 isabelle components -u ./contrib/Isa-Mini || exit 1
 isabelle components -u ./contrib/auto_sledgehammer || exit 1
-isabelle components -u ./tools/Build_AFP_Image/AFP-DEP1/ || exit 1
 
 isabelle ocaml_setup
 isabelle ghc_setup

@@ -44,12 +44,6 @@ class Result:
     def __str__(self):
         return f"{self.status} {self.error}"
 
-class CaseNotAvailable(Exception):
-    """Exception raised when a test case is not available."""
-    def __init__(self, message="The requested test case is not available"):
-        self.message = message
-        super().__init__(self.message)
-
 class Case:
     def __init__(self, index, code):
         self.index = index
@@ -63,6 +57,14 @@ class Case:
                     data = json.loads(line)
                     ret.append(Case(data["index"], data["response"]))
         return ret
+
+
+class CaseNotAvailable(Exception):
+    """Exception raised when a test case is not available."""
+    def __init__(self, idx, message="The requested test case is not available"):
+        self.idx = idx
+        self.message = message
+        super().__init__(self.message)
 
 class Evaluator:
     def __enter__(self):
@@ -141,7 +143,7 @@ class MiniLang_PISA(MiniLang_Base):
         try:
             pos_before, pos, statement = PISA_DATA[index]
         except KeyError:
-            raise CaseNotAvailable(f"MiniLang_PISA: case {index} not available")
+            raise CaseNotAvailable(index, f"MiniLang_PISA: case {index} not available")
         self.move_to(pos.file, pos.line, pos.column)
     
 
@@ -222,7 +224,7 @@ class Isar_PISA(Isar_Base):
         try:
             pos_before, pos, statement = PISA_DATA[index]
         except KeyError:
-            raise CaseNotAvailable(f"Isar_PISA: case {index} not available")
+            raise CaseNotAvailable(index, f"Isar_PISA: case {index} not available")
         self.move_to(pos.file, pos.line, pos.column)
 
 class Isar(Isar_Base):
@@ -309,127 +311,221 @@ class Isar_MiniF2F(Isar_Base):
 #    qed"""
 #        ])[0] == Result.SUCCESS)
 
-
-class Request:
-    def __init__(
-            self, 
-            case : Case, 
-            evaluator : Evaluator, 
-            callback, # : Callable[[Request, Result], None], 
-            retry=5
-        ): # type: ignore
-        self.case = case
-        self.callback = callback
-        self.evaluator = evaluator
-        self.retry = retry
-
-def evaluation_engine():
-    task_queue = queue.Queue()
-
-    def eval_server(server_addr):
-        while True:
-            try:
-                while True:
-                    try:
-                        # Get next task from queue with timeout
-                        req : Request = task_queue.get(timeout=1)
-                    except queue.Empty:
-                        # No more tasks in queue
-                        time.sleep(1)
-                        continue
-                    
-                    try:
-                        logger.info(f"Server {server_addr} evaluating {req.case.index}")
-                        evaluator = req.evaluator(server_addr)
-                        try:
-                            result = evaluator.validate(req.case.index, [req.case.code])
-                            req.callback(req, result)
-                        except REPLFail as E:
-                            evaluator.reset()
-                            logger.error(f"REPLFail error @ {req.case.index}: {E}")
-                    except ConnectionError:
-                        logger.error(f"Fail to connect to {server_addr}. Retrying in 10 seconds...")
-                        task_queue.put(req)
-                        time.sleep(10)
-                    except Exception as e:
-                        logger.error(f"Error processing case {req.case.index}: {str(e)}")
-                        if req.retry > 0:
-                            req.retry -= 1
-                            task_queue.put(req)
-                            break
-                        else:
-                            req.callback(Result(Status.CASE_NOT_AVAILABLE, e))
-                    finally:
-                        task_queue.task_done()
-            except ConnectionRefusedError:
-                logger.error(f"Fail to connect to {server_addr}. Retrying in 10 seconds...")
-                time.sleep(10)
-            except Exception as e:
-                logger.error(f"Worker thread for server {server_addr} encountered an error: {str(e)}. Retrying in 10 seconds...")
-                time.sleep(10)
-        
-    # Create and start worker threads for each server
-    threads = []
-    for server_addr in SERVER_INSTANCES:
-        thread = threading.Thread(target=eval_server, args=(server_addr,))
-        thread.daemon = True  # Make threads daemon so they exit if main thread exits
-        threads.append(thread)
-        thread.start()
-        
-    return (task_queue, threads)
-
-(task_queue, evaluator_threads) = evaluation_engine()
-
-def evaluate(case : Case, evaluator : Evaluator, retry=5) -> concurrent.futures.Future[Result]:
-    future = concurrent.futures.Future()
-
-    def callback(req : Request, result : Result):
-        if not future.done():
-            future.set_result(result)
-    
-    task_queue.put(Request(case, evaluator, callback, retry=retry))
-    return future
-
 def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluator):
+    # Setup shared variables with thread-safe access
     success = 0
     unavailable = 0
     total = 0
     results = {}
     lock = threading.Lock()
-    futures = []
 
+    def log_state():
+        with lock:
+            success_rate = success / (total-unavailable) if total - unavailable > 0 else 0
+            unavailable_rate = unavailable / total if total > 0 else 0
+            logger.info(f"Success: {success_rate:.3f}, Unavailable: {unavailable_rate:.3f}")
+            
+    # Create a task queue from all cases
+    task_queue = queue.Queue()
+    for case in cases:
+        task_queue.put(case)
+
+    logger.info(f"Starting {evaluator.__name__} evaluation of {len(cases)} cases. The result will be saved to {result_path}")
     with SqliteDict(result_path, autocommit=True) as db:
-        def callback(case : Case, result : Result):
+        def eval_server(server_addr):
             nonlocal success, unavailable, total, results
-            with lock:
-                db[case.index] = result
-                db.commit()
+            while not task_queue.empty():
+                logger.info(f"Connecting to server {server_addr}")
+                try:
+                    with evaluator(server_addr) as test:
+                        while True:
+                            try:
+                                # Get next task from queue with timeout
+                                case : Case = task_queue.get(timeout=1)
+                            except queue.Empty:
+                                # No more tasks in queue
+                                return
+                            
+                            try:
+                                logger.info(f"Server {server_addr} evaluating {case.index}")
+                                
+                                # Check if result already exists in database
+                                if case.index in db and db[case.index].status != Status.CASE_NOT_AVAILABLE:
+                                    result = db[case.index]
+                                else:
+                                    try:
+                                        result = test.validate(case.index, [case.code])
+                                        db[case.index] = result
+                                    except REPLFail as E:
+                                        test.reset()
+                                        logger.error(f"REPLFail error @ {case.index}: {E}")
+                                        result = Result(Status.CASE_NOT_AVAILABLE, None)
+                            except Exception as e:
+                                logger.error(f"Error processing case {case.index}: {str(e)}")
+                                # Put the task back in the queue to retry
+                                task_queue.put(case)
+                                break
+                            finally:
+                                # Mark task as done
+                                task_queue.task_done()
+                                    
+                            with lock:
+                                # Update statistics
+                                if result.status == Status.SUCCESS:
+                                    success += 1
+                                elif result.status == Status.CASE_NOT_AVAILABLE:
+                                    unavailable += 1
+                                
+                                total += 1
+                                results[case.index] = result
 
-                if result.status == Status.SUCCESS:
-                    success += 1
-                elif result.status == Status.CASE_NOT_AVAILABLE:
-                    unavailable += 1
-                    
-                total += 1
-                results[case.index] = result
-                
-                success_rate = success / (total-unavailable) if total - unavailable > 0 else 0
-                unavailable_rate = unavailable / total if total > 0 else 0
-                logger.info(f"Success: {success_rate:.3f}, Unavailable: {unavailable_rate:.3f}")
+                            log_state()
+                except ConnectionRefusedError:
+                    logger.error(f"Fail to connect to {server_addr}. Retrying in 10 seconds...")
+                    time.sleep(10)
+                except Exception as e:
+                    logger.error(f"Worker thread for server {server_addr} encountered an error: {str(e)}. Retrying in 10 seconds...")
+                    time.sleep(10)
+        
+        # Create and start worker threads for each server
+        threads = []
+        for server_addr in SERVER_INSTANCES:
+            thread = threading.Thread(target=eval_server, args=(server_addr,))
+            thread.daemon = True  # Make threads daemon so they exit if main thread exits
+            threads.append(thread)
+            thread.start()
+            
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
 
-        for case in cases:
-            if case.index in db and db[case.index].status != Status.CASE_NOT_AVAILABLE:
-                results[case.index] = db[case.index]
-                callback(case, db[case.index])
-            else:
-                future = evaluate(case, evaluator,  retry=5)
-                future.add_done_callback(lambda f: callback(case, f.result()))
-                futures.append(future)
-
-        for future in futures:
-            future.result()
-
+    logger.info(f"Evaluation complete. Processed {total}/{len(cases)} cases.")
+    log_state()
     return results
+
+
+
+
+#class Request:
+#    def __init__(
+#            self, 
+#            case : Case, 
+#            evaluator : Evaluator, 
+#            callback, # : Callable[[Request, Result], None], 
+#            retry=5
+#        ): # type: ignore
+#        self.case = case
+#        self.callback = callback
+#        self.evaluator = evaluator
+#        self.retry = retry
+#
+#def evaluation_engine():
+#    task_queue = queue.Queue()
+#
+#    def eval_server(server_addr):
+#        while True:
+#            try:
+#                while True:
+#                    try:
+#                        # Get next task from queue with timeout
+#                        req : Request = task_queue.get(timeout=1)
+#                    except queue.Empty:
+#                        # No more tasks in queue
+#                        time.sleep(1)
+#                        continue
+#                    
+#                    try:
+#                        logger.info(f"Server {server_addr} evaluating {req.case.index}")
+#                        evaluator = req.evaluator(server_addr)
+#                        try:
+#                            result = evaluator.validate(req.case.index, [req.case.code])
+#                            req.callback(req, result)
+#                        except REPLFail as E:
+#                            evaluator.reset()
+#                            logger.error(f"REPLFail error @ {req.case.index}: {E}")
+#                    except ConnectionError:
+#                        logger.error(f"Fail to connect to {server_addr}. Retrying in 60 seconds...")
+#                        task_queue.put(req)
+#                        time.sleep(60)
+#                    except Exception as e:
+#                        logger.error(f"Error processing case {req.case.index}: {str(e)}")
+#                        if req.retry > 0:
+#                            req.retry -= 1
+#                            task_queue.put(req)
+#                            break
+#                        else:
+#                            req.callback(Result(Status.CASE_NOT_AVAILABLE, e))
+#                    finally:
+#                        task_queue.task_done()
+#            except ConnectionRefusedError:
+#                logger.error(f"Fail to connect to {server_addr}. Retrying in 10 seconds...")
+#                time.sleep(10)
+#            except Exception as e:
+#                logger.error(f"Worker thread for server {server_addr} encountered an error: {str(e)}. Retrying in 10 seconds...")
+#                time.sleep(10)
+#        
+#    # Create and start worker threads for each server
+#    threads = []
+#    for server_addr in SERVER_INSTANCES:
+#        thread = threading.Thread(target=eval_server, args=(server_addr,))
+#        thread.daemon = True  # Make threads daemon so they exit if main thread exits
+#        threads.append(thread)
+#        thread.start()
+#        
+#    return (task_queue, threads)
+#
+#(task_queue, evaluator_threads) = evaluation_engine()
+#
+#def evaluate(case : Case, evaluator : Evaluator, retry=5) -> concurrent.futures.Future[Result]:
+#    future = concurrent.futures.Future()
+#
+#    def callback(req : Request, result : Result):
+#        if not future.done():
+#            future.set_result(result)
+#    
+#    task_queue.put(Request(case, evaluator, callback, retry=retry))
+#    return future
+#
+#def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluator):
+#    success = 0
+#    unavailable = 0
+#    total = 0
+#    results = {}
+#    lock = threading.Lock()
+#    futures = []
+#
+#    with SqliteDict(result_path, autocommit=True) as db:
+#        def callback(case : Case, result : Result):
+#            nonlocal success, unavailable, total, results
+#            with lock:
+#                db[case.index] = result
+#                db.commit()
+#
+#                if result.status == Status.SUCCESS:
+#                    success += 1
+#                elif result.status == Status.CASE_NOT_AVAILABLE:
+#                    unavailable += 1
+#                    
+#                total += 1
+#                results[case.index] = result
+#                
+#                success_rate = success / (total-unavailable) if total - unavailable > 0 else 0
+#                unavailable_rate = unavailable / total if total > 0 else 0
+#                logger.info(f"Success: {success_rate:.3f}, Unavailable: {unavailable_rate:.3f}")
+#
+#        for case in cases:
+#            if case.index in db and db[case.index].status != Status.CASE_NOT_AVAILABLE:
+#                results[case.index] = db[case.index]
+#                callback(case, db[case.index])
+#            else:
+#                future = evaluate(case, evaluator,  retry=5)
+#                future.add_done_callback(lambda f: callback(case, f.result()))
+#                futures.append(future)
+#
+#        for future in futures:
+#            future.result()
+#
+#    return results
 
 
 # examples of evaluation

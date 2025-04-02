@@ -248,11 +248,12 @@ def get_ISAR_PROOFS():
     with SqliteDict('./cache/translation/results.db') as db:
         for key, value in db.items():
             match key.split(':'):
-                case (file,line):
+                case (file,line,'origin'):
                     spec_pos = Position(int(line),0,file)
-                    (data, _, proof_pos) = value
+                    (origin, _, proof_pos) = value
+                    (goal, _, _) = db[f"{file}:{line}:goal"]
                     proof_pos = Position.from_s(proof_pos)
-                    ISAR_PROOFS[spec_pos] = (proof_pos, data['goal'], data['origin'])
+                    ISAR_PROOFS[spec_pos] = (proof_pos, goal, origin)
     ISAR_PROOFS_CACHE = ISAR_PROOFS
     return ISAR_PROOFS
 
@@ -296,15 +297,16 @@ def gen_cases():
         with SqliteDict('cache/translation/results.db') as db:
             for key, value in db.items():
                 match key.split(':'):
-                    case (file,line):
+                    case (file,line,'refined'):
                         try:
-                            (data, _, _) = value
+                            (refined, _, _) = value
+                            (goal, _, _) = db[f"{file}:{line}:goal"]
                             prelude = prelude_of(file, int(line))
                             num += 1
                             f.write(json.dumps({
                                 'prelude': prelude,
-                                'goal': data['goal'],
-                                'proof': data['refined']
+                                'goal': goal,
+                                'proof': refined
                             }) + '\n')
                         except KeyError:
                             pass

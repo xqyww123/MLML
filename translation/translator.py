@@ -12,7 +12,7 @@ import time
 from IsaREPL import Client
 import queue
 import atexit
-from tools import slum
+from . import slurm
 
 logging.basicConfig(
     level=logging.INFO,
@@ -125,32 +125,32 @@ def translate():
                             match c.unpack.unpack():
                                 case (0, pos):
                                     pos = encode_pos(pos)
-                                    try:
-                                        ret, errs, pos_prf = db[pos]
-                                        run = not all(target in ret for target in translation_targets)
-                                    except KeyError:
-                                        run = True
+                                    run = False
+                                    for target in translation_targets:
+                                        key = f"{pos}:{target}"
+                                        if key in db and db[key][1]:
+                                            run = True
+                                            break
                                     mp.pack(run, c.cout)
                                     c.cout.flush()
-                                case (2, pos_spec, pos_prf, ret, errs):
+                                case (2, pos_spec, pos_prf, ret):
                                     total_goals += 1
-                                    if errs:
-                                        logger.error(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} fails")
-                                        for err in errs:
-                                            logger.error(err)
-                                    else:
+                                    pos_spec = encode_pos(pos_spec)
+                                    pos_prf = encode_pos(pos_prf)
+                                    if all(not err for _, (_, err) in ret.items()):
                                         logger.info(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} succeeds")
-                                    for cat in ret:
-                                        if cat in finished_goals:
-                                            finished_goals[cat] += 1
+                                    for cat, (src, err) in ret.items():
+                                        db[f"{pos_spec}:{cat}"] = (src, err, pos_prf)
+                                        if err:
+                                            logger.info(f"{server} - {norm_file(pos_spec[3][1])}:{pos_spec[0]} {cat} fails: {err}")
                                         else:
-                                            finished_goals[cat] = 1
+                                            if cat in finished_goals:
+                                                finished_goals[cat] += 1
+                                            else:
+                                                finished_goals[cat] = 1
                                     if 'isar-SH*' in ret:
                                         logger.info(ret['isar-SH*'])
                                     report()
-                                    pos_spec = encode_pos(pos_spec)
-                                    pos_prf = encode_pos(pos_prf)
-                                    db[pos_spec] = (ret, errs, pos_prf)
                                     db.commit()
                                 case 3:
                                     break

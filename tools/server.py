@@ -7,7 +7,7 @@ from IsaREPL import Client, REPLFail
 import time
 import concurrent.futures
 import threading
-from . import slum
+from . import slurm
 
 logger = logging.getLogger(__name__)
 # Read the logging level from an environment variable, default to INFO if not set.
@@ -90,7 +90,7 @@ def launch_server(server, retry=6, timeout=300):
                 f"mkdir -p ./cache/repl_tmps/{host}_{port} && " + \
                 f"source ./envir.sh && " + \
                 f"(fuser -n tcp -k {port} || true) && " + \
-                f"nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} HOL {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &'"
+                f"nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} AFP-1-PISA {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &'"
 
             # Log the command being executed
             logger.info(f"Launching server on {host}:{port} with command: {ssh_command}")
@@ -228,13 +228,13 @@ def launch_servers():
         case "ssh":
             pass
         case "slurm":
-            atexit.register(slum.free_servers)
+            atexit.register(slurm.free_servers)
             logger.info("Allocating servers for SLURM...")
             server_names = list(set(map(lambda x: x.split(":")[0], SERVERS.keys())))
             print(server_names)
-            slum.alloc_servers(server_names)
+            slurm.alloc_servers(server_names)
             time.sleep(15)
-            allocated_servers = slum.allocated_servers()
+            allocated_servers = slurm.allocated_servers()
             for server in SERVERS.keys():
                 if server not in allocated_servers:
                     logger.warning(f"Server {server} not allocated, skipping")
@@ -321,44 +321,6 @@ def kill_all_servers():
         return 0, 0
 
     killed_count = len(killed_servers)
-    logger.info(f"Killed {killed_count} server processes. Waiting for supervisor to restart them...")
+    logger.info(f"Killed {killed_count} server processes.")
 
     return killed_servers
-
-def restart_all_servers():
-    """Restart all servers by killing existing processes and waiting for supervisor to bring them back online"""
-
-    killed_servers = kill_all_servers()
-
-    # Wait for each server to come back online
-    success_count = 0
-    failed_servers = []
-
-    # Test each server with up to 30 attempts
-    for server in killed_servers:
-        server_online = False
-        max_attempts = 30
-
-        for attempt in range(1, max_attempts + 1):
-            if test_server(server):
-                logger.info(f"Server {server} is back online after {attempt*10} seconds")
-                success_count += 1
-                server_online = True
-                break
-
-            if attempt < max_attempts:
-                logger.debug(f"Server {server} still offline, waiting... (attempt {attempt}/{max_attempts})")
-                time.sleep(10)  # Wait 10 seconds between attempts
-
-        if not server_online:
-            logger.warning(f"Server {server} failed to restart after {max_attempts*10} seconds")
-            failed_servers.append(server)
-
-    # Final summary
-    if success_count == killed_count:
-        logger.info(f"All {killed_count} servers successfully restarted")
-    else:
-        logger.warning(f"Restart summary: {success_count}/{killed_count} servers online, {len(failed_servers)} failed")
-
-    return success_count, len(failed_servers)
-
