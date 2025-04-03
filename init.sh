@@ -24,7 +24,9 @@ if [[ "$reinstall_isabelle" == "y" ]]; then
     echo "Removing existing Isabelle and AFP installations..."
     rm -rf ./contrib/Isabelle2024 ./contrib/afp-2025-02-12
     rm -f ./cache/downloads/Isabelle2024_and_afp-2025-02-12.tar.gz
-    mv $USER/.isabelle/Isabelle2024/heaps $USER/.isabelle/Isabelle2024/heaps.$(date +%Y%m%d%H%M%S)
+    if [ -d "$USER/.isabelle/Isabelle2024/heaps" ]; then
+        mv $USER/.isabelle/Isabelle2024/heaps $USER/.isabelle/Isabelle2024/heaps.$(date +%Y%m%d%H%M%S)
+    fi
     echo "Isabelle and AFP will be reinstalled."
 fi
 
