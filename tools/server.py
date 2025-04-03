@@ -62,7 +62,7 @@ SERVERS = CFG_SERVERS.copy()
 # Read the cluster configuration from environment variable, default to 'local' if not set
 CLUSTER = os.getenv("CLUSTER", "ssh")
 
-def test_server(addr, timeout_retry=10):
+def test_server(addr, timeout_retry=120):
     try:
         with Client(addr, 'HOL', timeout=10) as client:
             client.num_processor()
@@ -71,6 +71,8 @@ def test_server(addr, timeout_retry=10):
         raise E
     except InterruptedError as E:
         raise E
+    except ConnectionRefusedError as E:
+        return False
     except TimeoutError as E:
         if timeout_retry > 0:
             logger.error(f"Cannot connect to server {addr}: {E}")
@@ -82,7 +84,7 @@ def test_server(addr, timeout_retry=10):
         logger.error(f"Cannot connect to server {addr}: {E}")
         return False
 
-def launch_server(server, retry=6, timeout=300):
+def launch_server(server, retry=6, timeout=240):
     if test_server(server):
         logger.info(f"Server on {server} is already running")
         return (True, server, "Already running")
@@ -145,71 +147,79 @@ class ServerSupervisor:
         Initialize the server supervisor
 
         Args:
-            check_interval: Time in seconds between health checks (default: 60)
+            check_interval: Time in seconds between health checks (default: 10)
         """
         if not self._initialized:
             self.check_interval = check_interval
             self.is_running = False
-            self.supervisor_thread = None
+            self.supervision_threads = {}  # Dictionary to track supervision threads for each server
             self._lock = threading.Lock()  # Lock for thread-safe operations
             self._initialized = True
 
     def start(self):
-        """Start the server supervision in a background thread"""
+        """Start the server supervision with a dedicated thread for each server"""
         with self._lock:
             if self.is_running:
                 logger.info("Server supervisor is already running")
                 return
 
             self.is_running = True
-            self.supervisor_thread = threading.Thread(target=self._supervision_loop, daemon=True)
-            self.supervisor_thread.start()
-            logger.info(f"Server supervisor started, checking every {self.check_interval} seconds")
+            
+            # Create and start a thread for each server
+            for server in SERVERS.keys():
+                self._start_server_supervision(server)
+                
+            logger.info(f"Server supervisor started with dedicated threads for {len(SERVERS)} servers, checking every {self.check_interval} seconds")
+
+    def _start_server_supervision(self, server):
+        """Start a dedicated supervision thread for the specified server"""
+        if server in self.supervision_threads and self.supervision_threads[server].is_alive():
+            logger.debug(f"Supervision thread for {server} is already running")
+            return
+            
+        thread = threading.Thread(
+            target=self._server_supervision_loop,
+            args=(server,),
+            daemon=True,
+            name=f"supervisor-{server}"
+        )
+        self.supervision_threads[server] = thread
+        thread.start()
+        logger.debug(f"Started supervision thread for server {server}")
 
     def stop(self):
-        """Stop the server supervision"""
+        """Stop all server supervision threads"""
         with self._lock:
             if not self.is_running:
                 return
 
             self.is_running = False
-            if self.supervisor_thread:
-                self.supervisor_thread.join(timeout=30)
-                logger.info("Server supervisor stopped")
+            
+            # Wait for all supervision threads to terminate
+            for server, thread in self.supervision_threads.items():
+                if thread.is_alive():
+                    thread.join(timeout=10)
+                    logger.debug(f"Stopped supervision thread for server {server}")
+            
+            self.supervision_threads.clear()
+            logger.info("Server supervisor stopped")
 
-    def _supervision_loop(self):
-        """Main supervision loop that checks server health periodically"""
+    def _server_supervision_loop(self, server):
+        """Supervision loop for a specific server that checks its health periodically"""
+        logger.debug(f"Starting supervision loop for server {server}")
         while self.is_running:
-            self._check_and_restart_servers()
+            self._check_and_restart_server(server)
             # Sleep for the specified interval
             time.sleep(self.check_interval)
 
-    def _check_and_restart_servers(self):
-        """Check health of all servers and restart any that are down"""
-        logger.debug("Running server health check...")
-
-        server_status = []
-        servers_to_restart = []
-
-        # Check status of all servers
-        for server in list(SERVERS.keys()):
-            for _ in range(10):
-                is_running = test_server(server)
-                if is_running:
-                    break
-            server_status.append(f"{server}: {'UP' if is_running else 'DOWN'}")
-            if not is_running:
-                servers_to_restart.append(server)
-
-        # Log status summary
-        logger.debug(f"Server health status: {', '.join(server_status)}")
-
-        # Restart any servers that are down
-        if servers_to_restart:
-            logger.warning(f"Detected {len(servers_to_restart)} servers down: {', '.join(servers_to_restart)}")
-            for server in servers_to_restart:
-                logger.info(f"Attempting to restart server {server}")
-                self._restart_server(server)
+    def _check_and_restart_server(self, server):
+        """Check health of a specific server and restart it if down"""
+        is_running = test_server(server)
+        if is_running:
+            logger.debug(f"Server {server} is UP")
+        else:
+            logger.warning(f"Server {server} is DOWN - attempting to restart")
+            self._restart_server(server)
 
     def _restart_server(self, server):
         """Restart a specific server"""
@@ -292,7 +302,7 @@ def launch_servers():
 #atexit.register(supervisor.stop)
 
 def kill_all_servers():
-    logger.info("Killing all server processes for supervisor-managed restart...")
+    logger.info("Killing all server processes...")
     # Kill all existing server processes
     killed_servers = []
     for server_addr in SERVERS.keys():
@@ -328,7 +338,7 @@ def kill_all_servers():
             logger.error(f"Error killing server {server_addr}: {str(e)}")
 
     if not killed_servers:
-        logger.warning("No servers were killed, nothing to restart")
+        logger.warning("No servers were killed")
         return 0, 0
 
     killed_count = len(killed_servers)

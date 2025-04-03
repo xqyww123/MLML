@@ -12,6 +12,23 @@ mkdir -p ./cache/translation/tmp
 
 source ./envir.sh
 
+# Check if reinstall flag is provided as command line argument
+reinstall_isabelle="n"
+for arg in "$@"; do
+    if [[ "$arg" == "--reinstall" ]]; then
+        reinstall_isabelle="y"
+    fi
+done
+
+if [[ "$reinstall_isabelle" == "y" ]]; then
+    echo "Removing existing Isabelle and AFP installations..."
+    rm -rf ./contrib/Isabelle2024 ./contrib/afp-2025-02-12
+    rm -f ./cache/downloads/Isabelle2024_and_afp-2025-02-12.tar.gz
+    mv $USER/.isabelle/Isabelle2024/heaps $USER/.isabelle/Isabelle2024/heaps.$(date +%Y%m%d%H%M%S)
+    echo "Isabelle and AFP will be reinstalled."
+fi
+
+
 if [ ! -d "./contrib/Isabelle2024" ] || [ ! -d "./contrib/afp-2025-02-12" ]; then
     echo "Downloading Isabelle2024 and AFP"
     gdown --fuzzy https://drive.google.com/file/d/176tufd_eHxzpAHdVV5-XMJSRy8NVaGq9/view?usp=sharing -O ./cache/downloads/Isabelle2024_and_afp-2025-02-12.tar.gz
@@ -29,6 +46,7 @@ if ! [[ "$isabelle_memory" =~ ^[0-9]+$ ]] || [ "$isabelle_memory" -lt 30 ]; then
     exit 1
 fi
 
+mkdir -p $(isabelle getenv -b ISABELLE_HOME_USER)/etc
 echo "ML_OPTIONS='--minheap 4G --maxheap ${isabelle_memory}G'" > $(isabelle getenv -b ISABELLE_HOME_USER)/etc/settings
 echo "Setting Isabelle memory limit to ${isabelle_memory}GB"
 
