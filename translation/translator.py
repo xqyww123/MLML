@@ -13,6 +13,7 @@ from IsaREPL import Client, REPLFail
 import queue
 import atexit
 import tools.slurm as slurm
+from tools.server import test_server
 
 logging.basicConfig(
     level=logging.INFO,
@@ -177,6 +178,10 @@ def translate():
             def worker(server):
                 nonlocal finished_theories
                 while True:
+                    if not test_server(server):
+                        logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Server is down")
+                        time.sleep(60)
+                        continue
                     try:
                         group = task_queue.get(timeout=1)
                     except queue.Empty:
@@ -197,6 +202,9 @@ def translate():
                                     group.remove(rpath)  # Remove bad task from group
                                     logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {rpath}: {e}")
                                     break
+                                except ConnectionError:
+                                    logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Connection error translating {rpath}")
+                                    time.sleep(60)
                                 except Exception as e:
                                     logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {rpath}: {e}")
                                     time.sleep(10)

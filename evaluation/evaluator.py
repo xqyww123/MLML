@@ -73,14 +73,14 @@ class Evaluator:
     def __exit__(self, exc_type, exc_value, traceback):
         return None
     
-    def all_cases(self) -> enumerate[Case]:
+    def all_cases(self): # -> enumerate[Index]:
         raise NotImplementedError("all_cases must be implemented by subclass")
+
+    def validate(self, index, srcs : enumerate[str]) -> Result:
+        raise NotImplementedError("validate must be implemented by subclass")
     
     def start_case(self, index) -> None:
         raise NotImplementedError("start_case must be implemented by subclass")
-    
-    def validate(self, index, srcs : enumerate[str]) -> Result:
-        raise NotImplementedError("validate must be implemented by subclass")
 
     def reset(self) -> None:
         raise NotImplementedError("reset must be implemented by subclass")
@@ -227,7 +227,7 @@ class Isar_PISA(Isar_Base):
             raise CaseNotAvailable(index, f"Isar_PISA: case {index} not available")
         self.move_to(pos.file, pos.line, pos.column)
 
-class Isar(Isar_Base):
+class Isar_AFP(Isar_Base):
     def all_cases(self):
         ISAR_PROOFS = get_ISAR_PROOFS()
         return ISAR_PROOFS.keys()
