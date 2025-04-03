@@ -9,7 +9,7 @@ import os
 import concurrent.futures
 import threading
 import time
-from IsaREPL import Client
+from IsaREPL import Client, REPLFail
 import queue
 import atexit
 import tools.slurm as slurm
@@ -186,12 +186,16 @@ def translate():
                         # Create a copy of the group for iteration
                         for rpath in group[:]:
                             success = False
-                            for _ in range(3):
+                            for _ in range(10):
                                 try:
                                     translate_one(server, rpath)
                                     success = True
                                     finished_theories += 1
                                     group.remove(rpath)  # Remove succeeded task from group
+                                    break
+                                except REPLFail as e:
+                                    group.remove(rpath)  # Remove bad task from group
+                                    logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {rpath}: {e}")
                                     break
                                 except Exception as e:
                                     logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {rpath}: {e}")
