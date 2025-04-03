@@ -18,7 +18,7 @@ def check_node(node):
 def alloc_server(node):
     while True:
         if not check_node(node):
-            cmd = f"srun --job-name=myjob --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=64 --time=120:00:00 sleep 10000000000"
+            cmd = f"srun --job-name=minilang --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=128 --time=120:00:00 sleep 10000000000"
             subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(10)
 
@@ -30,7 +30,7 @@ def alloc_servers(node_list):
 
 
 def free_servers():
-    getjobs_cmd = 'squeue --format="%.18i %.9P %.30j %.8u %.8T %.10M %.9l %.6D %R" --me | grep "miniLang" > tmp.txt'
+    getjobs_cmd = 'squeue --format="%.18i %.9P %.30j %.8u %.8T %.10M %.9l %.6D %R" --me | grep "minilang" > tmp.txt'
     os.system(getjobs_cmd)
 
     with open('tmp.txt','r') as f:

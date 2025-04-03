@@ -84,7 +84,7 @@ def test_server(addr, timeout_retry=120):
         logger.error(f"Cannot connect to server {addr}: {E}")
         return False
 
-def launch_server(server, retry=6, timeout=240):
+def launch_server(server, retry=6, timeout=360):
     if test_server(server):
         logger.info(f"Server on {server} is already running")
         return (True, server, "Already running")
@@ -164,11 +164,11 @@ class ServerSupervisor:
                 return
 
             self.is_running = True
-            
+
             # Create and start a thread for each server
             for server in SERVERS.keys():
                 self._start_server_supervision(server)
-                
+
             logger.info(f"Server supervisor started with dedicated threads for {len(SERVERS)} servers, checking every {self.check_interval} seconds")
 
     def _start_server_supervision(self, server):
@@ -176,7 +176,7 @@ class ServerSupervisor:
         if server in self.supervision_threads and self.supervision_threads[server].is_alive():
             logger.debug(f"Supervision thread for {server} is already running")
             return
-            
+
         thread = threading.Thread(
             target=self._server_supervision_loop,
             args=(server,),
@@ -194,13 +194,13 @@ class ServerSupervisor:
                 return
 
             self.is_running = False
-            
+
             # Wait for all supervision threads to terminate
             for server, thread in self.supervision_threads.items():
                 if thread.is_alive():
                     thread.join(timeout=10)
                     logger.debug(f"Stopped supervision thread for server {server}")
-            
+
             self.supervision_threads.clear()
             logger.info("Server supervisor stopped")
 
@@ -275,7 +275,7 @@ def launch_servers():
     # Use a ThreadPoolExecutor to launch servers in parallel
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(servers_to_launch)) as executor:
         # Submit all tasks and map them to their servers for tracking
-        future_to_server = {executor.submit(lambda s: launch_server(s, retry=1, timeout=120), server): server for server in servers_to_launch}
+        future_to_server = {executor.submit(lambda s: launch_server(s, retry=1, timeout=360), server): server for server in servers_to_launch}
 
         # Process results as they complete
         success_count = 0
