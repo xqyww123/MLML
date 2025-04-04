@@ -162,8 +162,10 @@ def translate():
                                 case (5, pos, header):
                                     pos = encode_pos(pos)
                                     db_decl[':header:'+pos] = header
+                                case (7, err):
+                                    raise REPLFail(err)
                                 case X:
-                                    raise Exception("Invalid message " + str(X))
+                                    raise REPLFail("Invalid message " + str(X))
 
                     c.run_app("Minilang-Translator")
                     logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - translating {rpath}")
