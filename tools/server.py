@@ -84,53 +84,50 @@ def test_server(addr, timeout_retry=120):
         logger.error(f"Cannot connect to server {addr}: {E}")
         return False
 
-def launch_server(server, retry=6, timeout=360):
+def launch_server(server, retry=6, timeout=600):
     if test_server(server):
         logger.info(f"Server on {server} is already running")
         return (True, server, "Already running")
     else:
         pwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         host, port = server.split(':')
-        try:
-            # Construct the SSH command to launch the REPL server
-            # ./contrib/Isa-REPL/repl_server_watch_dog.sh 0.0.0.0:6666 HOL /tmp/repl_outputs -o threads=32
-            numprocs = SERVERS[server]["numprocs"]
-            ssh_command = f"ssh {host} 'cd {pwd} && " + \
-                f"mkdir -p ./cache/repl_tmps/{host}_{port} && " + \
-                f"source ./envir.sh && " + \
-                f"(fuser -n tcp -k {port} || true) && " + \
-                f"nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} AFP-1-PISA {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &'"
+        # Construct the SSH command to launch the REPL server
+        # ./contrib/Isa-REPL/repl_server_watch_dog.sh 0.0.0.0:6666 HOL /tmp/repl_outputs -o threads=32
+        numprocs = SERVERS[server]["numprocs"]
+        ssh_command = f"ssh {host} 'cd {pwd} && " + \
+            f"mkdir -p ./cache/repl_tmps/{host}_{port} && " + \
+            f"source ./envir.sh && " + \
+            f"(fuser -n tcp -k {port} || true) && " + \
+            f"nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} AFP-1-PISA {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &'"
 
-            # Log the command being executed
-            logger.info(f"Launching server on {host}:{port} with command: {ssh_command}")
+        # Log the command being executed
+        logger.info(f"Launching server on {host}:{port} with command: {ssh_command}")
 
-            # Execute the SSH command in a subprocess
-            subprocess.Popen(ssh_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            logger.info(f"Command sent to {host}:{port}. It typically takes 90 seconds to start.")
+        # Execute the SSH command in a subprocess
+        subprocess.Popen(ssh_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        logger.info(f"Command sent to {host}:{port}. It typically takes 90 seconds to start.")
 
-            # Wait for the server to start (try up to 60 times)
-            print(timeout//10)
-            for attempt in range(timeout//10):
-                if test_server(server):
-                    logger.info(f"Server on {host}:{port} started after {(attempt+1)*10} seconds")
-                    return (True, server, f"Started successfully after {(attempt+1)*10} seconds")
-                if attempt <= 9:
-                    msg = f"Waiting for server {host}:{port} to start ({(attempt+1)*10}/{timeout} seconds). Calm down, it typically takes 90 seconds to start."
-                else:
-                    msg = f"Waiting for server {host}:{port} to start ({(attempt+1)*10}/{timeout} seconds). Maybe it is not working, check the log file ./cache/repl_tmps/{host}_{port}/log.txt"
-                logger.info(msg)
-                time.sleep(10)
-
-            if retry > 1:
-                logger.warning(f"Server on {host}:{port} failed to start after {timeout} seconds, retrying...")
-                return launch_server(server, retry-1, timeout)
+        # Wait for the server to start (try up to 60 times)
+        print(timeout//10)
+        for attempt in range(timeout//10):
+            if test_server(server):
+                logger.info(f"Server on {host}:{port} started after {(attempt+1)*10} seconds")
+                return (True, server, f"Started successfully after {(attempt+1)*10} seconds")
+            if attempt <= 9:
+                msg = f"Waiting for server {host}:{port} to start ({(attempt+1)*10}/{timeout} seconds). Calm down, it typically takes 90 seconds to start."
             else:
-                logger.warning(f"Server on {host}:{port} failed to start after {retry}*{timeout} seconds")
-                return (False, server, f"Failed to start after {retry}*{timeout} seconds")
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Failed to launch server on {host}:{port}: {error_msg}, retrying...")
-            return (False, server, f"Error: {error_msg}")
+                msg = f"Waiting for server {host}:{port} to start ({(attempt+1)*10}/{timeout} seconds). Maybe it is not working, check the log file ./cache/repl_tmps/{host}_{port}/log.txt"
+            logger.info(msg)
+            time.sleep(10)
+
+        if retry > 1:
+            logger.warning(f"Server on {host}:{port} failed to start after {timeout} seconds, retrying...")
+            slurm.cancel_job(host)
+            return launch_server(server, retry-1, timeout)
+        else:
+            logger.warning(f"Server on {host}:{port} failed to start after {retry}*{timeout} seconds")
+            return (False, server, f"Failed to start after {retry}*{timeout} seconds")
+
 
 class ServerSupervisor:
     """Class to monitor and maintain server health"""
@@ -275,7 +272,7 @@ def launch_servers():
     # Use a ThreadPoolExecutor to launch servers in parallel
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(servers_to_launch)) as executor:
         # Submit all tasks and map them to their servers for tracking
-        future_to_server = {executor.submit(lambda s: launch_server(s, retry=1, timeout=360), server): server for server in servers_to_launch}
+        future_to_server = {executor.submit(lambda s: launch_server(s, retry=1, timeout=600), server): server for server in servers_to_launch}
 
         # Process results as they complete
         success_count = 0

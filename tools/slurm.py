@@ -15,6 +15,16 @@ def check_node(node):
     # Get list of running jobs for the user
     return node in allocated_servers()
 
+
+def cancel_job(node):
+    running_jobs = allocated_servers().split('\n')
+    for job in running_jobs:
+        if node in job:
+            job_id = job.split()[0]
+            cmd = f"scancel {job_id}"
+            os.system(cmd)
+    time.sleep(60)
+
 def alloc_server(node):
     while True:
         if not check_node(node):
