@@ -206,7 +206,7 @@ def translate():
                                     break
                                 except ConnectionError:
                                     logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Connection error translating {rpath}")
-                                    time.sleep(60)
+                                    time.sleep(180)
                                 except Exception as e:
                                     logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {rpath}: {e}")
                                     time.sleep(10)
