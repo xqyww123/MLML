@@ -202,7 +202,10 @@ def translate():
                                     break
                                 except REPLFail as e:
                                     group.remove(rpath)  # Remove bad task from group
-                                    logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {rpath}: {e}")
+                                    finished_theories += 1
+                                    for target in translation_targets:
+                                        db_decl[f"{rpath}:{target}"] = True
+                                    logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Give up bad theory {rpath}: {e}")
                                     break
                                 except ConnectionError:
                                     logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Connection error translating {rpath}")
