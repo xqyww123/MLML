@@ -262,10 +262,10 @@ def launch_servers():
         case 'slurmx':
             atexit.register(slurm.free_servers)
             logger.info("Running servers for SLURMX...")
-            server_names = []
+            server_names = {}
             for server, info in SERVERS.items():
                 host, _ = server.split(":")
-                server_names.append((host, info["numprocs"]))
+                server_names[host] = info["numprocs"]
             print(server_names)
             slurm.run_servers(server_names) # The only difference from slurm is `run_servers` instead of `alloc_servers`
             time.sleep(15)
