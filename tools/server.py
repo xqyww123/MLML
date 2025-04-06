@@ -88,9 +88,9 @@ def launch_server(server, retry=6, timeout=600):
         logger.info(f"Server on {server} is already running")
         return (True, server, "Already running")
     else:
+        pwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        host, port = server.split(':')
         if CLUSTER != "slurmx":
-            pwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            host, port = server.split(':')
             # Construct the SSH command to launch the REPL server
             # ./contrib/Isa-REPL/repl_server_watch_dog.sh 0.0.0.0:6666 HOL /tmp/repl_outputs -o threads=32
             numprocs = SERVERS[server]["numprocs"]
@@ -269,12 +269,6 @@ def launch_servers():
             print(server_names)
             slurm.run_servers(server_names) # The only difference from slurm is `run_servers` instead of `alloc_servers`
             time.sleep(15)
-            allocated_servers = slurm.allocated_servers()
-            for server in SERVERS.keys():
-                if server not in allocated_servers:
-                    logger.warning(f"Server {server} not allocated, skipping")
-                    # SERVERS.pop(server)
-            logger.info(f"{len(SERVERS)}/{len(CFG_SERVERS)} servers are allocated for SLURM")
         case _:
             raise ValueError(f"Invalid cluster configuration: {CLUSTER}")
 
