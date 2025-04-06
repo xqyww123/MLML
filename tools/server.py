@@ -88,23 +88,24 @@ def launch_server(server, retry=6, timeout=600):
         logger.info(f"Server on {server} is already running")
         return (True, server, "Already running")
     else:
-        pwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        host, port = server.split(':')
-        # Construct the SSH command to launch the REPL server
-        # ./contrib/Isa-REPL/repl_server_watch_dog.sh 0.0.0.0:6666 HOL /tmp/repl_outputs -o threads=32
-        numprocs = SERVERS[server]["numprocs"]
-        ssh_command = f"ssh {host} 'cd {pwd} && " + \
-            f"mkdir -p ./cache/repl_tmps/{host}_{port} && " + \
-            f"source ./envir.sh && " + \
-            f"(fuser -n tcp -k {port} || true) && " + \
-            f"nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} AFP-1-PISA {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &'"
+        if CLUSTER != "slurmx":
+            pwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            host, port = server.split(':')
+            # Construct the SSH command to launch the REPL server
+            # ./contrib/Isa-REPL/repl_server_watch_dog.sh 0.0.0.0:6666 HOL /tmp/repl_outputs -o threads=32
+            numprocs = SERVERS[server]["numprocs"]
+            ssh_command = f"ssh {host} 'cd {pwd} && " + \
+                f"mkdir -p ./cache/repl_tmps/{host}_{port} && " + \
+                f"source ./envir.sh && " + \
+                f"(fuser -n tcp -k {port} || true) && " + \
+                f"nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} AFP-1-PISA {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &'"
 
-        # Log the command being executed
-        logger.info(f"Launching server on {host}:{port} with command: {ssh_command}")
+            # Log the command being executed
+            logger.info(f"Launching server on {host}:{port} with command: {ssh_command}")
 
-        # Execute the SSH command in a subprocess
-        subprocess.Popen(ssh_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        logger.info(f"Command sent to {host}:{port}. It typically takes 90 seconds to start.")
+            # Execute the SSH command in a subprocess
+            subprocess.Popen(ssh_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            logger.info(f"Command sent to {host}:{port}. It typically takes 90 seconds to start.")
 
         # Wait for the server to start (try up to 60 times)
         print(timeout//10)
@@ -121,7 +122,7 @@ def launch_server(server, retry=6, timeout=600):
 
         if retry > 1:
             logger.warning(f"Server on {host}:{port} failed to start after {timeout} seconds, retrying...")
-            if CLUSTER == "slurm":
+            if CLUSTER == "slurm" or CLUSTER == "slurmx":
                 slurm.restart_job(host)
             return launch_server(server, retry-1, timeout)
         else:
@@ -251,6 +252,19 @@ def launch_servers():
             server_names = list(set(map(lambda x: x.split(":")[0], SERVERS.keys())))
             print(server_names)
             slurm.alloc_servers(server_names)
+            time.sleep(15)
+            allocated_servers = slurm.allocated_servers()
+            for server in SERVERS.keys():
+                if server not in allocated_servers:
+                    logger.warning(f"Server {server} not allocated, skipping")
+                    # SERVERS.pop(server)
+            logger.info(f"{len(SERVERS)}/{len(CFG_SERVERS)} servers are allocated for SLURM")
+        case 'slurmx':
+            atexit.register(slurm.free_servers)
+            logger.info("Running servers for SLURMX...")
+            server_names = list(set(map(lambda x: x.split(":")[0], SERVERS.keys())))
+            print(server_names)
+            slurm.run_servers(server_names) # The only difference from slurm is `run_servers` instead of `alloc_servers`
             time.sleep(15)
             allocated_servers = slurm.allocated_servers()
             for server in SERVERS.keys():

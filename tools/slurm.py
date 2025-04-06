@@ -58,3 +58,18 @@ def free_servers():
 
     os.system('rm tmp.txt')
 
+
+
+
+# new interfaces
+
+def run_servers (nodes):
+    for node, numprocs in nodes:
+        run_server(node, numprocs)
+
+def run_server(node, numprocs):
+    while True:
+        if not check_node(node):
+            cmd = f"srun --job-name=minilang --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=128 --time=120:00:00 ./tools/slurm_run_server.sh {node} {numprocs}"
+            subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(10)
