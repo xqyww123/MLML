@@ -122,7 +122,8 @@ def launch_server(server, retry=6, timeout=600):
 
         if retry > 1:
             logger.warning(f"Server on {host}:{port} failed to start after {timeout} seconds, retrying...")
-            slurm.cancel_job(host)
+            if CLUSTER == "slurm":
+                slurm.restart_job(host)
             return launch_server(server, retry-1, timeout)
         else:
             logger.warning(f"Server on {host}:{port} failed to start after {retry}*{timeout} seconds")
