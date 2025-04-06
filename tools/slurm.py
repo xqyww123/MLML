@@ -64,7 +64,7 @@ def free_servers():
 # new interfaces
 
 def run_servers (nodes):
-    for node, numprocs in nodes:
+    for node, numprocs in nodes.items():
         thread = threading.Thread(target=run_server, args=(node, numprocs))
         thread.start()
 
