@@ -5,7 +5,7 @@ echo "Initializing system..."
 git pull
 git submodule update --init --recursive --remote
 pip install -q gdown sqlitedict
-pip install -q isarepl --upgrade
+pip install -q isarepl isamini --upgrade
 mkdir -p ./cache/downloads
 mkdir -p ./translation/results
 mkdir -p ./cache/translation/tmp
