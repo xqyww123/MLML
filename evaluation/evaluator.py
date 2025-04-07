@@ -12,7 +12,7 @@ import threading
 import concurrent.futures
 import queue  # Add standard queue module
 import time
-from tools.server import launch_servers, SERVERS
+from tools.server import SERVERS
 from typing import Callable, Tuple
 
 logger = logging.getLogger(__name__)
@@ -23,8 +23,6 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-
-launch_servers()
 
 SERVER_INSTANCES = []
 for server, data in SERVERS.items():
@@ -311,6 +309,19 @@ class Isar_MiniF2F(Isar_Base):
 #    qed"""
 #        ])[0] == Result.SUCCESS)
 
+def report_evaluation(response_path : str, result_path : str):
+    responses = {}
+    with open(response_path, "r", encoding="utf-8") as f:
+        for line in f:
+            data = json.loads(line)
+            responses[str(data["index"])] = data["response"]
+    with open(result_path + '.csv', "w", encoding="utf-8") as f:
+        csv_writer = csv.writer(f)
+        csv_writer.writerow(["index", "status", "error", "response"])
+        with SqliteDict(result_path) as db:
+            for key, result in db.items():
+                csv_writer.writerow([key, result.status, result.error, responses[key]])
+
 def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluator):
     # Setup shared variables with thread-safe access
     success = 0
@@ -357,9 +368,13 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
                                         result = test.validate(case.index, [case.code])
                                         db[case.index] = result
                                     except REPLFail as E:
-                                        test.reset()
                                         logger.error(f"REPLFail error @ {case.index}: {E}")
-                                        result = Result(Status.CASE_NOT_AVAILABLE, None)
+                                        result = Result(Status.FAIL, str(E))
+                                        db[case.index] = result
+                                        try:
+                                            test.reset()
+                                        except REPLFail as E:
+                                            break
                             except Exception as e:
                                 logger.error(f"Error processing case {case.index}: {str(e)}")
                                 # Put the task back in the queue to retry
@@ -381,8 +396,8 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
 
                             log_state()
                 except ConnectionRefusedError:
-                    logger.error(f"Fail to connect to {server_addr}. Retrying in 10 seconds...")
-                    time.sleep(10)
+                    logger.error(f"Fail to connect to {server_addr}. Retrying in 60 seconds...")
+                    time.sleep(60)
                 except Exception as e:
                     logger.error(f"Worker thread for server {server_addr} encountered an error: {str(e)}. Retrying in 10 seconds...")
                     time.sleep(10)
@@ -453,7 +468,7 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
 #                            req.retry -= 1
 #                            task_queue.put(req)
 #                            break
-#                        else:
+#                        elseClassification of Failures
 #                            req.callback(Result(Status.CASE_NOT_AVAILABLE, e))
 #                    finally:
 #                        task_queue.task_done()

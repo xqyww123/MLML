@@ -1,6 +1,7 @@
 #!/bin/env python3
 import sys
-from evaluation import evaluate_and_save, Case, MiniLang_PISA, Isar_PISA
+from evaluation import evaluate_and_save, Case, MiniLang_PISA, Isar_PISA, report_evaluation
+from tools.server import launch_servers
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,13 +14,25 @@ logging.basicConfig(
 )
 
 if __name__ == "__main__":
-    logger.info('self-test passed')
-if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "eval-mini-pisa":
-    cases = Case.PISA_file('./evaluation/minilang_response.jsonl')
-    evaluate_and_save('./evaluation/minilang_pisa_result.db', cases, MiniLang_PISA)
-elif __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "eval-isar-pisa":
-    cases = Case.PISA_file('./evaluation/isar_response.jsonl')
-    evaluate_and_save('./evaluation/isar_pisa_result.db', cases, Isar_PISA)
-elif __name__ == "__main__":
-    print("Usage: python evaluation/evaluator_top.py eval-mini-pisa|eval-isar-pisa")
-    exit()
+    if len(sys.argv) > 1:
+        match sys.argv[1]:
+            case "eval-mini-pisa":
+                launch_servers()
+                cases = Case.PISA_file('./evaluation/minilang_response.jsonl')
+                evaluate_and_save('./evaluation/minilang_pisa_result.db', cases, MiniLang_PISA)
+                report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
+            case "eval-isar-pisa":
+                launch_servers()
+                cases = Case.PISA_file('./evaluation/isar_response.jsonl')
+                evaluate_and_save('./evaluation/isar_pisa_result.db', cases, Isar_PISA)
+                report_evaluation('./evaluation/isar_response.jsonl', './evaluation/isar_pisa_result.db')
+            case 'report-mini-pisa':
+                report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
+            case 'report-isar-pisa':
+                report_evaluation('./evaluation/isar_response.jsonl', './evaluation/isar_pisa_result.db')
+            case _:
+                print("Usage: python evaluation/evaluator_top.py eval-mini-pisa|eval-isar-pisa")
+                exit()
+    else:
+        print("Usage: python evaluation/evaluator_top.py eval-mini-pisa|eval-isar-pisa")
+        exit()
