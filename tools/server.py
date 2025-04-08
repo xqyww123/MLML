@@ -122,7 +122,7 @@ def launch_server(server, retry=6, timeout=600):
 
         if retry > 1:
             logger.warning(f"Server on {host}:{port} failed to start after {timeout} seconds, retrying...")
-            if CLUSTER == "slurm" or CLUSTER == "slurmx":
+            if CLUSTER == "slurm" or CLUSTER == "slurmx" and port == "6666":
                 slurm.restart_job(host)
             return launch_server(server, retry-1, timeout)
         else:
@@ -218,8 +218,9 @@ class ServerSupervisor:
         else:
             logger.warning(f"Server {server} is DOWN - attempting to restart")
             if CLUSTER == "slurm" or CLUSTER == "slurmx":
-                host, _ = server.split(":")
-                slurm.restart_job(host)
+                host, port = server.split(":")
+                if port == "6666":
+                    slurm.restart_job(host)
             self._restart_server(server)
 
     def _restart_server(self, server):
