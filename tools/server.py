@@ -62,9 +62,9 @@ SERVERS = CFG_SERVERS.copy()
 # Read the cluster configuration from environment variable, default to 'local' if not set
 CLUSTER = os.getenv("CLUSTER", "ssh")
 
-def test_server(addr, timeout_retry=30):
+def test_server(addr, timeout_retry=6):
     try:
-        Client.test_server(addr, timeout=60)
+        Client.test_server(addr, timeout=300)
         return True
     except KeyboardInterrupt as E:
         raise E
