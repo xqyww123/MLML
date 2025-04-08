@@ -5,6 +5,7 @@ import json
 from IsaREPL import Client, Position, REPLFail
 import csv
 import sys
+import re
 
 # Configure logging to print to screen
 logging.basicConfig(
@@ -149,21 +150,48 @@ def prelude_of(file, line):
     return '\n'.join(prelude)
 
 
+
+def common_prefix(a, b):
+    i, j = 0, 0  # Iterators for strings a and b
+    match_len = 0  # Length of the matched prefix in a
+    
+    # Scan through both strings simultaneously
+    while i < len(a) and j < len(b):
+        # Skip whitespace in string a
+        while i < len(a) and a[i] in ' \n':
+            i += 1
+        if i >= len(a):
+            break
+            
+        # Skip whitespace in string b
+        while j < len(b) and b[j] in ' \n':
+            j += 1
+        if j >= len(b):
+            break
+            
+        # Compare non-whitespace characters
+        if a[i] != b[j]:
+            break
+            
+        # Move to next characters
+        i += 1
+        j += 1
+        match_len = i  # Update the match length to current position in a
+    
+    return a[:match_len]
+
+
 PISA_TEST_PATH="./data/PISA"
 
 def preprocess_PISA(addr):
     with Client(addr, 'HOL') as c:
         def read_PISA(i):
-            src_path = PISA_TEST_PATH+'/quick_test_name_'+str(i)+'.json'
-            if not os.path.isfile(src_path):
-                src_path = PISA_TEST_PATH+'/test_name_'+str(i)+'.json'
+            src_path = PISA_TEST_PATH+'/test_name_'+str(i)+'.json'
             with open(src_path, 'r', encoding='utf-8') as file:
                 [[path,lemma]] = json.load(file)
             prefix = "/home/ywu/afp-2021-02-11/"
             if path.startswith(prefix):
                 path = "./contrib/afp-2025-02-12/" + path[len(prefix):]
-            else:
-                raise ValueError(f"PISA {i}: Exceptional JSON format")
             if not os.path.isfile(path):
                 raise FileNotFoundError(f"PISA {i}: theory not found: {path}")
 
@@ -172,26 +200,24 @@ def preprocess_PISA(addr):
 
             match_index = -1
             for idx, (_, command) in enumerate(commands):
-                common_prefix_length = 0
-                while (common_prefix_length < len(command) and
-                       common_prefix_length < len(lemma) and
-                       command[common_prefix_length] == lemma[common_prefix_length]):
-                    common_prefix_length += 1
+                if command.startswith('qualified'):
+                    command = command[len('qualified'):].strip()
+                if command.startswith('private'):
+                    command = command[len('private'):].strip()
+                # Remove newlines and consecutive spaces in command
+                command = command.replace('\n', ' ')
+                command = re.sub(r'\s+', ' ', command).strip()
 
-                # Get the common prefix
-                common_prefix = command[:common_prefix_length]
+                common = common_prefix(lemma, command)
 
-                # Check if it's a qualified prefix
-                if common_prefix.startswith('qualified') or common_prefix.startswith('private'):
-                    # For qualified prefixes, require at least two spaces
-                    if common_prefix_length > 0 and common_prefix.count(' ') >= 2:
-                        match_index = idx
-                        break
-                else:
-                    # For non-qualified prefixes, require at least one space
-                    if common_prefix_length > 0 and ' ' in common_prefix:
-                        match_index = idx
-                        break
+                if common == lemma or \
+                    ' ' in common and ':' in common and i not in [557, 2656, 2674, 961, 1641, 2237, 1907] and \
+                    (len(common) > 20 or re.match(r'^lemma \w+.*:', common)):
+                    #if common != lemma:
+                    #    print(f"PISA {i} inequal\n{common}\n{command}\n{lemma}\n")
+                    match_index = idx
+                    #print(f"PISA {i}: {common}")
+                    break
             if match_index == -1:
                 raise ValueError(f"PISA {i}: Cannot find {lemma}")
             else:
