@@ -92,20 +92,26 @@ def translate():
                 continue
             all_tasks.append(line)
             total_theories += 1
-    # Group tasks by directory
-    grouped_tasks = {}
-    for task in all_tasks:
-        # Get the directory part of the path
-        directory = os.path.dirname(task)
-        if directory not in grouped_tasks:
-            grouped_tasks[directory] = []
-        grouped_tasks[directory].append(task)
-
-    for directory, tasks in grouped_tasks.items():
-        logger.debug(f"Directory '{directory}': {len(tasks)} tasks")
     task_queue = queue.Queue()
-    for directory, tasks in grouped_tasks.items():
-        task_queue.put(tasks)
+    for task in all_tasks:
+        task_queue.put(task)
+    ## Group tasks by directory
+    #grouped_tasks = {}
+    #for task in all_tasks:
+    #    # Get the directory part of the path
+    #    directory = os.path.dirname(task)
+    #    if directory not in grouped_tasks:
+    #        grouped_tasks[directory] = []
+    #    grouped_tasks[directory].append(task)
+
+    #for directory, tasks in grouped_tasks.items():
+    #    logger.info(f"Directory '{directory}': {len(tasks)} tasks")
+    #task_queue = queue.Queue()
+    #for directory, tasks in grouped_tasks.items():
+    #    # Divide tasks into groups of at most 5
+    #    for i in range(0, len(tasks), 5):
+    #        task_group = tasks[i:i+5]
+    #        task_queue.put(task_group)
 
     with SqliteDict('./cache/translation/results.db') as db:
         with SqliteDict('./cache/translation/declarations.db', autocommit=True) as db_decl:
@@ -115,7 +121,7 @@ def translate():
                 if all(f"{rpath}:{target}" in db_decl for target in translation_targets):
                     logger.info(f"skipped {rpath}")
                     return
-                with Client(server, 'HOL') as c:
+                with Client(server, 'HOL', timeout=None) as c:
                     c.set_register_thy(False)
                     c.set_trace(False)
                     c.load_theory(['Minilang_Translator.MS_Translator_Top'])
@@ -185,41 +191,39 @@ def translate():
                         time.sleep(60)
                         continue
                     try:
-                        group = task_queue.get(timeout=1)
+                        task = task_queue.get(timeout=1)
                     except queue.Empty:
                         return
                     
                     try:
                         # Create a copy of the group for iteration
-                        for rpath in group[:]:
-                            success = False
-                            for _ in range(10):
-                                try:
-                                    translate_one(server, rpath)
-                                    success = True
-                                    finished_theories += 1
-                                    group.remove(rpath)  # Remove succeeded task from group
-                                    break
-                                except REPLFail as e:
-                                    group.remove(rpath)  # Remove bad task from group
-                                    finished_theories += 1
-                                    for target in translation_targets:
-                                        db_decl[f"{rpath}:{target}"] = True
-                                    logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Give up bad theory {rpath}: {e}")
-                                    break
-                                except ConnectionError:
-                                    logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Connection error translating {rpath}")
-                                    time.sleep(180)
-                                except Exception as e:
-                                    logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {rpath}: {e}")
-                                    time.sleep(10)
+                        reentry = True
+                        for _ in range(5):
+                            try:
+                                translate_one(server, task)
+                                reentry = False
+                                finished_theories += 1
+                                break
+                            except REPLFail as e:
+                                reentry = False
+                                finished_theories += 1
+                                for target in translation_targets:
+                                    db_decl[f"{task}:{target}"] = True
+                                logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Give up bad theory {task}: {e}")
+                                break
+                            except ConnectionError:
+                                logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Connection error translating {task}")
+                                time.sleep(180)
+                            except Exception as e:
+                                logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {task}: {e}")
+                                time.sleep(10)
                     finally:
                         # Mark the current group as done and requeue any remaining failed tasks
                         task_queue.task_done()
                         
                         # Put any remaining tasks back in the queue
-                        if group:
-                            task_queue.put(group)
+                        if reentry:
+                            task_queue.put(task)
 
             # Create and start worker threads for each server
             threads = []
