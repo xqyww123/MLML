@@ -95,7 +95,7 @@ def analyze_failure(result_path : str):
                             cats = [ ' - '.join(segs[:i+1]) for i in range(len(segs))]
                             for cat in cats:
                                 count_cat(cat)
-                            count_cat(failure_type + ' - ' + str(pattern))
+                            #count_cat(failure_type + ' - ' + str(pattern))
                             find_reason += 1
                             break
                 if find_reason == 0:

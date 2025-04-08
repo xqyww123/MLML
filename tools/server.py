@@ -217,6 +217,9 @@ class ServerSupervisor:
             logger.debug(f"Server {server} is UP")
         else:
             logger.warning(f"Server {server} is DOWN - attempting to restart")
+            if CLUSTER == "slurm" or CLUSTER == "slurmx":
+                host, _ = server.split(":")
+                slurm.restart_job(host)
             self._restart_server(server)
 
     def _restart_server(self, server):
