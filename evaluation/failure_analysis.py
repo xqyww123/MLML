@@ -1,4 +1,7 @@
+#!/usr/bin/env python3
+
 import re
+import sys
 from sqlitedict import SqliteDict
 from evaluation.evaluator import Result, Status
 # from .evaluator import 
@@ -13,6 +16,7 @@ TYPES = {
         r'^Tactic failed',
         r'^No matching coinduction rule found'
         r'^Unable to figure out induct rule',
+        r'^exception THM 0 raised.*symmetric$'
     ],
     'Tactic Execution - Timeout': [r'^Timeout'],
     'Syntax Error - Undefined Fact': [r'^Undefined fact'],
@@ -28,6 +32,15 @@ TYPES = {
         r'^Undefined constant',
         r'^Ill-typed instantiation'
     ],
+    'Hammer' : [
+        r'^PROOF FAIL'
+    ],
+    'Syntax Error - Proof Lang - Fact Selection': [
+        r'^Bad fact selection'
+    ],
+    'Syntax Error - Proof Lang - END Block': [
+        r'^INVALID_OPR : This block should be closed by the END command.'
+    ],
     'Syntax Error - Proof Lang': [
         r'^Outer syntax error',
         r'^Failed to refine any pending goal',
@@ -38,7 +51,6 @@ TYPES = {
         r'assume: variables',
         r'^Induction argument not a variable',
         r'^Bad name binding',
-        r'^Bad fact selection',
         r'^Undefined method',
         r'^Too many parameters for case',
         r'^Rule has fewer conclusions than arguments given',
@@ -53,7 +65,10 @@ TYPES = {
         r'OF: no unifiers',
         r'symmetric: no unifiers'
     ],
-    'No proof generated': [r'^exception Empty raised'],
+    'No proof generated or incomplete proof': [
+        r'^exception Empty raised',
+        r'^None$'
+    ],
     'Other': [r'^exception Interrupt_Breakdown raised$']
 }
 
@@ -61,29 +76,39 @@ TYPES = {
 def analyze_failure(result_path : str):
     counts = {}
     total = 0
+    def count_cat(cat):
+        nonlocal counts
+        try:
+            counts[cat] += 1
+        except KeyError:
+            counts[cat] = 1
     with SqliteDict(result_path) as db:
         for key, result in db.items():
             if result.status == Status.FAIL:
+                err = str(result.error)
                 total += 1
                 find_reason = 0
                 for failure_type, patterns in TYPES.items():
                     for pattern in patterns:
-                        if re.search(pattern, result.error):
+                        if re.search(pattern, err):
                             segs = failure_type.split(' - ')
                             cats = [ ' - '.join(segs[:i+1]) for i in range(len(segs))]
                             for cat in cats:
-                                try:
-                                    counts[cat] += 1
-                                except KeyError:
-                                    counts[cat] = 1
+                                count_cat(cat)
+                            count_cat(failure_type + ' - ' + str(pattern))
                             find_reason += 1
                             break
                 if find_reason == 0:
-                    print(f"[{key}] Unknown failure: {result.error}")
+                    count_cat('Unknown')
+                    print(f"[{key}] Unknown failure: {err}")
                 elif find_reason > 1:
-                    print(f"[{key}] Multiple failure types: {result.error}")
-    for cat, count in counts.items():
+                    print(f"[{key}] Multiple failure types: {err}")
+    for cat, count in sorted(list(counts.items()), key=lambda x: x[0]):
         print(f"{cat}: {count / total * 100:.3f}%")
 
-#if __name__ == "__main__":
-analyze_failure('./evaluation/isar_pisa_result.db')
+if __name__ == "__main__":
+    if len(sys.argv) <= 1:
+        print("Usage: python evaluation/failure_analysis.py <result_path>")
+        sys.exit(1)
+    target_path = sys.argv[1]
+    analyze_failure(target_path)

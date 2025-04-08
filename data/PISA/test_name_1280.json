@@ -1,1 +1,1 @@
-[["/home/ywu/afp-2021-02-11/thys/Word_Lib/Aligned.thy", "lemma word_mod_by_0: \"k mod (0::'a::len word) = k\""]]
+[["./contrib/afp-2025-02-12/thys/Word_Lib/More_Word.thy", "lemma word_mod_by_0: \"k mod (0::'a::len word) = k\""]]
