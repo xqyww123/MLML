@@ -27,7 +27,8 @@ for server, data in SERVERS.items():
     SERVER_INSTANCES.extend([server] * data["num-translator"])
 
 
-KNOWN_TRANSLATION_TARGETS = {"origin", "isar-SH", "isar-SH*", "refined", "raw", "reord_raw", "reord_refined", 'goal'}
+KNOWN_TRANSLATION_TARGETS = {"origin", "isar-SH", "isar-SH*", "refined", "raw", "reord_raw", "reord_refined", 'goal',
+                            'untyp_refined', 'untyp_raw'}
 
 if len(sys.argv) > 1:
     translation_targets = sys.argv[1:]
