@@ -137,7 +137,7 @@ def translate():
                                     run = False
                                     for target in translation_targets:
                                         key = f"{pos}:{target}"
-                                        if key not in db or db[key][1]:
+                                        if key not in db: # or db[key][1]:
                                             run = True
                                             break
                                     mp.pack(run, c.cout)
