@@ -194,7 +194,9 @@ def translate():
                     try:
                         task = task_queue.get(timeout=1)
                     except queue.Empty:
-                        return
+                        logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - No tasks available, waiting...")
+                        time.sleep(60)
+                        continue
                     
                     try:
                         # Create a copy of the group for iteration
