@@ -41,24 +41,34 @@ for thy, info in THEORIES.items():
             INFLUENCES[dep] = set()
         INFLUENCES[dep].add(thy)
 
-def deps_of(thy):
-    try:
-        return THEORIES[thy]['deps']
-    except KeyError:
-        return []
+def deps_of(thy, depth=1, ret = None):
+    """
+    @return: `depth`-th generation dependencies of `thy`.
+        Specially, `deps_of(thy, depth=i)` returns all dependencies of `thy` if i is negative.
+    @param depth: the generation of dependencies to return.
+    @example:
+    deps_of(thy, depth=0) returns the `thy` itself.
+    deps_of(thy, depth=1) returns the `thy` and its immediate dependencies.
+    deps_of(thy, depth=2) returns the deps_of(thy,depth=1) and the immediate dependencies of deps_of(thy,depth=1).
+    """
+    if ret is None:
+        ret = set()
+    if thy in ret:
+        return ret
+    ret.add(thy)
+    if depth != 0:
+        try:
+            for dep in THEORIES[thy]['deps']:
+                deps_of(dep, depth=depth-1, ret=ret)
+        except KeyError:
+            pass
+    return ret
 
 def session_of(thy):
     return '.'.join(thy.split('.')[:-1])
 
 def short_name_of(thy):
     return thy.split('.')[-1]
-
-def all_deps_of(thy, ret=set()):
-    for dep in deps_of(thy):
-        if dep not in ret:
-            ret.add(dep)
-            ret.update(all_deps_of(dep, ret))
-    return ret
 
 def all_theories_in_session(session_name):
     ret = set()
@@ -68,7 +78,7 @@ def all_theories_in_session(session_name):
         thys = SESSIONS[session_name]
     for thy in thys:
         ret.add(thy)
-        ret.update(all_deps_of(thy))
+        ret.update(deps_of(thy, depth=-1))
     return ret
 
 def location_of(thy):
@@ -90,20 +100,20 @@ def topological_sort():
             ranks[thy] = rank
             return rank
     sorted_thy = sorted(THEORIES, key=lambda x: ranking(x))
-    with open('cache/sorted_thy.txt', 'w') as f:
+    with open('data/sorted_thy.txt', 'w') as f:
         for thy in sorted_thy:
             f.write(f"{thy}\n")
 
-if not os.path.exists('cache/sorted_thy.txt'):
+if not os.path.exists('data/sorted_thy.txt'):
     logging.info('Topological sorting of theories')
     topological_sort()
 
-with open('cache/sorted_thy.txt', 'r') as f:
+with open('data/sorted_thy.txt', 'r') as f:
     SORTED_THY = f.read().splitlines()
 
 def collect_declarations():
     declarations = {}
-    with SqliteDict('./cache/translation/declarations.db') as db:
+    with SqliteDict('./data/translation/declarations.db') as db:
         for key, command in db.items():
             match key.split(':'):
                 case (file,line,ofs):
@@ -112,43 +122,85 @@ def collect_declarations():
                         declarations[file] = []
                     declarations[file].append((int(line), int(ofs), command))
     declarations = {k: sorted(v, key=lambda x: x[1]) for k, v in declarations.items()}
-    with open('cache/declarations.json', 'w') as f:
+    with open('data/declarations.json', 'w') as f:
         json.dump(declarations, f)
 
-if not os.path.exists('cache/declarations.json'):
+if not os.path.exists('data/declarations.json'):
     logging.info('Collecting declarations')
     collect_declarations()
 
-with open('cache/declarations.json', 'r') as f:
-    DECLARATIONS = json.load(f)
+with open('data/declarations.json', 'r') as f:
+    DECLARATIONS = json.load(f) # a map from file paths to declarations which are tuples of (line, offset, command), sorted by the position of occurence
 
-
-def prelude_of(file, line):
+def prelude_of(file, line, dep_depth=1, use_proofs=False, maxsize=None):
+    """
+    @param file: the path to the theory file
+    @param dep_depth: if the prelude shall include the declarations of the dependencies of the theory,
+        `dep_depth` indicates the generation of the dependencies to include.
+        For example, `dep_depth=1` means the immediate dependencies of the theory;
+        `dep_depth=2` means the immediate dependencies and the dependencies of the immediate dependencies;
+        `dep_depth=None` means no dependencies shall be included.
+    @param use_proofs:
+        Set `use_proofs` to 'isar' to use Isar proofs;
+        Set `use_proofs` to 'isar-SH*' to use isar-SH* proofs (isar-SH* is the thor-style Isar based on an improved Sledgehammer);
+        Set `use_proofs` to 'minilang' to use minilang proofs.
+        Set `use_proofs` to False to not use any proofs.
+    """
     prelude0 = []
     try:
-        prelude0 = [x[2] for x in DECLARATIONS[file] if x[0] < line]
+        prelude0 = [(x[0],x[2]) for x in DECLARATIONS[file] if x[0] < line]
     except KeyError:
         pass
+
     dep_thys = set()
-    try:
-        thys = THEORIES_IN_FILE[file]
-    except KeyError:
-        thys = []
-    for thy in thys:
+    if dep_depth:
         try:
-            dep_thys.update(deps_of(thy))
+            thys = THEORIES_IN_FILE[file]
         except KeyError:
-            pass
+            thys = []
+        for thy in thys:
+            deps_of(thy, depth=dep_depth, ret=dep_thys)
+        for thy in thys:
+            dep_thys.remove(thy)
+        
     prelude = []
     for dep in dep_thys:
         try:
             for decl in DECLARATIONS[location_of(dep)]:
-                prelude.append(decl[2])
+                prelude.append((decl[0], decl[2]))
         except KeyError:
             pass
     prelude += prelude0
-    return '\n'.join(prelude)
 
+    # add proofs
+    if use_proofs:
+        with SqliteDict('./data/translation/results.db') as db:
+            ret = []
+            size = 0
+            for reverse_idx, (line, command) in enumerate(reversed(prelude)):
+                ret.append('')
+                idx = len(prelude) - 1 - reverse_idx
+                if maxsize is not None and size + len(command) >= maxsize:
+                    break
+                size += len(command)
+                if use_proofs and (idx == 0 or line != prelude[idx-1][0]):
+                    try:
+                        (proof, _, _) = db[f"{file}:{line}:{use_proofs}"]
+                        if maxsize is not None and size + len(proof) >= maxsize:
+                            break
+                        ret.append(proof)
+                        size += len(proof)
+                    except KeyError:
+                        pass
+                ret.append(command)
+            ret.reverse()
+    else:
+        ret = []
+        for _, command in prelude:
+            ret.append(command)
+            ret.append('')
+            
+    return '\n'.join(ret)
 
 
 def common_prefix(a, b):
@@ -266,12 +318,14 @@ PISA_DATA, PISA_AT = read_pisa_data()
 #ISAR_PROOFS = SqliteDict('isar_proofs.db')
 #ISAR_PROOF_LEN = len(ISAR_PROOFS)
 
+ISAR_PROOFS_CACHE = None
+
 def get_ISAR_PROOFS():
     global ISAR_PROOFS_CACHE
     if ISAR_PROOFS_CACHE is not None:
         return ISAR_PROOFS_CACHE
     ISAR_PROOFS = {}
-    with SqliteDict('./cache/translation/results.db') as db:
+    with SqliteDict('./data/translation/results.db') as db:
         for key, value in db.items():
             match key.split(':'):
                 case (file,line,'origin'):
@@ -320,7 +374,7 @@ def gen_cases():
             f.write(f"{proof_pos.file}:{proof_pos.line}:{spec}\n")
     num = 0
     with open('cache/fine_tune_data_minilang.jsonl', 'w') as f:
-        with SqliteDict('cache/translation/results.db') as db:
+        with SqliteDict('data/translation/results.db') as db:
             for key, value in db.items():
                 match key.split(':'):
                     case (file,line,'refined'):
