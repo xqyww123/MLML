@@ -107,27 +107,35 @@ def launch_server(server, retry=6, timeout=600):
             subprocess.Popen(ssh_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             logger.info(f"Command sent to {host}:{port}. It typically takes 90 seconds to start.")
 
-        # Wait for the server to start (try up to 60 times)
-        print(timeout//10)
-        for attempt in range(timeout//10):
+        start_time = time.monotonic()  # 返回以秒为单位的浮点数
+        end_time = start_time + timeout
+        
+        while time.monotonic() < end_time:
             if test_server(server):
-                logger.info(f"Server on {host}:{port} started after {(attempt+1)*10} seconds")
-                return (True, server, f"Started successfully after {(attempt+1)*10} seconds")
-            if attempt <= 9:
-                msg = f"Waiting for server {host}:{port} to start ({(attempt+1)*10}/{timeout} seconds). Calm down, it typically takes 90 seconds to start."
+                elapsed_time = time.monotonic() - start_time
+                logger.info(f"Server on {host}:{port} started after {elapsed_time:.1f} seconds")
+                return (True, server, f"Started successfully after {elapsed_time:.1f} seconds")
+            
+            elapsed_time = time.monotonic() - start_time
+            
+            if elapsed_time <= 90:  # First 90 seconds
+                msg = f"Waiting for server {host}:{port} to start ({elapsed_time:.1f}/{timeout:.0f} seconds). Calm down, it typically takes 90 seconds to start."
             else:
-                msg = f"Waiting for server {host}:{port} to start ({(attempt+1)*10}/{timeout} seconds). Maybe it is not working, check the log file ./cache/repl_tmps/{host}_{port}/log.txt"
+                msg = f"Waiting for server {host}:{port} to start ({elapsed_time:.1f}/{timeout:.0f} seconds). Maybe it is not working, check the log file ./cache/repl_tmps/{host}_{port}/log.txt"
+            
             logger.info(msg)
+            # Use a shorter sleep interval for more responsive checking
             time.sleep(10)
 
         if retry > 1:
-            logger.warning(f"Server on {host}:{port} failed to start after {timeout} seconds, retrying...")
+            logger.warning(f"Server on {host}:{port} failed to start after {timeout:.0f} seconds, retrying...")
             if CLUSTER == "slurm" or CLUSTER == "slurmx" and port == "6666":
                 slurm.restart_job(host)
             return launch_server(server, retry-1, timeout)
         else:
-            logger.warning(f"Server on {host}:{port} failed to start after {retry}*{timeout} seconds")
-            return (False, server, f"Failed to start after {retry}*{timeout} seconds")
+            elapsed_time = time.monotonic() - start_time
+            logger.warning(f"Server on {host}:{port} failed to start after {elapsed_time:.1f} seconds")
+            return (False, server, f"Failed to start after {elapsed_time:.1f} seconds")
 
 
 class ServerSupervisor:
