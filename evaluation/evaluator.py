@@ -43,9 +43,9 @@ class Result:
         return f"{self.status} {self.error}"
 
 class Case:
-    def __init__(self, index, code):
+    def __init__(self, index, proof):
         self.index = index
-        self.code = code
+        self.code = proof
 
     @staticmethod
     def PISA_file(response_path):
@@ -322,7 +322,7 @@ def report_evaluation(response_path : str, result_path : str):
             for key, result in db.items():
                 csv_writer.writerow([key, result.status, result.error, responses[key]])
 
-def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluator):
+def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluator): # -> Dict[Index, Result]
     # Setup shared variables with thread-safe access
     success = 0
     unavailable = 0
