@@ -49,7 +49,7 @@ if ! [[ "$isabelle_memory" =~ ^[0-9]+$ ]] || [ "$isabelle_memory" -lt 30 ]; then
 fi
 
 mkdir -p $(isabelle getenv -b ISABELLE_HOME_USER)/etc
-echo "ML_OPTIONS='--minheap 4G --maxheap ${isabelle_memory}G'" > $(isabelle getenv -b ISABELLE_HOME_USER)/etc/settings
+printf "ML_OPTIONS='--minheap 4G --maxheap ${isabelle_memory}G'\nML_MAX_HEAP=${isabelle_memory}" > $(isabelle getenv -b ISABELLE_HOME_USER)/etc/settings
 echo "Setting Isabelle memory limit to ${isabelle_memory}GB"
 
 
