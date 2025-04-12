@@ -133,7 +133,7 @@ if not os.path.exists('data/declarations.json'):
 with open('data/declarations.json', 'r') as f:
     DECLARATIONS = json.load(f) # a map from file paths to declarations which are tuples of (line, offset, command), sorted by the position of occurence
 
-def prelude_of(file, line, dep_depth=1, use_proofs=False, maxsize=None) -> str:
+def prelude_of(file, line, dep_depth=1, use_proofs=False, use_comments=True, maxsize=None, length_of=len) -> str:
     """
     @param file: the path to the theory file
     @param dep_depth: if the prelude shall include the declarations of the dependencies of the theory,
@@ -173,6 +173,8 @@ def prelude_of(file, line, dep_depth=1, use_proofs=False, maxsize=None) -> str:
             pass
     prelude += prelude0
 
+    _, PISA_AT = load_pisa_data()
+
     # add proofs
     if use_proofs:
         with SqliteDict('./data/translation/results.db') as db:
@@ -181,17 +183,19 @@ def prelude_of(file, line, dep_depth=1, use_proofs=False, maxsize=None) -> str:
             for reverse_idx, (line, command) in enumerate(reversed(prelude)):
                 ret.append('')
                 idx = len(prelude) - 1 - reverse_idx
-                if maxsize is not None and size + len(command) >= maxsize:
+                if maxsize is not None and size + length_of(command) >= maxsize:
                     break
-                size += len(command)
-                if use_proofs and (idx == 0 or line != prelude[idx-1][0]):
+                size += length_of(command)
+                if use_proofs and (idx == 0 or line != prelude[idx-1][0]) and (file, line) not in PISA_AT:
                     try:
                         (proof, err, _) = db[f"{file}:{line}:{use_proofs}"]
+                        if not use_comments:
+                            proof = Data.remove_comments(proof)
                         if not err:
-                            if maxsize is not None and size + len(proof) >= maxsize:
+                            if maxsize is not None and size + length_of(proof) >= maxsize:
                                 break
                             ret.append(proof)
-                            size += len(proof)
+                            size += length_of(proof)
                     except KeyError:
                         pass
                 ret.append(command)
@@ -427,7 +431,7 @@ class Data:
     def goal_of(self, index) -> str:
         raise NotImplementedError("goal_of must be implemented by subclass")
 
-    def prelude_of(self, index, dep_depth=1, use_proofs=False, maxsize=None):
+    def prelude_of(self, index, dep_depth=1, use_proofs=False, use_comments=True, maxsize=None):
         """
         @param file: the path to the theory file
         @param dep_depth: if the prelude shall include the declarations of the dependencies of the theory,
@@ -449,8 +453,14 @@ class Data:
         if lang not in Data.LANG:
             raise ValueError(f"Unsupported language: {lang}. Can only be one of {Data.LANG}")
     
-    def proof_of(self, index, lang : str) -> str:
+    def proof_of(self, index, lang : str, comments = True) -> str:
         raise NotImplementedError("proof_of must be implemented by subclass")
+
+    @staticmethod
+    def remove_comments(text : str) -> str:
+        lines = text.split('\n')
+        filtered_lines = [line for line in lines if not re.match(r'\s*\(\*.*\*\)\s*', line)]
+        return '\n'.join(filtered_lines)
 
 class PISA_Data(Data):
     def __init__(self):
@@ -480,11 +490,11 @@ class PISA_Data(Data):
         except KeyError:
             raise CaseNotAvailable(index)
     
-    def prelude_of(self, index : int, dep_depth=1, use_proofs=False, maxsize=None) -> str:
+    def prelude_of(self, index : int, dep_depth=1, use_proofs=False, use_comments=True, maxsize=None, length_of=len) -> str:
         PISA_DATA, PISA_AT = load_pisa_data()
         try:
             (pos_spec, _, _) = PISA_DATA[index]
-            return prelude_of(pos_spec.file, pos_spec.line, dep_depth, use_proofs, maxsize)
+            return prelude_of(pos_spec.file, pos_spec.line, dep_depth, use_proofs, use_comments, maxsize, length_of)
         except KeyError:
             raise CaseNotAvailable(index)
 
@@ -504,27 +514,43 @@ class PISA_Data(Data):
         except KeyError:
             raise CaseNotAvailable(index)
     
-    def proof_of(self, index : int, lang : str) -> str:
+    def proof_of(self, index : int, lang : str, comments = True) -> str:
         Data.chk_lang_supported(lang)
         try:
             pos_spec = self.goal_pos_of(index)
             (proof, err, _) = self.db[f"{pos_spec.file}:{pos_spec.line}:{lang}"]
             if err:
                 raise CaseNotAvailable(index)
+            if not comments:
+                proof = Data.remove_comments(proof)
             return proof
         except KeyError:
             raise CaseNotAvailable(index)
 
 _AFP_CASES_CACHE = None
 
+def _load_AFP_CASES_CACHE():
+    global _AFP_CASES_CACHE
+    if _AFP_CASES_CACHE is not None:
+        return _AFP_CASES_CACHE
+    if os.path.isfile('cache/afp_proofs.idx'):
+        with open('cache/afp_proofs.idx', 'r', encoding='utf-8') as f:
+            _AFP_CASES_CACHE = {Position.from_s(line.strip()) for line in f}
+            return _AFP_CASES_CACHE
+    _, PISA_AT = load_pisa_data()
+    s = set(load_ISAR_PROOF_INDEX().keys())
+    for file, line in PISA_AT.keys():
+        s.discard(Position(line, 0, file))
+    _AFP_CASES_CACHE = s
+    with open('cache/afp_proofs.idx', 'w', encoding='utf-8') as f:
+        for pos in _AFP_CASES_CACHE:
+            f.write(f"{pos.file}:{pos.line}\n")
+    return _AFP_CASES_CACHE 
+
 class AFP_Data(Data):
     def __init__(self):
-        PISA_DATA, _ = load_pisa_data()
         self.db = SqliteDict('./data/translation/results.db')
-        global _AFP_CASES_CACHE
-        if _AFP_CASES_CACHE is None:
-            _AFP_CASES_CACHE = load_ISAR_PROOF_INDEX().keys() - PISA_DATA.keys()
-        self._all_cases = _AFP_CASES_CACHE
+        self._all_cases = _load_AFP_CASES_CACHE()
 
     def close(self):
         self.db.close()
@@ -538,7 +564,7 @@ class AFP_Data(Data):
     def index_type(self) -> type:
         return Position
     
-    def all_cases(self): # -> enumerate[Index]:
+    def all_cases(self) -> set[Position]:
         return self._all_cases
 
     def goal_of(self, index : Position) -> str:
@@ -548,8 +574,8 @@ class AFP_Data(Data):
         except KeyError:
             raise CaseNotAvailable(index)
     
-    def prelude_of(self, index : Position, dep_depth=None, use_proofs=False, maxsize=None):
-        return prelude_of(index.file, index.line, dep_depth, use_proofs, maxsize)
+    def prelude_of(self, index : Position, dep_depth=None, use_proofs=False, use_comments=True, maxsize=None, length_of=len):
+        return prelude_of(index.file, index.line, dep_depth, use_proofs, use_comments, maxsize, length_of)
     
     def goal_pos_of(self, index : Position):
         return index
@@ -560,12 +586,14 @@ class AFP_Data(Data):
         except KeyError:
             raise CaseNotAvailable(index)
     
-    def proof_of(self, index : Position, lang : str) -> str:
+    def proof_of(self, index : Position, lang : str, comments = True) -> str:
         Data.chk_lang_supported(lang)
         try:
             (proof, err, _) = self.db[f"{index.file}:{index.line}:{lang}"]
             if err:
                 raise CaseNotAvailable(index)
+            if not comments:
+                proof = Data.remove_comments(proof)
             return proof
         except KeyError:
             raise CaseNotAvailable(index)
@@ -582,7 +610,7 @@ class MiniF2F_Data(Data):
     def goal_of(self, index) -> str:
         raise NotImplementedError("TODO")
     
-    def prelude_of(self, index, dep_depth=None, use_proofs=False, maxsize=None):
+    def prelude_of(self, index, dep_depth=None, use_proofs=False, use_comments=True, maxsize=None):
         if dep_depth is not None:
             raise ValueError("dep_depth must be None. MiniF2F does not support dependency depth")
         if use_proofs:
@@ -591,62 +619,3 @@ class MiniF2F_Data(Data):
             raise ValueError("maxsize must be None. MiniF2F does not support maxsize")
         raise NotImplementedError("TODO")
 
-
-
-# Generating Fine tuning data
-
-def gen_fine_tune_data_isar_SHstar(proof_lang, result_path):
-    data = AFP_Data()
-    count = 0
-    logging.info(f"Generating {result_path}")
-    all_cases = data.all_cases()
-    time_start = time.time()
-    with open(result_path, 'w', encoding='utf-8') as f:
-        for idx in all_cases:
-            try:
-                f.write(json.dumps({'prelude': data.prelude_of(idx, dep_depth=None, use_proofs=proof_lang),
-                                    'goal': data.goal_of(idx),
-                                    'proof': data.proof_of(idx, proof_lang)}) + '\n')
-                count += 1
-                if count % 100 == 0:
-                    logging.info(f"Generated {count / len(all_cases) * 100:.2f}% fine-tune cases in {result_path}, ETA: {((time.time() - time_start) / count * (len(all_cases) - count)) / 60:.2f} minutes")
-            except CaseNotAvailable:
-                pass
-    print(f"Generated {count} fine-tune cases in {result_path}")
-
-if __name__ == '__main__' and len(sys.argv) > 3 and sys.argv[1] == 'fine-tune-data':
-    gen_fine_tune_data_isar_SHstar(sys.argv[2], sys.argv[3])
-    exit()
-
-#def gen_cases():
-#    ISAR_PROOFS = get_ISAR_PROOFS()
-#    goal_of = {}
-#    with open('cache/goal_of.txt', 'w') as f:
-#        for spec_pos, (proof_pos, spec, proof) in ISAR_PROOFS.items():
-#            goal_of[(proof_pos.file, proof_pos.line)] = spec
-#            f.write(f"{proof_pos.file}:{proof_pos.line}:{spec}\n")
-#    num = 0
-#    with open('cache/fine_tune_data_minilang.jsonl', 'w') as f:
-#        with SqliteDict('data/translation/results.db') as db:
-#            for key, value in db.items():
-#                match key.split(':'):
-#                    case (file,line,'refined'):
-#                        try:
-#                            (refined, err, _) = value
-#                            if err:
-#                                continue
-#                            (goal, _, _) = db[f"{file}:{line}:goal"]
-#                            prelude = prelude_of(file, int(line))
-#                            num += 1
-#                            f.write(json.dumps({
-#                                'prelude': prelude,
-#                                'goal': goal,
-#                                'proof': refined
-#                            }) + '\n')
-#                        except KeyError:
-#                            pass
-#    print(f"Generated {num} cases in cache/fine_tune_data_minilang.jsonl")
-#
-#if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'fine-tune-minilang-data':
-#    gen_cases()
-#    exit()
