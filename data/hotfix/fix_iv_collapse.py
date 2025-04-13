@@ -1,15 +1,15 @@
 import re
 from sqlitedict import SqliteDict
 
-with SqliteDict('/home/xero/Current/tmp/declarations.db') as decls:
-    with SqliteDict('/home/xero/Current/tmp/results.db') as db:
+with SqliteDict('cache/translation/declarations.db') as decls:
+    with SqliteDict('cache/translation/results.db') as db:
         bad = {}
         for key, value in db.items():
             match key.split(':'):
                 case (file, line, cat):
                     (proof, _, _) = value
-                    #matches = re.finditer(r'^.*(NEXT|END|NXT).*\(((\d+|\d+-\d+|\d+-),)+(\d+|\d+-\d+|\d+-)\).*$', proof, re.MULTILINE)
-                    matches = re.finditer(r'^.*auto_sledgehammer.*\(((\d+|\d+-\d+|\d+-),)+(\d+|\d+-\d+|\d+-)\).*$', proof, re.MULTILINE)
+                    matches = re.finditer(r'^.*(NEXT|END|NXT).*\(((\d+|\d+-\d+|\d+-),)+(\d+|\d+-\d+|\d+-)\).*$', proof, re.MULTILINE)
+                    #matches = re.finditer(r'^.*auto_sledgehammer.*\(((\d+|\d+-\d+|\d+-),)+(\d+|\d+-\d+|\d+-)\).*$', proof, re.MULTILINE)
                     def check_bad(cmd):
                         for sequence in re.finditer(r'\([\d\-,]+\)', cmd):
                             raw_intervals = sequence.group(0).strip('()').split(',')

@@ -80,7 +80,7 @@ isabelle components -u ./contrib/Isa-REPL || exit 1
 isabelle components -u ./contrib/Isa-Mini || exit 1
 isabelle components -u ./contrib/auto_sledgehammer || exit 1
 
-isabelle ocaml_setup
-isabelle ghc_setup
+isabelle ocaml_setup || echo "Fail to activate OCaml support for Isabelle. Some files may fail to be evaluated"
+isabelle ghc_setup || echo "Fail to activate GHC support for Isabelle. Some files may fail to be evaluated"
 
 echo "System initialized"
