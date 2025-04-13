@@ -12,3 +12,6 @@ __pycache__
 evaluation/isar_pisa_result.db
 config/evaluation_servers.csv
 shell.log
+data/translation/md5sum
+data/translation/declarations.db
+data/translation/results.db
