@@ -5,10 +5,11 @@ import sys
 import json
 import logging
 import time
-from data.isabelle import AFP_Data, CaseNotAvailable
+from data.isabelle import AFP_Data, CaseNotAvailable, PISA_Data
 from transformers import AutoTokenizer
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
+from data.isabelle import Position
 
 # Configure logging
 logging.basicConfig(
@@ -18,6 +19,18 @@ logging.basicConfig(
         logging.StreamHandler(sys.stdout)
     ]
 )
+
+def verify_contamination():
+    afp = AFP_Data()
+    pisa = PISA_Data()
+    for i in pisa.all_cases():
+        pos = pisa.goal_pos_of(i)
+        if pos in afp.all_cases():
+            print(f"Data contamination detected! {pos}")
+            exit(1)
+    print("no data contamination")
+
+verify_contamination()
 
 # Generating Fine tuning data
 
