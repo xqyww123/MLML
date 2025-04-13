@@ -4,6 +4,8 @@ set -e
 echo "Initializing system..."
 git pull
 git submodule update --init --recursive --remote
+git lfs install
+git lfs pull
 pip install -q gdown sqlitedict
 pip install -q isarepl isamini --upgrade
 mkdir -p ./cache/downloads
@@ -11,21 +13,21 @@ mkdir -p ./translation/results
 mkdir -p ./cache/translation/tmp
 
 # Check if md5sum file exists and verify database integrity
-if [ -f "./data/md5sum" ]; then
+if [ -f "./data/translation/md5sum" ]; then
     echo "Verifying database integrity..."
-    if md5sum --status -c ./data/md5sum; then
+    if md5sum --status -c ./data/translation/md5sum; then
         echo "Database integrity verified."
     else
         echo "Database files are out-of-date. Reinstalling..."
         gunzip -k ./data/translation/declarations.db.gz
         gunzip -k ./data/translation/results.db.gz
-        md5sum ./data/translation/declarations.db ./data/translation/results.db > ./data/md5sum
+        md5sum ./data/translation/declarations.db ./data/translation/results.db > ./data/translation/md5sum
     fi
 else
     echo "Unpacking database files..."
     gunzip -k ./data/translation/declarations.db.gz
     gunzip -k ./data/translation/results.db.gz
-    md5sum ./data/translation/declarations.db ./data/translation/results.db > ./data/md5sum
+    md5sum ./data/translation/declarations.db ./data/translation/results.db > ./data/translation/md5sum
 fi
 
 
