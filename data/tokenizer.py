@@ -72,17 +72,20 @@ def tokenize_text(text, tokenizer, verbose=False):
     
     return tokens, token_ids.tolist(), text
 
-#tokenizer = check_tokenizer_type('deepseek-ai/DeepSeek-Prover-V1.5-Base')
-#
-#
-#text = """HAVE "(h, U) \<in> B \<and> card (snd (h, U)) = Suc m" unfolding assms(3)
-#END WITH aaa ccc(1)
-#Consider xx where a:"xx < 1"
-#CaseSplit"""
-#
-#print("正在对文本进行分词...")
-#tokens, token_ids, text = tokenize_text(text, tokenizer, True)
-#
-#print(f"输入文本: {text}")
-#print(f"总 token 数: {len(tokens)}")
-#print(f"Token ID: {token_ids}")
+tokenizer = check_tokenizer_type('EleutherAI/llemma_34b')
+
+
+text = """Have "(h, U) \<in> B \<and> card (snd (h, U)) = Suc m" unfolding assms(3)
+End With aaa ccc(1) Without zx
+Consider xx where a:"xx < 1"
+CaseSplit
+Induct
+Next
+Unfold"""
+
+print("正在对文本进行分词...")
+tokens, token_ids, text = tokenize_text(text, tokenizer, True)
+
+print(f"输入文本: {text}")
+print(f"总 token 数: {len(tokens)}")
+print(f"Token ID: {token_ids}")
