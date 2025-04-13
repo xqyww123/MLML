@@ -447,7 +447,7 @@ class Data:
         """
         raise NotImplementedError("prelude_of must be implemented by subclass")
 
-    LANG = ['origin', 'isar-SH*', 'minilang', 'isar-SH']
+    LANG = ['origin', 'isar-SH*', 'minilang', 'isar-SH', 'isar-SH*-idt']
     @staticmethod
     def chk_lang_supported(lang : str) -> bool:
         if lang not in Data.LANG:
