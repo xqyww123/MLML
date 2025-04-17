@@ -10,6 +10,7 @@ from transformers import AutoTokenizer
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 from data.isabelle import Position
+import data.language as language
 
 # Configure logging
 logging.basicConfig(
@@ -23,14 +24,24 @@ logging.basicConfig(
 def verify_contamination():
     afp = AFP_Data()
     pisa = PISA_Data()
+    print(f"Checking data contamination for {len(pisa.all_cases())} PISA cases")
     for i in pisa.all_cases():
         pos = pisa.goal_pos_of(i)
+        print(pos)
         if pos in afp.all_cases():
             print(f"Data contamination detected! {pos}")
             exit(1)
     print("no data contamination")
 
 verify_contamination()
+
+
+# tokenizer = AutoTokenizer.from_pretrained('EleutherAI/llemma_34b')
+# a = is_codepoint_supported(tokenizer, '\<s>')
+# x = mk_unicode_table('EleutherAI/llemma_34b')
+# y = mk_unicode_table('deepseek-ai/DeepSeek-Prover-V1.5-Base')
+# 
+# exit(1)
 
 # Generating Fine tuning data
 
@@ -68,13 +79,14 @@ def gen_fine_tune_data_isar_SHstar(proof_lang, result_path, model_name, partNum,
     with open(result_path, 'w', encoding='utf-8') as f:
         for idx in all_cases:
             try:
-                proof = data.proof_of(idx, proof_lang, comments=False)
+                proof = data.proof_of(idx, proof_lang, comments=False, camlize=False)
                 goal = data.goal_of(idx)
                 if length_of(proof) + length_of(goal) > 2000:
                     dropped += 1
-                    print(f"drop {idx} because proof is too long ({length_of(proof)}). Total dropped: {dropped / count * 100:.2f}%")
+                    if dropped % 100 == 0:
+                        print(f"drop {idx} because proof is too long ({length_of(proof)}). Total dropped: {dropped / count * 100:.2f}%")
                     continue
-                prelude = data.prelude_of(idx, dep_depth=None, use_proofs=proof_lang, use_comments=False, length_of=length_of, maxsize=2000)
+                prelude = data.prelude_of(idx, dep_depth=None, use_proofs=proof_lang, use_comments=False, length_of=length_of, maxsize=2000, camlize=False)
                 f.write(json.dumps({'prelude': prelude,
                                     'goal': goal,
                                     'proof': proof}) + '\n')
