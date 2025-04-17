@@ -2,6 +2,7 @@
   "extraPaths": [
     "./evaluation",
     "./data",
-    "./tools"
+    "./tools",
+    "."
   ],
 } 

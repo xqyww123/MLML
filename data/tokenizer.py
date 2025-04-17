@@ -42,6 +42,45 @@ def count_tokens(text, model_name):
     
     return token_count
 
+
+def is_codepoint_supported(tokenizer, codepoint):
+    """
+    检查给定tokenizer是否支持特定Unicode字符或码点
+    
+    Args:
+        tokenizer: 用于检查的tokenizer
+        codepoint (int or str): Unicode码点(整数)或单个字符(字符串)
+    
+    Returns:
+        int or False: 若支持则返回实际token数量(排除特殊token)，否则返回False
+    """
+    # 将输入统一转换为字符
+    try:
+        char = codepoint if isinstance(codepoint, str) else chr(codepoint)
+    except (ValueError, OverflowError):
+        return False
+    
+    # 处理多字符字符串
+    if isinstance(codepoint, str) and len(codepoint) > 1:
+        # 获取原始token列表
+        #tokens = tokenizer.encode(char)
+        # 获取不包含特殊token的token列表
+        tokens_no_special = tokenizer.encode(char, add_special_tokens=False)
+        
+        if codepoint in tokenizer.decode(tokens_no_special):
+            return len(tokens_no_special)  # 返回不包含特殊token的数量
+        else:
+            return False
+    
+    # 编码单个字符并检查能否正确恢复
+    #tokens = tokenizer.encode(char)
+    tokens_no_special = tokenizer.encode(char, add_special_tokens=False)
+    decoded = tokenizer.decode(tokens_no_special)
+    
+    # 如果字符可以被恢复，返回非特殊token数量，否则返回False
+    return len(tokens_no_special) if char in decoded else False
+
+
 def tokenize_text(text, tokenizer, verbose=False):
     """
     使用指定的 tokenizer 对输入文本进行分词
@@ -72,20 +111,32 @@ def tokenize_text(text, tokenizer, verbose=False):
     
     return tokens, token_ids.tolist(), text
 
-tokenizer = check_tokenizer_type('EleutherAI/llemma_34b')
-
-
-text = """Have "(h, U) \<in> B \<and> card (snd (h, U)) = Suc m" unfolding assms(3)
-End With aaa ccc(1) Without zx
-Consider xx where a:"xx < 1"
-CaseSplit
-Induct
-Next
-Unfold"""
-
-print("正在对文本进行分词...")
-tokens, token_ids, text = tokenize_text(text, tokenizer, True)
-
-print(f"输入文本: {text}")
-print(f"总 token 数: {len(tokens)}")
-print(f"Token ID: {token_ids}")
+if __name__ == "__main__":
+    #tokenizer = check_tokenizer_type('EleutherAI/llemma_34b')
+    tokenizer = check_tokenizer_type('deepseek-ai/DeepSeek-Prover-V1.5-Base')
+    
+    text = """Have "(h, U) \<in> B \<and> card (snd (h, U)) = Suc m" unfolding assms(3)
+    End With aaa ccc(1) Without zx
+    Consider xx where a:"xx < 1"
+    CaseSplit
+    CASE_SPLIT
+    CASESPLIT
+    Induct
+    Next
+    NEXT
+    END
+    End
+    DEFINE
+    Define
+    WITHOUT
+    Without
+    WITH
+    With
+    """
+    
+    print("正在对文本进行分词...")
+    tokens, token_ids, text = tokenize_text(text, tokenizer, True)
+    
+    print(f"输入文本: {text}")
+    print(f"总 token 数: {len(tokens)}")
+    print(f"Token ID: {token_ids}")

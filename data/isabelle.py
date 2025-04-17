@@ -8,6 +8,8 @@ import sys
 import re
 from typing import Tuple  # Add this import for Tuple type
 import time
+from . import language
+
 # Configure logging to print to screen
 logging.basicConfig(
     level=logging.INFO,
@@ -133,7 +135,7 @@ if not os.path.exists('data/declarations.json'):
 with open('data/declarations.json', 'r') as f:
     DECLARATIONS = json.load(f) # a map from file paths to declarations which are tuples of (line, offset, command), sorted by the position of occurence
 
-def prelude_of(file, line, dep_depth=1, use_proofs=False, use_comments=True, maxsize=None, length_of=len) -> str:
+def prelude_of(file, line, dep_depth=1, use_proofs=False, use_comments=True, maxsize=None, length_of=len, camlize=False) -> str:
     """
     @param file: the path to the theory file
     @param dep_depth: if the prelude shall include the declarations of the dependencies of the theory,
@@ -189,8 +191,10 @@ def prelude_of(file, line, dep_depth=1, use_proofs=False, use_comments=True, max
                 if use_proofs and (idx == 0 or line != prelude[idx-1][0]) and (file, line) not in PISA_AT:
                     try:
                         (proof, err, _) = db[f"{file}:{line}:{use_proofs}"]
+                        if camlize and language.is_minilang(use_proofs):
+                            proof = language.camlize_minilang(proof)
                         if not use_comments:
-                            proof = Data.remove_comments(proof)
+                            proof = language.remove_comments(proof)
                         if not err:
                             if maxsize is not None and size + length_of(proof) >= maxsize:
                                 break
@@ -447,20 +451,8 @@ class Data:
         """
         raise NotImplementedError("prelude_of must be implemented by subclass")
 
-    LANG = ['origin', 'isar-SH*', 'minilang', 'isar-SH', 'isar-SH*-idt']
-    @staticmethod
-    def chk_lang_supported(lang : str) -> bool:
-        if lang not in Data.LANG:
-            raise ValueError(f"Unsupported language: {lang}. Can only be one of {Data.LANG}")
-    
     def proof_of(self, index, lang : str, comments = True) -> str:
         raise NotImplementedError("proof_of must be implemented by subclass")
-
-    @staticmethod
-    def remove_comments(text : str) -> str:
-        lines = text.split('\n')
-        filtered_lines = [line for line in lines if not re.match(r'\s*\(\*.*\*\)\s*', line)]
-        return '\n'.join(filtered_lines)
 
 class PISA_Data(Data):
     def __init__(self):
@@ -490,11 +482,11 @@ class PISA_Data(Data):
         except KeyError:
             raise CaseNotAvailable(index)
     
-    def prelude_of(self, index : int, dep_depth=1, use_proofs=False, use_comments=True, maxsize=None, length_of=len) -> str:
+    def prelude_of(self, index : int, dep_depth=1, use_proofs=False, use_comments=True, maxsize=None, length_of=len, camlize=False) -> str:
         PISA_DATA, PISA_AT = load_pisa_data()
         try:
             (pos_spec, _, _) = PISA_DATA[index]
-            return prelude_of(pos_spec.file, pos_spec.line, dep_depth, use_proofs, use_comments, maxsize, length_of)
+            return prelude_of(pos_spec.file, pos_spec.line, dep_depth, use_proofs, use_comments, maxsize, length_of, camlize)
         except KeyError:
             raise CaseNotAvailable(index)
 
@@ -514,15 +506,17 @@ class PISA_Data(Data):
         except KeyError:
             raise CaseNotAvailable(index)
     
-    def proof_of(self, index : int, lang : str, comments = True) -> str:
-        Data.chk_lang_supported(lang)
+    def proof_of(self, index : int, lang : str, comments = True, camlize = False) -> str:
+        language.chk_lang_supported(lang)
         try:
             pos_spec = self.goal_pos_of(index)
             (proof, err, _) = self.db[f"{pos_spec.file}:{pos_spec.line}:{lang}"]
             if err:
                 raise CaseNotAvailable(index)
             if not comments:
-                proof = Data.remove_comments(proof)
+                proof = language.remove_comments(proof)
+            if camlize and language.is_minilang(lang):
+                proof = language.camlize_minilang(proof)
             return proof
         except KeyError:
             raise CaseNotAvailable(index)
@@ -574,8 +568,8 @@ class AFP_Data(Data):
         except KeyError:
             raise CaseNotAvailable(index)
     
-    def prelude_of(self, index : Position, dep_depth=None, use_proofs=False, use_comments=True, maxsize=None, length_of=len):
-        return prelude_of(index.file, index.line, dep_depth, use_proofs, use_comments, maxsize, length_of)
+    def prelude_of(self, index : Position, dep_depth=None, use_proofs=False, use_comments=True, maxsize=None, length_of=len, camlize=False):
+        return prelude_of(index.file, index.line, dep_depth, use_proofs, use_comments, maxsize, length_of, camlize)
     
     def goal_pos_of(self, index : Position):
         return index
@@ -586,14 +580,16 @@ class AFP_Data(Data):
         except KeyError:
             raise CaseNotAvailable(index)
     
-    def proof_of(self, index : Position, lang : str, comments = True) -> str:
-        Data.chk_lang_supported(lang)
+    def proof_of(self, index : Position, lang : str, comments = True, camlize = False) -> str:
+        language.chk_lang_supported(lang)
         try:
             (proof, err, _) = self.db[f"{index.file}:{index.line}:{lang}"]
             if err:
                 raise CaseNotAvailable(index)
             if not comments:
-                proof = Data.remove_comments(proof)
+                proof = language.remove_comments(proof)
+            if camlize and language.is_minilang(lang):
+                proof = language.camlize_minilang(proof)
             return proof
         except KeyError:
             raise CaseNotAvailable(index)
@@ -610,7 +606,7 @@ class MiniF2F_Data(Data):
     def goal_of(self, index) -> str:
         raise NotImplementedError("TODO")
     
-    def prelude_of(self, index, dep_depth=None, use_proofs=False, use_comments=True, maxsize=None):
+    def prelude_of(self, index, dep_depth=None, use_proofs=False, use_comments=True, maxsize=None, camlize=False):
         if dep_depth is not None:
             raise ValueError("dep_depth must be None. MiniF2F does not support dependency depth")
         if use_proofs:
