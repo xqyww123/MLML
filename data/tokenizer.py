@@ -115,23 +115,11 @@ if __name__ == "__main__":
     #tokenizer = check_tokenizer_type('EleutherAI/llemma_34b')
     tokenizer = check_tokenizer_type('deepseek-ai/DeepSeek-Prover-V1.5-Base')
     
-    text = """Have "(h, U) \<in> B \<and> card (snd (h, U)) = Suc m" unfolding assms(3)
-    End With aaa ccc(1) Without zx
-    Consider xx where a:"xx < 1"
-    CaseSplit
-    CASE_SPLIT
-    CASESPLIT
-    Induct
-    Next
-    NEXT
-    END
-    End
-    DEFINE
-    Define
-    WITHOUT
-    Without
-    WITH
-    With
+    text = """
+show ?thesis
+show?thesis
+thus ?thesis
+thus?thesis
     """
     
     print("正在对文本进行分词...")

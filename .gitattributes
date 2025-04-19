@@ -2,3 +2,13 @@ data/declarations.json filter=lfs diff=lfs merge=lfs -text
 data/sorted_thy.txt filter=lfs diff=lfs merge=lfs -text
 data/translation/results.db.gz filter=lfs diff=lfs merge=lfs -text
 data/translation/declarations.db.gz filter=lfs diff=lfs merge=lfs -text
+tasks/Baldur/eval/eval_data_isar-SH*.jsonl filter=lfs diff=lfs merge=lfs -text
+tasks/Baldur/eval/eval_data_isar-SH.parquet filter=lfs diff=lfs merge=lfs -text
+tasks/Baldur/eval/eval_data_minilang-no-SH.jsonl filter=lfs diff=lfs merge=lfs -text
+tasks/Baldur/eval/eval_data_minilang-no-SH.parquet filter=lfs diff=lfs merge=lfs -text
+tasks/Baldur/eval/eval_data_isar.jsonl filter=lfs diff=lfs merge=lfs -text
+tasks/Baldur/eval/eval_data_isar-SH.jsonl filter=lfs diff=lfs merge=lfs -text
+tasks/Baldur/eval/eval_data_isar-SH*.parquet filter=lfs diff=lfs merge=lfs -text
+tasks/Baldur/eval/eval_data_minilang.jsonl filter=lfs diff=lfs merge=lfs -text
+tasks/Baldur/eval/eval_data_minilang.parquet filter=lfs diff=lfs merge=lfs -text
+tasks/Baldur/eval/eval_data_isar.parquet filter=lfs diff=lfs merge=lfs -text
