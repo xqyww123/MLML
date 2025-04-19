@@ -185,24 +185,28 @@ def prelude_of(file, line, dep_depth=1, use_proofs=False, use_comments=True, max
             for reverse_idx, (line, command) in enumerate(reversed(prelude)):
                 ret.append('')
                 idx = len(prelude) - 1 - reverse_idx
-                if maxsize is not None and size + length_of(command) >= maxsize:
-                    break
-                size += length_of(command)
-                if use_proofs and (idx == 0 or line != prelude[idx-1][0]) and (file, line) not in PISA_AT:
-                    try:
-                        (proof, err, _) = db[f"{file}:{line}:{use_proofs}"]
-                        if camlize and language.is_minilang(use_proofs):
-                            proof = language.camlize_minilang(proof)
-                        if not use_comments:
-                            proof = language.remove_comments(proof)
-                        if not err:
-                            if maxsize is not None and size + length_of(proof) >= maxsize:
-                                break
-                            ret.append(proof)
-                            size += length_of(proof)
-                    except KeyError:
-                        pass
-                ret.append(command)
+                if use_proofs:
+                    if (idx == 0 or line != prelude[idx-1][0]) and (file, line) not in PISA_AT:
+                        try:
+                            (proof, err, _) = db[f"{file}:{line}:{use_proofs}"]
+                            if camlize and language.is_minilang(use_proofs):
+                                proof = language.camlize_minilang(proof)
+                            if not use_comments:
+                                proof = language.remove_comments(proof)
+                            if not err:
+                                seg = f"{proof.strip()}\n{command.strip()}\n\n"
+                                if maxsize is not None and size + length_of(seg) >= maxsize:
+                                    break
+                                ret.append(seg)
+                                size += length_of(seg)
+                        except KeyError:
+                            pass
+                else:
+                    seg = f"{command.strip()}\n\n"
+                    if maxsize is not None and size + length_of(seg) >= maxsize:
+                        break
+                    size += length_of(seg)
+                    ret.append(seg)
             ret.reverse()
     else:
         ret = []
@@ -210,7 +214,7 @@ def prelude_of(file, line, dep_depth=1, use_proofs=False, use_comments=True, max
             ret.append(command)
             ret.append('')
             
-    return '\n'.join(ret)
+    return ''.join(ret).strip()
 
 
 def common_prefix(a, b):

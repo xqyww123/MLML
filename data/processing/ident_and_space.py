@@ -161,7 +161,8 @@ def norm_prf(prf):
     new_lines = []
     modified = False
     for line in lines:
-        if line.strip().startswith('by (auto_sledgehammer'):
+        # if line.strip().startswith('by (auto_sledgehammer'):
+        if line.strip().startswith('END') or line.strip().startswith('NEXT'):
             (m, new_line) = norm_space(line)
         else:
             (m, new_line) = (False, line)
@@ -221,6 +222,7 @@ def normalize_space():
         db.commit()
     print(f"{count / total:.2%}")
 
+
 def press_dots(lines):
     """
     If a line is just a single '.' or '..', append it to the previous line.
@@ -237,11 +239,12 @@ def press_dots(lines):
     return result
 
 def make_indent():
-    total = 0
+    to_modify = {}
     with SqliteDict('cache/translation/results.db') as db:
+        total = 0
         for key, value in db.items():
             match key.split(':'):
-                case (file, line, 'isar-SH*'):
+                case (file, line, 'origin'):
                     (prf, err, pos) = value
                     if err:
                         continue
@@ -249,12 +252,53 @@ def make_indent():
                     lines = press_dots(lines)
                     lines = mk_indent(lines)
                     prf = '\n'.join(lines)
-                    db[f"{file}:{line}:isar-SH*-idt"] = (prf, err, pos)
+                    to_modify[key] = (prf, err, pos)
                     total += 1
-                    if total % 100 == 0:
+                    if total % 10000 == 0:
                         print(f"{total}")
-                        db.commit()
+        total = 0
+        for key, value in to_modify.items():
+            db[key] = value
+            total += 1
+            if total % 100 == 0:
+                db.commit()
+                print(f"{total}")
         db.commit()
+
+def clean():
+    count = 0
+    with SqliteDict('cache/translation/results.db') as db:
+        for key in db:
+            match key.split(':'):
+                case (file, line, 'isar-SH*-idt'):
+                    del db[key]
+                    count += 1
+                    if count % 100 == 0:
+                        print(f"{count}")
+    db.commit()
+
+def copy():
+    count = 0
+    to_add = {}
+    with SqliteDict('cache/translation/results.db') as db:
+        for key, value in db.items():
+            match key.split(':'):
+                case (file, line, 'origin'):
+                    to_add[f"{file}:{line}:origin-noindent"] = value
+                    count += 1
+                    if count % 100 == 0:
+                        print(f"{count}")
+        count = 0
+        for key, value in to_add.items():
+            db[key] = value
+            count += 1
+            if count % 100 == 0:
+                db.commit()
+                print(f"{count}")
+        db.commit()
+
+make_indent()
+exit(1)
 
 def data_processing():
     remove_auto2()
