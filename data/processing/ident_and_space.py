@@ -275,7 +275,7 @@ def clean():
                     count += 1
                     if count % 100 == 0:
                         print(f"{count}")
-    db.commit()
+        db.commit()
 
 def copy():
     count = 0
@@ -330,6 +330,8 @@ def norm_spaces_inside():
     with SqliteDict('cache/translation/results.db') as db:
         for key, value in db.items():
             _,_,cat = key.split(':')
+            if cat == "goal":
+                continue
             #if cat not in ['origin', 'origin-noindent', 'isar-SH*-noindent', 'isar-SH*']:
             #    continue
             (prf, err, pos) = value
@@ -339,26 +341,34 @@ def norm_spaces_inside():
             new_lines = []
             for line in lines:
                 indent = len(line) - len(line.lstrip(' '))
-                line = re.sub(r'\s+', ' ', line)
+                line = re.sub(r'\s+', ' ', line.strip())
                 line = ' ' * indent + line
                 new_lines.append(line)
             new_prf = '\n'.join(new_lines)
             if new_prf != prf:
                 count += 1
                 to_modify[key] = (new_prf, err, pos)
+                #if cat not in ['origin', 'origin-noindent', 'isar-SH*-noindent', 'isar-SH*', 'before_split_proof', 'after_split_proof', 'before_elim_this_connectives', 'after_elim_this_connectives', 'raw', 'refined', 'untyp_raw', 'untyp_refined']:
+                #    print(key)
+                #    print('----------------------')
+                #    print(prf)
+                #    print('----------------------')
+                #    print(new_prf)
+                #    print('----------------------\n\n\n')
             total += 1
             if total % 1000 == 0:
                 print(f"{count / total:.2%}, {total}")
-        #total = 0
-        #for key, value in to_modify.items():
-        #    db[key] = value
-        #    total += 1
-        #    if total % 100 == 0:
-        #        db.commit()
-        #        print(f"{total}")
-        #db.commit()
 
         print(f"{count / total:.2%}, {count}, {total}")
+        total = 0
+        for key, value in to_modify.items():
+            db[key] = value
+            total += 1
+            if total % 100 == 0:
+                db.commit()
+                print(f"{total}")
+        db.commit()
+
 
 norm_spaces_inside()
 exit(1)
