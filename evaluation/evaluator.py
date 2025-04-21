@@ -257,8 +257,8 @@ class Isar_PISA(Isar_Base, PISA_Data):
 
 class Isar_AFP(Isar_Base, AFP_Data):
 
-    def __init__(self, addr):
-        Isar_Base.__init__(self, addr)
+    def __init__(self, addr, *args, **kwargs):
+        Isar_Base.__init__(self, addr, *args, **kwargs)
         AFP_Data.__init__(self)
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -325,8 +325,8 @@ class MiniLang_MiniF2F(MiniLang_Base, MiniF2F_Data):
 
 class Isar_MiniF2F(Isar_Base, MiniF2F_Data):
 
-    def __init__(self, addr):
-        Isar_Base.__init__(self, addr)
+    def __init__(self, addr, *args, **kwargs):
+        Isar_Base.__init__(self, addr, *args, **kwargs)
         MiniF2F_Data.__init__(self)
 
     def __exit__(self, exc_type, exc_value, traceback):
