@@ -183,24 +183,28 @@ def prelude_of(file, line, dep_depth=1, use_proofs=False, use_comments=True, max
             ret = []
             size = 0
             for reverse_idx, (line, command) in enumerate(reversed(prelude)):
-                ret.append('')
                 idx = len(prelude) - 1 - reverse_idx
-                if use_proofs:
-                    if (idx == 0 or line != prelude[idx-1][0]) and (file, line) not in PISA_AT:
-                        try:
-                            (proof, err, _) = db[f"{file}:{line}:{use_proofs}"]
-                            if camlize and language.is_minilang(use_proofs):
-                                proof = language.camlize_minilang(proof)
-                            if not use_comments:
-                                proof = language.remove_comments(proof)
-                            if not err:
-                                seg = f"{proof.strip()}\n{command.strip()}\n\n"
-                                if maxsize is not None and size + length_of(seg) >= maxsize:
-                                    break
-                                ret.append(seg)
-                                size += length_of(seg)
-                        except KeyError:
-                            pass
+                if use_proofs and (idx == 0 or line != prelude[idx-1][0]) and (file, line) not in PISA_AT:
+                    try:
+                        (proof, err, _) = db[f"{file}:{line}:{use_proofs}"]
+                        if camlize and language.is_minilang(use_proofs):
+                            proof = language.camlize_minilang(proof)
+                        if not use_comments:
+                            proof = language.remove_comments(proof)
+                        if not err:
+                            seg = f"{command.strip()}\n{proof.strip()}\n\n"
+                            if maxsize is not None and size + length_of(seg) >= maxsize:
+                                break
+                            ret.append(seg)
+                            size += length_of(seg)
+                    except KeyError:
+                        if command.startswith('lemma') or command.startswith('theorem') or command.startswith('corollary'):
+                            continue
+                        seg = f"{command.strip()}\n\n"
+                        if maxsize is not None and size + length_of(seg) >= maxsize:
+                            break
+                        size += length_of(seg)
+                        ret.append(seg)
                 else:
                     seg = f"{command.strip()}\n\n"
                     if maxsize is not None and size + length_of(seg) >= maxsize:
@@ -212,7 +216,10 @@ def prelude_of(file, line, dep_depth=1, use_proofs=False, use_comments=True, max
         ret = []
         for _, command in prelude:
             ret.append(command)
-            ret.append('')
+            ret.append('\n')
+    # Remove leading 'end\n\n' elements
+    while ret and ret[0].strip() == 'end':
+        ret.pop(0)
             
     return ''.join(ret).strip()
 

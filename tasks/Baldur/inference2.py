@@ -82,13 +82,16 @@ if __name__ == "__main__":
     full_responses = []
     for response, d in zip(generated_texts, data):
         full_responses.append({
+            "index": d["index"],
             "prelude": d["prelude"],
             "goal": d["goal"],
             "response": response
         })
     
-    with open("responses.json", "w") as f:
-        json.dump(full_responses, f, indent=2)
+    # Write to JSONL file (each JSON object on a separate line)
+    with open("responses.jsonl", "w") as f:
+        for item in full_responses:
+            f.write(json.dumps(item) + "\n")
 
 
     
