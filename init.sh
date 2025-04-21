@@ -25,8 +25,8 @@ if [ -f "./data/translation/md5sum" ]; then
     fi
 else
     echo "Unpacking database files..."
-    gunzip -k ./data/translation/declarations.db.gz
-    gunzip -k ./data/translation/results.db.gz
+    gunzip -f -k ./data/translation/declarations.db.gz
+    gunzip -f -k ./data/translation/results.db.gz
     md5sum ./data/translation/declarations.db ./data/translation/results.db > ./data/translation/md5sum
 fi
 
