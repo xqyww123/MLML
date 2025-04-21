@@ -89,12 +89,14 @@ class MiniLang_Base(Evaluator):
     def __exit__(self, exc_type, exc_value, traceback):
         if self.mini:
             self.mini.__exit__(exc_type, exc_value, traceback)
+            self.mini = None
         super().__exit__(exc_type, exc_value, traceback)
         return None
 
     def close(self):
         if self.mini:
             self.mini.close()
+            self.mini = None
     
     def validate(self, index, src):
         try:
@@ -406,6 +408,11 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
     results = {}
     lock = threading.Lock()
 
+    # Create a task queue from all cases
+    task_queue = queue.Queue()
+    for case in cases:
+        task_queue.put(case)
+
     remaining_cases = task_queue.qsize()
     def log_state():
         nonlocal remaining_cases
@@ -413,11 +420,6 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
             success_rate = success / (total-unavailable) if total - unavailable > 0 else 0
             unavailable_rate = unavailable / total if total > 0 else 0
             logger.info(f"Success: {success_rate:.3f}, Unavailable: {unavailable_rate:.3f}, Remaining: {remaining_cases}")
-            
-    # Create a task queue from all cases
-    task_queue = queue.Queue()
-    for case in cases:
-        task_queue.put(case)
 
 
     logger.info(f"Starting {evaluator.__name__} evaluation of {len(cases)} cases. The result will be saved to {result_path}")
