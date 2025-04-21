@@ -21,6 +21,16 @@ if __name__ == "__main__":
                 cases = Case.PISA_file('./evaluation/minilang_response.jsonl')
                 evaluate_and_save('./evaluation/minilang_pisa_result.db', cases, MiniLang_PISA)
                 report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
+            case "eval-mini-no-SH-pisa":
+                launch_servers()
+                cases = Case.PISA_file('./evaluation/minilang-no-SH_response.jsonl')
+                evaluate_and_save('./evaluation/minilang-no-SH_pisa_result.db', cases, MiniLang_PISA)
+                report_evaluation('./evaluation/minilang-no-SH_response.jsonl', './evaluation/minilang-no-SH_pisa_result.db')
+            case "eval-isar-SH*-pisa":
+                launch_servers()
+                cases = Case.PISA_file('./evaluation/isar-SH*_response.jsonl')
+                evaluate_and_save('./evaluation/isar-SH*_pisa_result.db', cases, lambda addr: Isar_PISA(addr, libs=['Auto_Sledgehammer.Auto_Sledgehammer']))
+                report_evaluation('./evaluation/isar-SH*_response.jsonl', './evaluation/isar-SH*_pisa_result.db')
             case "eval-isar-pisa":
                 launch_servers()
                 cases = Case.PISA_file('./evaluation/isar_response.jsonl')
