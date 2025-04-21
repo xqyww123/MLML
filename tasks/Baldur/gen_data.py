@@ -119,6 +119,10 @@ def gen_data(proof_lang, result_path, model_name, partNum, totalNum, data_source
     with open(result_path, 'w', encoding='utf-8') as f:
         for idx in all_cases:
             try:
+                if isinstance(idx, int):
+                    idx2 = idx
+                else:
+                    idx2 = str(idx)
                 if include_proof:
                     proof = data.proof_of(idx, proof_lang, comments=False, camlize=False).strip()
                     goal = data.goal_of(idx).strip()
@@ -128,14 +132,14 @@ def gen_data(proof_lang, result_path, model_name, partNum, totalNum, data_source
                             print(f"drop {idx} because proof is too long ({length_of(proof)}). Total dropped: {dropped / count * 100:.2f}%")
                         continue
                     prelude = data.prelude_of(idx, dep_depth=None, use_proofs=proof_lang, use_comments=False, length_of=length_of, maxsize=2000, camlize=False).strip()
-                    f.write(json.dumps({'index': idx,
+                    f.write(json.dumps({'index': idx2,
                                         'prelude': prelude,
                                         'goal': goal,
                                         'proof': proof}) + '\n')
                 else:
                     goal = data.goal_of(idx).strip()
                     prelude = data.prelude_of(idx, dep_depth=None, use_proofs=proof_lang, use_comments=False, length_of=length_of, maxsize=2000, camlize=False).strip()
-                    f.write(json.dumps({'index': idx,
+                    f.write(json.dumps({'index': idx2,
                                         'prelude': prelude,
                                         'goal': goal}) + '\n')
                 count += 1

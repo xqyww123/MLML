@@ -19,8 +19,8 @@ if [ -f "./data/translation/md5sum" ]; then
         echo "Database integrity verified."
     else
         echo "Database files are out-of-date. Reinstalling..."
-        gunzip -k ./data/translation/declarations.db.gz
-        gunzip -k ./data/translation/results.db.gz
+        gunzip -f -k ./data/translation/declarations.db.gz
+        gunzip -f -k ./data/translation/results.db.gz
         md5sum ./data/translation/declarations.db ./data/translation/results.db > ./data/translation/md5sum
     fi
 else

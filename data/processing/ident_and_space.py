@@ -297,7 +297,70 @@ def copy():
                 print(f"{count}")
         db.commit()
 
-make_indent()
+def norm_question_mark():
+    total = 0
+    count = 0
+    to_modify = {}
+    with SqliteDict('cache/translation/results.db') as db:
+        for key, value in db.items():
+            (prf, err, pos) = value
+            if err:
+                continue
+            prf2 = prf.replace('show?', 'show ?').replace('thus?', 'thus ?').replace('by(', 'by (').replace('apply(', 'apply (')
+            if prf2 != prf:
+                count += 1
+                to_modify[key] = (prf2, err, pos)
+            total += 1
+            if total % 1000 == 0:
+                print(f"{count / total:.2%}, {total}")
+        total = 0
+        for key, value in to_modify.items():
+            db[key] = value
+            total += 1
+            if total % 100 == 0:
+                db.commit()
+                print(f"{total}")
+        db.commit()
+    print(f"{total}")
+
+def norm_spaces_inside():
+    total = 0
+    count = 0
+    to_modify = {}
+    with SqliteDict('cache/translation/results.db') as db:
+        for key, value in db.items():
+            _,_,cat = key.split(':')
+            #if cat not in ['origin', 'origin-noindent', 'isar-SH*-noindent', 'isar-SH*']:
+            #    continue
+            (prf, err, pos) = value
+            if err:
+                continue
+            lines = prf.split('\n')
+            new_lines = []
+            for line in lines:
+                indent = len(line) - len(line.lstrip(' '))
+                line = re.sub(r'\s+', ' ', line)
+                line = ' ' * indent + line
+                new_lines.append(line)
+            new_prf = '\n'.join(new_lines)
+            if new_prf != prf:
+                count += 1
+                to_modify[key] = (new_prf, err, pos)
+            total += 1
+            if total % 1000 == 0:
+                print(f"{count / total:.2%}, {total}")
+        #total = 0
+        #for key, value in to_modify.items():
+        #    db[key] = value
+        #    total += 1
+        #    if total % 100 == 0:
+        #        db.commit()
+        #        print(f"{total}")
+        #db.commit()
+
+        print(f"{count / total:.2%}, {count}, {total}")
+
+norm_spaces_inside()
 exit(1)
 
 def data_processing():
