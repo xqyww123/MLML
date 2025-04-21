@@ -233,8 +233,8 @@ class Isar_Base(Evaluator):
 
 class Isar_PISA(Isar_Base, PISA_Data):
 
-    def __init__(self, addr):
-        Isar_Base.__init__(self, addr)
+    def __init__(self, addr, *args, **kwargs):
+        Isar_Base.__init__(self, addr, *args, **kwargs)
         PISA_Data.__init__(self)
 
     def __exit__(self, exc_type, exc_value, traceback):
