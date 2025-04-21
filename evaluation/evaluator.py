@@ -406,21 +406,24 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
     results = {}
     lock = threading.Lock()
 
+    remaining_cases = task_queue.qsize()
     def log_state():
+        nonlocal remaining_cases
         with lock:
             success_rate = success / (total-unavailable) if total - unavailable > 0 else 0
             unavailable_rate = unavailable / total if total > 0 else 0
-            logger.info(f"Success: {success_rate:.3f}, Unavailable: {unavailable_rate:.3f}")
+            logger.info(f"Success: {success_rate:.3f}, Unavailable: {unavailable_rate:.3f}, Remaining: {remaining_cases}")
             
     # Create a task queue from all cases
     task_queue = queue.Queue()
     for case in cases:
         task_queue.put(case)
 
+
     logger.info(f"Starting {evaluator.__name__} evaluation of {len(cases)} cases. The result will be saved to {result_path}")
     with SqliteDict(result_path, autocommit=True) as db:
         def eval_server(server_addr):
-            nonlocal success, unavailable, total, results
+            nonlocal success, unavailable, total, results, remaining_cases
             while not task_queue.empty():
                 logger.info(f"Connecting to server {server_addr}")
                 try:
@@ -466,7 +469,8 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
                                     success += 1
                                 elif result.status == Status.CASE_NOT_AVAILABLE:
                                     unavailable += 1
-                                
+
+                                remaining_cases -= 1
                                 total += 1
                                 results[case.index] = result
 
