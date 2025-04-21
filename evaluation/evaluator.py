@@ -181,10 +181,12 @@ class MiniLang_AFP(MiniLang_Base, AFP_Data):
 
 class Isar_Base(Evaluator):
 
-    def __init__(self, addr):
+    def __init__(self, addr, libs=[]):
         self.addr = addr
         self.repl = Client(addr, 'HOL')
         self.repl.record_state("init")
+        if libs:
+            self.repl.add_lib(libs)
 
     def __enter__(self):
         self.repl.__enter__()
