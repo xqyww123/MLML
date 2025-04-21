@@ -215,7 +215,7 @@ class Isar_Base(Evaluator):
         except CaseNotAvailable:
             return Result(Status.CASE_NOT_AVAILABLE, None)
         try:
-            response, error = self.repl.eval(src, timeout=600000)
+            response, error = self.repl.eval(src, timeout=900000)
             if error:
                 return Result(Status.FAIL, error)
             elif response and not response[-1][3][3]:
