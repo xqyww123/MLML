@@ -3,6 +3,7 @@ import sys
 from evaluation import evaluate_and_save, Case, MiniLang_PISA, Isar_PISA, report_evaluation
 from tools.server import launch_servers
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -13,11 +14,25 @@ logging.basicConfig(
     ]
 )
 
+def clean_mash(result_path):
+    if not os.path.exists(result_path):
+        # If the result path doesn't exist, clean the mash state
+        # This helps prevent issues with cached state from previous runs
+        try:
+            logger.info("Cleaning mash state before evaluation")
+            script_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tools', 'clean_mash.sh')
+            exit_code = os.system(script_path)
+            if exit_code != 0:
+                logger.warning(f"Failed to clean mash state, exit code: {exit_code}")
+        except Exception as e:
+            logger.error(f"Error cleaning mash state: {e}")
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         match sys.argv[1]:
             case "eval-mini-pisa":
                 launch_servers()
+                clean_mash("./evaluation/minilang_pisa_result.db")
                 cases = Case.PISA_file('./evaluation/minilang_response.jsonl')
                 evaluate_and_save('./evaluation/minilang_pisa_result.db', cases, MiniLang_PISA)
                 report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
@@ -28,6 +43,7 @@ if __name__ == "__main__":
                 report_evaluation('./evaluation/minilang-no-SH_response.jsonl', './evaluation/minilang-no-SH_pisa_result.db')
             case "eval-isar-SH*-pisa":
                 launch_servers()
+                clean_mash("./evaluation/isar-SH*_pisa_result.db")
                 cases = Case.PISA_file('./evaluation/isar-SH*_response.jsonl')
                 evaluate_and_save('./evaluation/isar-SH*_pisa_result.db', cases, lambda addr: Isar_PISA(addr, libs=['Auto_Sledgehammer.Auto_Sledgehammer']))
                 report_evaluation('./evaluation/isar-SH*_response.jsonl', './evaluation/isar-SH*_pisa_result.db')
