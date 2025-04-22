@@ -217,7 +217,7 @@ class Isar_Base(Evaluator):
         except CaseNotAvailable:
             return Result(Status.CASE_NOT_AVAILABLE, None)
         try:
-            response, error = self.repl.eval(src, timeout=900000)
+            response, error = self.repl.eval(src, timeout=900000, cmd_timeout=15000)
             if error:
                 return Result(Status.FAIL, error)
             elif response and not response[-1][3][3]:
@@ -435,8 +435,11 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
                                 # Get next task from queue with timeout
                                 case : Case = task_queue.get(timeout=1)
                             except queue.Empty:
-                                # No more tasks in queue
-                                return
+                                if remaining_cases == 0:
+                                    return
+                                else:
+                                    time.sleep(1)
+                                    continue
                             
                             try:
                                 logger.info(f"Server {server_addr} evaluating {case.index}")
