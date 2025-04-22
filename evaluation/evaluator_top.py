@@ -31,14 +31,14 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         match sys.argv[1]:
             case "eval-mini-pisa":
-                launch_servers()
                 clean_mash("./evaluation/minilang_pisa_result.db")
+                launch_servers()
                 cases = Case.PISA_file('./evaluation/minilang_response.jsonl')
                 evaluate_and_save('./evaluation/minilang_pisa_result.db', cases, MiniLang_PISA)
                 report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
             case "eval-mini-no-SH-soft-pisa":
-                launch_servers()
                 clean_mash("./evaluation/minilang-no-SH-soft_pisa_result.db")
+                launch_servers()
                 cases = Case.PISA_file('./evaluation/minilang-no-SH_response.jsonl')
                 evaluate_and_save('./evaluation/minilang-no-SH-soft_pisa_result.db', cases, MiniLang_PISA)
                 report_evaluation('./evaluation/minilang-no-SH-soft_response.jsonl', './evaluation/minilang-no-SH-soft_pisa_result.db')
@@ -48,8 +48,8 @@ if __name__ == "__main__":
                 evaluate_and_save('./evaluation/minilang-no-SH_pisa_result.db', cases, MiniLang_PISA)
                 report_evaluation('./evaluation/minilang-no-SH_response.jsonl', './evaluation/minilang-no-SH_pisa_result.db')
             case "eval-isar-SH*-pisa":
-                launch_servers()
                 clean_mash("./evaluation/isar-SH*_pisa_result.db")
+                launch_servers()
                 cases = Case.PISA_file('./evaluation/isar-SH*_response.jsonl')
                 evaluate_and_save('./evaluation/isar-SH*_pisa_result.db', cases, lambda addr: Isar_PISA(addr, libs=['Auto_Sledgehammer.Auto_Sledgehammer']))
                 report_evaluation('./evaluation/isar-SH*_response.jsonl', './evaluation/isar-SH*_pisa_result.db')
