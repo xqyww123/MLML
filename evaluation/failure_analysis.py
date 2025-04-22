@@ -32,8 +32,13 @@ TYPES = {
         r'^Undefined constant',
         r'^Ill-typed instantiation'
     ],
-    'Hammer' : [
-        r'^PROOF FAIL'
+    'Proof Fail' : [
+        r'^PROOF FAIL : Proof fails and Sledgehammer is disable due to debugging',
+        r'^PROOF FAIL : Fail to apply the tactic',
+        r'^PROOF FAIL : Fail to apply the rules',
+        r'^PROOF FAIL : Timeout',
+        r'^PROOF FAIL : Fail to prove the goal',
+        r'Fail to prove the goal',
     ],
     'Syntax Error - Proof Lang - Fact Selection': [
         r'^Bad fact selection'
@@ -63,7 +68,9 @@ TYPES = {
         r'^More instantiations than variables in theorem$', 
         r'^No such variable in theorem',
         r'OF: no unifiers',
-        r'symmetric: no unifiers'
+        r'symmetric: no unifiers',
+        r'^INVALID_OPR : Incorrect number of VARS',
+        r'^Bad context for command'
     ],
     'No proof generated or incomplete proof': [
         r'^exception Empty raised',
