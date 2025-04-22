@@ -111,6 +111,8 @@ class MiniLang_Base(Evaluator):
                 return Result(Status.FAIL, "Proof not finished")
         except REPLFail as E:
             return Result(Status.FAIL, E)
+        except TimeoutError as E:
+            return Result(Status.FAIL, E)
 
     def move_to(self, file, line, column):
         file = os.path.abspath(file)
@@ -225,6 +227,8 @@ class Isar_Base(Evaluator):
             else:
                 return Result(Status.FAIL, "Proof not finished")
         except REPLFail as E:
+            return Result(Status.FAIL, E)
+        except TimeoutError as E:
             return Result(Status.FAIL, E)
 
     def reset(self):
