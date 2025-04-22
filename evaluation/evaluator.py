@@ -75,9 +75,9 @@ class Evaluator:
         raise NotImplementedError("reset must be implemented by subclass")
 
 class MiniLang_Base(Evaluator):
-    def __init__(self, addr):
+    def __init__(self, addr, *args, **kwargs):
         self.addr = addr
-        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False, timeout=900)
+        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False, timeout=900, *args, **kwargs)
         self._timeout = 900 * 1000
 
     def __enter__(self):
@@ -128,8 +128,8 @@ class MiniLang_Base(Evaluator):
 
 class MiniLang_PISA(MiniLang_Base, PISA_Data):
 
-    def __init__(self, addr):
-        MiniLang_Base.__init__(self, addr)
+    def __init__(self, addr, *args, **kwargs):
+        MiniLang_Base.__init__(self, addr, *args, **kwargs)
         PISA_Data.__init__(self)
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -158,8 +158,8 @@ class MiniLang_PISA(MiniLang_Base, PISA_Data):
     
 class MiniLang_AFP(MiniLang_Base, AFP_Data):
 
-    def __init__(self, addr):
-        MiniLang_Base.__init__(self, addr)
+    def __init__(self, addr, *args, **kwargs):
+        MiniLang_Base.__init__(self, addr, *args, **kwargs)
         AFP_Data.__init__(self)
 
     def __enter__(self):
@@ -300,8 +300,8 @@ class Isar_AFP(Isar_Base, AFP_Data):
 
 class MiniLang_MiniF2F(MiniLang_Base, MiniF2F_Data):
 
-    def __init__(self, addr):
-        MiniLang_Base.__init__(self, addr)
+    def __init__(self, addr, *args, **kwargs):
+        MiniLang_Base.__init__(self, addr, *args, **kwargs)
         MiniF2F_Data.__init__(self)
 
     def __exit__(self, exc_type, exc_value, traceback):
