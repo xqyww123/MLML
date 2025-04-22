@@ -77,8 +77,8 @@ class Evaluator:
 class MiniLang_Base(Evaluator):
     def __init__(self, addr):
         self.addr = addr
-        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False)
-        self.timeout = 900 * 1000
+        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False, timeout=900)
+        self._timeout = 900 * 1000
 
     def __enter__(self):
         if self.mini:
@@ -104,7 +104,7 @@ class MiniLang_Base(Evaluator):
         except CaseNotAvailable:
             return Result(Status.CASE_NOT_AVAILABLE, None)
         try:
-            _, finished = self.mini.eval(src, self.timeout)
+            _, finished = self.mini.eval(src, self._timeout)
             if finished:
                 return Result(Status.SUCCESS, None)
             else:
