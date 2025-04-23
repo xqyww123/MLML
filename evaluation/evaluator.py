@@ -502,6 +502,9 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
                                 results[case.index] = result
 
                             log_state()
+                            if result.status == Status.CASE_NOT_AVAILABLE:
+                                break
+
                 except ConnectionRefusedError:
                     logger.error(f"Fail to connect to {server_addr}. Retrying in 60 seconds...")
                     time.sleep(60)
