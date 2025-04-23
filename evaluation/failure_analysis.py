@@ -16,7 +16,9 @@ TYPES = {
         r'^Tactic failed',
         r'^No matching coinduction rule found'
         r'^Unable to figure out induct rule',
-        r'^exception THM 0 raised.*symmetric$'
+        r'^exception THM 0 raised.*symmetric$',
+        r'^PROOF FAIL : Fail to apply the rules',
+        r'^PROOF FAIL : Fail to apply the tactic',
     ],
     'Tactic Execution - Timeout': [r'^Timeout'],
     'Syntax Error - Undefined Fact': [r'^Undefined fact'],
@@ -34,11 +36,11 @@ TYPES = {
     ],
     'Proof Fail' : [
         r'^PROOF FAIL : Proof fails and Sledgehammer is disable due to debugging',
-        r'^PROOF FAIL : Fail to apply the tactic',
-        r'^PROOF FAIL : Fail to apply the rules',
         r'^PROOF FAIL : Timeout',
         r'^PROOF FAIL : Fail to prove the goal',
         r'Fail to prove the goal',
+        r'^timed out',
+        r'^Proof not finished'
     ],
     'Syntax Error - Proof Lang - Fact Selection': [
         r'^Bad fact selection'
@@ -69,8 +71,11 @@ TYPES = {
         r'^No such variable in theorem',
         r'OF: no unifiers',
         r'symmetric: no unifiers',
+
         r'^INVALID_OPR : Incorrect number of VARS',
-        r'^Bad context for command'
+        r'^Bad context for command',
+        r'^exception FAIL \(SOME fn\) raised',
+        r'^exception ABORT fn raised',
     ],
     'No proof generated or incomplete proof': [
         r'^exception Empty raised',
