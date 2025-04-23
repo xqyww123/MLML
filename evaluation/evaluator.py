@@ -154,7 +154,10 @@ class MiniLang_PISA(MiniLang_Base, PISA_Data):
             pos = self.proof_pos_of(index)
         except KeyError:
             raise CaseNotAvailable(index, f"MiniLang_PISA: case {index} not available")
-        self.move_to(pos.file, pos.line, pos.column)
+        try:
+            self.move_to(pos.file, pos.line, pos.column)
+        except REPLFail as E:
+            raise CaseNotAvailable(index, f"MiniLang_PISA: case {index} not available")
     
 class MiniLang_AFP(MiniLang_Base, AFP_Data):
 
@@ -181,7 +184,10 @@ class MiniLang_AFP(MiniLang_Base, AFP_Data):
             pos = self.proof_pos_of(index)
         except KeyError:
             raise CaseNotAvailable(index, f"MiniLang_AFP: case {index} not available")
-        self.move_to(pos.file, pos.line, pos.column)
+        try:
+            self.move_to(pos.file, pos.line, pos.column)
+        except REPLFail as E:
+            raise CaseNotAvailable(index, f"MiniLang_AFP: case {index} not available")
 
 class Isar_Base(Evaluator):
 
@@ -207,7 +213,7 @@ class Isar_Base(Evaluator):
 
     def move_to(self, file, line, column=0):
         self.repl.rollback("init")
-        self.repl.file (os.path.abspath(file), line, column, cache_position=True, use_cache=True)
+        self.repl.file (os.path.abspath(file), line, column, cache_position=False, use_cache=False)
     
     def reset_eval(self, src):
         self.repl.rollback("init")
@@ -259,7 +265,10 @@ class Isar_PISA(Isar_Base, PISA_Data):
 
     def start_case(self, index : int):
         pos = self.proof_pos_of(index)
-        self.move_to(pos.file, pos.line, pos.column)
+        try:
+            self.move_to(pos.file, pos.line, pos.column)
+        except REPLFail as E:
+            raise CaseNotAvailable(index, f"Isar_PISA: case {index} not available")
 
 class Isar_AFP(Isar_Base, AFP_Data):
 
@@ -283,7 +292,10 @@ class Isar_AFP(Isar_Base, AFP_Data):
 
     def start_case(self, index : Position):
         pos = self.proof_pos_of(index)
-        self.move_to(pos.file, pos.line, pos.column)
+        try:
+            self.move_to(pos.file, pos.line, pos.column)
+        except REPLFail as E:
+            raise CaseNotAvailable(index, f"Isar_AFP: case {index} not available")
 
 #if __name__ == "__main__":
 #    logger.info('self-testing')
@@ -327,7 +339,10 @@ class MiniLang_MiniF2F(MiniLang_Base, MiniF2F_Data):
             src = dataset[idx]
         except KeyError:
             raise CaseNotAvailable(f"MiniLang_MiniF2F: case {index} not available")
-        self.reset_eval(src)
+        try:
+            self.reset_eval(src)
+        except REPLFail as E:
+            raise CaseNotAvailable(f"MiniLang_MiniF2F: case {index} not available")
 
 class Isar_MiniF2F(Isar_Base, MiniF2F_Data):
 
@@ -358,7 +373,10 @@ class Isar_MiniF2F(Isar_Base, MiniF2F_Data):
             src = dataset[idx]
         except KeyError:
             raise CaseNotAvailable(f"Isar_MiniF2F: case {index} not available")
-        self.reset_eval(src)
+        try:
+            self.reset_eval(src)
+        except REPLFail as E:
+            raise CaseNotAvailable(f"Isar_MiniF2F: case {index} not available")
 
 #if __name__ == "__main__":
 #    logger.info('self-testing MiniF2F')
