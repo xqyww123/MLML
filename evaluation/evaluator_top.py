@@ -80,6 +80,8 @@ if __name__ == "__main__":
                 report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
             case 'report-mini-DS-pisa':
                 report_evaluation('./evaluation/minilang-DS_response.jsonl', './evaluation/minilang-DS_pisa_result.db')
+            case 'report-isar-SH*-DS-pisa':
+                report_evaluation('./evaluation/isar-SH*-DS_response.jsonl', './evaluation/isar-SH*-DS_pisa_result.db')
             case 'report-isar-SH*-pisa':
                 report_evaluation('./evaluation/isar-SH*_response.jsonl', './evaluation/isar-SH*_pisa_result.db')
             case 'report-isar-pisa':
