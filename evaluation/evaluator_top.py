@@ -36,6 +36,12 @@ if __name__ == "__main__":
                 cases = Case.PISA_file('./evaluation/minilang_response.jsonl')
                 evaluate_and_save('./evaluation/minilang_pisa_result.db', cases, MiniLang_PISA)
                 report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
+            case "eval-mini-DS-pisa":
+                clean_mash("./evaluation/minilang-DS_pisa_result.db")
+                launch_servers()
+                cases = Case.PISA_file('./evaluation/minilang-DS_response.jsonl')
+                evaluate_and_save('./evaluation/minilang-DS_pisa_result.db', cases, MiniLang_PISA)
+                report_evaluation('./evaluation/minilang-DS_response.jsonl', './evaluation/minilang_pisa-DS_result.db')
             case "eval-mini-hasty-pisa":
                 clean_mash("./evaluation/minilang_hasty_pisa_result.db")
                 launch_servers()
@@ -59,6 +65,12 @@ if __name__ == "__main__":
                 cases = Case.PISA_file('./evaluation/isar-SH*_response.jsonl')
                 evaluate_and_save('./evaluation/isar-SH*_pisa_result.db', cases, lambda addr: Isar_PISA(addr, libs=['Auto_Sledgehammer.Auto_Sledgehammer']))
                 report_evaluation('./evaluation/isar-SH*_response.jsonl', './evaluation/isar-SH*_pisa_result.db')
+            case "eval-isar-SH*-DS-pisa":
+                clean_mash("./evaluation/isar-SH*-DS_pisa_result.db")
+                launch_servers()
+                cases = Case.PISA_file('./evaluation/isar-SH*-DS_response.jsonl')
+                evaluate_and_save('./evaluation/isar-SH*-DS_pisa_result.db', cases, lambda addr: Isar_PISA(addr, libs=['Auto_Sledgehammer.Auto_Sledgehammer']))
+                report_evaluation('./evaluation/isar-SH*-DS_response.jsonl', './evaluation/isar-SH*-DS_pisa_result.db')
             case "eval-isar-pisa":
                 launch_servers()
                 cases = Case.PISA_file('./evaluation/isar_response.jsonl')
@@ -66,6 +78,8 @@ if __name__ == "__main__":
                 report_evaluation('./evaluation/isar_response.jsonl', './evaluation/isar_pisa_result.db')
             case 'report-mini-pisa':
                 report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
+            case 'report-mini-DS-pisa':
+                report_evaluation('./evaluation/minilang-DS_response.jsonl', './evaluation/minilang-DS_pisa_result.db')
             case 'report-isar-SH*-pisa':
                 report_evaluation('./evaluation/isar-SH*_response.jsonl', './evaluation/isar-SH*_pisa_result.db')
             case 'report-isar-pisa':
