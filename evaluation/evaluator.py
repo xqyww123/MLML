@@ -71,9 +71,6 @@ class Evaluator:
     def start_case(self, index) -> None:
         raise NotImplementedError("start_case must be implemented by subclass")
 
-    def reset(self) -> None:
-        raise NotImplementedError("reset must be implemented by subclass")
-
 class MiniLang_Base(Evaluator):
     def __init__(self, addr, *args, **kwargs):
         self.addr = addr
@@ -120,11 +117,6 @@ class MiniLang_Base(Evaluator):
 
     def reset_eval(self, src):
         self.mini.set_theory_and_goal(src)
-
-    def reset(self):
-        if self.mini:
-            self.mini.close()
-        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False)
 
 class MiniLang_PISA(MiniLang_Base, PISA_Data):
 
@@ -240,12 +232,6 @@ class Isar_Base(Evaluator):
             return Result(Status.FAIL, E)
         except TimeoutError as E:
             return Result(Status.FAIL, E)
-
-    def reset(self):
-        if self.repl:
-            self.repl.close()
-        self.repl = Client(self.addr, 'HOL')
-        self.repl.record_state("init")
 
 class Isar_PISA(Isar_Base, PISA_Data):
 
@@ -457,7 +443,7 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
 
 
     logger.info(f"Starting {evaluator.__name__} evaluation of {len(cases)} cases. The result will be saved to {result_path}")
-    with SqliteDict(result_path, autocommit=True) as db:
+    with SqliteDict(result_path) as db:
         def eval_server(server_addr):
             nonlocal success, unavailable, total, results, remaining_cases
             while not task_queue.empty():
@@ -485,14 +471,13 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
                                     try:
                                         result = test.validate(case.index, case.code)
                                         db[case.index] = result
+                                        db.commit()
                                     except REPLFail as E:
                                         logger.error(f"REPLFail error @ {case.index}: {E}")
                                         result = Result(Status.FAIL, str(E))
                                         db[case.index] = result
-                                        try:
-                                            test.reset()
-                                        except REPLFail as E:
-                                            break
+                                        db.commit()
+                                        break
                             except Exception as e:
                                 logger.error(f"Error processing case {case.index}: {str(e)}")
                                 # Put the task back in the queue to retry
