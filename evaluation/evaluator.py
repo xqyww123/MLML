@@ -506,8 +506,8 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
                                 break
 
                 except ConnectionRefusedError:
-                    logger.error(f"Fail to connect to {server_addr}. Retrying in 60 seconds...")
-                    time.sleep(60)
+                    logger.error(f"Fail to connect to {server_addr}. Retrying in 10 seconds...")
+                    time.sleep(10)
                 except Exception as e:
                     logger.error(f"Worker thread for server {server_addr} encountered an error: {str(e)}. Retrying in 10 seconds...")
                     time.sleep(10)
