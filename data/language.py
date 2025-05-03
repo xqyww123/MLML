@@ -8,7 +8,11 @@ LANGS = {
     'untyp_refined': 'Untyped Minilang + SH*',
     'untyp_raw': 'Untyped Minilang - SH*',
     'isar-SH': 'Isar-SH',
-    'isar-SH*-idt': 'Isar-SH*-idt'
+    'isar-SH*-idt': 'Isar-SH*-idt',
+    'after_split_proof': 'The intermediate lang after the translation pass of splitting proofs',
+    'before_split_proof': 'The intermediate lang before the translation pass of splitting proofs',
+    'before_elim_this_connectives': 'The intermediate lang before the translation pass of eliminating pronouns and connectives',
+    'after_elim_this_connectives': 'The intermediate lang after the translation pass of eliminating pronouns and connectives',
 }
 
 def chk_lang_supported(lang : str) -> bool:
