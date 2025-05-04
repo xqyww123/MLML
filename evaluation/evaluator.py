@@ -465,7 +465,7 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
                                 logger.info(f"Server {server_addr} evaluating {case.index}")
                                 
                                 # Check if result already exists in database
-                                if case.index in db and db[case.index].status != Status.CASE_NOT_AVAILABLE:
+                                if case.index in db: # and db[case.index].status != Status.CASE_NOT_AVAILABLE:
                                     result = db[case.index]
                                 else:
                                     try:
