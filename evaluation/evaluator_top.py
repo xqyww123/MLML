@@ -54,6 +54,11 @@ if __name__ == "__main__":
                 cases = Case.PISA_file('./evaluation/minilang-no-SH_response.jsonl')
                 evaluate_and_save('./evaluation/minilang-no-SH-soft_pisa_result.db', cases, MiniLang_PISA)
                 report_evaluation('./evaluation/minilang-no-SH-soft_response.jsonl', './evaluation/minilang-no-SH-soft_pisa_result.db')
+            case "eval-mini-DS-no-SH-pisa":
+                launch_servers()
+                cases = Case.PISA_file('./evaluation/minilang-DS-no-SH_response.jsonl')
+                evaluate_and_save('./evaluation/minilang-DS-no-SH_pisa_result.db', cases, MiniLang_PISA)
+                report_evaluation('./evaluation/minilang-DS-no-SH_response.jsonl', './evaluation/minilang-DS-no-SH_pisa_result.db')
             case "eval-mini-no-SH-pisa":
                 launch_servers()
                 cases = Case.PISA_file('./evaluation/minilang-no-SH_response.jsonl')
@@ -96,6 +101,11 @@ if __name__ == "__main__":
                 cases = Case.PISA_file('./evaluation/after_split_proof_response.jsonl')
                 evaluate_and_save('./evaluation/after_split_proof_pisa_result.db', cases, lambda addr: Isar_PISA(addr, libs=['Minilang_Translator.MS_Translator']))
                 report_evaluation('./evaluation/after_split_proof_response.jsonl', './evaluation/after_split_proof_pisa_result.db')
+            case "eval-isar-DS-pisa":
+                launch_servers()
+                cases = Case.PISA_file('./evaluation/isar-DS_response.jsonl')
+                evaluate_and_save('./evaluation/isar-DS_pisa_result.db', cases, Isar_PISA)
+                report_evaluation('./evaluation/isar-DS_response.jsonl', './evaluation/isar-DS_pisa_result.db')
             case 'report-mini-pisa':
                 report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
             case 'report-mini-DS-pisa':

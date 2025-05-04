@@ -84,7 +84,8 @@ TYPES = {
         r'^exception Empty raised',
         r'^None$'
     ],
-    'Other': [r'^exception Interrupt_Breakdown raised$']
+    'Other': [r'^exception Interrupt_Breakdown raised$'],
+    'Unknown': [r'^Some error happens']
 }
 
 
