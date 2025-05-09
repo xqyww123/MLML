@@ -76,6 +76,26 @@ if __name__ == "__main__":
                 cases = Case.PISA_file('./evaluation/isar_response.jsonl')
                 evaluate_and_save('./evaluation/isar_pisa_result.db', cases, Isar_PISA)
                 report_evaluation('./evaluation/isar_response.jsonl', './evaluation/isar_pisa_result.db')
+            case "eval-before_elim_pronouns_connectives":
+                launch_servers()
+                cases = Case.PISA_file('./evaluation/before_elim_pronouns_connectives_response.jsonl')
+                evaluate_and_save('./evaluation/before_elim_pronouns_connectives_pisa_result.db', cases, Isar_PISA)
+                report_evaluation('./evaluation/before_elim_pronouns_connectives_response.jsonl', './evaluation/before_elim_pronouns_connectives_pisa_result.db')
+            case "eval-after_elim_pronouns_connectives":
+                launch_servers()
+                cases = Case.PISA_file('./evaluation/after_elim_pronouns_connectives_response.jsonl')
+                evaluate_and_save('./evaluation/after_elim_pronouns_connectives_pisa_result.db', cases, Isar_PISA)
+                report_evaluation('./evaluation/after_elim_pronouns_connectives_response.jsonl', './evaluation/after_elim_pronouns_connectives_pisa_result.db')
+            case "eval-before_split_proof":
+                launch_servers()
+                cases = Case.PISA_file('./evaluation/before_split_proof_response.jsonl')
+                evaluate_and_save('./evaluation/before_split_proof_pisa_result.db', cases, Isar_PISA)
+                report_evaluation('./evaluation/before_split_proof_response.jsonl', './evaluation/before_split_proof_pisa_result.db')
+            case "eval-after_split_proof":
+                launch_servers()
+                cases = Case.PISA_file('./evaluation/after_split_proof_response.jsonl')
+                evaluate_and_save('./evaluation/after_split_proof_pisa_result.db', cases, lambda addr: Isar_PISA(addr, libs=['Minilang_Translator.MS_Translator']))
+                report_evaluation('./evaluation/after_split_proof_response.jsonl', './evaluation/after_split_proof_pisa_result.db')
             case 'report-mini-pisa':
                 report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
             case 'report-mini-DS-pisa':

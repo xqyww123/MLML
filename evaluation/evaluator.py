@@ -474,7 +474,7 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
                                         db.commit()
                                     except REPLFail as E:
                                         logger.error(f"REPLFail error @ {case.index}: {E}")
-                                        result = Result(Status.FAIL, str(E))
+                                        result = Result(Status.CASE_NOT_AVAILABLE, str(E))
                                         db[case.index] = result
                                         db.commit()
                                         break
