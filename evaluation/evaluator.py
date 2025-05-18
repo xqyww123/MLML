@@ -86,10 +86,10 @@ class Evaluator:
         raise NotImplementedError("start_case must be implemented by subclass")
 
 class MiniLang_Base(Evaluator):
-    def __init__(self, addr, *args, **kwargs):
+    def __init__(self, addr, timeout=500, *args, **kwargs):
         self.addr = addr
-        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False, timeout=900, *args, **kwargs)
-        self._timeout = 900 * 1000
+        self._timeout = timeout
+        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False, timeout=self._timeout, *args, **kwargs)
 
     def __enter__(self):
         if self.mini:
@@ -124,7 +124,7 @@ class MiniLang_Base(Evaluator):
             if i > 0:
                 self.mini.rollback('EVAL')
             try:
-                _, finished = self.mini.eval(code, self._timeout)
+                _, finished = self.mini.eval(code, self._timeout * 1000)
                 if finished:
                     return Result(Status.SUCCESS, errors, time.time() - start_time)
                 else:
@@ -211,9 +211,10 @@ class MiniLang_AFP(MiniLang_Base, AFP_Data):
 
 class Isar_Base(Evaluator):
 
-    def __init__(self, addr, libs=[]):
+    def __init__(self, addr, libs=[], timeout=500):
         self.addr = addr
-        self.repl = Client(addr, 'HOL')
+        self.repl = Client(addr, 'HOL', timeout=timeout)
+        self._timeout = timeout
         self.repl.record_state("init")
         if libs:
             self.repl.add_lib(libs)
@@ -254,7 +255,7 @@ class Isar_Base(Evaluator):
             if i > 0:
                 self.mini.rollback('EVAL')
             try:
-                response, error = self.repl.eval(code, timeout=900000, cmd_timeout=15000)
+                response, error = self.repl.eval(code, timeout=self._timeout * 1000, cmd_timeout=15000)
                 if error:
                     errors.append(error)
                 elif response and not response[-1][3][3]:
