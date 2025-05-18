@@ -34,17 +34,20 @@ class Status(Enum):
     CASE_NOT_AVAILABLE = "CASE_NOT_AVAILABLE"
 
 class Result:
-    def __init__(self, status : Status, error : Exception | None):
+    def __init__(self, status : Status, errors : list[Exception | str] | str | None, elapsed_time : float | None = None):
         self.status = status
-        self.error = error
+        self.errors = errors
+        self.elapsed_time = elapsed_time
 
     def __str__(self):
-        return f"{self.status} {self.error}"
+        return f"{self.status} ({self.elapsed_time}) {self.errors}"
 
 class Case:
-    def __init__(self, index, proof):
+    def __init__(self, index, code : str | list[str]):
+        if not isinstance(code, str) and not isinstance(code, list):
+            raise TypeError(f"code must be a string or a list, but got {type(code)}")
         self.index = index
-        self.code = proof
+        self.code = code
 
     @staticmethod
     def PISA_file(response_path):
@@ -65,7 +68,18 @@ class Evaluator:
     def all_cases(self): # -> enumerate[Index]:
         raise NotImplementedError("all_cases must be implemented by subclass")
 
-    def validate(self, index, src : str) -> Result:
+    def validate(self, index, proofs : str | list[str]) -> Result:
+        """
+        When proofs is a list:
+          This method evaluates the proofs sequentially from the first to the last.
+          The method returns success immediately once the first successful proof is found.
+          If the method returns after evaluating the n-th proof,
+          the returned result.errors is a list {E_i}_(i<n) containing the failure reason E_i
+          for every previous i-th proof. E_i is either a string or an exception.
+        When proofs is a string:
+          The returned result.errors is either None if the proof succeeds, or a string or exception
+          explaining why the proof fails.
+        """
         raise NotImplementedError("validate must be implemented by subclass")
     
     def start_case(self, index) -> None:
@@ -99,17 +113,27 @@ class MiniLang_Base(Evaluator):
         try:
             self.start_case(index)
         except CaseNotAvailable:
-            return Result(Status.CASE_NOT_AVAILABLE, None)
-        try:
-            _, finished = self.mini.eval(src, self._timeout)
-            if finished:
-                return Result(Status.SUCCESS, None)
-            else:
-                return Result(Status.FAIL, "Proof not finished")
-        except REPLFail as E:
-            return Result(Status.FAIL, E)
-        except TimeoutError as E:
-            return Result(Status.FAIL, E)
+            return Result(Status.CASE_NOT_AVAILABLE, "Case not available")
+        if isinstance(src, str):
+            src = [src]
+        if len(src) > 1:
+            self.mini.record('EVAL')
+        errors = []
+        start_time = time.time()
+        for i, code in enumerate(src):
+            if i > 0:
+                self.mini.rollback('EVAL')
+            try:
+                _, finished = self.mini.eval(code, self._timeout)
+                if finished:
+                    return Result(Status.SUCCESS, errors, time.time() - start_time)
+                else:
+                    errors.append("Proof not finished")
+            except REPLFail as E:
+                errors.append(E)
+            except TimeoutError as E:
+                errors.append(E)
+        return Result(Status.FAIL, errors, time.time() - start_time)
 
     def move_to(self, file, line, column):
         file = os.path.abspath(file)
@@ -219,19 +243,29 @@ class Isar_Base(Evaluator):
         try:
             self.start_case(index)
         except CaseNotAvailable:
-            return Result(Status.CASE_NOT_AVAILABLE, None)
-        try:
-            response, error = self.repl.eval(src, timeout=900000, cmd_timeout=15000)
-            if error:
-                return Result(Status.FAIL, error)
-            elif response and not response[-1][3][3]:
-                return Result(Status.SUCCESS, None)
-            else:
-                return Result(Status.FAIL, "Proof not finished")
-        except REPLFail as E:
-            return Result(Status.FAIL, E)
-        except TimeoutError as E:
-            return Result(Status.FAIL, E)
+            return Result(Status.CASE_NOT_AVAILABLE, "Case not available")
+        if isinstance(src, str):
+            src = [src]
+        if len(src) > 1:
+            self.mini.record('EVAL')
+        errors = []
+        start_time = time.time()
+        for i, code in enumerate(src):
+            if i > 0:
+                self.mini.rollback('EVAL')
+            try:
+                response, error = self.repl.eval(code, timeout=900000, cmd_timeout=15000)
+                if error:
+                    errors.append(error)
+                elif response and not response[-1][3][3]:
+                    return Result(Status.SUCCESS, errors, time.time() - start_time)
+                else:
+                    errors.append("Proof not finished")
+            except REPLFail as E:
+                errors.append(E)
+            except TimeoutError as E:
+                errors.append(E)
+        return Result(Status.FAIL, errors, time.time() - start_time)
 
 class Isar_PISA(Isar_Base, PISA_Data):
 
@@ -418,7 +452,11 @@ def report_evaluation(response_path : str, result_path : str):
         csv_writer.writerow(["index", "status", "error", "response"])
         with SqliteDict(result_path) as db:
             for key, result in db.items():
-                csv_writer.writerow([key, result.status, result.error, responses[key]])
+                try:
+                    err = '\n\n'.join(result.errors)
+                except AttributeError:
+                    err = result.error
+                csv_writer.writerow([key, result.status, err, responses[key]])
 
 def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluator): # -> Dict[Index, Result]
     # Setup shared variables with thread-safe access
