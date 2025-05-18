@@ -28,7 +28,7 @@ for server, data in SERVERS.items():
 
 
 KNOWN_TRANSLATION_TARGETS = {"origin", "isar-SH", "isar-SH*", "refined", "raw", "reord_raw", "reord_refined", 'goal',
-                            'untyp_refined', 'untyp_raw'}
+                            'untyp_refined', 'untyp_raw', 'after_desugar'}
 
 if len(sys.argv) > 1:
     translation_targets = sys.argv[1:]
@@ -71,6 +71,8 @@ def translate():
     finished_theories = 0
     total_goals = 0
     finished_goals = {}
+    # Add a lock for thread-safe counter operations
+    task_counter_lock = threading.Lock()
 
     def add_goal(ret):
         for cat in ret:
@@ -93,6 +95,7 @@ def translate():
                 continue
             all_tasks.append(line)
             total_theories += 1
+    all_task_num = len(all_tasks)
     task_queue = queue.Queue()
     for task in all_tasks:
         task_queue.put(task)
@@ -185,7 +188,7 @@ def translate():
                     logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - finished {rpath}")
 
             def worker(server):
-                nonlocal finished_theories
+                nonlocal finished_theories, all_task_num
                 while True:
                     if not test_server(server):
                         logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Server is down")
@@ -194,6 +197,8 @@ def translate():
                     try:
                         task = task_queue.get(timeout=1)
                     except queue.Empty:
+                        if all_task_num == 0:
+                            break
                         logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - No tasks available, waiting...")
                         time.sleep(60)
                         continue
@@ -227,6 +232,10 @@ def translate():
                         # Put any remaining tasks back in the queue
                         if reentry:
                             task_queue.put(task)
+                        else:
+                            # Use lock to make the decrement operation atomic
+                            with task_counter_lock:
+                                all_task_num -= 1
 
             # Create and start worker threads for each server
             threads = []

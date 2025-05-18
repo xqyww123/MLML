@@ -41,7 +41,7 @@ if __name__ == "__main__":
                 clean_mash("./evaluation/minilang-DS_pisa_result.db")
                 launch_servers()
                 cases = Case.PISA_file('./evaluation/minilang-DS_response.jsonl')
-                evaluate_and_save('./evaluation/minilang-DS_pisa_result.db', cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout = 20"))
+                evaluate_and_save('./evaluation/minilang-DS_pisa_result.db', cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout = 30"))
                 report_evaluation('./evaluation/minilang-DS_response.jsonl', './evaluation/minilang_pisa-DS_result.db')
             case "eval-mini-hasty-pisa":
                 clean_mash("./evaluation/minilang_hasty_pisa_result.db")
