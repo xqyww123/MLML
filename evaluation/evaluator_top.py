@@ -15,6 +15,7 @@ logging.basicConfig(
 )
 
 def clean_mash(result_path):
+    # Ask user if they want to clean mash state
     if not os.path.exists(result_path):
         # If the result path doesn't exist, clean the mash state
         # This helps prevent issues with cached state from previous runs
@@ -34,13 +35,13 @@ if __name__ == "__main__":
                 clean_mash("./evaluation/minilang_pisa_result.db")
                 launch_servers()
                 cases = Case.PISA_file('./evaluation/minilang_response.jsonl')
-                evaluate_and_save('./evaluation/minilang_pisa_result.db', cases, MiniLang_PISA)
+                evaluate_and_save('./evaluation/minilang_pisa_result.db', cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout = 30"))
                 report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
             case "eval-mini-DS-pisa":
                 clean_mash("./evaluation/minilang-DS_pisa_result.db")
                 launch_servers()
                 cases = Case.PISA_file('./evaluation/minilang-DS_response.jsonl')
-                evaluate_and_save('./evaluation/minilang-DS_pisa_result.db', cases, MiniLang_PISA)
+                evaluate_and_save('./evaluation/minilang-DS_pisa_result.db', cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout = 20"))
                 report_evaluation('./evaluation/minilang-DS_response.jsonl', './evaluation/minilang_pisa-DS_result.db')
             case "eval-mini-hasty-pisa":
                 clean_mash("./evaluation/minilang_hasty_pisa_result.db")
