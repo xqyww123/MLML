@@ -89,7 +89,7 @@ class MiniLang_Base(Evaluator):
     def __init__(self, addr, timeout=500, *args, **kwargs):
         self.addr = addr
         self._timeout = timeout
-        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False, timeout=self._timeout, *args, **kwargs)
+        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False, timeout=self._timeout + 20, *args, **kwargs)
 
     def __enter__(self):
         if self.mini:
@@ -213,7 +213,7 @@ class Isar_Base(Evaluator):
 
     def __init__(self, addr, libs=[], timeout=500):
         self.addr = addr
-        self.repl = Client(addr, 'HOL', timeout=timeout)
+        self.repl = Client(addr, 'HOL', timeout=timeout + 20)
         self._timeout = timeout
         self.repl.record_state("init")
         if libs:
@@ -450,14 +450,14 @@ def report_evaluation(response_path : str, result_path : str):
             responses[str(data["index"])] = data["response"]
     with open(result_path + '.csv', "w", encoding="utf-8") as f:
         csv_writer = csv.writer(f)
-        csv_writer.writerow(["index", "status", "error", "response"])
+        csv_writer.writerow(["index", "status", "elapsed time", "error", "response"])
         with SqliteDict(result_path) as db:
             for key, result in db.items():
                 try:
-                    err = '\n\n'.join(result.errors)
+                    err = '\n\n'.join([str(e) for e in result.errors])
                 except AttributeError:
                     err = result.error
-                csv_writer.writerow([key, result.status, err, responses[key]])
+                csv_writer.writerow([key, result.status, result.elapsed_time, err, responses[key]])
 
 def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluator): # -> Dict[Index, Result]
     # Setup shared variables with thread-safe access
