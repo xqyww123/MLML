@@ -117,6 +117,8 @@ if __name__ == "__main__":
                 report_evaluation('./evaluation/isar-SH*_response.jsonl', './evaluation/isar-SH*_pisa_result.db')
             case 'report-isar-pisa':
                 report_evaluation('./evaluation/isar_response.jsonl', './evaluation/isar_pisa_result.db')
+            case 'report-tmp':
+                report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang-DS_pisa_result.db.30s-500s')
             case _:
                 print("Usage: python evaluation/evaluator_top.py eval-mini-pisa|eval-isar-pisa")
                 exit()
