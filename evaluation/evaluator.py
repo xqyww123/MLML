@@ -169,6 +169,7 @@ class MiniLang_PISA(MiniLang_Base, PISA_Data):
         try:
             pos = self.proof_pos_of(index)
         except KeyError:
+            logger.error(f"Case Not Available: {index} is not in the dateset")
             raise CaseNotAvailable(index, f"MiniLang_PISA: case {index} not available")
         try:
             self.move_to(pos.file, pos.line, pos.column)
@@ -203,6 +204,7 @@ class MiniLang_AFP(MiniLang_Base, AFP_Data):
         try:
             pos = self.proof_pos_of(index)
         except KeyError:
+            logger.error(f"Case Not Available: {index} is not in the dateset")
             raise CaseNotAvailable(index, f"MiniLang_AFP: case {index} not available")
         try:
             self.move_to(pos.file, pos.line, pos.column)
@@ -293,7 +295,11 @@ class Isar_PISA(Isar_Base, PISA_Data):
         Isar_Base.close(self)
 
     def start_case(self, index : int):
-        pos = self.proof_pos_of(index)
+        try:
+            pos = self.proof_pos_of(index)
+        except KeyError:
+            logger.error(f"Case Not Available: {index} is not in the dateset")
+            raise CaseNotAvailable(index, f"Isar_PISA: case {index} not available")
         try:
             self.move_to(pos.file, pos.line, pos.column)
         except TimeoutError as E:
@@ -324,7 +330,11 @@ class Isar_AFP(Isar_Base, AFP_Data):
         Isar_Base.close(self)
 
     def start_case(self, index : Position):
-        pos = self.proof_pos_of(index)
+        try:
+            pos = self.proof_pos_of(index)
+        except KeyError:
+            logger.error(f"Case Not Available: {index} is not in the dateset")
+            raise CaseNotAvailable(index, f"Isar_AFP: case {index} not available")
         try:
             self.move_to(pos.file, pos.line, pos.column)
         except TimeoutError as E:
@@ -375,6 +385,7 @@ class MiniLang_MiniF2F(MiniLang_Base, MiniF2F_Data):
         try:
             src = dataset[idx]
         except KeyError:
+            logger.error(f"Case Not Available: {index} is not in the dateset")
             raise CaseNotAvailable(f"MiniLang_MiniF2F: case {index} not available")
         try:
             self.reset_eval(src)
@@ -413,6 +424,7 @@ class Isar_MiniF2F(Isar_Base, MiniF2F_Data):
         try:
             src = dataset[idx]
         except KeyError:
+            logger.error(f"Case Not Available: {index} is not in the dateset")
             raise CaseNotAvailable(f"Isar_MiniF2F: case {index} not available")
         try:
             self.reset_eval(src)
