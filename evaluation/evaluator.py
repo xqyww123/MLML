@@ -34,7 +34,7 @@ class Status(Enum):
     CASE_NOT_AVAILABLE = "CASE_NOT_AVAILABLE"
 
 class Result:
-    def __init__(self, status : Status, errors : list[Exception | str] | str | None, elapsed_time : float | None = None):
+    def __init__(self, status : Status, errors : list[Exception | str], elapsed_time : list[float]):
         self.status = status
         self.errors = errors
         self.elapsed_time = elapsed_time
@@ -113,27 +113,29 @@ class MiniLang_Base(Evaluator):
         try:
             self.start_case(index)
         except CaseNotAvailable:
-            return Result(Status.CASE_NOT_AVAILABLE, "Case not available")
+            return Result(Status.CASE_NOT_AVAILABLE, ["Case not available"], [])
         if isinstance(src, str):
             src = [src]
         if len(src) > 1:
             self.mini.record('EVAL')
         errors = []
-        start_time = time.time()
+        times = []
         for i, code in enumerate(src):
             if i > 0:
                 self.mini.rollback('EVAL')
             try:
+                start_time = time.time()
                 _, finished = self.mini.eval(code, self._timeout * 1000)
+                times.append(time.time() - start_time)
                 if finished:
-                    return Result(Status.SUCCESS, errors, time.time() - start_time)
+                    return Result(Status.SUCCESS, errors, times)
                 else:
                     errors.append("Proof not finished")
             except REPLFail as E:
                 errors.append(E)
             except TimeoutError as E:
                 errors.append(E)
-        return Result(Status.FAIL, errors, time.time() - start_time)
+        return Result(Status.FAIL, errors, times)
 
     def move_to(self, file, line, column):
         file = os.path.abspath(file)
@@ -250,29 +252,31 @@ class Isar_Base(Evaluator):
         try:
             self.start_case(index)
         except CaseNotAvailable:
-            return Result(Status.CASE_NOT_AVAILABLE, "Case not available")
+            return Result(Status.CASE_NOT_AVAILABLE, ["Case not available"], [])
         if isinstance(src, str):
             src = [src]
         if len(src) > 1:
             self.mini.record('EVAL')
         errors = []
-        start_time = time.time()
+        times = []
         for i, code in enumerate(src):
             if i > 0:
                 self.mini.rollback('EVAL')
             try:
+                start_time = time.time()
                 response, error = self.repl.eval(code, timeout=self._timeout * 1000, cmd_timeout=15000)
+                times.append(time.time() - start_time)
                 if error:
                     errors.append(error)
                 elif response and not response[-1][3][3]:
-                    return Result(Status.SUCCESS, errors, time.time() - start_time)
+                    return Result(Status.SUCCESS, errors, times)
                 else:
                     errors.append("Proof not finished")
             except REPLFail as E:
                 errors.append(E)
             except TimeoutError as E:
                 errors.append(E)
-        return Result(Status.FAIL, errors, time.time() - start_time)
+        return Result(Status.FAIL, errors, times)
 
 class Isar_PISA(Isar_Base, PISA_Data):
 
@@ -481,7 +485,7 @@ def report_evaluation(response_path : str, result_path : str):
                     err = '\n\n'.join([str(e) for e in result.errors])
                 except AttributeError:
                     err = result.error
-                csv_writer.writerow([key, result.status, result.elapsed_time, err, responses[key]])
+                csv_writer.writerow([key, result.status, str(result.elapsed_time), err, responses[key]])
 
 def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluator): # -> Dict[Index, Result]
     # Setup shared variables with thread-safe access
@@ -537,7 +541,7 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
                                         db.commit()
                                     except REPLFail as E:
                                         logger.error(f"REPLFail error @ {case.index}: {E}")
-                                        result = Result(Status.CASE_NOT_AVAILABLE, str(E))
+                                        result = Result(Status.CASE_NOT_AVAILABLE, [str(E)], [])
                                         db[case.index] = result
                                         db.commit()
                                         break
