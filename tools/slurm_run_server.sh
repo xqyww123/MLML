@@ -1,22 +1,40 @@
 #!/bin/bash
 
 host=$1
-numprocs=$2
-port1=6666
-port2=7777
+shift  # Remove the host argument, leaving only the port/numproc pairs
 
-set -e
-mkdir -p ./cache/repl_tmps/${host}_${port1}
-mkdir -p ./cache/repl_tmps/${host}_${port2}
+# Ensure we have an even number of arguments (port/numproc pairs)
+if [ $(($# % 2)) -ne 0 ]; then
+  echo "Error: Invalid arguments format. Expected: host port1 numproc1 port2 numproc2 ..."
+  exit 1
+fi
+
+# Create necessary directories
 source ./envir.sh
-fuser -n tcp -k $port1 || true
-fuser -n tcp -k $port2 || true
+set -e
 
-# Make cache directory path absolute
-dir1="$(realpath ./cache/repl_tmps/${host}_${port1})"
-dir2="$(realpath ./cache/repl_tmps/${host}_${port2})"
+# Process each port/numproc pair
+while [ $# -gt 0 ]; do
+  port=$1
+  numprocs=$2
+  shift 2  # Move to the next pair
+  
+  #echo "Setting up server instance on port $port with $numprocs processes"
+  
+  # Create directory for this instance
+  mkdir -p ./cache/repl_tmps/${host}_${port}
+  
+  # Kill any process using this port
+  fuser -n tcp -k $port || true
+  
+  # Make cache directory path absolute
+  dir="$(realpath ./cache/repl_tmps/${host}_${port})"
+  
+  # Start the server instance
+  MASH_STATE_PATH=$dir/mash_state ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:$port AFP-1-PISA $dir -o threads=$numprocs > $dir/log.txt 2>&1 &
+  
+  #echo "Started server on port $port"
+done
 
-./contrib/Isa-REPL/repl_server.sh 0.0.0.0:$port1 AFP-1-PISA $dir1 -o threads=$numprocs > $dir1/log.txt 2>&1 &
-./contrib/Isa-REPL/repl_server.sh 0.0.0.0:$port2 AFP-1-PISA $dir2 -o threads=$numprocs > $dir2/log.txt 2>&1 &
-
+# Wait for any child process to exit
 wait -n

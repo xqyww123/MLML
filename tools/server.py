@@ -98,7 +98,7 @@ def launch_server(server, retry=6, timeout=600):
                 f"mkdir -p ./cache/repl_tmps/{host}_{port} && " + \
                 f"source ./envir.sh && " + \
                 f"(fuser -n tcp -k {port} || true) && " + \
-                f"nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} AFP-1-PISA {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &'"
+                f"MASH_STATE_PATH={pwd}/cache/repl_tmps/{host}_{port}/mash_state nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} AFP-1-PISA {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &'"
 
             # Log the command being executed
             logger.info(f"Launching server on {host}:{port} with command: {ssh_command}")
@@ -129,7 +129,7 @@ def launch_server(server, retry=6, timeout=600):
 
         if retry > 1:
             logger.warning(f"Server on {host}:{port} failed to start after {timeout:.0f} seconds, retrying...")
-            if CLUSTER == "slurm" or CLUSTER == "slurmx" and port == "6666":
+            if CLUSTER == "slurm" or CLUSTER == "slurmx":
                 slurm.restart_job(host)
             return launch_server(server, retry-1, timeout)
         else:
@@ -226,9 +226,8 @@ class ServerSupervisor:
         else:
             logger.warning(f"Server {server} is DOWN - attempting to restart")
             if CLUSTER == "slurm" or CLUSTER == "slurmx":
-                host, port = server.split(":")
-                if port == "6666":
-                    slurm.restart_job(host)
+                host, _ = server.split(":")
+                slurm.restart_job(host)
             self._restart_server(server)
 
     def _restart_server(self, server):
@@ -276,8 +275,10 @@ def launch_servers():
             logger.info("Running servers for SLURMX...")
             server_names = {}
             for server, info in SERVERS.items():
-                host, _ = server.split(":")
-                server_names[host] = info["numprocs"]
+                host, port = server.split(":")
+                if host not in server_names:
+                    server_names[host] = []
+                server_names[host].append((port, info["numprocs"]))
             print(server_names)
             slurm.run_servers(server_names) # The only difference from slurm is `run_servers` instead of `alloc_servers`
             time.sleep(15)
