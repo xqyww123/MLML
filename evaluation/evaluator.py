@@ -256,12 +256,12 @@ class Isar_Base(Evaluator):
         if isinstance(src, str):
             src = [src]
         if len(src) > 1:
-            self.mini.record('EVAL')
+            self.repl.record_state('EVAL')
         errors = []
         times = []
         for i, code in enumerate(src):
             if i > 0:
-                self.mini.rollback('EVAL')
+                self.repl.rollback('EVAL')
             try:
                 start_time = time.time()
                 response, error = self.repl.eval(code, timeout=self._timeout * 1000, cmd_timeout=15000)
