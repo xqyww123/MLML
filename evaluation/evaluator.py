@@ -170,6 +170,9 @@ class MiniLang_PISA(MiniLang_Base, PISA_Data):
         """
         try:
             pos = self.proof_pos_of(index)
+        except CaseNotAvailable:
+            logger.error(f"Case Not Available: {index} AAAAAA")
+            raise
         except KeyError:
             logger.error(f"Case Not Available: {index} is not in the dateset")
             raise CaseNotAvailable(index, f"MiniLang_PISA: case {index} not available")
