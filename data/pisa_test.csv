@@ -389,7 +389,7 @@ and   ""A \<parallel> (B \<union> C) = A \<parallel> B \<union> A \<parallel> C"
 102,./contrib/afp-2025-02-12/thys/Group-Ring-Module/Algebra4.thy:4542:1,./contrib/afp-2025-02-12/thys/Group-Ring-Module/Algebra4.thy:4544:1,"lemma set_r_ar_cos_ker:""\<lbrakk>Ring A; Ring R; f \<in> rHom A R \<rbrakk> \<Longrightarrow>
                      set_rcs (b_ag A) (ker\<^bsub>A,R\<^esub> f) = set_ar_cos A (ker\<^bsub>A,R\<^esub> f)""
 "
-103,./contrib/afp-2025-02-12/thys/Auto2_Imperative_HOL/Imperative/RBTree_Impl.thy:221:1,./contrib/afp-2025-02-12/thys/Auto2_Imperative_HOL/Imperative/RBTree_Impl.thy:225:2,"lemma balance_to_fun [hoare_triple]:
+103,./contrib/afp-2025-02-12/thys/Auto2_Imperative_HOL/Imperative/RBTree_Impl.thy:221:1,./contrib/afp-2025-02-12/thys/Auto2_Imperative_HOL/Imperative/RBTree_Impl.thy:225:1,"lemma balance_to_fun [hoare_triple]:
   ""<btree (rbt.Node l B k v r) p>
    btree_balance p
    <btree (balance l k v r)>""
@@ -2674,7 +2674,7 @@ shows ""phi (xs,s) A P""
   assumes ""b \<in> orbit f a"" ""a \<in> orbit f a"" ""a \<noteq> b""
   shows ""funpow_dist1 f a b < funpow_dist1 f a (f b)""
   "
-740,./contrib/afp-2025-02-12/thys/Auto2_Imperative_HOL/Imperative/RBTree_Impl.thy:109:1,./contrib/afp-2025-02-12/thys/Auto2_Imperative_HOL/Imperative/RBTree_Impl.thy:111:2,"lemma get_color_rule [hoare_triple]:
+740,./contrib/afp-2025-02-12/thys/Auto2_Imperative_HOL/Imperative/RBTree_Impl.thy:109:1,./contrib/afp-2025-02-12/thys/Auto2_Imperative_HOL/Imperative/RBTree_Impl.thy:111:1,"lemma get_color_rule [hoare_triple]:
   ""<btree t p> get_color p <\<lambda>r. btree t p * \<up>(r = rbt.cl t)>""
 @"
 741,./contrib/afp-2025-02-12/thys/Polynomials/OAlist_Poly_Mapping.thy:412:1,./contrib/afp-2025-02-12/thys/Polynomials/OAlist_Poly_Mapping.thy:415:1,"lemma compute_min_key_val_ko_ntm [code]:
@@ -5589,7 +5589,7 @@ shows ""good X""
   "
 1543,./contrib/afp-2025-02-12/thys/Special_Function_Bounds/Sin_Cos_Bounds.thy:65:1,./contrib/afp-2025-02-12/thys/Special_Function_Bounds/Sin_Cos_Bounds.thy:66:3,"lemma sinpoly_Suc: ""sinpoly (Suc n) = (\<lambda>x. sinpoly n x + sin_coeff n * x ^ n)""
   "
-1544,./contrib/afp-2025-02-12/thys/Auto2_Imperative_HOL/Functional/RBTree.thy:425:1,./contrib/afp-2025-02-12/thys/Auto2_Imperative_HOL/Functional/RBTree.thy:429:2,"lemma del_bd [forward_arg]:
+1544,./contrib/afp-2025-02-12/thys/Auto2_Imperative_HOL/Functional/RBTree.thy:425:1,./contrib/afp-2025-02-12/thys/Auto2_Imperative_HOL/Functional/RBTree.thy:429:1,"lemma del_bd [forward_arg]:
   ""bd_inv t \<Longrightarrow> cl_inv t \<Longrightarrow> bd_inv (del x t) \<and> (
     if cl t = R then black_depth (del x t) = black_depth t
     else black_depth (del x t) = black_depth t - 1)""
