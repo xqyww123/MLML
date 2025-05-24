@@ -125,7 +125,7 @@ class MiniLang_Base(Evaluator):
                 self.mini.rollback('EVAL')
             try:
                 start_time = time.time()
-                _, finished = self.mini.eval(code, self._timeout * 1000)
+                _, finished = self.mini.eval(code, self._timeout * 1000, timeout_cmd=5000)
                 times.append(time.time() - start_time)
                 if finished:
                     return Result(Status.SUCCESS, errors, times)
@@ -535,7 +535,7 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
                                 logger.info(f"Server {server_addr} evaluating {case.index}")
                                 
                                 # Check if result already exists in database
-                                if case.index in db: # and db[case.index].status != Status.CASE_NOT_AVAILABLE:
+                                if case.index in db and db[case.index].status != Status.CASE_NOT_AVAILABLE:
                                     result = db[case.index]
                                 else:
                                     try:
