@@ -86,10 +86,10 @@ class Evaluator:
         raise NotImplementedError("start_case must be implemented by subclass")
 
 class MiniLang_Base(Evaluator):
-    def __init__(self, addr, timeout=500, *args, **kwargs):
+    def __init__(self, addr, timeout=500, connection_timeout=1200, *args, **kwargs):
         self.addr = addr
         self._timeout = timeout
-        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False, timeout=self._timeout + 20, *args, **kwargs)
+        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False, timeout=max(connection_timeout, timeout + 20), *args, **kwargs)
 
     def __enter__(self):
         if self.mini:
@@ -222,9 +222,9 @@ class MiniLang_AFP(MiniLang_Base, AFP_Data):
 
 class Isar_Base(Evaluator):
 
-    def __init__(self, addr, libs=[], timeout=500):
+    def __init__(self, addr, libs=[], timeout=500, connection_timeout=1200):
         self.addr = addr
-        self.repl = Client(addr, 'HOL', timeout=timeout + 20)
+        self.repl = Client(addr, 'HOL', timeout=max(connection_timeout, timeout + 20))
         self._timeout = timeout
         self.repl.record_state("init")
         if libs:
