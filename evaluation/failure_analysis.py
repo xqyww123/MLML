@@ -89,7 +89,7 @@ TYPES = {
 }
 
 
-def analyze_failure(result_path : str, response_path : str, model_name : str, max_length : int):
+def analyze_failure(result_path : str, response_path : str, model_name : str, max_length : int, counts = None):
 
     responses = {}
     with open(response_path, "r", encoding="utf-8") as f:
@@ -98,13 +98,11 @@ def analyze_failure(result_path : str, response_path : str, model_name : str, ma
             responses[str(data["index"])] = data
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    def length_of(response):
-        ret = len(tokenizer.encode(response['response'])) + len(tokenizer.encode(response['prelude'])) + len(tokenizer.encode(response['goal']))
-        return ret
 
-
-    counts = {}
+    if counts is None:
+        counts = {}
     total = 0
+    case_num = 0
     def count_cat(cat):
         nonlocal counts
         try:
@@ -119,51 +117,78 @@ def analyze_failure(result_path : str, response_path : str, model_name : str, ma
 
     with SqliteDict(result_path) as db:
         for key, result in db.items():
+            if result.status == Status.FAIL or result.status == Status.SUCCESS:
+                case_num += 1
             #length = length_of(responses[key])
             #if length >= 4000:
             #    #print(f"----------------------------------\n[{key}] Length: {length}\n{tokenizer.encode(responses[key])}")
             #    print(f"[{key}] Length: {length}")
             #continue
-            if result.status == Status.FAIL:
-                err = str(result.error)
-                total += 1
-                find_reason = 0
-                found_cats = set()
-                for failure_type, patterns in TYPES.items():
-                    for pattern in patterns:
-                        mat = re.search(pattern, err)
-                        if mat:
-                            find_reason += 1
-                            # Check if the match object has a group 1
-                            if 'Tactic Execution - Fails' in failure_type and len(mat.groups()) >= 1:
-                                line_number = int(mat.group(1))
-                                line = responses[key]['response'].split('\n')[line_number - 1].strip()
-                                if 'auto_sledgehammer' in line:
-                                    count_cats('Hammer Fail')
-                                    found_cats.add('Hammer Fail')
+            errs = result.errors
+            responss = responses[key]['response']
+            prelude = responses[key]['prelude']
+            goal = responses[key]['goal']
+            prelude_len = len(tokenizer.encode(prelude))
+            goal_len = len(tokenizer.encode(goal))
+            if not isinstance(errs, list):
+                errs = [errs]
+            if not isinstance(responss, list):
+                responss = [responss]
+
+            def length_of(response):
+                ret = len(tokenizer.encode(response)) + prelude_len + goal_len
+                return ret
+
+            if result.status == Status.FAIL or len(errs) > 1:
+                for err, response in zip(errs, responss):
+                    err = str(err)
+                    total += 1
+                    find_reason = 0
+                    found_cats = set()
+                    # if length_of(response) >= max_length:
+                    #     count_cats('Exceeds Window')
+                    #     found_cats.add('Exceeds Window')
+                    #     continue
+                    for failure_type, patterns in TYPES.items():
+                        for pattern in patterns:
+                            mat = re.search(pattern, err)
+                            if mat:
+                                find_reason += 1
+                                # Check if the match object has a group 1
+                                if failure_type.startswith('Syntax Error - Proof Lang') and length_of(response) >= max_length:
+                                    count_cats('Exceeds Window')
+                                    found_cats.add('Exceeds Window')
+                                    continue
+                                elif 'Tactic Execution - Fails' in failure_type and len(mat.groups()) >= 1:
+                                    line_number = int(mat.group(1))
+                                    line = response.split('\n')[line_number - 1].strip()
+                                    if 'auto_sledgehammer' in line:
+                                        count_cats('Hammer Fail')
+                                        found_cats.add('Hammer Fail')
+                                    else:
+                                        count_cats(failure_type + ' - ' + str(pattern))
+                                        found_cats.add(failure_type + ' - ' + str(pattern))
                                 else:
                                     count_cats(failure_type + ' - ' + str(pattern))
                                     found_cats.add(failure_type + ' - ' + str(pattern))
-                            else:
-                                count_cats(failure_type + ' - ' + str(pattern))
-                                found_cats.add(failure_type + ' - ' + str(pattern))
-                            break
-                if re.search(r'^exception FAIL \(SOME fn\) raised', err) or re.search(r'^exception ABORT fn raised', err) or re.search(r'^Proof not finished', err):
-                    find_reason += 1
-                    if length_of(responses[key]) >= max_length:
-                        count_cats('Exceeds Window')
-                        found_cats.add('Exceeds Window')
-                    else:
-                        count_cats(r'Syntax Error - Proof Lang - ^exception FAIL \(SOME fn\) raised | ^exception ABORT fn raised | ^Proof not finished')
-                        found_cats.add(r'Syntax Error - Proof Lang - ^exception FAIL \(SOME fn\) raised | ^exception ABORT fn raised | ^Proof not finished')
+                                break
+                    if re.search(r'^exception FAIL \(SOME fn\) raised', err) or re.search(r'^exception ABORT fn raised', err) or re.search(r'^Proof not finished', err):
+                        find_reason += 1
+                        if length_of(response) >= max_length:
+                            count_cats('Exceeds Window')
+                            found_cats.add('Exceeds Window')
+                        else:
+                            count_cats(r'Syntax Error - Proof Lang - ^exception FAIL \(SOME fn\) raised | ^exception ABORT fn raised | ^Proof not finished')
+                            found_cats.add(r'Syntax Error - Proof Lang - ^exception FAIL \(SOME fn\) raised | ^exception ABORT fn raised | ^Proof not finished')
 
-                if find_reason == 0:
-                    count_cats('Unknown')
-                    print(f"[{key}] Unknown failure: {err}")
-                elif find_reason > 1:
-                    print(f"[{key}] Multiple failure types ({find_reason}): {err}\n{found_cats}\n")
+                    if find_reason == 0:
+                        count_cats('Unknown')
+                        print(f"[{key}] Unknown failure: {err}")
+                    elif find_reason > 1:
+                        print(f"[{key}] Multiple failure types ({find_reason}): {err}\n{found_cats}\n")
     for cat, count in sorted(list(counts.items()), key=lambda x: x[0]):
         print(f"{cat}: {count / total * 100:.3f}%, {count}")
+    return total, case_num
 
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
