@@ -11,7 +11,7 @@ else:
         "tasks/Baldur/results/minilang-DS_pisa_result.db",
         "tasks/Baldur/results/minilang-DS_response.jsonl",
         "reasonwang/deepseek-prover-minilang",
-        4022,
+        4040,
         minilang_count
     )
 
@@ -19,7 +19,7 @@ else:
         "tasks/Baldur/results/minilang_pisa_result.db",
         "tasks/Baldur/results/minilang_response.jsonl",
         "EleutherAI/llemma_7b",
-        4022,
+        4040,
         minilang_count
     )
 
@@ -37,7 +37,7 @@ else:
         "tasks/Baldur/results/isar-SH*-DS_pisa_result.db",
         "tasks/Baldur/results/isar-SH*-DS_response.jsonl",
         "reasonwang/deepseek-prover-isar",
-        4020,
+        4040,
         isar_count
     )
 
@@ -45,7 +45,7 @@ else:
         "tasks/Baldur/results/isar-SH*_pisa_result.db",
         "tasks/Baldur/results/isar-SH*_response.jsonl",
         "EleutherAI/llemma_7b",
-        4020,
+        4040,
         isar_count
     )
     isar_total = isar_total1 + isar_total2
@@ -54,6 +54,56 @@ else:
     with open("tasks/Baldur/isar_errors.json", "w") as f:
         json.dump((isar_total, isar_count, isar_case_num), f)
 
+# if os.path.exists("tasks/Baldur/minilang_errors-no-SH.json"):
+#     (minilang_total, minilang_count, minilang_case_num) = json.load(open("tasks/Baldur/minilang_errors-no-SH.json"))
+# else:
+#     minilang_count = {}
+#     minilang_total1, minilang_case_num1 = fa.analyze_failure(
+#         "tasks/Baldur/results/minilang-DS-no-SH_pisa_result.db",
+#         "tasks/Baldur/results/minilang-DS_response.jsonl",
+#         "reasonwang/deepseek-prover-minilang",
+#         4022,
+#         minilang_count
+#     )
+# 
+#     minilang_total2, minilang_case_num2 = fa.analyze_failure(
+#         "tasks/Baldur/results/minilang-no-SH_pisa_result.db",
+#         "tasks/Baldur/results/minilang-no-SH_response.jsonl",
+#         "EleutherAI/llemma_7b",
+#         4022,
+#         minilang_count
+#     )
+# 
+#     minilang_total = minilang_total1 + minilang_total2
+#     minilang_case_num = minilang_case_num1 + minilang_case_num2
+#     print(minilang_total)
+#     with open("tasks/Baldur/minilang_errors.json", "w") as f:
+#         json.dump((minilang_total, minilang_count, minilang_case_num), f)
+# 
+# if os.path.exists("tasks/Baldur/isar_errors-no-SH.json"):
+#     (isar_total, isar_count, isar_case_num) = json.load(open("tasks/Baldur/isar_errors-no-SH.json"))
+# else:
+#     isar_count = {}
+#     isar_total1, isar_case_num1 = fa.analyze_failure(
+#         "tasks/Baldur/results/isar-DS_pisa_result.db",
+#         "tasks/Baldur/results/isar-DS_response.jsonl",
+#         "reasonwang/deepseek-prover-isar",
+#         4020,
+#         isar_count
+#     )
+# 
+#     isar_total2, isar_case_num2 = fa.analyze_failure(
+#         "tasks/Baldur/results/isar_pisa_result.db",
+#         "tasks/Baldur/results/isar_response.jsonl",
+#         "EleutherAI/llemma_7b",
+#         4020,
+#         isar_count
+#     )
+#     isar_total = isar_total1 + isar_total2
+#     isar_case_num = isar_case_num1 + isar_case_num2
+#     print(isar_total)
+#     with open("tasks/Baldur/isar_errors-no-SH.json", "w") as f:
+#         json.dump((isar_total, isar_count, isar_case_num), f)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -71,15 +121,18 @@ plt.rcParams.update({'ytick.labelsize': 14})  # y轴刻度标签
 plt.rcParams.update({'legend.fontsize': 14})  # 图例
 
 keys = [["Hammer Fail"], ["Tactic Execution"], ["Syntax Error - Term Lang"],
-        ["Syntax Error - Undefined Fact"], ["Exceeds Window", "Unknown"], ["Syntax Error - Proof Lang"]]
+        ["Syntax Error - Undefined Fact"], ["Syntax Error - Proof Lang"], ["Exceeds Window"], ["Unknown"]]
 def get_key(key, set):
     ret = 0
     for k in key:
-        ret += set[k]
+        try:
+            ret += set[k]
+        except KeyError:
+            pass
     return ret
 values_minilang = [get_key(key, minilang_count) / minilang_case_num * 100 for key in keys]
 values_isar = [get_key(key, isar_count) / isar_case_num * 100 for key in keys]
-texts = ["Hammer Fails", "Operation Fails", "Term Lang", "Undefined Lemma", "Other", "Proof Lang"]
+texts = ["Hammer Fails", "Operation Fails", "Term Lang", "Undefined Lemma", "Proof Lang", "Window Overflow", "Other"]
 
 y = np.arange(len(keys))
 trunc_high = 16.0  # 截断值
@@ -129,7 +182,7 @@ ax_low.set_xticks([0, 1, 2, 3, 4, 5])
 ax_low.set_xticklabels(['0%', '1%', '2%', '3%', '4%', '5%'])
 
 # 在 A 类条形末端添加省略号
-ax_low.text(trunc_low + 0.35, y[0], '...', va='center', ha='right')  # 增大省略号字体
+#ax_low.text(trunc_low + 0.35, y[0], '...', va='center', ha='right')  # 增大省略号字体
 
 # 高区间子图：仅显示 A 的截断后部分 (450–max)，同样错开显示
 for i in range(len(values_minilang_high)):
@@ -184,8 +237,8 @@ for i, text in enumerate(texts):
         label_x = max_length_low + 5  # 向右偏移5个单位
         label_y = y[i]  # 垂直居中
         label_text = f"{text} (M={values_minilang[i]:.1f}%, I={values_isar[i]:.1f}%)"
-        if i in [4,5]:
-            ax_high.text(13, label_y, label_text, va='center', ha='left')
+        if i in [4,5,6]:
+            ax_high.text(13.5, label_y, label_text, va='center', ha='left')
         elif values_minilang[i] >= 15.0:
             ax_low.text(0.2, label_y, label_text, va='center', ha='left')
         else:
@@ -212,5 +265,5 @@ for i, text in enumerate(texts):
 
 # 移除 tight_layout，它会覆盖我们的间距设置
 # plt.tight_layout()
-plt.subplots_adjust(left=0.02, right=0.99, top=0.975, bottom=0.12)  # 手动调整边距
+plt.subplots_adjust(left=0.02, right=0.99, top=0.975, bottom=0.12, wspace=0)  # 手动调整边距
 plt.show()

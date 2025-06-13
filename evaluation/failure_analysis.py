@@ -124,7 +124,13 @@ def analyze_failure(result_path : str, response_path : str, model_name : str, ma
             #    #print(f"----------------------------------\n[{key}] Length: {length}\n{tokenizer.encode(responses[key])}")
             #    print(f"[{key}] Length: {length}")
             #continue
-            errs = result.errors
+            try:
+                errs = result.errors
+            except AttributeError:
+                if result.error is None:
+                    errs = []
+                else:
+                    errs = [result.error]
             responss = responses[key]['response']
             prelude = responses[key]['prelude']
             goal = responses[key]['goal']
@@ -161,6 +167,11 @@ def analyze_failure(result_path : str, response_path : str, model_name : str, ma
                                     continue
                                 elif 'Tactic Execution - Fails' in failure_type and len(mat.groups()) >= 1:
                                     line_number = int(mat.group(1))
+                                    lines = response.split('\n')
+                                    if line_number > len(lines):
+                                        #count_cats('Hammer Fail')
+                                        #found_cats.add('Hammer Fail')
+                                        continue
                                     line = response.split('\n')[line_number - 1].strip()
                                     if 'auto_sledgehammer' in line:
                                         count_cats('Hammer Fail')

@@ -9771,9 +9771,6 @@ shows ""sameDom inp (lift2 f inp1' inp1) = sameDom inp inp1'""
   assumes ""bo \<le> vimage2p h h (=)""
   shows ""blinding_of_tree h bo \<le> vimage2p (hash_tree h) (hash_tree h) (=)""
   "
-2659,./contrib/afp-2025-02-12/thys/Core_SC_DOM/safely_composable/pointers/ShadowRootPointer.thy:174:1,./contrib/afp-2025-02-12/thys/Core_SC_DOM/safely_composable/pointers/ShadowRootPointer.thy:176:3,"lemma is_shadow_root_ptr_kind_cast [simp]:
-  ""is_shadow_root_ptr_kind (cast\<^sub>s\<^sub>h\<^sub>a\<^sub>d\<^sub>o\<^sub>w\<^sub>_\<^sub>r\<^sub>o\<^sub>o\<^sub>t\<^sub>_\<^sub>p\<^sub>t\<^sub>r\<^sub>2\<^sub>d\<^sub>o\<^sub>c\<^sub>u\<^sub>m\<^sub>e\<^sub>n\<^sub>t\<^sub>_\<^sub>p\<^sub>t\<^sub>r shadow_root_ptr)""
-  "
 2660,./contrib/afp-2025-02-12/thys/Certification_Monads/Check_Monad.thy:196:1,./contrib/afp-2025-02-12/thys/Certification_Monads/Check_Monad.thy:196:84,"lemma or_is_or[simp]: ""isOK (or_ok a b) \<longleftrightarrow> isOK a \<or> isOK b"" "
 2662,./contrib/afp-2025-02-12/thys/Coinductive/Coinductive_List.thy:4919:1,./contrib/afp-2025-02-12/thys/Coinductive/Coinductive_List.thy:4921:1,"lemma lfinite_lnths [simp]:
   ""lfinite (lnths xs A) \<longleftrightarrow> lfinite xs \<or> finite A""
