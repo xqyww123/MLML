@@ -14,3 +14,4 @@ config/evaluation_servers.csv
 shell.log
 data/translation/declarations.db
 data/translation/results.db
+.venv

@@ -41,7 +41,7 @@ def parse_args():
         required=False,
         metavar='model',
         help='The model name of the LLM model, tpyically EleutherAI/llemma_7b or deepseek-ai/DeepSeek-Prover-V1.5-Base',
-        default='deepseek-ai/DeepSeek-Prover-V1.5-Base'
+        default='anonymous6435/deepseek-prover-minilang'
     )
 
     return parser.parse_args()
@@ -59,27 +59,52 @@ def count_tokens(text, model_name):
 
 def gen_request(c : Client, source : str, file_name : str, model_name : str) -> list:
     tokenizer = AutoTokenizer.from_pretrained(model_name)
+    def count_tokens(text):
+        tokens = tokenizer.encode(text)
+        return len(tokens)
 
     ret = []
     cmds = c.lex(source)
     preludes = []
+    parent_preludes = []
+    dir = os.path.dirname(file_name)
 
-    def get_prelude() :
+    for (_, src) in cmds:
+        if src.startswith('theory'):
+            _, imports, _ = c.parse_thy_header(src)
+            for i in imports:
+                path = c.path_of_theory(i, dir)
+                with open(path, 'r') as f:
+                    for (_, src) in c.lex(f.read()):
+                        parent_preludes.append((src, count_tokens(src)))
+
+    def get_prelude(sum) :
         n = len(preludes) - 1
-        sum = 0
         while n >= 0 and sum + preludes[n][1] <= 2000:
-            sum += preludes[n][1]
+            sum += preludes[n][1] + 1
             n -= 1
-        return '\n'.join ([p[0] for p in preludes[n + 1 :]])
+        first_prelude = '\n'.join ([p[0] for p in preludes[n + 1 :]])
+        #print(f"TOKEN USAGE 111: {sum}")
+        if n < 0:
+            n = len(parent_preludes) - 1
+            while n >= 0 and sum + parent_preludes[n][1] <= 2000:
+                sum += parent_preludes[n][1] + 1
+                n -= 1
+            second_prelude = '\n'.join ([p[0] for p in parent_preludes[n + 1 :]]) + '\n'
+        else:
+            second_prelude = ''
+        print(f"TOKEN USAGE: {sum}")
+        return second_prelude + first_prelude
 
-    for i, (pos, src) in enumerate(cmds):
+    for i, (_, src) in enumerate(cmds):
         if (src.startswith('lemma ') or src.startswith('theorem ') or src.startswith('corollary ') or
             src.startswith('schematic_goal ') or src.startswith('proposition ')) and \
             i < len(cmds) - 1 and \
             cmds[i + 1][1].startswith('sorry'):
+            pos = cmds[i + 1][0]
             ret.append({
                 'index': f"{file_name}:{pos.line}",
-                'prelude': get_prelude(),
+                'prelude': get_prelude(count_tokens(src)),
                 'goal': src
             })
         else:
@@ -108,6 +133,7 @@ if __name__ == "__main__":
     
     with Client(args.address, 'HOL') as c:
         for file_name in thy_files:
+            print(f"Processing {file_name}")
             with open(file_name, 'r') as f:
                 source = f.read()
             ret.extend(gen_request(c, source, file_name, args.model))

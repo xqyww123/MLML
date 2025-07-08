@@ -50,7 +50,7 @@ class Case:
         self.code = code
 
     @staticmethod
-    def PISA_file(response_path):
+    def jsonl(response_path):
         ret = []
         with open(response_path, "r", encoding="utf-8") as f: 
                 for line in f:
@@ -220,6 +220,28 @@ class MiniLang_AFP(MiniLang_Base, AFP_Data):
             logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
             raise CaseNotAvailable(index, f"MiniLang_AFP: case {index} not available")
 
+class MiniLang(MiniLang_Base):
+
+    def start_case(self, index : str):
+        """
+        index is a string of format <file>:<line>:[column]
+        """
+        match index.split(':'):
+            case (file, line, column):
+                pass
+            case (file, line):
+                column = 0
+            case _:
+                raise ValueError(f"Invalid index: {index}")
+        try:
+            self.move_to(file, int(line), int(column))
+        except TimeoutError as E:
+            logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
+            raise CaseNotAvailable(index, f"MiniLang: case {index} not available")
+        except REPLFail as E:
+            logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
+            raise CaseNotAvailable(index, f"MiniLang: case {index} not available")
+
 class Isar_Base(Evaluator):
 
     def __init__(self, addr, libs=[], timeout=500, connection_timeout=1200):
@@ -350,6 +372,28 @@ class Isar_AFP(Isar_Base, AFP_Data):
         except REPLFail as E:
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
             raise CaseNotAvailable(index, f"Isar_AFP: case {index} not available")
+
+class Isar(Isar_Base):
+
+    def start_case(self, index : str):
+        """
+        index is a string of format <file>:<line>:[column]
+        """
+        match index.split(':'):
+            case (file, line, column):
+                pass
+            case (file, line):
+                column = 0
+            case _:
+                raise ValueError(f"Invalid index: {index}")
+        try:
+            self.move_to(file, int(line), int(column))
+        except TimeoutError as E:
+            logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
+            raise CaseNotAvailable(index, f"Isar: case {index} not available")
+        except REPLFail as E:
+            logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
+            raise CaseNotAvailable(index, f"Isar: case {index} not available")
 
 #if __name__ == "__main__":
 #    logger.info('self-testing')
