@@ -61,6 +61,7 @@ SERVERS = CFG_SERVERS.copy()
 
 # Read the cluster configuration from environment variable, default to 'local' if not set
 CLUSTER = os.getenv("CLUSTER", "ssh")
+BASE_SESSION = os.getenv("SESSION", "AFP-1-PISA")
 
 def test_server(addr, timeout_retry=6):
     try:
@@ -94,11 +95,11 @@ def launch_server(server, retry=6, timeout=600):
             # Construct the SSH command to launch the REPL server
             # ./contrib/Isa-REPL/repl_server_watch_dog.sh 0.0.0.0:6666 HOL /tmp/repl_outputs -o threads=32
             numprocs = SERVERS[server]["numprocs"]
-            ssh_command = f"ssh {host} 'cd {pwd} && " + \
+            ssh_command = f"ssh {host} \"bash -lc \'cd {pwd} && " + \
                 f"mkdir -p ./cache/repl_tmps/{host}_{port} && " + \
                 f"source ./envir.sh && " + \
                 f"(fuser -n tcp -k {port} || true) && " + \
-                f"MASH_STATE_PATH={pwd}/cache/repl_tmps/{host}_{port}/mash_state nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} AFP-1-PISA {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &'"
+                f"MASH_STATE_PATH={pwd}/cache/repl_tmps/{host}_{port}/mash_state nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} {BASE_SESSION} {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &\'\""
 
             # Log the command being executed
             logger.info(f"Launching server on {host}:{port} with command: {ssh_command}")

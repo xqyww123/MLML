@@ -1,6 +1,6 @@
 #!/bin/env python3
 import sys
-from evaluation import evaluate_and_save, Case, MiniLang_PISA, Isar_PISA, report_evaluation
+from evaluation import evaluate_and_save, Case, MiniLang_PISA, Isar_PISA, report_evaluation, MiniLang, Isar
 from tools.server import launch_servers
 import logging
 import os
@@ -38,6 +38,8 @@ if __name__ == "__main__":
                 proof_jsonl = sys.argv[2]
                 result_db = sys.argv[3]
                 cases = Case.jsonl(proof_jsonl)
+                clean_mash(result_db)
+                launch_servers()
                 evaluate_and_save(result_db, cases, MiniLang)
                 report_evaluation(proof_jsonl, result_db)
             case 'isar':
@@ -47,6 +49,8 @@ if __name__ == "__main__":
                 proof_jsonl = sys.argv[2]
                 result_db = sys.argv[3]
                 cases = Case.jsonl(proof_jsonl)
+                clean_mash(result_db)
+                launch_servers()
                 evaluate_and_save(result_db, cases, Isar)
                 report_evaluation(proof_jsonl, result_db)
             case "eval-mini-pisa":
