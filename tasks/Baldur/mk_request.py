@@ -102,9 +102,13 @@ def gen_request(c : Client, source : str, file_name : str, model_name : str) -> 
             i < len(cmds) - 1 and \
             cmds[i + 1][1].startswith('sorry'):
             pos = cmds[i + 1][0]
+            src_tokens = count_tokens(src)
+            if src_tokens > 4000:
+                print(f"Warning: {file_name}:{pos.line} has {src_tokens} tokens, which is greater than 4000. Skipping...")
+                continue
             ret.append({
                 'index': f"{file_name}:{pos.line}",
-                'prelude': get_prelude(count_tokens(src)),
+                'prelude': get_prelude(src_tokens),
                 'goal': src
             })
         else:

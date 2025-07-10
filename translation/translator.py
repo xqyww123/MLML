@@ -147,13 +147,14 @@ def translate():
                                     c.cout.flush()
                                 case (2, pos_spec, pos_prf, ret):
                                     total_goals += 1
+                                    spec_offset = pos_spec[1]
                                     pos_spec = encode_pos(pos_spec)
-                                    pos_prf = encode_pos(pos_prf)
+                                    pos_prf = encode_pos2(pos_prf)
                                     if all(not err for _, (_, err) in ret.items()):
                                         logger.info(f"{server} - {pos_spec} succeeds")
                                         logger.info(ret[translation_targets[0]][0])
                                     for cat, (src, err) in ret.items():
-                                        db[f"{pos_spec}:{cat}"] = (src, err, pos_prf)
+                                        db[f"{pos_spec}:{cat}"] = (src, err, pos_prf, spec_offset)
                                         if err:
                                             logger.info(f"{server} - {pos_spec} - {cat} fails: {err}")
                                         else:
