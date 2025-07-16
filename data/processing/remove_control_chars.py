@@ -41,12 +41,12 @@ def clean_markup_from_db():
     with SqliteDict('cache/translation/results.db') as db:
         for key, value in db.items():
             _, _, cat = key.split(':')
-            (prf, err, pos) = value
+            (prf, err, pos, spec_column) = value
             prf2 = clean_makrup(prf)
             total += 1
             if prf2:
                 count += 1
-                to_modify[key] = (prf2, err, pos)
+                to_modify[key] = (prf2, err, pos, spec_column)
             if total % 1000 == 0:
                 print(f"{total}, {count}, {count/total:.2%}")
         total = 0

@@ -183,7 +183,7 @@ def remove_auto2():
                 case (_, _, cat):
                     if cat in ['goal']:
                         continue
-                    (prf, err, _) = value
+                    (prf, err, _, _) = value
                     if err:
                         continue
                     if ('@proof' in prf or '@qed' in prf or '@have' in prf):
@@ -207,7 +207,7 @@ def normalize_space():
                 case (_, _, cat):
                     if cat in ['goal']:
                         continue
-                    (prf, err, pos) = value
+                    (prf, err, pos, spec_column) = value
                     if err:
                         continue
                     (modified, prf) = norm_prf(prf)
@@ -245,14 +245,14 @@ def make_indent():
         for key, value in db.items():
             match key.split(':'):
                 case (file, line, 'origin'):
-                    (prf, err, pos) = value
+                    (prf, err, pos, spec_column) = value
                     if err:
                         continue
                     lines = prf.split('\n')
                     lines = press_dots(lines)
                     lines = mk_indent(lines)
                     prf = '\n'.join(lines)
-                    to_modify[key] = (prf, err, pos)
+                    to_modify[key] = (prf, err, pos, spec_column)
                     total += 1
                     if total % 10000 == 0:
                         print(f"{total}")
@@ -303,13 +303,13 @@ def norm_question_mark():
     to_modify = {}
     with SqliteDict('cache/translation/results.db') as db:
         for key, value in db.items():
-            (prf, err, pos) = value
+            (prf, err, pos, spec_column) = value
             if err:
                 continue
             prf2 = prf.replace('show?', 'show ?').replace('thus?', 'thus ?').replace('by(', 'by (').replace('apply(', 'apply (')
             if prf2 != prf:
                 count += 1
-                to_modify[key] = (prf2, err, pos)
+                to_modify[key] = (prf2, err, pos, spec_column)
             total += 1
             if total % 1000 == 0:
                 print(f"{count / total:.2%}, {total}")
@@ -334,7 +334,7 @@ def norm_spaces_inside():
                 continue
             #if cat not in ['origin', 'origin-noindent', 'isar-SH*-noindent', 'isar-SH*']:
             #    continue
-            (prf, err, pos) = value
+            (prf, err, pos, spec_column) = value
             if err:
                 continue
             lines = prf.split('\n')
@@ -347,7 +347,7 @@ def norm_spaces_inside():
             new_prf = '\n'.join(new_lines)
             if new_prf != prf:
                 count += 1
-                to_modify[key] = (new_prf, err, pos)
+                to_modify[key] = (new_prf, err, pos, spec_column)
                 #if cat not in ['origin', 'origin-noindent', 'isar-SH*-noindent', 'isar-SH*', 'before_split_proof', 'after_split_proof', 'before_elim_this_connectives', 'after_elim_this_connectives', 'raw', 'refined', 'untyp_raw', 'untyp_refined']:
                 #    print(key)
                 #    print('----------------------')

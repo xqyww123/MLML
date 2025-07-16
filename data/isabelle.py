@@ -186,7 +186,7 @@ def prelude_of(file, line, dep_depth=1, use_proofs=False, use_comments=True, max
                 idx = len(prelude) - 1 - reverse_idx
                 if use_proofs and (idx == 0 or line != prelude[idx-1][0]) and (file, line) not in PISA_AT:
                     try:
-                        (proof, err, _) = db[f"{file}:{line}:{use_proofs}"]
+                        (proof, err, _, _) = db[f"{file}:{line}:{use_proofs}"]
                         if camlize and language.is_minilang(use_proofs):
                             proof = language.camlize_minilang(proof)
                         if not use_comments:
@@ -353,8 +353,8 @@ def load_ISAR_PROOF_INDEX():
     if os.path.isfile('cache/isar_proofs.idx'):
         with open('cache/isar_proofs.idx', 'r', encoding='utf-8') as f:
             for line in f:
-                file, line, pos_line = line.split(':')
-                indexes[Position(int(line), 0, file)] = Position(int(pos_line), 0, file)
+                file, line, column, prf_line, prf_column = line.split(':')
+                indexes[Position(int(line), int(column), file)] = Position(int(prf_line), int(prf_column), file)
         _ISAR_PROOF_INDEX_CACHE = indexes
         return _ISAR_PROOF_INDEX_CACHE
     else:
@@ -363,12 +363,12 @@ def load_ISAR_PROOF_INDEX():
             for key, value in db.items():
                 match key.split(':'):
                     case (file,line,'origin'):
-                        spec_pos = Position(int(line),0,file)
-                        (origin, _, proof_pos) = value
+                        (origin, _, proof_pos, spec_column) = value
+                        spec_pos = Position(int(line), spec_column, file)
                         indexes[spec_pos] = Position.from_s(proof_pos)
         with open('cache/isar_proofs.idx', 'w', encoding='utf-8') as f:
             for pos, proof_pos in indexes.items():
-                f.write(f"{pos.file}:{pos.line}:{proof_pos.line}\n")
+                f.write(f"{pos.file}:{pos.line}:{pos.column}:{proof_pos.line}:{proof_pos.column}\n")
     _ISAR_PROOF_INDEX_CACHE = indexes
     return indexes
 
@@ -521,7 +521,7 @@ class PISA_Data(Data):
         language.chk_lang_supported(lang)
         try:
             pos_spec = self.goal_pos_of(index)
-            (proof, err, _) = self.db[f"{pos_spec.file}:{pos_spec.line}:{lang}"]
+            (proof, err, _, _) = self.db[f"{pos_spec.file}:{pos_spec.line}:{lang}"]
             if err:
                 raise CaseNotAvailable(index)
             if not comments:
@@ -542,10 +542,12 @@ def _load_AFP_CASES_CACHE():
         with open('cache/afp_proofs.idx', 'r', encoding='utf-8') as f:
             _AFP_CASES_CACHE = {Position.from_s(line.strip()) for line in f}
             return _AFP_CASES_CACHE
-    _, PISA_AT = load_pisa_data()
+    PISA_DATA, _ = load_pisa_data()
     s = set(load_ISAR_PROOF_INDEX().keys())
-    for file, line in PISA_AT.keys():
-        s.discard(Position(line, 0, file))
+    for _, (pos_spec, pos_proof, statement) in PISA_DATA.items():
+        if pos_spec not in s:
+            logging.warning(f"PISA {pos_spec} not in ISAR proof index")
+        s.discard(pos_spec)
     _AFP_CASES_CACHE = s
     with open('cache/afp_proofs.idx', 'w', encoding='utf-8') as f:
         for pos in _AFP_CASES_CACHE:
@@ -574,7 +576,7 @@ class AFP_Data(Data):
 
     def goal_of(self, index : Position) -> str:
         try:
-            (goal, _, _) = self.db[f"{index.file}:{index.line}:goal"]
+            (goal, _, _, _) = self.db[f"{index.file}:{index.line}:goal"]
             return goal
         except KeyError:
             raise CaseNotAvailable(index)
@@ -594,7 +596,7 @@ class AFP_Data(Data):
     def proof_of(self, index : Position, lang : str, comments = True, camlize = False) -> str:
         language.chk_lang_supported(lang)
         try:
-            (proof, err, _) = self.db[f"{index.file}:{index.line}:{lang}"]
+            (proof, err, _, _) = self.db[f"{index.file}:{index.line}:{lang}"]
             if err:
                 raise CaseNotAvailable(index)
             if not comments:

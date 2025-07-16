@@ -5,7 +5,7 @@ counts['origin'] = 0
 with SqliteDict('./data/translation/results.db') as db:
     for key, value in db.items():
         (_,_,cat) = key.split(':')
-        (_,err,_) = value
+        (_,err,_,_) = value
         if err:
             continue
         if cat not in counts:
