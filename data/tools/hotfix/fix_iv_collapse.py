@@ -7,7 +7,7 @@ with SqliteDict('cache/translation/declarations.db') as decls:
         for key, value in db.items():
             match key.split(':'):
                 case (file, line, cat):
-                    (proof, _, _) = value
+                    (proof, _, _, _) = value
                     matches = re.finditer(r'^.*(NEXT|END|NXT).*\(((\d+|\d+-\d+|\d+-),)+(\d+|\d+-\d+|\d+-)\).*$', proof, re.MULTILINE)
                     #matches = re.finditer(r'^.*auto_sledgehammer.*\(((\d+|\d+-\d+|\d+-),)+(\d+|\d+-\d+|\d+-)\).*$', proof, re.MULTILINE)
                     def check_bad(cmd):
