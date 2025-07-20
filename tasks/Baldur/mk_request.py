@@ -6,6 +6,15 @@ import json
 import os
 import sys
 import glob
+import queue
+import logging
+import threading
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -64,7 +73,7 @@ def gen_request(c : Client, source : str, file_name : str, model_name : str) -> 
         return len(tokens)
 
     ret = []
-    cmds = c.lex(source)
+    cmds = c.fast_lex(source)
     preludes = []
     parent_preludes = []
     dir = os.path.dirname(file_name)
@@ -75,7 +84,7 @@ def gen_request(c : Client, source : str, file_name : str, model_name : str) -> 
             for i in imports:
                 path = c.path_of_theory(i, dir)
                 with open(path, 'r') as f:
-                    for (_, src) in c.lex(f.read()):
+                    for (_, src) in c.fast_lex(f.read()):
                         parent_preludes.append((src, count_tokens(src)))
 
     def get_prelude(sum) :
@@ -93,7 +102,7 @@ def gen_request(c : Client, source : str, file_name : str, model_name : str) -> 
             second_prelude = '\n'.join ([p[0] for p in parent_preludes[n + 1 :]]) + '\n'
         else:
             second_prelude = ''
-        print(f"TOKEN USAGE: {sum}")
+        logging.info(f"TOKEN USAGE: {sum}")
         return second_prelude + first_prelude
 
     for i, (_, src) in enumerate(cmds):
@@ -104,7 +113,7 @@ def gen_request(c : Client, source : str, file_name : str, model_name : str) -> 
             pos = cmds[i + 1][0]
             src_tokens = count_tokens(src)
             if src_tokens > 4000:
-                print(f"Warning: {file_name}:{pos.line} has {src_tokens} tokens, which is greater than 4000. Skipping...")
+                logging.warning(f"Warning: {file_name}:{pos.line} has {src_tokens} tokens, which is greater than 4000. Skipping...")
                 continue
             ret.append({
                 'index': f"{file_name}:{pos.line}",
@@ -133,14 +142,44 @@ if __name__ == "__main__":
             thy_pattern = os.path.join(source_path, '**', '*.thy')
             thy_files.extend(glob.glob(thy_pattern, recursive=True))
         else:
-            print(f"Warning: {source_path} is neither a file nor a directory", file=sys.stderr)
+            logging.warning(f"Warning: {source_path} is neither a file nor a directory")
     
-    with Client(args.address, 'HOL') as c:
-        for file_name in thy_files:
-            print(f"Processing {file_name}")
-            with open(file_name, 'r') as f:
-                source = f.read()
-            ret.extend(gen_request(c, source, file_name, args.model))
-    with open(args.output, 'w') as f:
-        for x in ret:
-            f.write(json.dumps(x) + '\n')
+    task_queue = queue.Queue()
+    for file_name in thy_files:
+        task_queue.put(file_name)
+
+    lock = threading.Lock()
+    with open(args.output, 'w') as fout:
+        counter = 0
+        def worker():
+            global counter
+            with Client(args.address, 'HOL') as c:
+                try:
+                    while True:
+                        try:
+                            file_name = task_queue.get(timeout=1)
+                        except queue.Empty:
+                            return
+                        logging.info(f"[{counter}/{len(thy_files)}] Processing {file_name}")
+                        with open(file_name, 'r') as f:
+                            source = f.read()
+                        reqs = gen_request(c, source, file_name, args.model)
+                        with lock:
+                            ret.extend(reqs)
+                            for req in reqs:
+                                fout.write(json.dumps(req) + '\n')
+                            counter += 1
+                except Exception as e:
+                    logging.error(f"Error: {e}")
+                    exit(1)
+        threads = []
+        for _ in range(2):
+            thread = threading.Thread(target=worker)
+            thread.daemon = True  # Make threads daemon so they exit if main thread exits
+            threads.append(thread)
+            thread.start()
+            
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
+
