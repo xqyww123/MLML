@@ -30,7 +30,7 @@ BASE = {}
 with open(base_csv, "r") as f:
     reader = csv.reader(f)
     for row in reader:
-        BASE[(row[0], row[1])] = (row[2] == 'True')
+        BASE[(row[0].split('/')[-1], row[1])] = (row[2] == 'True')
 
 with SqliteDict(mlml_eval_db) as db:
     for (key, result) in db.items():
@@ -40,13 +40,13 @@ with SqliteDict(mlml_eval_db) as db:
         # Get the subpath under data/why3/*
         directory = directory.split("data/why3/")[-1]  # Split on data/why3/ and take last part
         mlw_path = directory.split("/")[-1]  # Take the last directory component
-        print((mlw_path, goal_name))
+        #print((mlw_path, goal_name))
         if result.status == Status.CASE_NOT_AVAILABLE:
             continue
         if (mlw_path, goal_name) not in BASE:
             goal_name += 'qtvc'
         if (mlw_path, goal_name) not in BASE:
-            print(f"{(mlw_path, goal_name)} not in BASE")
+            print(f"{(mlw_path, goal_name)} not in BASE, {result.status}")
             continue
         if result.status == Status.SUCCESS:
             eval_success += 1
