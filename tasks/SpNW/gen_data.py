@@ -1,20 +1,15 @@
-#!/usr/bin/env python3
-
-import os
-import sys
+#!/bin/env python3
 import json
 import logging
+import sys
 import time
 from data.isabelle import AFP_Data, CaseNotAvailable, PISA_Data, get_data_class
 from transformers import AutoTokenizer
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
-from data.isabelle import Position
-import data.language as language
-import pandas as pd  # For DataFrame handling
-import pyarrow  # Required for pandas to write parquet files
+from IsaREPL import Client
+import os
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(processName)s - %(levelname)s - %(message)s',
@@ -23,61 +18,8 @@ logging.basicConfig(
     ]
 )
 
-def verify_contamination():
-    afp = AFP_Data()
-    pisa = PISA_Data()
-    print(f"Checking data contamination for {len(pisa.all_cases())} PISA cases")
-    for i in pisa.all_cases():
-        pos = pisa.goal_pos_of(i)
-        print(pos)
-        if pos in afp.all_cases():
-            print(f"Data contamination detected! {pos}")
-            exit(1)
-    print("no data contamination")
 
-verify_contamination()
-
-
-# tokenizer = AutoTokenizer.from_pretrained('EleutherAI/llemma_34b')
-# a = is_codepoint_supported(tokenizer, '\<s>')
-# x = mk_unicode_table('EleutherAI/llemma_34b')
-# y = mk_unicode_table('deepseek-ai/DeepSeek-Prover-V1.5-Base')
-# 
-# exit(1)
-
-# Generating Fine tuning data
-
-def convert_jsonl_to_parquet(jsonl_file_path, parquet_file_path):
-    """
-    Convert a JSONL file to Parquet format using Pandas.
-    
-    Args:
-        jsonl_file_path: Path to the input JSONL file
-        parquet_file_path: Path to the output Parquet file
-    
-    Returns:
-        bool: True if conversion was successful, False otherwise
-    """
-    try:
-        logging.info(f"Converting {jsonl_file_path} to Parquet format...")
-        # Read the JSONL file line by line and create a list of dictionaries
-        data = []
-        with open(jsonl_file_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                data.append(json.loads(line.strip()))
-        
-        # Convert to pandas DataFrame
-        df = pd.DataFrame(data)
-        
-        # Write to Parquet format
-        df.to_parquet(parquet_file_path, index=False)
-        logging.info(f"Successfully converted to Parquet: {parquet_file_path}")
-        return True
-    except Exception as e:
-        logging.error(f"Error converting to Parquet: {str(e)}")
-        return False
-
-def gen_data(proof_lang, result_path, model_name, partNum, totalNum, data_source, include_proof=True):
+def gen_data(proof_lang, result_path, model_name, partNum, totalNum, data_source, token_limit, include_proof=True, process=lambda x: x):
     DATA = get_data_class(data_source)
     data = DATA()
     count = 0
@@ -114,65 +56,105 @@ def gen_data(proof_lang, result_path, model_name, partNum, totalNum, data_source
                     idx2 = idx
                 else:
                     idx2 = str(idx)
-                if include_proof:
-                    proof = data.proof_of(idx, proof_lang, comments=False, camlize=False).strip()
-                    goal = data.goal_of(idx).strip()
-                    if length_of(proof) + length_of(goal) > 2000:
-                        dropped += 1
-                        if dropped % 100 == 0:
-                            print(f"drop {idx} because proof is too long ({length_of(proof)}). Total dropped: {dropped / count * 100:.2f}%")
+                ctxt = data.context_of(idx)
+                if ctxt is None:
+                    logging.error(idx)
+                    continue
+                local_facts = {}
+                for name, fact in ctxt.local_facts.items():
+                    if name in ['local.assms', '<unnamed>']:
                         continue
-                    prelude = data.prelude_of(idx, dep_depth=None, use_proofs=proof_lang, use_comments=False, length_of=length_of, maxsize=2000, camlize=False).strip()
-                    f.write(json.dumps({'index': idx2,
-                                        'prelude': prelude,
-                                        'goal': goal,
-                                        'proof': proof}) + '\n')
-                else:
-                    goal = data.goal_of(idx).strip()
-                    prelude = data.prelude_of(idx, dep_depth=None, use_proofs=proof_lang, use_comments=False, length_of=length_of, maxsize=2000, camlize=False).strip()
-                    f.write(json.dumps({'index': idx2,
-                                        'prelude': prelude,
-                                        'goal': goal}) + '\n')
+                    if name.startswith('local.'):
+                        name = name[6:]
+                    if name in ['<unnamed>']:
+                        continue
+                    match len(fact):
+                        case 0:
+                            pass
+                        case 1:
+                            local_facts[name] = fact[0]
+                        case _:
+                            for i, afact in enumerate(fact):
+                                local_facts[f"{name}({i+1})"] = afact
+                ret = {
+                    'goals': [process(goal) for goal in ctxt.goals],
+                    'vars': {k: process(v) for k,v in ctxt.fixes[0].items()},
+                    'local_facts': {k: process(v) for k,v in local_facts.items()}
+                }
+                toks = sum(length_of(tok) + 2 for tok in ret['goals']) +\
+                       sum(length_of(name) + length_of(typ) + 2 for name, typ in ret['vars'].items()) +\
+                       sum(length_of(name) + length_of(fact) + 2 for name, fact in ret['local_facts'].items())
+                if include_proof:
+                    proof = process(data.proof_of(idx, proof_lang, comments=False, camlize=False).strip())
+                    ret['proof'] = proof
+                    toks += length_of(proof) + 2
                 count += 1
+                if toks > token_limit:
+                    dropped += 1
+                    logging.info(f"drop {idx} because proof is too long ({length_of(proof)}). Total dropped: {dropped / count * 100:.2f}%")
+                premises = {}
+                all_premises = data.premise_of(idx, method='SH', pp='pretty')
+                if all_premises is None:
+                    logging.error(idx)
+                    continue
+                for name, fact in all_premises.items():
+                    length = length_of(name) + length_of(fact) + 2
+                    if length + toks > token_limit:
+                        break
+                    premises[name] = process(fact)
+                    toks += length
+                ret['premises'] = premises
+                f.write(json.dumps(ret) + '\n')
                 if count % 100 == 0:
                     logging.info(f"Generated {count / len(all_cases) * 100:.2f}% fine-tune cases in {result_path}, ETA: {((time.time() - time_start) / count * (len(all_cases) - count)) / 60:.2f} minutes")
             except CaseNotAvailable:
                 pass
     print(f"Generated {count} fine-tune cases in {result_path}")
 
+def encode_prompt(req):
+    premises = '\n'.join(f"{name} : {prop}" for name, prop in req['premises'].items())
+    vars = '\n'.join(f"{name} : {typ}" for name, typ in req['vars'].items())
+    facts = '\n'.join(f"{name} : {fact}" for name, fact in req['local_facts'].items())
+    goals = '\n'.join(f"{i+1}. {prop}" for i, prop in enumerate(req['goals']))
+    prompt = f"LEMMAS:\n{premises}\n-----\nVARIABLES:\n{vars}\n\nFACTS:\n{facts}\n\nGOALS:\n{goals}"
+    if 'proof' in req:
+        prompt += f"\n\nPROOF:\n{req['proof']}"
+    return prompt
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("Usage:")
-        print("  python gen_fine_tune_data.py proof_lang result_path model_name totalNum [data_source] [include_proof] [to_parquet]")
+        print("  python gen_fine_tune_data.py proof_lang result_path model_name parallelNum token_limit [data_source] [include_proof]")
         print("")
         print("Arguments:")
         print("  proof_lang       Proof language format")
         print("  result_path      Base path for result files (will be suffixed with partition number)")
         print("  model_name       Name of the model for tokenization")
-        print("  totalNum         Number of partitions to create (and processes to run)")
+        print("  parallelNum      Number of parallel processes to run")
+        print("  token_limit      Maximum number of tokens in the input")
         print("  data_source      Data source to use: 'afp' or 'pisa' (default: 'afp')")
         print("  include_proof    Whether to include proofs in output: 'true' or 'false' (default: 'true')")
-        print("  to_parquet       Whether to convert final output to Parquet format: 'true' or 'false' (default: 'false')")
         exit(1)
     
-    if len(sys.argv) < 5:
+    if len(sys.argv) < 6:
         print("Error: Not enough arguments for fine-tune-data command")
-        print("Usage: python gen_fine_tune_data.py proof_lang result_path model_name totalNum [data_source] [include_proof] [to_parquet]")
+        print("Usage: python gen_fine_tune_data.py proof_lang result_path model_name parallelNum token_limit [data_source] [include_proof]")
         exit(1)
     
     proof_lang = sys.argv[1]
     result_path = sys.argv[2]
     model_name = sys.argv[3]
     try:
-        totalNum = int(sys.argv[4])
-        if totalNum <= 0:
-            raise ValueError("totalNum must be a positive integer")
+        parallelNum = int(sys.argv[4])
+        if parallelNum <= 0:
+            raise ValueError("parallelNum must be a positive integer")
     except ValueError as e:
         print(f"Error: {str(e)}")
         exit(1)
     
     # Get data source (default to 'afp' if not provided)
-    data_source = sys.argv[5] if len(sys.argv) > 5 else 'afp'
+    token_limit = int(sys.argv[5])
+    data_source = sys.argv[6] if len(sys.argv) > 6 else 'afp'
     if data_source.lower() not in ['afp', 'pisa']:
         print(f"Warning: Invalid data source '{data_source}'. Using 'afp' as default.")
         data_source = 'afp'
@@ -185,37 +167,29 @@ if __name__ == '__main__':
         elif sys.argv[6].lower() not in ['include_proof', 'true', 't', 'yes', 'y', '1']:
             print(f"Warning: Invalid include_proof value '{sys.argv[6]}'. Using 'true' as default.")
     
-    # Get to_parquet option (default to 'false' if not provided)
-    to_parquet = False
-    if len(sys.argv) > 7:
-        if sys.argv[7].lower() in ['true', 't', 'yes', 'y', '1', 'to_parquet']:
-            to_parquet = True
-        elif sys.argv[7].lower() not in ['false', 'f', 'no', 'n', '0']:
-            print(f"Warning: Invalid to_parquet value '{sys.argv[7]}'. Using 'false' as default.")
-    
     # Limit the number of concurrent processes to avoid overloading the system
-    max_concurrent = min(totalNum, multiprocessing.cpu_count())
-    logging.info(f"Starting {totalNum} processes with maximum {max_concurrent} concurrent processes using {data_source.upper()}_Data" +
+    max_concurrent = min(parallelNum, multiprocessing.cpu_count())
+    logging.info(f"Starting {parallelNum} processes with maximum {max_concurrent} concurrent processes using {data_source.upper()}_Data" +
                  (", including proofs" if include_proof else ", excluding proofs"))
     
     # Create and execute processes using ProcessPoolExecutor to limit concurrency
     with ProcessPoolExecutor(max_workers=max_concurrent) as executor:
         futures = []
-        for partNum in range(totalNum):
+        for partNum in range(parallelNum):
             future = executor.submit(
                 gen_data,
-                proof_lang, result_path, model_name, partNum, totalNum, data_source, include_proof
+                proof_lang, result_path, model_name, partNum, parallelNum, data_source, token_limit, include_proof, Client.pretty_unicode
             )
             futures.append(future)
-            logging.info(f"Scheduled process {partNum+1}/{totalNum}")
+            logging.info(f"Scheduled process {partNum+1}/{parallelNum}")
         
         # Wait for all processes to complete
         for i, future in enumerate(futures):
-            try:
+            #try:
                 future.result()  # This will re-raise any exceptions from the process
-                logging.info(f"Process {i+1}/{totalNum} completed successfully")
-            except Exception as e:
-                logging.error(f"Process {i+1}/{totalNum} failed with error: {str(e)}")
+                logging.info(f"Process {i+1}/{parallelNum} completed successfully")
+            #except Exception as e:
+            #    logging.error(f"Process {i+1}/{parallelNum} failed with error: {str(e)}")
     
     logging.info("All processes completed. Merging results...")
 
@@ -225,7 +199,7 @@ if __name__ == '__main__':
     
     with open(merged_file_path, 'w', encoding='utf-8') as merged_file:
         total_examples = 0
-        for partNum in range(totalNum):
+        for partNum in range(parallelNum):
             partition_file_path = f"{result_path}.{partNum}.jsonl"
             try:
                 with open(partition_file_path, 'r', encoding='utf-8') as part_file:
@@ -249,10 +223,5 @@ if __name__ == '__main__':
     data = DATA()
     all_cases = list(data.all_cases())
     logging.info(f"Merge complete. Total examples in {merged_file_path}: {total_examples}, {total_examples / len(all_cases) * 100:.2f}% of total")
-
-    if to_parquet:
-        logging.info("Converting final output to Parquet format...")
-        convert_jsonl_to_parquet(merged_file_path, merged_file_path.replace('.jsonl', '.parquet'))
-        logging.info("Conversion completed successfully")
 
     exit()

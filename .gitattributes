@@ -12,3 +12,5 @@ tasks/Baldur/eval/eval_data_isar-SH*.parquet filter=lfs diff=lfs merge=lfs -text
 tasks/Baldur/eval/eval_data_minilang.jsonl filter=lfs diff=lfs merge=lfs -text
 tasks/Baldur/eval/eval_data_minilang.parquet filter=lfs diff=lfs merge=lfs -text
 tasks/Baldur/eval/eval_data_isar.parquet filter=lfs diff=lfs merge=lfs -text
+data/premise_selection/SH.pretty.db.zst filter=lfs diff=lfs merge=lfs -text
+data/proof_context.db.zst filter=lfs diff=lfs merge=lfs -text

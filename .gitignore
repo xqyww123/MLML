@@ -14,4 +14,6 @@ config/evaluation_servers.csv
 shell.log
 data/translation/declarations.db
 data/translation/results.db
+data/premise_selection/SH.pretty.db
+data/proof_context.db
 .venv
