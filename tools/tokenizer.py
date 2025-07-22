@@ -116,6 +116,9 @@ if __name__ == "__main__":
     tokenizer = check_tokenizer_type('deepseek-ai/DeepSeek-Prover-V1.5-Base')
     
     text = """
+A₀ A₁ A₂ A₃ A₄ A₅ A₆ A⇩1
+S⁰ S¹ S² S³ S⁴ S⁵ S⁶ S⇧1
+Xₐ Xᵃ Xᵇ
 show ?thesis
 show?thesis
 thus ?thesis
