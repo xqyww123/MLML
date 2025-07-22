@@ -6,14 +6,14 @@ git pull
 git submodule update --init --recursive --remote
 git lfs install
 git lfs pull
-pip install -q gdown sqlitedict
+pip install -q sqlitedict
 pip install -q isarepl isamini --upgrade
 mkdir -p ./cache/downloads
 mkdir -p ./translation/results
 mkdir -p ./cache/translation/tmp
 
 # Check if md5sum file exists and verify database integrity
-if [ -f "./data/translation/md5sum" ]; then
+if [ -f "./data/md5sum" ]; then
     echo "Verifying database integrity..."
     if md5sum --status -c ./data/md5sum; then
         echo "Database integrity verified."
@@ -31,7 +31,7 @@ else
     gunzip -f -k ./data/translation/results.db.gz
     unzstd -f -k data/proof_context.db.zst
     unzstd -f -k data/premise_selection/SH.pretty.db.zst
-    md5sum ./data/translation/declarations.db ./data/translation/results.db > ./data/translation/md5sum
+    md5sum ./data/translation/declarations.db ./data/translation/results.db > ./data/md5sum
 fi
 
 
@@ -56,11 +56,14 @@ if [[ "$reinstall_isabelle" == "y" ]]; then
 fi
 
 
-if [ ! -d "./contrib/Isabelle2024" ] || [ ! -d "./contrib/afp-2025-02-12" ]; then
-    echo "Downloading Isabelle2024 and AFP"
-    gdown --fuzzy https://drive.google.com/file/d/176tufd_eHxzpAHdVV5-XMJSRy8NVaGq9/view?usp=sharing -O ./cache/downloads/Isabelle2024_and_afp-2025-02-12.tar.gz
-    echo "Unpacking Isabelle2024 and AFP"
-    tar -xzf ./cache/downloads/Isabelle2024_and_afp-2025-02-12.tar.gz -C ./contrib
+if md5sum --status -c ./contrib/Isabelle2024.md5sum; then
+    echo "Isabelle2024 is up to date."
+else
+    echo "Isabelle2024 is out of date. Reinstalling..."
+    rm -rf ./contrib/Isabelle2024
+    rm -rf ./contrib/afp-2025-02-12
+    tar --zstd -xf ./contrib/Isabelle2024_and_afp-2025-02-12.tar.zst -C ./contrib
+    echo "Isabelle2024 and AFP reinstalled."
 fi
 
 # Ask user for maximum memory allocation for Isabelle
@@ -78,7 +81,7 @@ printf "ML_OPTIONS='--minheap 4G --maxheap ${isabelle_memory}G'\nML_MAX_HEAP=${i
 echo "Setting Isabelle memory limit to ${isabelle_memory}GB"
 
 
-rm -f  $(isabelle getenv -b ISABELLE_HOME_USER)/etc/components 2>/dev/null
+#rm -f  $(isabelle getenv -b ISABELLE_HOME_USER)/etc/components 2>/dev/null
 isabelle components -u ./contrib/afp-2025-02-12/thys || exit 1
 isabelle components -u ./contrib/Isa-REPL || exit 1
 isabelle components -u ./contrib/Isa-Mini || exit 1
