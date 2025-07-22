@@ -9,6 +9,8 @@ import re
 from typing import Tuple  # Add this import for Tuple type
 import time
 from . import language
+from . import proof_context
+from . import premise_selection
 
 # Configure logging to print to screen
 logging.basicConfig(
@@ -492,7 +494,15 @@ class PISA_Data(Data):
             return goal
         except KeyError:
             raise CaseNotAvailable(index)
-    
+
+    def context_of(self, index : int) -> str:
+        pos = self.goal_pos_of(index)
+        return proof_context.get_context(pos.file, pos.line)
+
+    def prelude_of(self, index : int, dep_depth=None, use_proofs=False, use_comments=True, maxsize=None, length_of=len, camlize=False):
+        pos = self.goal_pos_of(index)
+        return prelude_of(pos.file, pos.line, dep_depth, use_proofs, use_comments, maxsize, length_of, camlize)
+
     def prelude_of(self, index : int, dep_depth=1, use_proofs=False, use_comments=True, maxsize=None, length_of=len, camlize=False) -> str:
         PISA_DATA, PISA_AT = load_pisa_data()
         try:
@@ -580,10 +590,16 @@ class AFP_Data(Data):
             return goal
         except KeyError:
             raise CaseNotAvailable(index)
-    
+
+    def premise_of(self, index : Position, pp : str, method : str = 'SH') -> list[str]:
+        return premise_selection.premise_of(method, pp, index.file, index.line)
+
+    def context_of(self, index : Position) -> str:
+        return proof_context.get_context(index.file, index.line)
+
     def prelude_of(self, index : Position, dep_depth=None, use_proofs=False, use_comments=True, maxsize=None, length_of=len, camlize=False):
         return prelude_of(index.file, index.line, dep_depth, use_proofs, use_comments, maxsize, length_of, camlize)
-    
+
     def goal_pos_of(self, index : Position):
         return index
 
@@ -628,3 +644,11 @@ class MiniF2F_Data(Data):
             raise ValueError("maxsize must be None. MiniF2F does not support maxsize")
         raise NotImplementedError("TODO")
 
+def get_data_class(data_source):
+    if data_source.lower() == "afp":
+        return AFP_Data
+    elif data_source.lower() == "pisa":
+        return PISA_Data
+    else:
+        logging.error(f"Invalid data source: {data_source}. Using AFP_Data as default.")
+        return AFP_Data

@@ -15,18 +15,22 @@ mkdir -p ./cache/translation/tmp
 # Check if md5sum file exists and verify database integrity
 if [ -f "./data/translation/md5sum" ]; then
     echo "Verifying database integrity..."
-    if md5sum --status -c ./data/translation/md5sum; then
+    if md5sum --status -c ./data/md5sum; then
         echo "Database integrity verified."
     else
         echo "Database files are out-of-date. Reinstalling..."
         gunzip -f -k ./data/translation/declarations.db.gz
         gunzip -f -k ./data/translation/results.db.gz
-        md5sum ./data/translation/declarations.db ./data/translation/results.db > ./data/translation/md5sum
+        unzstd -f -k data/proof_context.db.zst
+        unzstd -f -k data/premise_selection/SH.pretty.db.zst
+        md5sum ./data/translation/declarations.db ./data/translation/results.db data/proof_context.db data/premise_selection/SH.pretty.db > ./data/md5sum
     fi
 else
     echo "Unpacking database files..."
     gunzip -f -k ./data/translation/declarations.db.gz
     gunzip -f -k ./data/translation/results.db.gz
+    unzstd -f -k data/proof_context.db.zst
+    unzstd -f -k data/premise_selection/SH.pretty.db.zst
     md5sum ./data/translation/declarations.db ./data/translation/results.db > ./data/translation/md5sum
 fi
 
