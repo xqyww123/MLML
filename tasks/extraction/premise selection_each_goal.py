@@ -29,7 +29,7 @@ with SqliteDict('./cache/SH_premise_selection.db') as db:
     for j, (key, val) in enumerate(db.items()):
         if j % 1000 == 0:
             logging.info(f"Checking [{j}/{pre_total}] records...")
-        if len(val) <= 10:
+        if isinstance(val, int) or len(val) <= 10:
             continue
         complete_indexes.add(key)
 
@@ -43,7 +43,7 @@ with SqliteDict('./cache/SH_premise_selection.db') as db:
                 task_queue.put(the_chunk)
             the_chunk = []
             last_file = spec_pos.file
-        key = f'{spec_pos.file}:{spec_pos.line}'
+        key = f'{spec_pos.file}:{spec_pos.line}#0'
         if key in complete_indexes:
             continue
         total += 1
@@ -68,7 +68,7 @@ with SqliteDict('./cache/SH_premise_selection.db') as db:
                                 c.clean_cache()
                         try:
                             key = f'{spec_pos.file}:{spec_pos.line}'
-                            if key in db and len(db[key]) > 10:
+                            if key in db and len(db[f"{key}#0"]) > 10:
                                 continue
                             try:
                                 file = os.path.abspath(proof_pos.file)
@@ -76,10 +76,14 @@ with SqliteDict('./cache/SH_premise_selection.db') as db:
                             except REPLFail as e:
                                 logging.error(f"Error loading file {proof_pos.file}: {e}")
                                 continue
-                            res = c.premise_selection(1000, ['mesh'], {}, 'pretty')
-                            db[key] = res
+                            res = c.premise_selection('each', 1000, ['mesh'], {}, 'pretty')
+                            db[key] = len(res)
+                            for j, r in enumerate(res):
+                                db[f'{key}#{j}'] = r
+                                # if counter % 100 == 0:
+                                #    logging.info(r)
                             db.commit()
-                            logging.info(f"[{counter}/{total}] obtained {len(res)} for {proof_pos}")
+                            logging.info(f"[{counter}/{total}] obtained {len(res[0])} for {proof_pos}")
                         except Exception as e:
                             logging.error(f"Error: {e}")
                             exit(1)

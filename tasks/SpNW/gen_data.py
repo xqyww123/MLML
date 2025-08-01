@@ -18,7 +18,6 @@ logging.basicConfig(
     ]
 )
 
-
 def gen_data(proof_lang, result_path, model_name, partNum, totalNum, data_source, token_limit, include_proof=True, process=lambda x: x):
     DATA = get_data_class(data_source)
     data = DATA()
@@ -58,16 +57,14 @@ def gen_data(proof_lang, result_path, model_name, partNum, totalNum, data_source
                     idx2 = str(idx)
                 ctxt = data.context_of(idx)
                 if ctxt is None:
-                    logging.error(idx)
+                    logging.error(f"missing context: {idx}")
                     continue
                 local_facts = {}
                 for name, fact in ctxt.local_facts.items():
-                    if name in ['local.assms', '<unnamed>']:
+                    if name in ['<unnamed>']:
                         continue
                     if name.startswith('local.'):
                         name = name[6:]
-                    if name in ['<unnamed>']:
-                        continue
                     match len(fact):
                         case 0:
                             pass
@@ -91,11 +88,11 @@ def gen_data(proof_lang, result_path, model_name, partNum, totalNum, data_source
                 count += 1
                 if toks > token_limit:
                     dropped += 1
-                    logging.info(f"drop {idx} because proof is too long ({length_of(proof)}). Total dropped: {dropped / count * 100:.2f}%")
+                    logging.error(f"drop {idx} because proof is too long ({toks}). Total dropped: {dropped / count * 100:.2f}%")
                 premises = {}
                 all_premises = data.premise_of(idx, method='SH', pp='pretty')
                 if all_premises is None:
-                    logging.error(idx)
+                    logging.error(f"missing premises: {idx}")
                     continue
                 for name, fact in all_premises.items():
                     length = length_of(name) + length_of(fact) + 2
@@ -104,6 +101,9 @@ def gen_data(proof_lang, result_path, model_name, partNum, totalNum, data_source
                     premises[name] = process(fact)
                     toks += length
                 ret['premises'] = premises
+                if length_of(encode_prompt(ret)) > token_limit:
+                    logging.error(f"drop {idx} because prompt is too long. Total dropped: {dropped / count * 100:.2f}%")
+                    continue
                 f.write(json.dumps(ret) + '\n')
                 if count % 100 == 0:
                     logging.info(f"Generated {count / len(all_cases) * 100:.2f}% fine-tune cases in {result_path}, ETA: {((time.time() - time_start) / count * (len(all_cases) - count)) / 60:.2f} minutes")
