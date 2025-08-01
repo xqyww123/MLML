@@ -1,7 +1,7 @@
 #!/bin/env python3
 
 """
-Extract context of each proof.
+Add premise selection information into ./cache/SH_premise_selection.db
 """
 
 import logging
@@ -19,18 +19,18 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-FORMATS = ['typed-nv_pretty', 'typed_pretty', 'pretty', 'sexpr']
-
 pos = load_ISAR_PROOF_INDEX()
 threadLock = threading.Lock()
 counter = 0
 
-with SqliteDict(f'./cache/proof_context.db') as db:
+with SqliteDict('./cache/SH_premise_selection_final_goal.db') as db:
     pre_total = len(pos)
     complete_indexes = set()
-    for j, key in enumerate(db):
+    for j, (key, val) in enumerate(db.items()):
         if j % 1000 == 0:
             logging.info(f"Checking [{j}/{pre_total}] records...")
+        if isinstance(val, int) or len(val) <= 10:
+            continue
         complete_indexes.add(key)
 
     task_queue = queue.Queue()
@@ -39,12 +39,12 @@ with SqliteDict(f'./cache/proof_context.db') as db:
     total = 0
     for spec_pos, proof_pos in sorted(pos.items()):
         if last_file != spec_pos.file:
-            if last_file is not None and len(the_chunk) > 0:
+            if last_file is not None:
                 task_queue.put(the_chunk)
             the_chunk = []
             last_file = spec_pos.file
         key = f'{spec_pos.file}:{spec_pos.line}'
-        if all(f"{key}:{f}" in db for f in FORMATS):
+        if key in complete_indexes:
             continue
         total += 1
         the_chunk.append((spec_pos, proof_pos))
@@ -68,7 +68,7 @@ with SqliteDict(f'./cache/proof_context.db') as db:
                                 c.clean_cache()
                         try:
                             key = f'{spec_pos.file}:{spec_pos.line}'
-                            if all(f"{key}:{f}" in db for f in FORMATS):
+                            if key in db and len(db[key]) > 10:
                                 continue
                             try:
                                 file = os.path.abspath(proof_pos.file)
@@ -76,23 +76,20 @@ with SqliteDict(f'./cache/proof_context.db') as db:
                             except REPLFail as e:
                                 logging.error(f"Error loading file {proof_pos.file}: {e}")
                                 continue
-                            for f in FORMATS:
-                                res = c.context(f)
-                                db[f"{key}:{f}"] = res
+                            res = c.premise_selection('final', 1000, ['mesh'], {}, 'pretty')
+                            db[key] = res
                             db.commit()
                             logging.info(f"[{counter}/{total}] obtained {len(res)} for {proof_pos}")
-                            if counter % 1000 == 0:
-                                logging.info(res)
                         except Exception as e:
                             logging.error(f"Error: {e}")
-                            exit(1)
-                            time.sleep(3)
+                            #exit(1)
+                            time.sleep(1)
                             break
                         # if iter % 100 == 0:
                         #     logging.info(f"Processed {iter} propositions")
                         #     db.commit()
     threads = []
-    servers = ['127.0.0.1:6666'] * 24 # + ['cslcw2u:6666'] * 14 # + ['sg-home:6666'] * 16 
+    servers = ['127.0.0.1:6666'] * 24 # + ['cslcw2u:6666'] * 14 # + ['sg-home:6666'] * 16
     for server in servers:
         thread = threading.Thread(target=worker, args=(server,))
         thread.daemon = True  # Make threads daemon so they exit if main thread exits
