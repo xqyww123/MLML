@@ -15,6 +15,9 @@ def get_db():
     return _DB
 
 def get_context(file, line, pp='pretty'):
+    """
+    pp in ['typed-nv_pretty', 'typed_pretty', 'pretty', 'sexpr']
+    """
     db = get_db()
     key = f"{file}:{line}:{pp}"
     if key in db:
