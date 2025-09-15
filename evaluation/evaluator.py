@@ -12,6 +12,7 @@ import threading
 import concurrent.futures
 import queue  # Add standard queue module
 import time
+import traceback
 from tools.server import SERVERS
 from typing import Callable, Tuple
 
@@ -242,6 +243,8 @@ class MiniLang(MiniLang_Base):
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
             raise CaseNotAvailable(index, f"MiniLang: case {index} not available")
 
+import re
+
 class Isar_Base(Evaluator):
 
     def __init__(self, addr, libs=[], timeout=500, connection_timeout=1200):
@@ -289,7 +292,10 @@ class Isar_Base(Evaluator):
                 self.repl.rollback('EVAL')
             try:
                 start_time = time.time()
-                response, error = self.repl.eval(code, timeout=self._timeout * 1000, cmd_timeout=15000)
+                if self.contains_sorry(code):
+                    error = 'Contains sorry'
+                else:
+                    response, error = self.repl.eval(code, timeout=self._timeout * 1000, cmd_timeout=15000)
                 times.append(time.time() - start_time)
                 if error:
                     errors.append(error)
@@ -302,6 +308,40 @@ class Isar_Base(Evaluator):
             except TimeoutError as E:
                 errors.append(E)
         return Result(Status.FAIL, errors, times)
+
+    @classmethod
+    def locate_proof_goal(cls, file : str):
+        line_num = 0
+        with open(file, "r", encoding="utf-8") as f:
+            for i, line in enumerate(f, 1):
+                if line.strip() == "sorry":
+                    if line_num == 0:
+                        line_num = i
+                    else:
+                        return None
+        return line_num if line_num > 0 else None
+    
+    @classmethod
+    def filter_comment(cls, code):
+        output = []
+        comment_level = 0 
+        for i, c in enumerate(code):
+            if c == '(' and code[i+1] == '*':
+                comment_level += 1
+            if comment_level == 0:
+                output.append(c)
+            elif c == ')' and i > 0 and code[i-1] == '*':
+                comment_level -= 1
+        return ''.join(output)
+
+    @classmethod
+    def contains_sorry(cls, code):
+        code = cls.filter_comment(code)
+        # Check for \<sorry\> or \<admitted\> in the code using regex
+        if re.search(r'\bsorry\b', code) or re.search(r'\badmit\b', code):
+            return True
+        return False
+
 
 class Isar_PISA(Isar_Base, PISA_Data):
 
@@ -384,8 +424,11 @@ class Isar(Isar_Base):
                 pass
             case (file, line):
                 column = 0
-            case _:
-                raise ValueError(f"Invalid index: {index}")
+            case (file,):
+                line = type(self).locate_proof_goal(file)
+                if line is None:
+                    raise ValueError(f"Invalid index: {index}")
+                column = 0
         try:
             self.move_to(file, int(line), int(column))
         except TimeoutError as E:
@@ -594,6 +637,7 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
                                         break
                             except Exception as e:
                                 logger.error(f"Error processing case {case.index}: {str(e)}")
+                                logger.error(f"Traceback:\n{traceback.format_exc()}")
                                 # Put the task back in the queue to retry
                                 task_queue.put(case)
                                 break
