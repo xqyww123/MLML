@@ -291,9 +291,11 @@ class Isar_Base(Evaluator):
             if i > 0:
                 self.repl.rollback('EVAL')
             try:
+                has_sorry = self.contains_sorry(code)
                 start_time = time.time()
-                if self.contains_sorry(code):
+                if has_sorry:
                     error = 'Contains sorry'
+                    response = None
                 else:
                     response, error = self.repl.eval(code, timeout=self._timeout * 1000, cmd_timeout=15000)
                 times.append(time.time() - start_time)
@@ -336,7 +338,8 @@ class Isar_Base(Evaluator):
 
     @classmethod
     def contains_sorry(cls, code):
-        code = cls.filter_comment(code)
+        if '(*' in code:
+            code = cls.filter_comment(code)
         # Check for \<sorry\> or \<admitted\> in the code using regex
         if re.search(r'\bsorry\b', code) or re.search(r'\badmit\b', code):
             return True
