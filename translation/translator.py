@@ -46,7 +46,7 @@ if any(target not in KNOWN_TRANSLATION_TARGETS for target in translation_targets
 
 os.makedirs(f"{os.getcwd()}/cache/translation/tmp", exist_ok=True)
 INIT_SCRIPT = f"""
-ML_Translator_Top.init_translator {translation_target_str} (Path.explode "{os.getcwd()}/cache/translation/tmp") (ML_Translator_Top.interactive_reporter());
+ML_Translator_Top.init_translator {translation_target_str} (ML_Translator_Top.interactive_reporter());
 REPL_Server.register_app "Minilang-Translator" ML_Translator_Top.REPL_App
 """
 
