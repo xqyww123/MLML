@@ -497,7 +497,14 @@ class PISA_Data(Data):
 
     def context_of(self, index : int, pp : str = 'typed-nv_pretty') -> str:
         pos = self.goal_pos_of(index)
-        return proof_context.get_context(pos.file, pos.line, pp)
+        ret = proof_context.get_context(pos.file, pos.line)
+        if ret is None:
+            print(pos)
+        return ret
+
+    def premise_of(self, index : int, pp : str, method : str) -> list[str]:
+        pos = self.goal_pos_of(index)
+        return premise_selection.premise_of(method, pp, pos.file, pos.line)
 
     def prelude_of(self, index : int, dep_depth=None, use_proofs=False, use_comments=True, maxsize=None, length_of=len, camlize=False):
         pos = self.goal_pos_of(index)
@@ -591,7 +598,7 @@ class AFP_Data(Data):
         except KeyError:
             raise CaseNotAvailable(index)
 
-    def premise_of(self, index : Position, pp : str, method : str = 'SH') -> list[str]:
+    def premise_of(self, index : Position, pp : str, method : str) -> list[str]:
         return premise_selection.premise_of(method, pp, index.file, index.line)
 
     def context_of(self, index : Position, pp : str = 'typed-nv_pretty') -> str:

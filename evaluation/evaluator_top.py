@@ -40,7 +40,7 @@ if __name__ == "__main__":
                 cases = Case.jsonl(proof_jsonl)
                 clean_mash(result_db)
                 launch_servers()
-                evaluate_and_save(result_db, cases, MiniLang)
+                evaluate_and_save(result_db, cases, lambda addr: MiniLang(addr, SH_params="timeout = 120"))
                 report_evaluation(proof_jsonl, result_db)
             case 'isar':
                 if len(sys.argv) != 4:
@@ -52,6 +52,13 @@ if __name__ == "__main__":
                 clean_mash(result_db)
                 launch_servers()
                 evaluate_and_save(result_db, cases, Isar)
+                report_evaluation(proof_jsonl, result_db)
+            case 'report':
+                if len(sys.argv) != 4:
+                    print("Usage: ./evaluation/evaluator_top.py mini <proof.jsonl> <result.db>")
+                    exit(1)
+                proof_jsonl = sys.argv[2]
+                result_db = sys.argv[3]
                 report_evaluation(proof_jsonl, result_db)
             case "eval-mini-pisa":
                 clean_mash("./evaluation/minilang_pisa_result.db")
