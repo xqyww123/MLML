@@ -224,8 +224,12 @@ def translate():
                                 logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Connection error translating {task}")
                                 time.sleep(180)
                             except Exception as e:
+                                reentry = False
+                                finished_theories += 1
+                                for target in translation_targets:
+                                    db_decl[f"{task}:{target}"] = True
                                 logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {task}: {e}")
-                                time.sleep(10)
+                                #time.sleep(10)
                     finally:
                         # Mark the current group as done and requeue any remaining failed tasks
                         task_queue.task_done()
