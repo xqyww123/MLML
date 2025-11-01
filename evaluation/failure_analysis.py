@@ -18,9 +18,18 @@ TYPES = {
         r'^Tactic failed',
         r'^No matching coinduction rule found'
         r'^Unable to figure out induct rule',
-        r'^exception THM 0 raised.*symmetric$',
         r'^PROOF FAIL : Fail to apply the rules',
         r'^PROOF FAIL : Fail to apply the tactic',
+        r'^No matching coinduction rule',
+        r'^Unable to figure out coinduct rule',
+        r'^Failed to apply initial proof method',
+        r'^Failed to finish proof:',
+        r'^Failed to refine any pending goal',
+        r'symmetric: no unifiers',
+        r'^exception THM \d raised',
+        r'^No matching trans rules for calculation',
+        r'^Ill-formed destruction rule',
+        r'^Vacuous calculation result',
     ],
     'Tactic Execution - Timeout': [
         r'^Timeout',
@@ -30,6 +39,10 @@ TYPES = {
     'Syntax Error - Term Lang - Type': [
         r'^Type unification failed', 
         r'^Undefined type name',
+        r'^Sort constraint',
+        r'^Type error in application',
+        r'^No type arity',
+        r'^Wellsortedness error:'
     ],
     'Syntax Error - Term Lang': [
         r'^Inner lexical error', 
@@ -37,13 +50,16 @@ TYPES = {
         r'^Ambiguous input',
         r'^Bad number of arguments for type constructor',
         r'^Undefined constant',
-        r'^Ill-typed instantiation'
+        r'^Ill-typed instantiation',
+        r'^Undeclared class',
+        r'^Unresolved adhoc overloading'
     ],
     'Hammer Fail' : [
         r'^PROOF FAIL : Proof fails and Sledgehammer is disable due to debugging',
         r'^PROOF FAIL : Timeout',
         r'^PROOF FAIL : Fail to prove the goal',
         r'Fail to prove the goal',
+        #r'^Some error happens',
     ],
     'Syntax Error - Proof Lang - Fact Selection': [
         r'^Bad fact selection'
@@ -53,12 +69,10 @@ TYPES = {
     ],
     'Syntax Error - Proof Lang': [
         r'^Outer syntax error',
-        r'^Failed to refine any pending goal',
         r'^Undefined attribute',
         r'^Undefined case',
         r'^Malformed definition',
         r'^More arguments than parameters in instantiation of locale',
-        r'assume: variables',
         r'^Induction argument not a variable',
         r'^Bad name binding',
         r'^Undefined method',
@@ -72,13 +86,17 @@ TYPES = {
         # The following are for attribute subsystem
         r'^More instantiations than variables in theorem$', 
         r'^No such variable in theorem',
-        r'OF: no unifiers',
-        r'symmetric: no unifiers',
         r'^exception Match raised \(line 482 of', # recursive proofs generated
         r'^Already at bottom of proof', # mismatched bracket
 
         r'^INVALID_OPR : Incorrect number of VARS',
         r'^Bad context for command',
+        r'^No more moves',
+        r'^Bad arguments for attribute',
+        r'^Duplicate fixed variable',
+        r'^Excessive subgoal parameter specification',
+        r'^Goal present in this block',
+        r'^Duplicate constant declaration'
     ],
     'No proof generated or incomplete proof': [
         r'^exception Empty raised',
@@ -173,10 +191,18 @@ def analyze_failure(result_path : str, response_path : str, model_name : str, ma
                                         #found_cats.add('Hammer Fail')
                                         continue
                                     line = response.split('\n')[line_number - 1].strip()
-                                    if 'auto_sledgehammer' in line:
+                                    if 'sledgehammer' in line:
                                         count_cats('Hammer Fail')
                                         found_cats.add('Hammer Fail')
                                     else:
+                                        count_cats(failure_type + ' - ' + str(pattern))
+                                        found_cats.add(failure_type + ' - ' + str(pattern))
+                                elif 'Unknown' in failure_type:
+                                    if 'raw_sledgehammer' in response: #response.strip().startswith('by raw_sledgehammer'):
+                                        count_cats('Hammer Fail')
+                                        found_cats.add('Hammer Fail')
+                                    else:
+                                        print(key)
                                         count_cats(failure_type + ' - ' + str(pattern))
                                         found_cats.add(failure_type + ' - ' + str(pattern))
                                 else:
@@ -184,6 +210,8 @@ def analyze_failure(result_path : str, response_path : str, model_name : str, ma
                                     found_cats.add(failure_type + ' - ' + str(pattern))
                                 break
                     if re.search(r'^exception FAIL \(SOME fn\) raised', err) or re.search(r'^exception ABORT fn raised', err) or re.search(r'^Proof not finished', err):
+                        if find_reason >= 1:
+                            pass
                         find_reason += 1
                         if length_of(response) >= max_length:
                             count_cats('Exceeds Window')
@@ -196,7 +224,7 @@ def analyze_failure(result_path : str, response_path : str, model_name : str, ma
                         count_cats('Unknown')
                         print(f"[{key}] Unknown failure: {err}")
                     elif find_reason > 1:
-                        print(f"[{key}] Multiple failure types ({find_reason}): {err}\n{found_cats}\n")
+                        print(f"!!!!!!!!!!!![{key}] Multiple failure types ({find_reason}): {err}\n{found_cats}\n")
     for cat, count in sorted(list(counts.items()), key=lambda x: x[0]):
         print(f"{cat}: {count / total * 100:.3f}%, {count}")
     return total, case_num

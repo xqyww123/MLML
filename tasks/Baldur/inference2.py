@@ -9,7 +9,9 @@ def load_data(data_path: str):
     return data
 
 def format_prompts(data: List[Dict[str, Any]]):
-    lemma_prompt_format = """<s>system\nYou are an AI programming assistant, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer.\n</s>\n<s>user\nPRELUDE:\n{prelude}\nGOAL:\n{goal}</s>\n<s>assistant\n"""
+    #lemma_prompt_format = """<s>system\nYou are an AI programming assistant, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer.\n</s>\n<s>user\nPRELUDE:\n{prelude}\nGOAL:\n{goal}</s>\n<s>assistant\n"""
+    deepseek_prompt_format = """You are an AI programming assistant, utilizing the Deepseek Coder model, developed by Deepseek Company, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer.\n### Instruction:\nPRELUDE:\n{prelude}\nGOAL:\n{goal}\n### Response:\n"""
+    lemma_prompt_format = deepseek_prompt_format
     prompts = []
     for d in data:
         prompt = lemma_prompt_format.format(prelude=d["prelude"], goal=d["goal"])
@@ -45,10 +47,14 @@ def load_model(
         llm = LLM(
             model=model_name_or_path,
             tensor_parallel_size=tensor_parallel_size,
+            #pipeline_parallel_size=1,
+            #pipeline_parallel_size=2,
+            #distributed_executor_backend="ray",
             gpu_memory_utilization=gpu_memory_utilization,
-            max_model_len=max_model_len,
+            #max_model_len=4096,
             quantization=quantization,
             dtype=torch.float16,  # Explicitly use float16 instead of the default bfloat16
+            max_num_seqs=4,
             **kwargs
         )
         
@@ -60,17 +66,23 @@ def load_model(
 if __name__ == "__main__":
     # Example usage
     model = load_model(
-        model_name_or_path="haonan-li/minilang-no-SH-llemma-7b",
+        #model_name_or_path="anonymous6435/deepseek-prover-isar",
+        model_name_or_path="anonymous6435/deepseek-prover-minilang",
+        #model_name_or_path="deepseek-ai/DeepSeek-Prover-V2-7B",
         tensor_parallel_size=1,  # Adjust based on your GPU setup
-        gpu_memory_utilization=0.9
+        gpu_memory_utilization=0.98,
+        #quantization="bitsandbytes"
     )
 
-    data = load_data("tasks/Baldur/eval/eval_data_minilang-no-SH.jsonl")
+    data = load_data("request.jsonl")
 
 
     sampling_params = SamplingParams(
-        temperature=0.1,
+        temperature=0,
         max_tokens=4096,
+        stop=["<|EOT|>"],
+        #stop=["<｜end▁of▁sentence｜>"],
+        skip_special_tokens=True,
     )
 
     prompts = format_prompts(data)
