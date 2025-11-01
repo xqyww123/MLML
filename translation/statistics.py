@@ -34,7 +34,7 @@ with SqliteDict('data/translation/results.db') as db:
         if cat == 'origin':
             decl += 1
             total += 1
-        src, err, _, _ = v
+        src, err, _ = v
         if cat == 'refined':
             lines = [x for x in src.strip().split('\n') if x.strip()]
             num_lines = len(lines)
@@ -56,7 +56,7 @@ with SqliteDict('data/translation/results.db') as db:
             num_of_HAVE = src.count('have ') + src.count('hence ')
             have_distr_origin[num_of_HAVE] += 1
             try:
-                _, err2, _, _ = db[f"{file}:{line}:refined"]
+                _, err2, _ = db[f"{file}:{line}:refined"]
                 if not err2:
                     success_rate[num_of_HAVE] += 1
             except KeyError:
