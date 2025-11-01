@@ -90,7 +90,7 @@ def gen_data(proof_lang, result_path, model_name, partNum, totalNum, data_source
                     dropped += 1
                     logging.error(f"drop {idx} because proof is too long ({toks}). Total dropped: {dropped / count * 100:.2f}%")
                 premises = {}
-                all_premises = data.premise_of(idx, method='SH', pp='pretty')
+                all_premises = data.premise_of(idx, method='SH-final-goal', pp='pretty')
                 if all_premises is None:
                     logging.error(f"missing premises: {idx}")
                     continue
@@ -101,6 +101,7 @@ def gen_data(proof_lang, result_path, model_name, partNum, totalNum, data_source
                     premises[name] = process(fact)
                     toks += length
                 ret['premises'] = premises
+                ret['index'] = idx
                 if length_of(encode_prompt(ret)) > token_limit:
                     logging.error(f"drop {idx} because prompt is too long. Total dropped: {dropped / count * 100:.2f}%")
                     continue
@@ -161,11 +162,11 @@ if __name__ == '__main__':
     
     # Get include_proof option (default to 'true' if not provided)
     include_proof = True
-    if len(sys.argv) > 6:
-        if sys.argv[6].lower() in ['no_proof', 'false', 'f', 'no', 'n', '0']:
+    if len(sys.argv) > 7:
+        if sys.argv[7].lower() in ['no_proof', 'false', 'f', 'no', 'n', '0']:
             include_proof = False
-        elif sys.argv[6].lower() not in ['include_proof', 'true', 't', 'yes', 'y', '1']:
-            print(f"Warning: Invalid include_proof value '{sys.argv[6]}'. Using 'true' as default.")
+        elif sys.argv[7].lower() not in ['include_proof', 'true', 't', 'yes', 'y', '1']:
+            print(f"Warning: Invalid include_proof value '{sys.argv[7]}'. Using 'true' as default.")
     
     # Limit the number of concurrent processes to avoid overloading the system
     max_concurrent = min(parallelNum, multiprocessing.cpu_count())

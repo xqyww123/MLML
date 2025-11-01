@@ -40,7 +40,7 @@ if __name__ == "__main__":
                 cases = Case.jsonl(proof_jsonl)
                 clean_mash(result_db)
                 launch_servers()
-                evaluate_and_save(result_db, cases, lambda addr: MiniLang(addr, SH_params="timeout = 120"))
+                evaluate_and_save(result_db, cases, lambda addr: MiniLang(addr, SH_params="timeout = 30"))
                 report_evaluation(proof_jsonl, result_db)
             case 'isar':
                 if len(sys.argv) != 4:
@@ -60,12 +60,60 @@ if __name__ == "__main__":
                 proof_jsonl = sys.argv[2]
                 result_db = sys.argv[3]
                 report_evaluation(proof_jsonl, result_db)
-            case "eval-mini-pisa":
-                clean_mash("./evaluation/minilang_pisa_result.db")
+            case "mini-pisa":
+                if len(sys.argv) != 4:
+                    print("usage: ./evaluation/evaluator_top.py mini-pisa <proof.jsonl> <result.db>")
+                    exit(1)
+                proof_jsonl = sys.argv[2]
+                result_db = sys.argv[3]
+                clean_mash(result_db)
                 launch_servers()
-                cases = Case.jsonl('./evaluation/minilang_response.jsonl')
-                evaluate_and_save('./evaluation/minilang_pisa_result.db', cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout = 30"))
-                report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
+                cases = Case.jsonl(proof_jsonl)
+                evaluate_and_save(result_db, cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout = 30"))
+                report_evaluation(proof_jsonl, result_db)
+            case "mini-pisa-raw-SH":
+                if len(sys.argv) != 4:
+                    print("Usage: ./evaluation/evaluator_top.py mini-pisa-raw-SH <proof.jsonl> <result.db>")
+                    exit(1)
+                proof_jsonl = sys.argv[2]
+                result_db = sys.argv[3]
+                clean_mash(result_db)
+                launch_servers()
+                cases = Case.jsonl(proof_jsonl)
+                evaluate_and_save(result_db, cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout = 30, mini_use_improved_SH = false"))
+                report_evaluation(proof_jsonl, result_db)
+            case "mini-pisa-raw-SH-report":
+                if len(sys.argv) != 4:
+                    print("Usage: ./evaluation/evaluator_top.py mini-pisa-raw-SH <proof.jsonl> <result.db>")
+                    exit(1)
+                proof_jsonl = sys.argv[2]
+                result_db = sys.argv[3]
+                report_evaluation(proof_jsonl, result_db)
+            case "isar-pisa":
+                if len(sys.argv) != 4:
+                    print("usage: ./evaluation/evaluator_top.py isar-pisa <proof.jsonl> <result.db>")
+                    exit(1)
+                proof_jsonl = sys.argv[2]
+                result_db = sys.argv[3]
+                clean_mash(result_db)
+                launch_servers()
+                cases = Case.jsonl(proof_jsonl)
+                #evaluate_and_save(result_db, cases, Isar_PISA)
+                evaluate_and_save(result_db, cases, lambda addr: Isar_PISA(addr, libs=['Auto_Sledgehammer.Auto_Sledgehammer']))
+                report_evaluation(proof_jsonl, result_db)
+            case "isar-pisa-report":
+                if len(sys.argv) != 4:
+                    print("usage: ./evaluation/evaluator_top.py isar-pisa <proof.jsonl> <result.db>")
+                    exit(1)
+                proof_jsonl = sys.argv[2]
+                result_db = sys.argv[3]
+                report_evaluation(proof_jsonl, result_db)
+            # case "eval-mini-pisa":
+            #     clean_mash("./evaluation/minilang_pisa_result.db")
+            #     launch_servers()
+            #     cases = Case.jsonl('./evaluation/minilang_response.jsonl')
+            #     evaluate_and_save('./evaluation/minilang_pisa_result.db', cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout = 30"))
+            #     report_evaluation('./evaluation/minilang_response.jsonl', './evaluation/minilang_pisa_result.db')
             case "eval-mini-DS-pisa":
                 clean_mash("./evaluation/minilang-DS_pisa_result.db")
                 launch_servers()

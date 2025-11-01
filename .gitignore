@@ -20,3 +20,6 @@ __pycache__
 .archive
 /evaluation
 /tasks/Baldur/results/
+/run
+/tmp
+/translation/statistics_cache.json

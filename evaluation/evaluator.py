@@ -56,7 +56,20 @@ class Case:
         with open(response_path, "r", encoding="utf-8") as f: 
                 for line in f:
                     data = json.loads(line)
-                    ret.append(Case(data["index"], data["response"]))
+                    if "response" in data:
+                        proofs = data["response"]
+                    elif "responses" in data:
+                        proofs = data["responses"]
+                    else:
+                        raise Exception("What the fuck where is my response?")
+                    if not isinstance(proofs, list):
+                        proofs = [proofs]
+                    def filter(prf):
+                        if prf.startswith('PROOF:\n'):
+                            return prf[7:]
+                        else:
+                            return prf
+                    ret.append(Case(data["index"], [filter(p) for p in proofs]))
         return ret
 
 class Evaluator:
@@ -133,8 +146,10 @@ class MiniLang_Base(Evaluator):
                 else:
                     errors.append("Proof not finished")
             except REPLFail as E:
+                times.append(time.time() - start_time)
                 errors.append(E)
             except TimeoutError as E:
+                times.append(time.time() - start_time)
                 errors.append(E)
         return Result(Status.FAIL, errors, times)
 
@@ -328,7 +343,7 @@ class Isar_Base(Evaluator):
         output = []
         comment_level = 0 
         for i, c in enumerate(code):
-            if c == '(' and code[i+1] == '*':
+            if c == '(' and i+1 < len(code) and code[i+1] == '*':
                 comment_level += 1
             if comment_level == 0:
                 output.append(c)
@@ -428,6 +443,8 @@ class Isar(Isar_Base):
             case (file, line):
                 column = 0
             case (file,):
+                if file.startswith("data"):
+                    file = "/home/xero/Current/NTP4Verif/" + file
                 line = type(self).locate_proof_goal(file)
                 if line is None:
                     raise ValueError(f"Invalid index: {index}")
@@ -568,17 +585,23 @@ def report_evaluation(response_path : str, result_path : str):
     with open(response_path, "r", encoding="utf-8") as f:
         for line in f:
             data = json.loads(line)
-            responses[str(data["index"])] = data["response"]
+            if "response" in data:
+                prf = data["response"]
+            elif "responses" in data:
+                prf = data["responses"]
+            else:
+                raise Exception ("No responses field")
+            responses[str(data["index"])] = prf
     with open(result_path + '.csv', "w", encoding="utf-8") as f:
         csv_writer = csv.writer(f)
-        csv_writer.writerow(["index", "status", "elapsed time", "error", "response"])
+        csv_writer.writerow(["index", "status", "pass", "elapsed time", "error", "response"])
         with SqliteDict(result_path) as db:
             for key, result in db.items():
                 try:
                     err = '\n\n'.join([str(e) for e in result.errors])
                 except AttributeError:
                     err = result.error
-                csv_writer.writerow([key, result.status, str(result.elapsed_time), err, responses[key]])
+                csv_writer.writerow([key, result.status, len(result.errors), str(result.elapsed_time), err, responses[key]])
 
 def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluator): # -> Dict[Index, Result]
     # Setup shared variables with thread-safe access
@@ -599,7 +622,7 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
         with lock:
             success_rate = success / (total-unavailable) if total - unavailable > 0 else 0
             unavailable_rate = unavailable / total if total > 0 else 0
-            logger.info(f"Success: {success_rate:.3f}, Unavailable: {unavailable_rate:.3f}, Remaining: {remaining_cases}")
+            logger.info(f"Success: {success_rate:.5f}, Unavailable: {unavailable_rate:.5f}, Remaining: {remaining_cases}")
 
 
     logger.info(f"Starting {evaluator.__name__} evaluation of {len(cases)} cases. The result will be saved to {result_path}")
