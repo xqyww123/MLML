@@ -14,6 +14,7 @@ import queue
 import atexit
 import tools.slurm as slurm
 from tools.server import test_server
+import traceback
 
 logging.basicConfig(
     level=logging.INFO,
@@ -63,6 +64,7 @@ def encode_pos (pos):
     return f'{norm_file(pos[3][1])}:{pos[0]}'
 
 def encode_pos2 (pos):
+    #print(pos)
     return f'{norm_file(pos[3][1])}:{pos[0]}:{pos[1]}'
 
 def translate():
@@ -228,6 +230,7 @@ def translate():
                                 finished_theories += 1
                                 for target in translation_targets:
                                     db_decl[f"{task}:{target}"] = True
+                                traceback.print_exc()
                                 logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {task}: {e}")
                                 #time.sleep(10)
                     finally:

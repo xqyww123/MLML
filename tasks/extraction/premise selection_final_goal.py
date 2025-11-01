@@ -23,7 +23,7 @@ pos = load_ISAR_PROOF_INDEX()
 threadLock = threading.Lock()
 counter = 0
 
-with SqliteDict('./cache/SH_premise_selection_final_goal.db') as db:
+with SqliteDict('./cache/SH.pretty.db') as db:
     pre_total = len(pos)
     complete_indexes = set()
     for j, (key, val) in enumerate(db.items()):
@@ -77,6 +77,7 @@ with SqliteDict('./cache/SH_premise_selection_final_goal.db') as db:
                                 logging.error(f"Error loading file {proof_pos.file}: {e}")
                                 continue
                             res = c.premise_selection('final', 1000, ['mesh'], {}, 'pretty')
+                            #print(res)
                             db[key] = res
                             db.commit()
                             logging.info(f"[{counter}/{total}] obtained {len(res)} for {proof_pos}")
