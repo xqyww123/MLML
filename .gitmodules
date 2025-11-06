@@ -13,3 +13,7 @@
 	path = contrib/Isa-REPL
 	url = git@github.com:xqyww123/Isa-REPL.git
 	branch = Isabelle2024
+[submodule "contrib/Automation_Base"]
+	path = contrib/Automation_Base
+	url = git@github.com:xqyww123/Automation_Base.git
+  branch = main
