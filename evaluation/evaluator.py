@@ -15,6 +15,7 @@ import time
 import traceback
 from tools.server import SERVERS
 from typing import Callable, Tuple
+import msgpack as mp
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -123,22 +124,22 @@ class MiniLang_Base(Evaluator):
             self.mini.close()
             self.mini = None
     
-    def validate(self, index, src):
+    def validate(self, index, proofs):
         try:
             self.start_case(index)
         except CaseNotAvailable:
             return Result(Status.CASE_NOT_AVAILABLE, ["Case not available"], [])
-        if isinstance(src, str):
-            src = [src]
-        if len(src) > 1:
+        if isinstance(proofs, str):
+            proofs = [proofs]
+        if len(proofs) > 1:
             self.mini.record('EVAL')
         errors = []
         times = []
-        for i, code in enumerate(src):
+        for i, code in enumerate(proofs):
             if i > 0:
                 self.mini.rollback('EVAL')
+            start_time = time.time()
             try:
-                start_time = time.time()
                 _, finished = self.mini.eval(code, self._timeout * 1000, timeout_cmd=5000)
                 times.append(time.time() - start_time)
                 if finished:
@@ -291,18 +292,18 @@ class Isar_Base(Evaluator):
         self.repl.rollback("init")
         self.repl.eval(src)
 
-    def validate(self, index, src):
+    def validate(self, index, proofs):
         try:
             self.start_case(index)
         except CaseNotAvailable:
             return Result(Status.CASE_NOT_AVAILABLE, ["Case not available"], [])
-        if isinstance(src, str):
-            src = [src]
-        if len(src) > 1:
+        if isinstance(proofs, str):
+            proofs = [proofs]
+        if len(proofs) > 1:
             self.repl.record_state('EVAL')
         errors = []
         times = []
-        for i, code in enumerate(src):
+        for i, code in enumerate(proofs):
             if i > 0:
                 self.repl.rollback('EVAL')
             try:
@@ -360,8 +361,65 @@ class Isar_Base(Evaluator):
             return True
         return False
 
+class MinilangAgent_Base(Isar_Base):
+    def __init__(self, addr, timeout=500, connection_timeout=1200,
+                step_limit=30, parallel_runs=1, query_ret_num=30):
+        self._budget = (step_limit, timeout, parallel_runs, query_ret_num)
+        super().__init__(addr, timeout=timeout, connection_timeout=connection_timeout, libs=[])
+        self.repl.set_trace(False)
+        self.repl.load_theory(['Minilang_Agent.Minilang_Agent'])
 
-class Isar_PISA(Isar_Base, PISA_Data):
+    def validate(self, index, proofs):
+        try:
+            self.start_case(index)
+        except CaseNotAvailable:
+            return Result(Status.CASE_NOT_AVAILABLE, ["Case not available"], [])
+        if isinstance(proofs, str):
+            proofs = [proofs]
+        elif isinstance(proofs, list) and all(isinstance(p, str) for p in proofs):
+            pass
+        else:
+            raise ValueError(f"Invalid proofs: {proofs}")
+
+        errors = []
+        times = []
+        for i, driver in enumerate(proofs):
+            if i > 0:
+                self.repl.rollback('EVAL')
+            try:
+                self.repl.run_app('MiniLang_Agent')
+                mp.pack((driver, self._budget), self.repl.cout)
+                self.repl.cout.flush()
+                (success, elapsed, cpu_time) = Client._parse_control_(self.repl.unpack.unpack())
+                times.append(elapsed)
+                if success:
+                    return Result(Status.SUCCESS, errors, times)
+                else:
+                    errors.append(f"Driver {driver} fails")
+            except REPLFail as E:
+                errors.append(E)
+            except TimeoutError as E:
+                errors.append(E)
+        return Result(Status.FAIL, errors, times)
+
+
+class REPL_PISA_Mixin:
+    def start_case(self, index : int):
+        try:
+            pos = self.proof_pos_of(index)
+        except KeyError:
+            logger.error(f"Case Not Available: {index} is not in the dateset")
+            raise CaseNotAvailable(index, f"Isar_PISA: case {index} not available")
+        try:
+            self.move_to(pos.file, pos.line, pos.column)
+        except TimeoutError as E:
+            logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
+            raise CaseNotAvailable(index, f"Isar_PISA: case {index} not available")
+        except REPLFail as E:
+            logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
+            raise CaseNotAvailable(index, f"Isar_PISA: case {index} not available")
+
+class Isar_PISA(REPL_PISA_Mixin, Isar_Base, PISA_Data):
 
     def __init__(self, addr, *args, **kwargs):
         Isar_Base.__init__(self, addr, *args, **kwargs)
@@ -381,22 +439,45 @@ class Isar_PISA(Isar_Base, PISA_Data):
         PISA_Data.close(self)
         Isar_Base.close(self)
 
-    def start_case(self, index : int):
+
+class MinilangAgent_PISA(REPL_PISA_Mixin, MinilangAgent_Base, PISA_Data):
+    def __init__(self, addr, *args, **kwargs):
+        MinilangAgent_Base.__init__(self, addr, *args, **kwargs)
+        PISA_Data.__init__(self)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        PISA_Data.__exit__(self, exc_type, exc_value, traceback)
+        MinilangAgent_Base.__exit__(self, exc_type, exc_value, traceback)
+        return None
+    
+    def __enter__(self):
+        PISA_Data.__enter__(self)
+        MinilangAgent_Base.__enter__(self)
+        return self
+
+    def close(self):
+        PISA_Data.close(self)
+        MinilangAgent_Base.close(self)
+
+class REPL_AFP_Mixin:
+
+    def start_case(self, index : Position):
         try:
             pos = self.proof_pos_of(index)
         except KeyError:
             logger.error(f"Case Not Available: {index} is not in the dateset")
-            raise CaseNotAvailable(index, f"Isar_PISA: case {index} not available")
+            raise CaseNotAvailable(index, f"Isar_AFP: case {index} not available")
         try:
             self.move_to(pos.file, pos.line, pos.column)
         except TimeoutError as E:
             logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
-            raise CaseNotAvailable(index, f"Isar_PISA: case {index} not available")
+            raise CaseNotAvailable(index, f"Isar_AFP: case {index} not available")
         except REPLFail as E:
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
-            raise CaseNotAvailable(index, f"Isar_PISA: case {index} not available")
+            raise CaseNotAvailable(index, f"Isar_AFP: case {index} not available")
 
-class Isar_AFP(Isar_Base, AFP_Data):
+
+class Isar_AFP(REPL_AFP_Mixin, Isar_Base, AFP_Data):
 
     def __init__(self, addr, *args, **kwargs):
         Isar_Base.__init__(self, addr, *args, **kwargs)
@@ -416,22 +497,29 @@ class Isar_AFP(Isar_Base, AFP_Data):
         AFP_Data.close(self)
         Isar_Base.close(self)
 
-    def start_case(self, index : Position):
-        try:
-            pos = self.proof_pos_of(index)
-        except KeyError:
-            logger.error(f"Case Not Available: {index} is not in the dateset")
-            raise CaseNotAvailable(index, f"Isar_AFP: case {index} not available")
-        try:
-            self.move_to(pos.file, pos.line, pos.column)
-        except TimeoutError as E:
-            logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
-            raise CaseNotAvailable(index, f"Isar_AFP: case {index} not available")
-        except REPLFail as E:
-            logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
-            raise CaseNotAvailable(index, f"Isar_AFP: case {index} not available")
 
-class Isar(Isar_Base):
+class MinilangAgent_AFP(REPL_AFP_Mixin, MinilangAgent_Base, AFP_Data):
+
+    def __init__(self, addr, *args, **kwargs):
+        MinilangAgent_Base.__init__(self, addr, *args, **kwargs)
+        AFP_Data.__init__(self)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        AFP_Data.__exit__(self, exc_type, exc_value, traceback)
+        MinilangAgent_Base.__exit__(self, exc_type, exc_value, traceback)
+        return None
+    
+    def __enter__(self):
+        AFP_Data.__enter__(self)
+        MinilangAgent_Base.__enter__(self)
+        return self
+
+    def close(self):
+        AFP_Data.close(self)
+        MinilangAgent_Base.close(self)
+
+
+class REPL_FileLine_Mixin:
 
     def start_case(self, index : str):
         """
@@ -457,6 +545,14 @@ class Isar(Isar_Base):
         except REPLFail as E:
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
             raise CaseNotAvailable(index, f"Isar: case {index} not available")
+    
+
+class Isar(REPL_FileLine_Mixin, Isar_Base):
+    pass
+
+class MinilangAgent(REPL_FileLine_Mixin, MinilangAgent_Base):
+    pass
+
 
 #if __name__ == "__main__":
 #    logger.info('self-testing')
@@ -471,83 +567,54 @@ class Isar(Isar_Base):
 #        assert(test.validate("test", 29, ["by simp"])[0] == Result.CASE_NOT_AVAILABLE)
 #        assert(test.validate("test", 1, ["using assms unfolding echelon_form_upt_k_def by auto"])[0] == Result.SUCCESS)
 
-class MiniLang_MiniF2F(MiniLang_Base, MiniF2F_Data):
+class MiniF2F_Mixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._data = MiniF2F_Data()
 
-    def __init__(self, addr, *args, **kwargs):
-        MiniLang_Base.__init__(self, addr, *args, **kwargs)
-        MiniF2F_Data.__init__(self)
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        MiniF2F_Data.__exit__(self, exc_type, exc_value, traceback)
-        MiniLang_Base.__exit__(self, exc_type, exc_value, traceback)
-        return None
-
-    def __enter__(self):
-        MiniF2F_Data.__enter__(self)
-        MiniLang_Base.__enter__(self)
-        return self
-    
-    def close(self):
-        MiniF2F_Data.close(self)
-        MiniLang_Base.close(self)
-
-    def start_case(self, index : Tuple[str, str]):
-        category, idx = index
-        if category not in ["test", "valid"]:
-            raise ValueError(f"Isar_MiniF2F: only support test and valid category") 
-        dataset = get_MINIF2F_VALIDATION() if category == "valid" else get_MINIF2F_TEST()
+    def start_case(self, index : str):
         try:
-            src = dataset[idx]
+            src = self._data.prelude_and_statement_of(index)
         except KeyError:
             logger.error(f"Case Not Available: {index} is not in the dateset")
-            raise CaseNotAvailable(f"MiniLang_MiniF2F: case {index} not available")
+            raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
         try:
             self.reset_eval(src)
         except REPLFail as E:
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
-            raise CaseNotAvailable(f"MiniLang_MiniF2F: case {index} not available")
+            raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
         except TimeoutError as E:
             logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
-            raise CaseNotAvailable(f"MiniLang_MiniF2F: case {index} not available")
+            raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
 
-class Isar_MiniF2F(Isar_Base, MiniF2F_Data):
+class MiniLang_MiniF2F(MiniF2F_Mixin, MiniLang_Base):
+    pass
 
-    def __init__(self, addr, *args, **kwargs):
-        Isar_Base.__init__(self, addr, *args, **kwargs)
-        MiniF2F_Data.__init__(self)
+class Isar_MiniF2F(MiniF2F_Mixin, Isar_Base):
+    pass
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        MiniF2F_Data.__exit__(self, exc_type, exc_value, traceback)
-        Isar_Base.__exit__(self, exc_type, exc_value, traceback)
-        return None
-    
-    def __enter__(self):
-        MiniF2F_Data.__enter__(self)
-        Isar_Base.__enter__(self)
-        return self
-    
-    def close(self):
-        MiniF2F_Data.close(self)
-        Isar_Base.close(self)
+class MinilangAgent_MiniF2F(MiniF2F_Mixin, MinilangAgent_Base):
+    pass
 
-    def start_case(self, index : Tuple[str, str]):
-        category, idx = index
-        if category not in ["test", "valid"]:
-            raise ValueError(f"Isar_MiniF2F: only support test and valid category") 
-        dataset = get_MINIF2F_VALIDATION() if category == "valid" else get_MINIF2F_TEST()
+class SourceText_Mixin:
+    def start_case(self, index : str):
         try:
-            src = dataset[idx]
-        except KeyError:
-            logger.error(f"Case Not Available: {index} is not in the dateset")
-            raise CaseNotAvailable(f"Isar_MiniF2F: case {index} not available")
-        try:
-            self.reset_eval(src)
+            self.reset_eval(index)
         except REPLFail as E:
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
-            raise CaseNotAvailable(f"Isar_MiniF2F: case {index} not available")
+            raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
         except TimeoutError as E:
             logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
-            raise CaseNotAvailable(f"Isar_MiniF2F: case {index} not available")
+            raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
+
+class MiniLang_Source(SourceText_Mixin, MiniLang_Base):
+    pass
+
+class Isar_Source(SourceText_Mixin, Isar_Base):
+    pass
+
+class MinilangAgent_Source(SourceText_Mixin, MinilangAgent_Base):
+    pass
 
 #if __name__ == "__main__":
 #    logger.info('self-testing MiniF2F')
