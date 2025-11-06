@@ -411,6 +411,7 @@ if not os.path.isfile('data/miniF2F_validation.json') or not os.path.isfile('dat
 
 _MINIF2F_VALIDATION = None
 _MINIF2F_TEST = None
+_MINIF2F_ALL = None
 
 def get_MINIF2F_VALIDATION():
     global _MINIF2F_VALIDATION
@@ -426,6 +427,11 @@ def get_MINIF2F_TEST():
             _MINIF2F_TEST = json.load(f)
     return _MINIF2F_TEST
 
+def get_MINIF2F_ALL():
+    global _MINIF2F_ALL
+    if _MINIF2F_ALL is None:
+        _MINIF2F_ALL = get_MINIF2F_VALIDATION() | get_MINIF2F_TEST()
+    return _MINIF2F_ALL
 
 class CaseNotAvailable(Exception):
     """Exception raised when an evaluation case is not available."""
@@ -441,6 +447,12 @@ class Data:
 
     def all_cases(self): # -> enumerate[Index]:
         raise NotImplementedError("all_cases must be implemented by subclass")
+
+    def all_categories(self): # -> enumerate[str]:
+        raise NotImplementedError("all_categories must be implemented by subclass")
+
+    def cases_of(self, category : str): # -> enumerate[Index]:
+        raise NotImplementedError("cases_of must be implemented by subclass")
     
     def is_available(self, index) -> bool:
         return index in self.all_cases()
@@ -632,12 +644,25 @@ class AFP_Data(Data):
 
 class MiniF2F_Data(Data):
     def index_type(self) -> type:
-        return Tuple[str, str]
+        return str
+    
+    def prelude_and_statement_of(self, index : str):
+        return get_MINIF2F_ALL()[index]
     
     def all_cases(self): # -> enumerate[Index]:
-        validation = get_MINIF2F_VALIDATION().keys()
-        test = get_MINIF2F_TEST().keys()
-        return {('valid', idx) for idx in validation} | {('test', idx) for idx in test}
+        return get_MINIF2F_ALL().keys()
+    
+    def all_categories(self): # -> enumerate[str]:
+        return ['valid', 'test']
+
+    def cases_of(self, category : str): # -> enumerate[Index]:
+        match category:
+            case 'valid':
+                return get_MINIF2F_VALIDATION().keys()
+            case 'test':
+                return get_MINIF2F_TEST().keys()
+            case _:
+                raise ValueError(f"Invalid category: {category}")
     
     def goal_of(self, index) -> str:
         raise NotImplementedError("TODO")
