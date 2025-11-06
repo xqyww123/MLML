@@ -82,10 +82,7 @@ echo "Setting Isabelle memory limit to ${isabelle_memory}GB"
 
 
 #rm -f  $(isabelle getenv -b ISABELLE_HOME_USER)/etc/components 2>/dev/null
-isabelle components -u ./contrib/afp-2025-02-12/thys || exit 1
-isabelle components -u ./contrib/Isa-REPL || exit 1
-isabelle components -u ./contrib/Isa-Mini || exit 1
-isabelle components -u ./contrib/auto_sledgehammer || exit 1
+isabelle components -u ./contrib || exit 1
 
 isabelle ocaml_setup || echo "Fail to activate OCaml support for Isabelle. Some files may fail to be evaluated"
 isabelle ghc_setup || echo "Fail to activate GHC support for Isabelle. Some files may fail to be evaluated"
