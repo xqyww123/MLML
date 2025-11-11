@@ -2,7 +2,7 @@
 set -e
 
 echo "Initializing system..."
-git pull
+#git pull
 git submodule update --init --recursive --remote
 git lfs install
 git lfs pull
@@ -82,6 +82,7 @@ echo "Setting Isabelle memory limit to ${isabelle_memory}GB"
 
 
 #rm -f  $(isabelle getenv -b ISABELLE_HOME_USER)/etc/components 2>/dev/null
+isabelle components -u ./contrib/afp-2025-02-12/thys || exit 1
 isabelle components -u . || exit 1
 
 isabelle ocaml_setup || echo "Fail to activate OCaml support for Isabelle. Some files may fail to be evaluated"
