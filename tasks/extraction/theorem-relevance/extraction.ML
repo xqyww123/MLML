@@ -80,11 +80,11 @@ fun socket_reporter pos_tr (cin,cout) =
               val seen = read (unpackList unpackString)
               val print = print_term_ ctxt
               val get_ac = ac_shuffle ac_shuffle_num (Context.Proof ctxt)
-              fun pass thm = (print (Thm.prop_of thm), map print (get_ac (Thm.prop_of thm)))
+              fun pass thm = map print (get_ac (Thm.prop_of thm))
               val premises'1 = filter_out (member (op =) seen o fst) premises'
                             |> map (apsnd pass)
            in doPack (packPair (packInt,
-                    packPairList (packString, packPair (packString, packList packString)))
+                    packPairList (packString, packList packString))
                 ) (3, premises'1) cout
             ; BinIO.StreamIO.flushOut cout
             ; fold (Symtab.update o rpair ()) seen tabs
@@ -262,6 +262,6 @@ fun REPL_App (cin, cout, toplevel) =
     ; toplevel
   end
 
-val _ = REPL_Server.register_app "Theorem_Extraction" REPL_App
+val _ = REPL_Server.register_app "Premise_Extraction" REPL_App
 
 end

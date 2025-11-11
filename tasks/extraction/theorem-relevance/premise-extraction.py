@@ -91,17 +91,19 @@ def extract():
     #        task_group = tasks[i:i+5]
     #        task_queue.put(task_group)
 
-    with SqliteDict('./cache/premise_extration.db') as db:
+    with SqliteDict('./cache/premise_relevance.db') as db,\
+        SqliteDict('./cache/premise_extration_control.db') as control_db,\
+        SqliteDict('./cache/premise_equivalence.db') as thm_db:
         def translate_one(server, rpath):
             path=os.path.abspath(rpath)
             rpath=norm_file(path)
-            if all(f"{rpath}:{target}" in db_decl for target in translation_targets):
+            if rpath in control_db:
                 logger.info(f"skipped {rpath}")
                 return
             with Client(server, 'HOL', timeout=None) as c:
                 c.set_register_thy(False)
                 c.set_trace(False)
-                c.load_theory(['Minilang_Translator.MS_Translator_Top'])
+                c.load_theory(['Premise_Extraction.Premise_Extraction'])
 
                 def interact():
                     nonlocal total_goals, finished_goals
@@ -109,55 +111,39 @@ def extract():
                         match c.unpack.unpack():
                             case (0, pos):
                                 pos = encode_pos(pos)
-                                run = False
-                                for target in translation_targets:
-                                    key = f"{pos}:{target}"
-                                    if key not in db: # or db[key][1]:
-                                        run = True
-                                        break
+                                run = pos not in db
                                 mp.pack(run, c.cout)
                                 c.cout.flush()
-                            case (2, pos_spec, pos_prf, ret):
-                                total_goals += 1
-                                spec_offset = pos_spec[1]
-                                pos_spec = encode_pos(pos_spec)
-                                pos_prf = encode_pos2(pos_prf)
-                                if all(not err for _, (_, err) in ret.items()):
-                                    logger.info(f"{server} - {pos_spec} succeeds")
-                                    logger.info(ret[translation_targets[0]][0])
-                                for cat, (src, err) in ret.items():
-                                    db[f"{pos_spec}:{cat}"] = (src, err, pos_prf, spec_offset)
-                                    if err:
-                                        logger.info(f"{server} - {pos_spec} - {cat} fails: {err}")
-                                    else:
-                                        if cat in finished_goals:
-                                            finished_goals[cat] += 1
-                                        else:
-                                            finished_goals[cat] = 1
-                                report()
-                                db.commit()
-                            case 3:
-                                break
-                            case (4, pos, src):
-                                # declarations
-                                pos = encode_pos2(pos)
-                                db_decl[pos] = src
-                            case (5, pos, header):
+                            case (1, pos, data):
                                 pos = encode_pos(pos)
-                                db_decl[':header:'+pos] = header
-                            case (7, err):
-                                raise REPLFail(err)
+                                db[pos] = data
+                                db.commit()
+                            case (2, premises):
+                                seen = [premise for premise in premises if premise in thm_db]
+                                mp.pack(seen, c.cout)
+                                c.cout.flush()
+                            case (3, premises):
+                                for premise, equivs in premises:
+                                    existing = []
+                                    if premise in thm_db:
+                                        existing = thm_db[premise]
+                                    existing += [x for x in equivs if x not in existing]
+                                    thm_db[premise] = existing
+                                    thm_db.commit()
+                            case (4, errs):
+                                logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error extracting {rpath}: {"\n\n".join(errs)}")
+                            case 5:
+                                break
                             case X:
                                 raise REPLFail("Invalid message " + str(X))
 
-                c.run_app("Minilang-Translator")
-                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - translating {rpath}")
-                mp.pack((path, translation_targets), c.cout)
+                c.run_app("Premise_Extraction")
+                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - extracting {rpath}")
+                mp.pack(path, c.cout)
                 c.cout.flush()
                 interact()
-                for target in translation_targets:
-                    db_decl[f"{rpath}:{target}"] = True
-                db_decl.commit()
+                control_db[rpath] = True
+                control_db.commit()
                 logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - finished {rpath}")
 
         def worker(server):
@@ -176,33 +162,23 @@ def extract():
                     time.sleep(60)
                     continue
                 
+                reentry = True
                 try:
                     # Create a copy of the group for iteration
-                    reentry = True
                     for _ in range(5):
                         try:
                             translate_one(server, task)
                             reentry = False
                             finished_theories += 1
                             break
-                        except REPLFail as e:
-                            reentry = False
-                            finished_theories += 1
-                            for target in translation_targets:
-                                db_decl[f"{task}:{target}"] = True
-                            logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Give up bad theory {task}: {e}")
-                            break
                         except ConnectionError:
-                            logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Connection error translating {task}")
+                            logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Connection error in extraction {task}")
                             time.sleep(180)
                         except Exception as e:
                             reentry = False
                             finished_theories += 1
-                            for target in translation_targets:
-                                db_decl[f"{task}:{target}"] = True
                             traceback.print_exc()
-                            logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {task}: {e}")
-                            #time.sleep(10)
+                            logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error extracting {task}: {e}")
                 finally:
                     # Mark the current group as done and requeue any remaining failed tasks
                     task_queue.task_done()
@@ -229,4 +205,4 @@ def extract():
 
 if __name__ == "__main__":
     launch_servers()
-    translate()
+    extract()
