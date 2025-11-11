@@ -1,0 +1,3 @@
+session Premise_Extraction = Minilang_Translator +
+  theories
+    "Premise_Extraction"
