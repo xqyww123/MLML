@@ -4,7 +4,8 @@ include THEOREM_EXTRACTION
 type theory_name = string
 (* type theorem_name = theory_name * string * int option *)
 
-val premise_selection : Sledgehammer.fact_override
+val premise_selection : bool -> thm list
+                     -> Sledgehammer.fact_override
                      -> Toplevel.state
                      -> (term * thm list) list
 
@@ -15,7 +16,7 @@ open Theorem_Extraction
 
 type theory_name = string
 (* type theorem_name = theory_name * string * int option *)
-
+                                                  
 (*
 fun fact_ref_to_name ctxt facts (Facts.Named ((name, _), iv)) : (theorem_name * thm) list =
   \<^try>\<open>
@@ -51,7 +52,7 @@ fun fact_ref_to_name ctxt facts (Facts.Named ((name, _), iv)) : (theorem_name * 
 
 val full_keywords = Thy_Header.get_keywords \<^theory>
 
-fun dirty_hack toplevel relevant_facts_store s =
+fun dirty_hack ctxt relevant_facts_store s =
   let fun find c s = CharVector.foldri (fn (i, c', ret) => if c' = c then i :: ret else ret) [] s
       val inds = find #"\^E" s
    in if length inds < 4
@@ -70,9 +71,8 @@ fun dirty_hack toplevel relevant_facts_store s =
                 |> (fn SOME x => x
                      | NONE => [])
         val (w, _) = MinLang_Translator.collect_facts ast
-        val ctxt = Toplevel.context_of toplevel
         val thy = Proof_Context.theory_of ctxt
-        val relevant_facts = maps (Proof_Context.get_fact ctxt o fst) w
+        val relevant_facts = Attrib.eval_thms ctxt w
          in Synchronized.change relevant_facts_store (union (Thm.equiv_thm thy) relevant_facts)
        end
   end
@@ -80,24 +80,61 @@ fun dirty_hack toplevel relevant_facts_store s =
 val silence_state =
       Proof.map_contexts (Try0.silence_methods false #> Config.put SMT_Config.verbose false)
 
-fun premise_selection override toplevel =
-  let val stat = Toplevel.proof_of toplevel
-              |> Proof.refine_insert []
+fun raw_premise_selection override stat =
+  let val ctxt = Proof.context_of stat
       val goals = #goal (Proof.raw_goal stat) |> Thm.prems_of
       (* val ret : string list Synchronized.var = Synchronized.var "raw_sledgehammer" [] *)
       val sledgehammer_params =
               ("try0", "false") :: ("preplay_timeout", "0") ::
               Phi_Sledgehammer_Solver.get_sledgehammer_params (Proof.context_of stat)
-   in Par_List.map (fn (i,goal) =>
+      fun collect (i, goal) =
         let val relevant_facts_store = Synchronized.var "relevant_facts" []
-         in Sledgehammer.run_sledgehammer
+            val tmp = Sledgehammer.run_sledgehammer
               (Sledgehammer_Commands.default_params (Proof.theory_of stat) sledgehammer_params)
                 Sledgehammer_Prover.Minimize
-                  (SOME (dirty_hack toplevel relevant_facts_store)) (i+1) override
+                  (SOME (dirty_hack ctxt relevant_facts_store)) (i+1) override
                 (silence_state stat)
-          ; (goal, Synchronized.value relevant_facts_store)
-        end)
-      (map_index I goals)
+         in (goal, Synchronized.value relevant_facts_store)
+        end
+   in map_index collect goals
   end
+
+val timeout = Time.fromSeconds 3
+fun premise_selection first_or_all wthms override toplevel =
+  let val stat = Toplevel.proof_of toplevel
+   in if Proof.goal_finished stat
+     then []
+     else let
+      val stat = stat
+              |> Proof.refine_insert []
+              |> first_or_all ? Proof.refine_primitive (fn _ => Goal.protect 1)
+      fun timeout_tac tac = (fn th => Seq.make (fn () =>
+            Timeout.apply timeout Seq.pull (tac th)
+            handle Timeout.TIMEOUT _ => NONE))
+      val stat's = Seq.append
+         (Proof.refine (Method.Basic (fn ctxt =>
+                Method.METHOD (K (timeout_tac (Clasimp.auto_tac ctxt))))) stat)
+         (Proof.refine (Method.Basic (fn ctxt =>
+                Method.METHOD (K (ALLGOALS (timeout_tac o Clasimp.clarsimp_tac ctxt))))) stat)
+         |> Seq.filter_results
+      val thy = Toplevel.theory_of toplevel
+   in(case Seq.pull stat's
+        of SOME (stat', _) =>
+            let val goal = #goal (Proof.goal stat)
+                val goal'= #goal (Proof.goal stat')
+             in if Thm.prop_of goal aconv Thm.prop_of goal'
+              then raw_premise_selection override stat
+                |> map (apsnd (union (Thm.equiv_thm thy) wthms))
+              else let
+                val premises  = raw_premise_selection override stat
+                             |> map (apsnd (union (Thm.equiv_thm thy) wthms))
+                val premises' = raw_premise_selection override stat'
+                 in AList.join (op aconv) (fn _ => merge (Thm.equiv_thm thy)) (premises', premises)
+                end
+            end
+         | NONE => raw_premise_selection override stat
+                |> map (apsnd (union (Thm.equiv_thm thy) wthms))
+    ) |> filter_out (null o snd)
+  end end
 
 end

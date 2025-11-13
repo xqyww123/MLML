@@ -6,6 +6,8 @@ type reporter
 val interactive_reporter : reporter
 val init_translator : reporter -> unit
 val extraction_file : string -> unit
+val extract_source : Toplevel.state -> string
+                  -> (string * ((string * thm) list * string list)) list
 
 end
 
@@ -25,6 +27,8 @@ type reporter = {
         report_errors : string list -> unit
      }
 
+val _ = MinLang_Translator.msorry_printing :=
+          "tactic \<open>ALLGOALS (Skip_Proof.cheat_tac \<^context>)\<close>"
 
 fun is_goal_command (Command_Span.Command_Span (name, _)) =
       member (op =) ["lemma", "theorem", "schematic_goal", "proposition", "corollary",
@@ -116,7 +120,7 @@ val interactive_reporter = let open Pretty
     notify_theorems = (fn ctxt => fn thms =>
       tracing (string_of (chunks (
           para "New theorem(s):"
-       :: map (fn (name, th) =>
+       :: map (fn (_, th) =>
             item [Syntax.pretty_term ctxt (Thm.prop_of th)]
           ) thms )))),
     report_errors = (fn errs =>
@@ -124,7 +128,11 @@ val interactive_reporter = let open Pretty
     }
   end
 
-fun collect stat commands =
+exception Partial_Ret of ((string * thm) list * string list) Symtab.table
+
+fun join_entry (pa,ga) (pb,gb) = (AList.join (op =) (K fst) (pa, pb), union (op =) ga gb)
+
+fun raw_collect report_err first_goal_or_all stat commands =
   let open Minilang_Aux
       fun extraction _ ret [] = ret
         | extraction stat ret (all_commands as (tr, _) :: commands) =
@@ -140,14 +148,22 @@ fun collect stat commands =
                      val origin_prf = tactics
                                    |> map ( filter Token.is_proper
                                           o Command_Span.content o snd)
-                     val origin_ast = try MinLang_Translator.parse_isar (stat, origin_prf)
-                                   |> the_default []
-                     val (w,wo) = MinLang_Translator.collect_facts origin_ast
-                     val override = { add = w, del = wo, only = false }
-                     fun pass stat ret [] = (stat, ret)
-                       | pass stat ret ((tr,_) :: cmds) =
-                          let val premises = premise_selection override stat
-                              val ctxt = Toplevel.context_of stat
+                     val origin_ast = try MinLang_Translator.parse_isar_no_state origin_prf
+                     fun pass stat ret [] _ = (stat, ret)
+                       | pass stat ret all_cmds all_ast =
+                          let val ctxt = Toplevel.context_of stat
+                           (* val thy = Proof_Context.theory_of ctxt *)
+                              val (override, wthms) = case all_ast
+                                    of SOME ast => let
+                                        val (w,_) = MinLang_Translator.collect_facts ast
+                                        val override = { add = w, del = [], only = false }
+                                        val wthms = Attrib.eval_thms ctxt w
+                                     in (override, wthms)
+                                    end
+                                     | NONE => ({ add=[], del=[], only=false }, [])
+                              val premises =
+                                    \<^try>\<open>premise_selection first_goal_or_all wthms override stat
+                                      catch E => (report_err (Runtime.exn_message_list E) ; [])\<close>
                               val print = print_term_ ctxt
                               val get_acs = ac_shuffle ac_shuffle_num (Context.Proof ctxt)
                               val assms = Assumption.all_assms_of (Toplevel.context_of stat)
@@ -159,13 +175,31 @@ fun collect stat commands =
                                               ( map (`(print o Thm.prop_of)) prems,
                                                 map print (get_acs goal)))
                                         end )
-                              fun join (pa,ga) (pb,gb) = (pa @ pb, ga @ gb)
-                              val ret' = fold (fn (k,v) => Symtab.map_default (k, ([],[])) (join v))
+                              val ret' = fold (fn (k,v) => Symtab.map_default (k, ([],[])) (join_entry v))
                                               premises ret
-                              val (stat', _) = Toplevel.transition false tr stat
-                           in pass stat' ret' cmds
+                              fun move_next state ((tr, Command_Span.Span (kind, _)) :: cmds) asts =
+                                    let val (stat', err) = Toplevel.transition false tr state
+                                        val _ = case err of NONE => ()
+                                                  | SOME (E, _) => (
+                                                      report_err (Runtime.exn_message_list E)
+                                                    ; raise Partial_Ret ret')
+                                        val asts' = Option.map (fn _ :: L => L | [] => []) asts
+                                     in case kind
+                                          of Command_Span.Command_Span ("using", _) =>
+                                                move_next stat' cmds asts'
+                                           | _ => (stat', cmds, asts')
+                                    end
+                                | move_next _ _ _ = error "BUG: extraction.collect_premises.pass"
+                              val (stat', cmds', asts') = move_next stat all_cmds all_ast
+                           in pass stat' ret' cmds' asts'
                           end
-                   in pass stat ret commands
+                      val _ = case origin_ast
+                           of SOME ast =>
+                              if length ast = length commands
+                              then ()
+                              else error "BUG: raw_collect.extraction"
+                            | _ => ()
+                   in pass stat ret commands origin_ast
                   end
              in (*
             if unsuported span
@@ -173,18 +207,78 @@ fun collect stat commands =
             else *) if Toplevel.is_proof stat andalso
                        begin_with_tactic all_commands
             then let val tactics = extract_tactic all_commands
-                     val (stat', ret') = collect_premises ret tactics
+                     val (stat', ret') =
+                        \<^try>\<open>collect_premises ret tactics
+                          catch Partial_Ret ret => raise Partial_Ret ret
+                              | E => (
+                                    report_err (Runtime.exn_message_list E);
+                                    raise Partial_Ret ret )\<close>
                   (* val pos = case Command_Span.kind (snd (hd tactics))
                                  of Command_Span.Command_Span (_, pos) => pos
                                   | _ => error "BUG" *)
-                  in extraction stat' ret' (remove_tactic all_commands)
+                  in \<^try>\<open>extraction stat' ret' (remove_tactic all_commands)
+                      catch Partial_Ret ret => raise Partial_Ret ret
+                          | E => ( report_err (Runtime.exn_message_list E);
+                                   raise Partial_Ret ret )\<close>
                  end
             else fallback ()
             end
    in extraction stat Symtab.empty commands
-   |> Symtab.dest
   end
 
+fun parse_cmds thy src =
+  let val pos = Position.make {
+                  line=1, offset=1, end_offset=1,
+                  props= { label = "", file = "#Extraction", id="" }
+                }
+      val symbs = Symbol_Pos.explode (src, pos)
+      val keywords = Thy_Header.get_keywords thy
+                  |> Keyword.add_major_keywords ["mqed", "mproof"]
+      fun fix_cmds (_, cmd as Command_Span.Span (Command_Span.Command_Span ("mproof", pos), _))
+            = ( MinLang_Translator.mproof_transition Toplevel.empty
+                  |> Toplevel.position pos
+                  |> Toplevel.name "mproof"
+              , cmd)
+        | fix_cmds (_, cmd as Command_Span.Span (Command_Span.Command_Span ("mqed", pos), _))
+            = ( MinLang_Translator.mqed_transition Toplevel.empty
+                  |> Toplevel.position pos
+                  |> Toplevel.name "mqed"
+              , cmd)
+        | fix_cmds x = x
+      val cmds = Token.tokenize keywords {strict = false} symbs
+              |> Outer_Syntax.parse_spans
+              |> map (` (Command_Span.content #> Outer_Syntax.parse_span thy (K thy)))
+              |> filter_out (Toplevel.is_ignored o fst)
+              |> map fix_cmds
+   in cmds
+  end
+
+fun collect report_err stat commands =
+  let val stat' = stat
+      fun try_raw_collect flag stat commands =
+          \<^try>\<open>raw_collect report_err flag stat commands
+            catch Partial_Ret ret => ret
+                | E => ( report_err (Runtime.exn_message_list E); Symtab.empty )\<close>
+   in case try (fn () =>
+        let val tokens = map (filter Token.is_proper o Command_Span.content o snd) commands
+            val ast' = MinLang_Translator.elaborate (Unsynchronized.ref []) (stat, tokens)
+            val elaborated = MinLang_Translator.print_ast ast'
+            val thy = Toplevel.theory_of stat'
+            val cmds' = parse_cmds thy elaborated
+            val _ = fold (Toplevel.command_exception false o fst) cmds' stat'
+         in cmds'
+        end) ()
+    of SOME cmds' =>
+          \<^try>\<open>raw_collect report_err true stat' cmds'
+            catch Partial_Ret ret =>
+              let val ret0 = try_raw_collect false stat commands
+               in Symtab.join (K (uncurry join_entry)) (ret0, ret)
+              end
+                | E => ( report_err (Runtime.exn_message_list E);
+                         try_raw_collect false stat commands )\<close>
+     | NONE => try_raw_collect false stat commands
+  end
+    |> Symtab.dest
 
 fun REPL_plugin (reporter : reporter) : REPL.collector =
       fn _ => fn {current_command, state, remaining} =>
@@ -198,7 +292,7 @@ fun REPL_plugin (reporter : reporter) : REPL.collector =
     then if #start reporter pos
       then let
           val proof = Minilang_Aux.extract_proof remaining
-          val data = collect state proof
+          val data = collect (#report_errors reporter) state proof
           val premise_group = map (apsnd (apfst (map fst))) data
           val theorems = maps (fst o snd) data
           val ctxt = Toplevel.context_of state
@@ -240,6 +334,14 @@ fun extraction_file path =
                       write_thy = false }
                     src
   end
+
+fun extract_source state src =
+  let val thy = Toplevel.theory_of state
+      val cmds = parse_cmds thy src
+   in collect (fn errs => warning (String.concatWith "\n" errs)) state cmds
+  end
+
+
 
 fun REPL_App (cin, cout, toplevel) =
   let open MessagePackBinIO.Unpack MessagePackBinIO.Pack
