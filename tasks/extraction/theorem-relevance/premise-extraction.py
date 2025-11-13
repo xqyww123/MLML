@@ -143,8 +143,10 @@ def extract():
                                 logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - file {rpath} - position {pos} - Error: {"\n\n".join(errs)}")
                             case 5:
                                 break
+                            case (None, err):
+                                raise REPLFail(f"{pos} REPL failed: " + err)
                             case X:
-                                raise REPLFail("Invalid message " + str(X))
+                                raise REPLFail(f"{pos} Invalid message " + str(X))
 
                 c.run_app("Premise_Extraction")
                 logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - extracting {rpath}")
