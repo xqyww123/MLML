@@ -7,7 +7,7 @@
 section \<open>List prefixes, suffixes, and homeomorphic embedding\<close>
 
 theory Test_Sublist
-imports Main Premise_Extraction.Premise_Extraction
+imports Main
 begin 
 
 subsection \<open>Prefix order on lists\<close>
@@ -19,7 +19,8 @@ definition strict_prefix :: "'a list \<Rightarrow> 'a list \<Rightarrow> bool"
   where "strict_prefix xs ys \<longleftrightarrow> prefix xs ys \<and> xs \<noteq> ys"
 
 global_interpretation prefix_order: ordering prefix strict_prefix
-  by standard (auto simp add: prefix_def strict_prefix_def)
+  by standard (fact pre_iso_test3 pre_iso_test4 pre_iso_test5 pre_iso_test6
+  same3 same4 same5 same6)+
 
 interpretation prefix_order: order prefix strict_prefix
   by standard (auto simp: prefix_def strict_prefix_def)

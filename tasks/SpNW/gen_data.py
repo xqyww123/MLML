@@ -9,13 +9,12 @@ import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 from IsaREPL import Client
 import os
+from tools.logger import configure_logging
 
-logging.basicConfig(
+configure_logging(
     level=logging.INFO,
-    format='%(asctime)s - %(processName)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout)
-    ]
+    fmt="%(asctime)s - %(processName)s - %(levelname)s - %(message)s",
+    stream=sys.stdout,
 )
 
 def gen_data(proof_lang, result_path, model_name, partNum, totalNum, data_source, token_limit, include_proof=True, process=lambda x: x):
