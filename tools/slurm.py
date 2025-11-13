@@ -6,8 +6,10 @@ import time
 import subprocess
 import threading
 
+USER = os.environ.get("USER", "qiyuan.xu")
+
 def allocated_servers():
-    cmd = f"squeue -u haonan.li"
+    cmd = f"squeue -u {USER}"
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     return result.stdout.strip()
 
