@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+from tools.logger import configure_logging
 from tools.server import SERVERS, CLUSTER, launch_servers
 from sqlitedict import SqliteDict
 import msgpack as mp
@@ -16,11 +17,7 @@ import tools.slurm as slurm
 from tools.server import test_server
 import traceback
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+configure_logging(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 SERVER_INSTANCES = []
@@ -187,8 +184,8 @@ def extract():
                             logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Connection error in extraction {task}")
                             time.sleep(180)
                         except Exception as e:
-                            reentry = False
-                            finished_theories += 1
+                            # reentry = False
+                            # finished_theories += 1
                             traceback.print_exc()
                             logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error extracting {task}: {e}")
                 finally:

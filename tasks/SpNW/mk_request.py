@@ -8,13 +8,10 @@ import sys
 import glob
 import queue
 import logging
+from tools.logger import configure_logging
 import threading
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+configure_logging(level=logging.INFO)
 
 TOKEN_LIMIT = 14000
 

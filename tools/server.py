@@ -8,19 +8,15 @@ import time
 import concurrent.futures
 import threading
 from . import slurm
+from .logger import configure_logging
 
-logger = logging.getLogger(__name__)
 # Read the logging level from an environment variable, default to INFO if not set.
-log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+log_level_name = os.getenv("LOG_LEVEL", "INFO").upper()
+log_level = getattr(logging, log_level_name, logging.INFO)
 
 # Configure logging using the specified log level.
-logging.basicConfig(
-    level=log_level,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler()
-    ]
-)
+configure_logging(level=log_level)
+logger = logging.getLogger(__name__)
 
 CFG_SERVERS = {}
 try:

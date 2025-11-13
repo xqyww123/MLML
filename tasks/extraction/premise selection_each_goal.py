@@ -5,6 +5,7 @@ Add premise selection information into ./cache/SH_premise_selection.db
 """
 
 import logging
+from tools.logger import configure_logging
 from data.isabelle import Position, load_ISAR_PROOF_INDEX
 from sqlitedict import SqliteDict
 from IsaREPL import Client, REPLFail
@@ -13,11 +14,7 @@ import queue
 import time
 import threading
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+configure_logging(level=logging.INFO)
 
 pos = load_ISAR_PROOF_INDEX()
 threadLock = threading.Lock()

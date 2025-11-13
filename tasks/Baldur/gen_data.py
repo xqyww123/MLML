@@ -13,14 +13,13 @@ from data.isabelle import Position
 import data.language as language
 import pandas as pd  # For DataFrame handling
 import pyarrow  # Required for pandas to write parquet files
+from tools.logger import configure_logging
 
 # Configure logging
-logging.basicConfig(
+configure_logging(
     level=logging.INFO,
-    format='%(asctime)s - %(processName)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout)
-    ]
+    fmt="%(asctime)s - %(processName)s - %(levelname)s - %(message)s",
+    stream=sys.stdout,
 )
 
 def verify_contamination():

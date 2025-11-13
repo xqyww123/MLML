@@ -1,6 +1,7 @@
 from sqlitedict import SqliteDict
 import os
 import logging
+from tools.logger import configure_logging
 import json
 from IsaREPL import Client, Position, REPLFail
 import csv
@@ -13,11 +14,7 @@ from . import proof_context
 from . import premise_selection
 
 # Configure logging to print to screen
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+configure_logging(level=logging.INFO)
 
 if not os.path.exists('cache'):
     os.makedirs('cache')
