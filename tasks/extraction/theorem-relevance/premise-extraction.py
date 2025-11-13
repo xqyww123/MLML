@@ -94,6 +94,9 @@ def extract():
     with SqliteDict('./cache/premise_relevance.db') as db,\
         SqliteDict('./cache/premise_extration_control.db') as control_db,\
         SqliteDict('./cache/premise_equivalence.db') as thm_db:
+        total_pairs = 0
+        if '$total' in control_db:
+            total_pairs = control_db['$total']
         def translate_one(server, rpath):
             path=os.path.abspath(rpath)
             rpath=norm_file(path)
@@ -106,7 +109,8 @@ def extract():
                 c.load_theory(['Premise_Extraction.Premise_Extraction'])
 
                 def interact():
-                    nonlocal total_goals, finished_goals
+                    nonlocal total_goals, finished_goals, total_pairs
+                    pos = None
                     while True:
                         match c.unpack.unpack():
                             case (0, pos):
@@ -116,22 +120,30 @@ def extract():
                                 c.cout.flush()
                             case (1, pos, data):
                                 pos = encode_pos(pos)
+                                lens = [len(r) for r, _ in data.values()]
+                                AC_equivs = [len(ac) for _, ac in data.values()]
+                                total_pairs += sum(lens)
+                                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - {pos} - finished {len(data)} goals, each of length {lens}, AC equivs {AC_equivs}, and {sum(lens)} pairs. In total {total_pairs} pairs are collected.")
                                 db[pos] = data
                                 db.commit()
+                                control_db['$total'] = total_pairs
+                                control_db.commit()
                             case (2, premises):
                                 seen = [premise for premise in premises if premise in thm_db]
                                 mp.pack(seen, c.cout)
                                 c.cout.flush()
                             case (3, premises):
-                                for premise, equivs in premises:
+                                for premise, equivs in premises.items():
                                     existing = []
                                     if premise in thm_db:
                                         existing = thm_db[premise]
                                     existing += [x for x in equivs if x not in existing]
                                     thm_db[premise] = existing
-                                    thm_db.commit()
+                                thm_db.commit()
+                                lens = [len(r) for r in premises.values()]
+                                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - meet {len(premises)} premises, each of {lens} AC equivs.")
                             case (4, errs):
-                                logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error extracting {rpath}: {"\n\n".join(errs)}")
+                                logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - file {rpath} - position {pos} - Error: {"\n\n".join(errs)}")
                             case 5:
                                 break
                             case X:
