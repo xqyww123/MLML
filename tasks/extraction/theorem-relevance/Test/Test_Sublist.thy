@@ -7,7 +7,7 @@
 section \<open>List prefixes, suffixes, and homeomorphic embedding\<close>
 
 theory Test_Sublist
-imports Main
+imports Main Premise_Extraction.Premise_Extraction
 begin 
 
 subsection \<open>Prefix order on lists\<close>
@@ -312,6 +312,17 @@ lemma prefixes_eq_snoc:
 
 lemma prefixes_tailrec [code]: 
   "prefixes xs = rev (snd (foldl (\<lambda>(acc1, acc2) x. (x#acc1, rev (x#acc1)#acc2)) ([],[[]]) xs))"
+(*  ML_val \<open>Theorem_Extraction.extract_source @{Isar.state}
+"proof -\
+\  have \"foldl (\<lambda>(acc1, acc2) x. (x#acc1, rev (x#acc1)#acc2)) (ys, rev ys # zs) xs = \
+\          (rev xs @ ys, rev (map (\<lambda>as. rev ys @ as) (prefixes xs)) @ zs)\" for ys zs \
+\  proof (induction xs arbitrary: ys zs) \
+\    case (Cons x xs ys zs) \
+\    from Cons.IH[of \"x # ys\" \"rev ys # zs\"]\
+\      show ?case by (simp add: o_def)\
+\  qed simp_all\
+\  from this [of \"[]\" \"[]\"] show ?thesis by simp \
+\qed"\<close> *)
 proof -
   have "foldl (\<lambda>(acc1, acc2) x. (x#acc1, rev (x#acc1)#acc2)) (ys, rev ys # zs) xs =
           (rev xs @ ys, rev (map (\<lambda>as. rev ys @ as) (prefixes xs)) @ zs)" for ys zs
@@ -322,7 +333,7 @@ proof -
   qed simp_all
   from this [of "[]" "[]"] show ?thesis by simp
 qed
-  
+   
 lemma set_prefixes_eq: "set (prefixes xs) = {ys. prefix ys xs}"
   by auto
 

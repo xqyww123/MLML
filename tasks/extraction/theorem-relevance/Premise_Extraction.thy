@@ -2,6 +2,7 @@ theory Premise_Extraction
   imports Minilang_Translator.MS_Translator Isa_REPL.Isa_REPL
 begin
 
+
 ML_file "ac_shuffle.ML"
 
 setup \<open>Context.theory_map (
@@ -11,6 +12,23 @@ setup \<open>Context.theory_map (
 
 ML_file "sledgehammer.ML"
 ML_file "extraction.ML"
+
+(*
+ML \<open>fun mapx F (L,x) = (map F L, F x)\<close>
+ML \<open>Theorem_Extraction.ac_shuffle_goal 30 (Context.Proof \<^context>)
+    ([@{term \<open>(ys::'a::type list) @ [y::'a::type] = (xs::'a::type list) @
+    (zs::'a::type list)\<close>},
+    @{term \<open>prefix (xs::'a::type list) ((ys::'a::type list) @ [y::'a::type])\<close>}],
+  @{term \<open>(xs::'a::type list) = (ys::'a::type list) @ [y::'a::type] \<or> prefix xs ys\<close>})
+  |> map (mapx (Thm.cterm_of \<^context>)) \<close>
+
+
+ML \<open>Theorem_Extraction.ac_shuffle_goal 100 (Context.Proof \<^context>)
+    ([@{term \<open>(xs::'a::type list) = [] \<and> B\<close>},
+      @{term \<open>AAA \<or> CCC\<close>}  ],
+  @{term \<open>prefix xs ((y::'a::type) # (ys::'a::type list)) = (xs = [] \<or> (\<exists>zs::'a::type list. xs = y # zs \<and> prefix zs ys))\<close>})
+  |> map (mapx (Thm.cterm_of \<^context>))
+  |> length  \<close>
 
 (*
 declare [[ML_print_depth = 100]]
@@ -29,6 +47,7 @@ fun print_term_ ctxt =
      in Syntax.string_of_term ctxt'
      #> REPL.trim_makrup
     end\<close>
+*)
 *)
 
 end

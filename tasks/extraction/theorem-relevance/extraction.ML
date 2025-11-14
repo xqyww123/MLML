@@ -7,7 +7,7 @@ val interactive_reporter : reporter
 val init_translator : reporter -> unit
 val extraction_file : string -> unit
 val extract_source : Toplevel.state -> string
-                  -> (string * ((string * thm) list * string list)) list
+                  -> ((string list * string) * ((string * thm) list * (string list * string) list)) list
 
 end
 
@@ -16,12 +16,16 @@ open Theorem_Extraction
 
 val ac_shuffle_num = 40
 
-type goal = string
+type goal = string list * string
 type thm_expr = string
+type premise_group = goal * (thm_expr list * goal list (*ac-shuffle*))
+
+val goal_eq = eq_pair (eq_set (op =)) (op =)
+
 type reporter = {
         start: Position.T -> bool,
         premise_group: Position.T
-                    -> (goal * (thm_expr list * goal list (*ac-shuffle*))) list
+                    -> premise_group list
                     -> unit,
         notify_theorems: Proof.context -> (thm_expr * thm) list -> unit,
         report_errors : string list -> unit
@@ -62,6 +66,7 @@ fun socket_reporter pos_tr (cin,cout) =
                          in cin := cin'
                           ; ret
                         end
+      val pack_goal = packPair (packList packString, packString)
    in { start = (fn pos =>
           let val _ = doPack (packPair (packInt, pos_packer)) (0, pos) cout 
               val _ = BinIO.StreamIO.flushOut cout
@@ -69,8 +74,8 @@ fun socket_reporter pos_tr (cin,cout) =
           end),
         premise_group = (fn pos => fn data => (
           doPack (packTuple3 (packInt, pos_packer,
-                    packPairList (packString,
-                        packPair (packList packString, packList packString))))
+                    packPairList (pack_goal,
+                        packPair (packList packString, packList pack_goal))))
                  (1, pos, data)
                  cout
         ; BinIO.StreamIO.flushOut cout
@@ -99,7 +104,12 @@ fun socket_reporter pos_tr (cin,cout) =
     } : reporter
   end
 
+
+fun concatWith x LL = List.concat (map_index (fn (0,L) => L | (_,L) => x @ L) LL)
+
 val interactive_reporter = let open Pretty
+     fun print_goal (assms, concl) =
+          concatWith [str ", ", brk 1] (map text assms) @ str " |-" :: brk 1 :: text concl
   in {
     start = (fn pos => (
       tracing (string_of (block [str "Start ", position pos])) ;
@@ -110,11 +120,11 @@ val interactive_reporter = let open Pretty
             block [str "Position:", brk 1, position pos]
          :: map (fn (goal, (thms, acs)) =>
               item [chunks [
-                  para goal
+                  block (print_goal goal)
                 , str "Dependent theorems"
                 , chunks (map (item o text) thms) 
                 , str "AC shuffle"
-                , chunks (map (item o text) acs)
+                , chunks (map (item o print_goal) acs)
                   ]]) data
          )))),
     notify_theorems = (fn ctxt => fn thms =>
@@ -128,9 +138,9 @@ val interactive_reporter = let open Pretty
     }
   end
 
-exception Partial_Ret of ((string * thm) list * string list) Symtab.table
+exception Partial_Ret of ((string list * string) * ((string * thm) list * (string list * string) list)) list
 
-fun join_entry (pa,ga) (pb,gb) = (AList.join (op =) (K fst) (pa, pb), union (op =) ga gb)
+fun join_entry ((pa,ga), (pb,gb)) = (AList.join (op =) (K fst) (pa, pb), union (op =) ga gb)
 
 fun raw_collect report_err first_goal_or_all stat commands =
   let open Minilang_Aux
@@ -165,18 +175,20 @@ fun raw_collect report_err first_goal_or_all stat commands =
                                     \<^try>\<open>premise_selection first_goal_or_all wthms override stat
                                       catch E => (report_err (Runtime.exn_message_list E) ; [])\<close>
                               val print = print_term_ ctxt
-                              val get_acs = ac_shuffle ac_shuffle_num (Context.Proof ctxt)
+                              fun print_goal (assms, goal) = (map print assms, print goal)
+                              val get_acs = ac_shuffle_goal ac_shuffle_num (Context.Proof ctxt)
                               val assms = Assumption.all_assms_of (Toplevel.context_of stat)
                                        |> map Thm.term_of
                               val premises = premises
-                                    |> map (fn (raw_goal, prems) =>
-                                        let val goal = Logic.list_implies (assms, raw_goal)
-                                         in (print goal,
+                                    |> map (fn (goal, prems) =>
+                                        let (* val goal = Logic.list_implies (assms, raw_goal) *)
+                                         in ((map print assms, print goal),
                                               ( map (`(print o Thm.prop_of)) prems,
-                                                map print (get_acs goal)))
+                                                map print_goal (get_acs (assms, goal))))
                                         end )
-                              val ret' = fold (fn (k,v) => Symtab.map_default (k, ([],[])) (join_entry v))
-                                              premises ret
+                              val ret' = AList.join goal_eq (K join_entry) (premises, ret)
+                           (* val ret' = fold (fn (k,v) => Symtab.map_default (k, ([],[])) (join_entry v))
+                                              premises ret *)
                               fun move_next state ((tr, Command_Span.Span (kind, _)) :: cmds) asts =
                                     let val (stat', err) = Toplevel.transition false tr state
                                         val _ = case err of NONE => ()
@@ -223,7 +235,7 @@ fun raw_collect report_err first_goal_or_all stat commands =
                  end
             else fallback ()
             end
-   in extraction stat Symtab.empty commands
+   in extraction stat [] commands
   end
 
 fun parse_cmds thy src =
@@ -258,7 +270,7 @@ fun collect report_err stat commands =
       fun try_raw_collect flag stat commands =
           \<^try>\<open>raw_collect report_err flag stat commands
             catch Partial_Ret ret => ret
-                | E => ( report_err (Runtime.exn_message_list E); Symtab.empty )\<close>
+                | E => ( report_err (Runtime.exn_message_list E); [] )\<close>
    in case try (fn () =>
         let val tokens = map (filter Token.is_proper o Command_Span.content o snd) commands
             val ast' = MinLang_Translator.elaborate (Unsynchronized.ref []) (stat, tokens)
@@ -272,13 +284,12 @@ fun collect report_err stat commands =
           \<^try>\<open>raw_collect report_err true stat' cmds'
             catch Partial_Ret ret =>
               let val ret0 = try_raw_collect false stat commands
-               in Symtab.join (K (uncurry join_entry)) (ret0, ret)
+               in AList.join goal_eq (K join_entry) (ret0, ret)
               end
                 | E => ( report_err (Runtime.exn_message_list E);
                          try_raw_collect false stat commands )\<close>
      | NONE => try_raw_collect false stat commands
   end
-    |> Symtab.dest
 
 fun REPL_plugin (reporter : reporter) : REPL.collector =
       fn _ => fn {current_command, state, remaining} =>
