@@ -2,13 +2,14 @@ signature THEOREM_EXTRACTION = sig
 
 type constant_name = string
 type AC_shuffle_max_num = int
-val ac_shuffle : AC_shuffle_max_num -> Context.generic -> term -> term list
+type ac_shuffle = term -> term list
+val ac_shuffle : AC_shuffle_max_num -> Context.generic -> ac_shuffle
+val ac_shuffle_goal : AC_shuffle_max_num -> Context.generic -> term list * term -> (term list * term) list
 
 val install_AC : Context.generic -> Context.generic -> Context.generic
 val install_AC_by_rewriting : thm list -> Context.generic -> Context.generic
 val remove_AC : constant_name list (*oprs*) -> Context.generic -> Context.generic
 
-type ac_shuffle = term -> term list
 
 end
 
@@ -386,11 +387,45 @@ fun apply_AC AC_max_num table =
           end ) vars's
      |> take_shuf origin_AC_max_num
     end
-  in fn term => remove (op aconv) term (shuffle_prems term)
-             |> take AC_max_num
+  in shuffle_prems
  end
 
-fun ac_shuffle AC_max_num ctxt = apply_AC AC_max_num (AC_table.get ctxt)
+fun ac_shuffle AC_max_num ctxt term =
+      apply_AC AC_max_num (AC_table.get ctxt) term
+        |> remove (op aconv) term
+        |> take AC_max_num
+
+fun ac_shuffle_goal AC_max_num ctxt (prems, goal) =
+  let val table = AC_table.get ctxt
+      val prems = map (apply_AC AC_max_num table) prems
+   in if null prems
+      then apply_AC AC_max_num table goal
+        |> map (pair [])
+      else let
+          val concl = apply_AC AC_max_num table goal
+          fun get_max ret [] = ret
+            | get_max ret (x::L) =
+                let val len = length x
+                 in get_max (if ret < len then len else ret) L
+                end
+          val max = get_max (length concl) prems
+          fun pad L = if length L < max
+                      then pad (L @ L)
+                      else take max L
+          val prems = map_transpose I (map (shuffle o pad) prems)
+          val concl = pad concl
+          val pairs = prems ~~ concl
+  
+          val need_permutation = length prems < AC_max_num
+          val perm_num = AC_max_num div length prems + 1
+       in ( if need_permutation
+        then maps (fn (prem,c) =>
+               map (rpair c) (bounded_permutations perm_num prem)
+           ) pairs
+        else map (apfst shuffle) pairs)
+      end
+  end
+    |> remove (eq_pair (eq_list (op aconv)) (op aconv)) (prems, goal)
 
 end
 
