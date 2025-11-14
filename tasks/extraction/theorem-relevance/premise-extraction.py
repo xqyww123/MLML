@@ -117,8 +117,8 @@ def extract():
                                 c.cout.flush()
                             case (1, pos, data):
                                 pos = encode_pos(pos)
-                                lens = [len(r) for r, _ in data.values()]
-                                AC_equivs = [len(ac) for _, ac in data.values()]
+                                lens = [len(r) for _, (r, _) in data]
+                                AC_equivs = [len(ac) for _, (_, ac) in data]
                                 total_pairs += sum(lens)
                                 logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - {pos} - finished {len(data)} goals, each of length {lens}, AC equivs {AC_equivs}, and {sum(lens)} pairs. In total {total_pairs} pairs are collected.")
                                 db[pos] = data
