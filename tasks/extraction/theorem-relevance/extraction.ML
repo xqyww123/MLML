@@ -74,8 +74,8 @@ fun socket_reporter pos_tr (cin,cout) =
           end),
         premise_group = (fn pos => fn data => (
           doPack (packTuple3 (packInt, pos_packer,
-                    packPairList (pack_goal,
-                        packPair (packList packString, packList pack_goal))))
+                    packList (packPair (pack_goal,
+                        packPair (packList packString, packList pack_goal)))))
                  (1, pos, data)
                  cout
         ; BinIO.StreamIO.flushOut cout
