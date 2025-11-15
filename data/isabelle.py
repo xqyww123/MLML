@@ -12,17 +12,18 @@ import time
 from . import language
 from . import proof_context
 from . import premise_selection
+from tools import MLML_BASE
 
 # Configure logging to print to screen
 configure_logging(level=logging.INFO)
 
-if not os.path.exists('cache'):
-    os.makedirs('cache')
+if not os.path.exists(f'{MLML_BASE}/cache'):
+    os.makedirs(f'{MLML_BASE}/cache')
 
-with open('./data/sessions.json', 'r') as f:
+with open(f'{MLML_BASE}/data/sessions.json', 'r') as f:
     SESSIONS = json.load(f)
 
-with open('./data/theories.json', 'r') as f:
+with open(f'{MLML_BASE}/data/theories.json', 'r') as f:
     # key: long name
     # value: {'deps':[long names], 'path':file_name}
     THEORIES = json.load(f)
@@ -102,20 +103,20 @@ def topological_sort():
             ranks[thy] = rank
             return rank
     sorted_thy = sorted(THEORIES, key=lambda x: ranking(x))
-    with open('data/sorted_thy.txt', 'w') as f:
+    with open(f'{MLML_BASE}/data/sorted_thy.txt', 'w') as f:
         for thy in sorted_thy:
             f.write(f"{thy}\n")
 
-if not os.path.exists('data/sorted_thy.txt'):
+if not os.path.exists(f'{MLML_BASE}/data/sorted_thy.txt'):
     logging.info('Topological sorting of theories')
     topological_sort()
 
-with open('data/sorted_thy.txt', 'r') as f:
+with open(f'{MLML_BASE}/data/sorted_thy.txt', 'r') as f:
     SORTED_THY = f.read().splitlines()
 
 def collect_declarations():
     declarations = {}
-    with SqliteDict('./data/translation/declarations.db') as db:
+    with SqliteDict(f'{MLML_BASE}/data/translation/declarations.db') as db:
         for key, command in db.items():
             match key.split(':'):
                 case (file,line,ofs):
@@ -124,14 +125,14 @@ def collect_declarations():
                         declarations[file] = []
                     declarations[file].append((int(line), int(ofs), command))
     declarations = {k: sorted(v, key=lambda x: x[1]) for k, v in declarations.items()}
-    with open('data/declarations.json', 'w') as f:
+    with open(f'{MLML_BASE}/data/declarations.json', 'w') as f:
         json.dump(declarations, f)
 
-if not os.path.exists('data/declarations.json'):
+if not os.path.exists(f'{MLML_BASE}/data/declarations.json'):
     logging.info('Collecting declarations')
     collect_declarations()
 
-with open('data/declarations.json', 'r') as f:
+with open(f'{MLML_BASE}/data/declarations.json', 'r') as f:
     DECLARATIONS = json.load(f) # a map from file paths to declarations which are tuples of (line, offset, command), sorted by the position of occurence
 
 def prelude_of(file, line, dep_depth=1, use_proofs=False, use_comments=True, maxsize=None, length_of=len, camlize=False) -> str:
@@ -178,7 +179,7 @@ def prelude_of(file, line, dep_depth=1, use_proofs=False, use_comments=True, max
 
     # add proofs
     if use_proofs:
-        with SqliteDict('./data/translation/results.db') as db:
+        with SqliteDict(f'{MLML_BASE}/data/translation/results.db') as db:
             ret = []
             size = 0
             for reverse_idx, (line, command) in enumerate(reversed(prelude)):
@@ -253,7 +254,7 @@ def common_prefix(a, b):
     return a[:match_len]
 
 
-PISA_TEST_PATH="./data/PISA"
+PISA_TEST_PATH=f"{MLML_BASE}/data/PISA"
 
 def preprocess_PISA(addr):
     with Client(addr, 'HOL') as c:
@@ -263,7 +264,7 @@ def preprocess_PISA(addr):
                 [[path,lemma]] = json.load(file)
             prefix = "/home/ywu/afp-2021-02-11/"
             if path.startswith(prefix):
-                path = "./contrib/afp-2025-02-12/" + path[len(prefix):]
+                path = f"{MLML_BASE}/contrib/afp-2025-02-12/" + path[len(prefix):]
             if not os.path.isfile(path):
                 raise FileNotFoundError(f"PISA {i}: theory not found: {path}")
 
@@ -302,7 +303,7 @@ def preprocess_PISA(addr):
             pos.file = path
             return (pos_before, pos, commands[match_index][1])
 
-        csv_file_path = "data/pisa_test.csv"
+        csv_file_path = f"{MLML_BASE}/data/pisa_test.csv"
         with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow(['Index', 'Position_before', 'Position', 'Statement'])  # Write header
@@ -321,7 +322,7 @@ def load_pisa_data():
         return PISA_DATA_CACHE
     data = {}
     PISA_AT = {}
-    csv_file_path = "data/pisa_test.csv"
+    csv_file_path = f"{MLML_BASE}/data/pisa_test.csv"
     # Check if the CSV file exists
     if not os.path.isfile(csv_file_path):
         print(f"{csv_file_path} not found. Running preprocess_PISA...")
@@ -349,15 +350,15 @@ def load_ISAR_PROOF_INDEX():
     if _ISAR_PROOF_INDEX_CACHE is not None:
         return _ISAR_PROOF_INDEX_CACHE
     indexes = {}
-    if os.path.isfile('cache/isar_proofs.idx'):
-        with open('cache/isar_proofs.idx', 'r', encoding='utf-8') as f:
+    if os.path.isfile(f'{MLML_BASE}/cache/isar_proofs.idx'):
+        with open(f'{MLML_BASE}/cache/isar_proofs.idx', 'r', encoding='utf-8') as f:
             for line in f:
                 file, line, column, prf_line, prf_column = line.split(':')
                 indexes[Position(int(line), int(column), file)] = Position(int(prf_line), int(prf_column), file)
         _ISAR_PROOF_INDEX_CACHE = indexes
         return _ISAR_PROOF_INDEX_CACHE
     else:
-        with SqliteDict('./data/translation/results.db') as db:
+        with SqliteDict(f'{MLML_BASE}/data/translation/results.db') as db:
             logging.info(f"Loading Isar proof index")
             for key, value in db.items():
                 match key.split(':'):
@@ -365,7 +366,7 @@ def load_ISAR_PROOF_INDEX():
                         (origin, _, proof_pos, spec_column) = value
                         spec_pos = Position(int(line), spec_column, file)
                         indexes[spec_pos] = Position.from_s(proof_pos)
-        with open('cache/isar_proofs.idx', 'w', encoding='utf-8') as f:
+        with open(f'{MLML_BASE}/cache/isar_proofs.idx', 'w', encoding='utf-8') as f:
             for pos, proof_pos in indexes.items():
                 f.write(f"{pos.file}:{pos.line}:{pos.column}:{proof_pos.line}:{proof_pos.column}\n")
     _ISAR_PROOF_INDEX_CACHE = indexes
@@ -396,14 +397,14 @@ def preprocess_MiniF2F(addr):
                 name, _ = os.path.splitext(os.path.basename(file))
                 validation_set[name] = src
             return validation_set
-        validate_set = mk_dataset('./data/miniF2F/isabelle/valid')
-        test_set = mk_dataset('./data/miniF2F/isabelle/test')
-        with open('data/miniF2F_validation.json', 'w', encoding='utf-8') as f:
+        validate_set = mk_dataset(f'{MLML_BASE}/data/miniF2F/isabelle/valid')
+        test_set = mk_dataset(f'{MLML_BASE}/data/miniF2F/isabelle/test')
+        with open(f'{MLML_BASE}/data/miniF2F_validation.json', 'w', encoding='utf-8') as f:
             json.dump(validate_set, f, ensure_ascii=False, indent=4)
-        with open('data/miniF2F_test.json', 'w', encoding='utf-8') as f:
+        with open(f'{MLML_BASE}/data/miniF2F_test.json', 'w', encoding='utf-8') as f:
             json.dump(test_set, f, ensure_ascii=False, indent=4)
 
-if not os.path.isfile('data/miniF2F_validation.json') or not os.path.isfile('data/miniF2F_test.json'):
+if not os.path.isfile(f'{MLML_BASE}/data/miniF2F_validation.json') or not os.path.isfile(f'{MLML_BASE}/data/miniF2F_test.json'):
     preprocess_MiniF2F("127.0.0.1:6666")
 
 _MINIF2F_VALIDATION = None
@@ -413,14 +414,14 @@ _MINIF2F_ALL = None
 def get_MINIF2F_VALIDATION():
     global _MINIF2F_VALIDATION
     if _MINIF2F_VALIDATION is None:
-        with open('data/miniF2F_validation.json', 'r', encoding='utf-8') as f:
+        with open(f'{MLML_BASE}/data/miniF2F_validation.json', 'r', encoding='utf-8') as f:
             _MINIF2F_VALIDATION = json.load(f)
     return _MINIF2F_VALIDATION
 
 def get_MINIF2F_TEST():
     global _MINIF2F_TEST
     if _MINIF2F_TEST is None:
-        with open('data/miniF2F_test.json', 'r', encoding='utf-8') as f:
+        with open(f'{MLML_BASE}/data/miniF2F_test.json', 'r', encoding='utf-8') as f:
             _MINIF2F_TEST = json.load(f)
     return _MINIF2F_TEST
 
@@ -478,7 +479,7 @@ class Data:
 
 class PISA_Data(Data):
     def __init__(self):
-        self.db = SqliteDict('./data/translation/results.db')
+        self.db = SqliteDict(f'{MLML_BASE}/data/translation/results.db')
 
     def close(self):
         self.db.close()
@@ -564,8 +565,8 @@ def _load_AFP_CASES_CACHE():
     global _AFP_CASES_CACHE
     if _AFP_CASES_CACHE is not None:
         return _AFP_CASES_CACHE
-    if os.path.isfile('cache/afp_proofs.idx'):
-        with open('cache/afp_proofs.idx', 'r', encoding='utf-8') as f:
+    if os.path.isfile(f'{MLML_BASE}/cache/afp_proofs.idx'):
+        with open(f'{MLML_BASE}/cache/afp_proofs.idx', 'r', encoding='utf-8') as f:
             _AFP_CASES_CACHE = {Position.from_s(line.strip()) for line in f}
             return _AFP_CASES_CACHE
     PISA_DATA, _ = load_pisa_data()
@@ -575,14 +576,14 @@ def _load_AFP_CASES_CACHE():
             logging.warning(f"PISA {pos_spec} not in ISAR proof index")
         s.discard(pos_spec)
     _AFP_CASES_CACHE = s
-    with open('cache/afp_proofs.idx', 'w', encoding='utf-8') as f:
+    with open(f'{MLML_BASE}/cache/afp_proofs.idx', 'w', encoding='utf-8') as f:
         for pos in _AFP_CASES_CACHE:
             f.write(f"{pos.file}:{pos.line}\n")
     return _AFP_CASES_CACHE 
 
 class AFP_Data(Data):
     def __init__(self):
-        self.db = SqliteDict('./data/translation/results.db')
+        self.db = SqliteDict(f'{MLML_BASE}/data/translation/results.db')
         self._all_cases = _load_AFP_CASES_CACHE()
 
     def close(self):

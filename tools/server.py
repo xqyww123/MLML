@@ -9,6 +9,7 @@ import concurrent.futures
 import threading
 from . import slurm
 from .logger import configure_logging
+from . import MLML_BASE
 
 # Read the logging level from an environment variable, default to INFO if not set.
 log_level_name = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 CFG_SERVERS = {}
 try:
-    with open('./config/evaluation_servers.csv', 'r') as f:
+    with open(f'{MLML_BASE}/config/evaluation_servers.csv', 'r') as f:
         csv_reader = csv.reader(f)
         # Read the first row as headers
         headers = next(csv_reader, None)
