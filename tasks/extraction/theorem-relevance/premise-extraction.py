@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 SERVER_INSTANCES = []
 for server, data in SERVERS.items():
     SERVER_INSTANCES.extend([server] * data["num-translator"])
+logger.info(f"SERVER_INSTANCES: {SERVER_INSTANCES}")
 
 # os.makedirs(f"{os.getcwd()}/cache/translation/tmp", exist_ok=True)
 # INIT_SCRIPT = f"""
@@ -121,6 +122,8 @@ def extract():
                                 AC_equivs = [len(ac) for _, (_, ac) in data]
                                 total_pairs += sum(lens)
                                 logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - {pos} - finished {len(data)} goals, each of length {lens}, AC equivs {AC_equivs}, and {sum(lens)} pairs. In total {total_pairs} pairs are collected.")
+                                # TODO： rerun zero goal cases
+                                # TODO: install agsyhol, then rerun ./contrib/afp-2025-02-12/thys/Transport
                                 db[pos] = data
                                 db.commit()
                                 control_db['$total'] = total_pairs
