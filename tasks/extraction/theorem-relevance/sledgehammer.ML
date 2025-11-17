@@ -91,7 +91,7 @@ fun raw_premise_selection override stat =
         let val relevant_facts_store = Synchronized.var "relevant_facts" []
             val tmp = Sledgehammer.run_sledgehammer
               (Sledgehammer_Commands.default_params (Proof.theory_of stat) sledgehammer_params)
-                Sledgehammer_Prover.Minimize
+                Sledgehammer_Prover.Normal
                   (SOME (dirty_hack ctxt relevant_facts_store)) (i+1) override
                 (silence_state stat)
          in (goal, Synchronized.value relevant_facts_store)

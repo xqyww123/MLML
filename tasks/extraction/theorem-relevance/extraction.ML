@@ -56,12 +56,13 @@ fun pos_packer pos =
       (line, offset, end_offset, (label, file, id))
   end
 
+val known_premises = Synchronized.var "Theorem_Extraction.known_premises" Symtab.empty
+
 fun socket_reporter pos_tr (cin,cout) =
   let open MessagePackBinIO.Unpack MessagePackBinIO.Pack
    (* val packError  = packString o Minilang_Aux.trim_markup o String.concat o Runtime.exn_message_list
       val packErrors = packList packError *)
       val pos_packer = pos_packer o pos_tr
-      val known_premises = Synchronized.var "Theorem_Extraction.known_premises" Symtab.empty
       fun read packer = let val (ret, cin') = doUnpack packer (!cin)
                          in cin := cin'
                           ; ret
