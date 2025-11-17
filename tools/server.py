@@ -7,9 +7,9 @@ from IsaREPL import Client, REPLFail
 import time
 import concurrent.futures
 import threading
-from . import slurm
+from .base import MLML_BASE
 from .logger import configure_logging
-from . import MLML_BASE
+from . import slurm
 
 # Read the logging level from an environment variable, default to INFO if not set.
 log_level_name = os.getenv("LOG_LEVEL", "INFO").upper()
