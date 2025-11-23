@@ -47,6 +47,12 @@ def encode_pos2 (pos):
     #print(pos)
     return f'{norm_file(pos[3][1])}:{pos[0]}:{pos[1]}'
 
+def watcher(client_id, status):
+    is_live, errors = status
+    logger.error(f"Client {client_id} is {'' if is_live else 'not '}live. Errors: {errors}")
+
+
+
 def extract():
 
     total_theories = 0
@@ -116,12 +122,13 @@ def extract():
                                 run = pos not in db
                                 mp.pack(run, c.cout)
                                 c.cout.flush()
+                                #logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - {pos} - reached")
                             case (1, pos, data):
                                 pos = encode_pos(pos)
                                 lens = [len(r) for _, (r, _) in data]
                                 AC_equivs = [len(ac) for _, (_, ac) in data]
                                 total_pairs += sum(lens)
-                                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - {pos} - finished {len(data)} goals, each of length {lens}, AC equivs {AC_equivs}, and {sum(lens)} pairs. In total {total_pairs} pairs are collected.")
+                                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - {pos} - finished {len(data)} goals, each of length {lens}, AC equivs {AC_equivs}, and {sum(lens)} pairs. In total {total_pairs} pairs are collected.")
                                 # TODO： rerun zero goal cases
                                 # TODO: install agsyhol, then rerun ./contrib/afp-2025-02-12/thys/Transport
                                 db[pos] = data
@@ -141,24 +148,26 @@ def extract():
                                     thm_db[premise] = existing
                                 thm_db.commit()
                                 lens = [len(r) for r in premises.values()]
-                                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - meet {len(premises)} premises, each of {lens} AC equivs.")
+                                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - meet {len(premises)} premises, each of {lens} AC equivs.")
                             case (4, errs):
-                                logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - file {rpath} - position {pos} - Error: {"\n\n".join(errs)}")
+                                logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - file {rpath} - position {pos} - Error: {"\n\n".join(errs)}")
                             case 5:
                                 break
                             case (None, err):
                                 raise REPLFail(f"{pos} REPL failed: " + err)
+                            case (9, msgs):
+                                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - {msgs}")
                             case X:
                                 raise REPLFail(f"{pos} Invalid message " + str(X))
 
                 c.run_app("Premise_Extraction")
-                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - extracting {rpath}")
+                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - extracting {rpath}")
                 mp.pack(path, c.cout)
                 c.cout.flush()
                 interact()
                 control_db[rpath] = True
                 control_db.commit()
-                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - finished {rpath}")
+                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - finished {rpath}")
 
         def worker(server):
             nonlocal finished_theories, all_task_num
@@ -219,4 +228,7 @@ def extract():
 
 if __name__ == "__main__":
     launch_servers()
+    ACTIVE_SERVERS = {k for k, v in SERVERS.items() if v["num-translator"] > 0}
+    for server in ACTIVE_SERVERS:
+        Client.install_watcher(server, watcher, interval=1)
     extract()

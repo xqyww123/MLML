@@ -88,7 +88,7 @@ def launch_server(server, retry=6, timeout=600):
     else:
         pwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         host, port = server.split(':')
-        if CLUSTER != "slurmx":
+        if CLUSTER != "slurmx" and CLUSTER != "external_managed":
             # Construct the SSH command to launch the REPL server
             # ./contrib/Isa-REPL/repl_server_watch_dog.sh 0.0.0.0:6666 HOL /tmp/repl_outputs -o threads=32
             numprocs = SERVERS[server]["numprocs"]
@@ -253,7 +253,7 @@ def launch_servers():
 
     # Get the list of servers to launch
     match CLUSTER:
-        case "ssh":
+        case "ssh" | "external_managed":
             pass
         case "slurm":
             atexit.register(slurm.free_servers)

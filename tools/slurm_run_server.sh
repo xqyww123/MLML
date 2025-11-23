@@ -29,9 +29,11 @@ while [ $# -gt 0 ]; do
   
   # Make cache directory path absolute
   dir="$(realpath ./cache/repl_tmps/${host}_${port})"
+  mash_dir="/run/screen/repl_tmps/${host}_${port}"
+  mkdir -p $mash_dir
   
   # Start the server instance
-  MASH_STATE_PATH=$dir/mash_state ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:$port AFP-1-PISA $dir -o threads=$numprocs > $dir/log.txt 2>&1 &
+  MASH_STATE_PATH=$mash_dir/mash_state ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:$port AFP-1-PISA $dir -o threads=$numprocs > $dir/log.txt 2>&1 &
   
   #echo "Started server on port $port"
 done
