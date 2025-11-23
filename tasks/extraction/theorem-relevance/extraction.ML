@@ -28,7 +28,8 @@ type reporter = {
                     -> premise_group list
                     -> unit,
         notify_theorems: Proof.context -> (thm_expr * thm) list -> unit,
-        report_errors : string list -> unit
+        report_errors : string list -> unit,
+        debug: string list -> unit
      }
 
 val _ = MinLang_Translator.msorry_printing :=
@@ -68,6 +69,7 @@ fun socket_reporter pos_tr (cin,cout) =
                           ; ret
                         end
       val pack_goal = packPair (packList packString, packString)
+      val printer_locker = Synchronized.var "" ()
    in { start = (fn pos =>
           let val _ = doPack (packPair (packInt, pos_packer)) (0, pos) cout 
               val _ = BinIO.StreamIO.flushOut cout
@@ -101,7 +103,10 @@ fun socket_reporter pos_tr (cin,cout) =
           end )),
         report_errors = (fn errs => (
               doPack (packPair (packInt, packList packString)) (4, errs) cout
-            ; BinIO.StreamIO.flushOut cout ))
+            ; BinIO.StreamIO.flushOut cout )),
+        debug = K () (* (fn errs => Synchronized.change printer_locker (fn () => (
+              doPack (packPair (packInt, packList packString)) (9, errs) cout
+            ; BinIO.StreamIO.flushOut cout ))) *)
     } : reporter
   end
 
@@ -135,7 +140,9 @@ val interactive_reporter = let open Pretty
             item [Syntax.pretty_term ctxt (Thm.prop_of th)]
           ) thms )))),
     report_errors = (fn errs =>
-      warning (string_of (chunks (map para errs))) )
+      warning (string_of (chunks (map para errs))) ),
+    debug = (fn info =>
+      warning (string_of (chunks (map para info))) )
     }
   end
 
@@ -143,7 +150,7 @@ exception Partial_Ret of ((string list * string) * ((string * thm) list * (strin
 
 fun join_entry ((pa,ga), (pb,gb)) = (AList.join (op =) (K fst) (pa, pb), union (op =) ga gb)
 
-fun raw_collect report_err first_goal_or_all stat commands =
+fun raw_collect (report_err, debug) first_goal_or_all stat commands =
   let open Minilang_Aux
       fun extraction _ ret [] = ret
         | extraction stat ret (all_commands as (tr, _) :: commands) =
@@ -172,9 +179,11 @@ fun raw_collect report_err first_goal_or_all stat commands =
                                      in (override, wthms)
                                     end
                                      | NONE => ({ add=[], del=[], only=false }, [])
+                              val _ = debug ["Before run premise selection"]
                               val premises =
-                                    \<^try>\<open>premise_selection first_goal_or_all wthms override stat
+                                    \<^try>\<open>premise_selection debug first_goal_or_all wthms override stat
                                       catch E => (report_err (Runtime.exn_message_list E) ; [])\<close>
+                              val _ = debug ["After premise selection"]
                               val print = print_term_ ctxt
                               fun print_goal (assms, goal) = (map print assms, print goal)
                               val get_acs = ac_shuffle_goal ac_shuffle_num (Context.Proof ctxt)
@@ -203,7 +212,9 @@ fun raw_collect report_err first_goal_or_all stat commands =
                                            | _ => (stat', cmds, asts')
                                     end
                                 | move_next _ _ _ = error "BUG: extraction.collect_premises.pass"
+                              val _ = debug ["Before move_next"]
                               val (stat', cmds', asts') = move_next stat all_cmds all_ast
+                              val _ = debug ["After move_next"]
                            in pass stat' ret' cmds' asts'
                           end
                       val _ = case origin_ast
@@ -236,7 +247,8 @@ fun raw_collect report_err first_goal_or_all stat commands =
                  end
             else fallback ()
             end
-   in extraction stat [] commands
+   in debug ["Start collection"]
+    ; extraction stat [] commands
   end
 
 fun parse_cmds thy src =
@@ -266,23 +278,25 @@ fun parse_cmds thy src =
    in cmds
   end
 
-fun collect report_err stat commands =
+fun collect (report_err, debug) stat commands =
   let val stat' = stat
       fun try_raw_collect flag stat commands =
-          \<^try>\<open>raw_collect report_err flag stat commands
+          \<^try>\<open>raw_collect (report_err, debug) flag stat commands
             catch Partial_Ret ret => ret
                 | E => ( report_err (Runtime.exn_message_list E); [] )\<close>
    in case try (fn () =>
-        let val tokens = map (filter Token.is_proper o Command_Span.content o snd) commands
+        let val _ = debug ["start elaboration"]
+            val tokens = map (filter Token.is_proper o Command_Span.content o snd) commands
             val ast' = MinLang_Translator.elaborate (Unsynchronized.ref []) (stat, tokens)
             val elaborated = MinLang_Translator.print_ast ast'
             val thy = Toplevel.theory_of stat'
             val cmds' = parse_cmds thy elaborated
             val _ = fold (Toplevel.command_exception false o fst) cmds' stat'
-         in cmds'
+         in debug ["Elaboration succeeds", elaborated]
+          ; cmds'
         end) ()
     of SOME cmds' =>
-          \<^try>\<open>raw_collect report_err true stat' cmds'
+          \<^try>\<open>raw_collect (report_err, debug) true stat' cmds'
             catch Partial_Ret ret =>
               let val ret0 = try_raw_collect false stat commands
                in AList.join goal_eq (K join_entry) (ret0, ret)
@@ -304,7 +318,7 @@ fun REPL_plugin (reporter : reporter) : REPL.collector =
     then if #start reporter pos
       then let
           val proof = Minilang_Aux.extract_proof remaining
-          val data = collect (#report_errors reporter) state proof
+          val data = collect (#report_errors reporter, #debug reporter) state proof
           val premise_group = map (apsnd (apfst (map fst))) data
           val theorems = maps (fst o snd) data
           val ctxt = Toplevel.context_of state
@@ -350,7 +364,8 @@ fun extraction_file path =
 fun extract_source state src =
   let val thy = Toplevel.theory_of state
       val cmds = parse_cmds thy src
-   in collect (fn errs => warning (String.concatWith "\n" errs)) state cmds
+   in collect ((fn errs => warning (String.concatWith "\n" errs)),
+               (fn errs => warning (String.concatWith "\n" errs))) state cmds
   end
 
 

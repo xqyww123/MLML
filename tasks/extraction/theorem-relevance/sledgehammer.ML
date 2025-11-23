@@ -4,7 +4,7 @@ include THEOREM_EXTRACTION
 type theory_name = string
 (* type theorem_name = theory_name * string * int option *)
 
-val premise_selection : bool -> thm list
+val premise_selection : (string list -> unit) -> bool -> thm list
                      -> Sledgehammer.fact_override
                      -> Toplevel.state
                      -> (term * thm list) list
@@ -52,12 +52,14 @@ fun fact_ref_to_name ctxt facts (Facts.Named ((name, _), iv)) : (theorem_name * 
 
 val full_keywords = Thy_Header.get_keywords \<^theory>
 
-fun dirty_hack ctxt relevant_facts_store s =
-  let fun find c s = CharVector.foldri (fn (i, c', ret) => if c' = c then i :: ret else ret) [] s
+fun dirty_hack debug ctxt relevant_facts_store s =
+  let val _ = debug ["SH", s]
+      fun find c s = CharVector.foldri (fn (i, c', ret) => if c' = c then i :: ret else ret) [] s
       val inds = find #"\^E" s
    in if length inds < 4
       then () (* tracing s *)
       else let
+        val _ = debug ["Enter dirty hack"]
         val i2 = List.nth (inds, 1)
         val i3 = List.nth (inds, 2)
      (* val i4 = List.nth (inds, 3) *)
@@ -73,34 +75,39 @@ fun dirty_hack ctxt relevant_facts_store s =
         val (w, _) = MinLang_Translator.collect_facts ast
         val thy = Proof_Context.theory_of ctxt
         val relevant_facts = Attrib.eval_thms ctxt w
-         in Synchronized.change relevant_facts_store (union (Thm.equiv_thm thy) relevant_facts)
+         in debug ["Before Synchronized.change"]
+          ; Synchronized.change relevant_facts_store (union (Thm.equiv_thm thy) relevant_facts)
+          ; debug ["After Synchronized.change"]
        end
   end
 
 val silence_state =
       Proof.map_contexts (Try0.silence_methods false #> Config.put SMT_Config.verbose false)
 
-fun raw_premise_selection override stat =
+fun raw_premise_selection debug override stat =
   let val ctxt = Proof.context_of stat
       val goals = #goal (Proof.raw_goal stat) |> Thm.prems_of
       (* val ret : string list Synchronized.var = Synchronized.var "raw_sledgehammer" [] *)
       val sledgehammer_params =
               ("try0", "false") :: ("preplay_timeout", "0") ::
               Phi_Sledgehammer_Solver.get_sledgehammer_params (Proof.context_of stat)
+      val params = Sledgehammer_Commands.default_params (Proof.theory_of stat) sledgehammer_params
+      val stat' = (silence_state stat)
       fun collect (i, goal) =
         let val relevant_facts_store = Synchronized.var "relevant_facts" []
-            val tmp = Sledgehammer.run_sledgehammer
-              (Sledgehammer_Commands.default_params (Proof.theory_of stat) sledgehammer_params)
+            val _ = debug ["before run_sledgehammer"]
+            val tmp = Sledgehammer.run_sledgehammer params
                 Sledgehammer_Prover.Normal
-                  (SOME (dirty_hack ctxt relevant_facts_store)) (i+1) override
-                (silence_state stat)
+                  (SOME (dirty_hack debug ctxt relevant_facts_store)) (i+1) override
+                stat'
+            val _ = debug ["after run_sledgehammer"]
          in (goal, Synchronized.value relevant_facts_store)
         end
    in map_index collect goals
   end
 
 val timeout = Time.fromSeconds 3
-fun premise_selection first_or_all wthms override toplevel =
+fun premise_selection debug first_or_all wthms override toplevel =
   let val stat = Toplevel.proof_of toplevel
    in if Proof.goal_finished stat
      then []
@@ -108,9 +115,13 @@ fun premise_selection first_or_all wthms override toplevel =
       val stat = stat
               |> Proof.refine_insert []
               |> first_or_all ? Proof.refine_primitive (fn _ => Goal.protect 1)
+      fun timeout_pull seq =
+            Timeout.apply timeout Seq.pull seq
+            handle Timeout.TIMEOUT _ => NONE
       fun timeout_tac tac = (fn th => Seq.make (fn () =>
             Timeout.apply timeout Seq.pull (tac th)
             handle Timeout.TIMEOUT _ => NONE))
+      val _ = debug ["AAAA1"]
       val stat's = Seq.append
          (Proof.refine (Method.Basic (fn ctxt =>
                 Method.METHOD (K (timeout_tac (Clasimp.auto_tac ctxt))))) stat)
@@ -118,22 +129,39 @@ fun premise_selection first_or_all wthms override toplevel =
                 Method.METHOD (K (ALLGOALS (timeout_tac o Clasimp.clarsimp_tac ctxt))))) stat)
          |> Seq.filter_results
       val thy = Toplevel.theory_of toplevel
-   in(case Seq.pull stat's
+   in(case (let val _ = debug ["Before pulling auto"]
+                val ret = timeout_pull stat's
+                val _ = debug ["After pulling auto"]
+             in ret
+            end )
         of SOME (stat', _) =>
             let val goal = #goal (Proof.goal stat)
                 val goal'= #goal (Proof.goal stat')
              in if Thm.prop_of goal aconv Thm.prop_of goal'
-              then raw_premise_selection override stat
-                |> map (apsnd (union (Thm.equiv_thm thy) wthms))
+              then let
+                  val _ = debug ["Before raw_premise_selection 11"]
+                  val ret = raw_premise_selection debug override stat
+                  val _ = debug ["After raw_premise_selection 11"]
+                   in ret
+                   |> map (apsnd (union (Thm.equiv_thm thy) wthms))
+                  end
               else let
-                val premises  = raw_premise_selection override stat
+                val _ = debug ["Before raw_premise_selection XX1"]
+                val premises  = raw_premise_selection debug override stat
                              |> map (apsnd (union (Thm.equiv_thm thy) wthms))
-                val premises' = raw_premise_selection override stat'
+                val _ = debug ["Before raw_premise_selection XX2"]
+                val premises' = raw_premise_selection debug override stat'
+                val _ = debug ["After raw_premise_selection XX3"]
                  in AList.join (op aconv) (fn _ => merge (Thm.equiv_thm thy)) (premises', premises)
                 end
             end
-         | NONE => raw_premise_selection override stat
-                |> map (apsnd (union (Thm.equiv_thm thy) wthms))
+         | NONE => let
+                 val _ = debug ["Before raw_premise_selection OO"]
+                 val ret = raw_premise_selection debug override stat
+                 val _ = debug ["After raw_premise_selection OO"]
+                  in ret
+                  |> map (apsnd (union (Thm.equiv_thm thy) wthms))
+                 end
     ) |> filter_out (null o snd)
   end end
 
