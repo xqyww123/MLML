@@ -123,15 +123,30 @@ def extract():
                                 mp.pack(run, c.cout)
                                 c.cout.flush()
                                 #logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - {pos} - reached")
+                            case (6, pos, transformed, id):
+                                pos = encode_pos(pos)
+                                key = f"{pos}:{'T' if transformed else 'O'}:{id}"
+                                run = (pos not in db) and (key not in db)
+                                mp.pack(run, c.cout)
+                                c.cout.flush()
                             case (1, pos, data):
                                 pos = encode_pos(pos)
                                 lens = [len(r) for _, (r, _) in data]
                                 AC_equivs = [len(ac) for _, (_, ac) in data]
                                 total_pairs += sum(lens)
                                 logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - {pos} - finished {len(data)} goals, each of length {lens}, AC equivs {AC_equivs}, and {sum(lens)} pairs. In total {total_pairs} pairs are collected.")
-                                # TODO： rerun zero goal cases
-                                # TODO: install agsyhol, then rerun ./contrib/afp-2025-02-12/thys/Transport
                                 db[pos] = data
+                                db.commit()
+                                control_db['$total'] = total_pairs
+                                control_db.commit()
+                            case (7, (pos, transformed, id), data):
+                                pos = encode_pos(pos)
+                                key = f"{pos}:{'T' if transformed else 'O'}:{id}"
+                                lens = [len(r) for _, (r, _) in data]
+                                AC_equivs = [len(ac) for _, (_, ac) in data]
+                                total_pairs += sum(lens)
+                                logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - {key} - finished {len(data)} goals, each of length {lens}, AC equivs {AC_equivs}, and {sum(lens)} pairs. In total {total_pairs} pairs are collected.")
+                                db[key] = data
                                 db.commit()
                                 control_db['$total'] = total_pairs
                                 control_db.commit()
@@ -228,7 +243,7 @@ def extract():
 
 if __name__ == "__main__":
     launch_servers()
-    ACTIVE_SERVERS = {k for k, v in SERVERS.items() if v["num-translator"] > 0}
-    for server in ACTIVE_SERVERS:
-        Client.install_watcher(server, watcher, interval=1)
+    # ACTIVE_SERVERS = {k for k, v in SERVERS.items() if v["num-translator"] > 0}
+    # for server in ACTIVE_SERVERS:
+    #     Client.install_watcher(server, watcher, interval=1)
     extract()

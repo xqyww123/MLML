@@ -15,3 +15,5 @@ tasks/Baldur/eval/eval_data_isar.parquet filter=lfs diff=lfs merge=lfs -text
 data/premise_selection/SH.pretty.db.zst filter=lfs diff=lfs merge=lfs -text
 data/proof_context.db.zst filter=lfs diff=lfs merge=lfs -text
 contrib/Isabelle2024_and_afp-2025-02-12.tar.zst filter=lfs diff=lfs merge=lfs -text
+contrib/cvc5-Linux-x86_64-static-gpl.tar.zst filter=lfs diff=lfs merge=lfs -text
+contrib/leo3-v1.7.18.jar filter=lfs diff=lfs merge=lfs -text

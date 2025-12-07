@@ -22,9 +22,15 @@ type premise_group = goal * (thm_expr list * goal list (*ac-shuffle*))
 
 val goal_eq = eq_pair (eq_set (op =)) (op =)
 
+type transformed = bool (*tranformed or original*)
+type proof_id = int
 type reporter = {
         start: Position.T -> bool,
+        start_SH: Position.T -> transformed -> proof_id -> bool,
         premise_group: Position.T
+                    -> premise_group list
+                    -> unit,
+        premise_group': Position.T * transformed * proof_id
                     -> premise_group list
                     -> unit,
         notify_theorems: Proof.context -> (thm_expr * thm) list -> unit,
@@ -75,11 +81,26 @@ fun socket_reporter pos_tr (cin,cout) =
               val _ = BinIO.StreamIO.flushOut cout
            in read unpackBool
           end),
+        start_SH = (fn pos => fn transformed => fn pid => (
+            doPack (packTuple4 (packInt, pos_packer, packBool, packInt))
+                   (6, pos, transformed, pid) cout
+          ; BinIO.StreamIO.flushOut cout
+          ; read unpackBool)),
         premise_group = (fn pos => fn data => (
           doPack (packTuple3 (packInt, pos_packer,
                     packList (packPair (pack_goal,
                         packPair (packList packString, packList pack_goal)))))
                  (1, pos, data)
+                 cout
+        ; BinIO.StreamIO.flushOut cout
+        )),
+        premise_group' = (fn pos => fn data => (
+          doPack (packTuple3 (
+                    packInt,
+                    packTuple3 (pos_packer, packBool, packInt),
+                    packList (packPair (pack_goal,
+                        packPair (packList packString, packList pack_goal)))))
+                 (7, pos, data)
                  cout
         ; BinIO.StreamIO.flushOut cout
         )),
@@ -121,9 +142,31 @@ val interactive_reporter = let open Pretty
       tracing (string_of (block [str "Start ", position pos])) ;
       true
     )),
+    start_SH = (fn pos => fn tr => fn i => (
+      tracing (string_of (block [
+          str "Start ",
+          position pos,
+          str (if tr then " transformed " else " original "),
+          str (string_of_int i) ])) ;
+      true
+    )),
     premise_group = (fn pos => fn data =>
       tracing (string_of (chunks (
             block [str "Position:", brk 1, position pos]
+         :: map (fn (goal, (thms, acs)) =>
+              item [chunks [
+                  block (print_goal goal)
+                , str "Dependent theorems"
+                , chunks (map (item o text) thms) 
+                , str "AC shuffle"
+                , chunks (map (item o print_goal) acs)
+                  ]]) data
+         )))),
+    premise_group' = (fn (pos, transformed, ID) => fn data =>
+      tracing (string_of (chunks (
+            block [str "Position:", brk 1, position pos,
+                   str (if transformed then " transformed " else " original "),
+                   str (string_of_int ID) ]
          :: map (fn (goal, (thms, acs)) =>
               item [chunks [
                   block (print_goal goal)
@@ -150,13 +193,16 @@ exception Partial_Ret of ((string list * string) * ((string * thm) list * (strin
 
 fun join_entry ((pa,ga), (pb,gb)) = (AList.join (op =) (K fst) (pa, pb), union (op =) ga gb)
 
-fun raw_collect (report_err, debug) first_goal_or_all stat commands =
+val single_cmd_timeout = Time.fromSeconds 60
+fun raw_collect (report_err, debug, can_start, notify) first_goal_or_all stat commands =
   let open Minilang_Aux
-      fun extraction _ ret [] = ret
-        | extraction stat ret (all_commands as (tr, _) :: commands) =
+      val can_start = can_start first_goal_or_all
+      val notify = notify first_goal_or_all
+      fun extraction _ _ ret [] = ret
+        | extraction ID stat ret (all_commands as (tr, _) :: commands) =
             let fun fallback () =
-                     case Toplevel.command_errors true tr stat
-                       of ([], SOME stat') => extraction stat' ret commands
+                     case try (Timeout.apply single_cmd_timeout (Toplevel.command_errors true tr)) stat
+                       of SOME ([], SOME stat') => extraction (ID+1) stat' ret commands
                         | _ => error "BUG extraction_thor - Isar evaluation fails"
                 fun collect_premises ret commands =
                   let (* val ctxt = Toplevel.context_of stat
@@ -169,38 +215,47 @@ fun raw_collect (report_err, debug) first_goal_or_all stat commands =
                      val origin_ast = try MinLang_Translator.parse_isar_no_state origin_prf
                      fun pass stat ret [] _ = (stat, ret)
                        | pass stat ret all_cmds all_ast =
-                          let val ctxt = Toplevel.context_of stat
-                           (* val thy = Proof_Context.theory_of ctxt *)
-                              val (override, wthms) = case all_ast
-                                    of SOME ast => let
-                                        val (w,_) = MinLang_Translator.collect_facts ast
-                                        val override = { add = w, del = [], only = false }
-                                        val wthms = Attrib.eval_thms ctxt w
-                                     in (override, wthms)
-                                    end
-                                     | NONE => ({ add=[], del=[], only=false }, [])
-                              val _ = debug ["Before run premise selection"]
-                              val premises =
-                                    \<^try>\<open>premise_selection debug first_goal_or_all wthms override stat
-                                      catch E => (report_err (Runtime.exn_message_list E) ; [])\<close>
-                              val _ = debug ["After premise selection"]
-                              val print = print_term_ ctxt
-                              fun print_goal (assms, goal) = (map print assms, print goal)
-                              val get_acs = ac_shuffle_goal ac_shuffle_num (Context.Proof ctxt)
-                              val assms = Assumption.all_assms_of (Toplevel.context_of stat)
-                                       |> map Thm.term_of
-                              val premises = premises
-                                    |> map (fn (goal, prems) =>
-                                        let (* val goal = Logic.list_implies (assms, raw_goal) *)
-                                         in ((map print assms, print goal),
-                                              ( map (`(print o Thm.prop_of)) prems,
-                                                map print_goal (get_acs (assms, goal))))
-                                        end )
-                              val ret' = AList.join goal_eq (K join_entry) (premises, ret)
-                           (* val ret' = fold (fn (k,v) => Symtab.map_default (k, ([],[])) (join_entry v))
-                                              premises ret *)
+                          let fun get_premises () =
+                                let val ctxt = Toplevel.context_of stat
+                                 (* val thy = Proof_Context.theory_of ctxt *)
+                                    val (override, wthms) = case all_ast
+                                          of SOME ast => let
+                                              val (w,_) = MinLang_Translator.collect_facts ast
+                                              val override = { add = w, del = [], only = false }
+                                              val wthms = Attrib.eval_thms ctxt w
+                                           in (override, wthms)
+                                          end
+                                           | NONE => ({ add=[], del=[], only=false }, [])
+                                    val _ = debug ["Before run premise selection"]
+                                    val premises =
+                                          \<^try>\<open>premise_selection debug first_goal_or_all wthms override stat
+                                            catch E => (report_err (Runtime.exn_message_list E) ; [])\<close>
+                                    val _ = debug ["After premise selection"]
+                                    val print = print_term_ ctxt
+                                    fun print_goal (assms, goal) = (map print assms, print goal)
+                                    val get_acs = ac_shuffle_goal ac_shuffle_num (Context.Proof ctxt)
+                                    val assms = Assumption.all_assms_of (Toplevel.context_of stat)
+                                             |> map Thm.term_of
+                                 in premises
+                                 |> map (fn (goal, prems) =>
+                                      let (* val goal = Logic.list_implies (assms, raw_goal) *)
+                                       in ((map print assms, print goal),
+                                            ( map (`(print o Thm.prop_of)) prems,
+                                              map print_goal (get_acs (assms, goal))))
+                                      end )
+                                end
+                              val do_SH = can_start ID
+                              val ret' = if do_SH
+                                         then let val premises = get_premises ()
+                                               in notify ID premises
+                                                ; AList.join goal_eq (K join_entry) (premises, ret)
+                                              end
+                                         else ret
                               fun move_next state ((tr, Command_Span.Span (kind, _)) :: cmds) asts =
-                                    let val (stat', err) = Toplevel.transition false tr state
+                                    let val (stat', err) =
+                                            case try (Timeout.apply single_cmd_timeout (Toplevel.transition false tr)) state
+                                              of SOME ret => ret
+                                               | NONE => raise Partial_Ret ret'
                                         val _ = case err of NONE => ()
                                                   | SOME (E, _) => (
                                                       report_err (Runtime.exn_message_list E)
@@ -240,7 +295,7 @@ fun raw_collect (report_err, debug) first_goal_or_all stat commands =
                   (* val pos = case Command_Span.kind (snd (hd tactics))
                                  of Command_Span.Command_Span (_, pos) => pos
                                   | _ => error "BUG" *)
-                  in \<^try>\<open>extraction stat' ret' (remove_tactic all_commands)
+                  in \<^try>\<open>extraction (ID+1) stat' ret' (remove_tactic all_commands)
                       catch Partial_Ret ret => raise Partial_Ret ret
                           | E => ( report_err (Runtime.exn_message_list E);
                                    raise Partial_Ret ret )\<close>
@@ -248,7 +303,7 @@ fun raw_collect (report_err, debug) first_goal_or_all stat commands =
             else fallback ()
             end
    in debug ["Start collection"]
-    ; extraction stat [] commands
+    ; extraction 0 stat [] commands
   end
 
 fun parse_cmds thy src =
@@ -278,10 +333,10 @@ fun parse_cmds thy src =
    in cmds
   end
 
-fun collect (report_err, debug) stat commands =
+fun collect (channels as (report_err, debug, _, _)) stat commands =
   let val stat' = stat
       fun try_raw_collect flag stat commands =
-          \<^try>\<open>raw_collect (report_err, debug) flag stat commands
+          \<^try>\<open>raw_collect channels flag stat commands
             catch Partial_Ret ret => ret
                 | E => ( report_err (Runtime.exn_message_list E); [] )\<close>
    in case try (fn () =>
@@ -291,12 +346,13 @@ fun collect (report_err, debug) stat commands =
             val elaborated = MinLang_Translator.print_ast ast'
             val thy = Toplevel.theory_of stat'
             val cmds' = parse_cmds thy elaborated
-            val _ = fold (Toplevel.command_exception false o fst) cmds' stat'
+            val _ = Timeout.apply (Time.fromSeconds (60 + 20 * length cmds'))
+                                  (fold (Toplevel.command_exception false o fst) cmds') stat'
          in debug ["Elaboration succeeds", elaborated]
           ; cmds'
         end) ()
     of SOME cmds' =>
-          \<^try>\<open>raw_collect (report_err, debug) true stat' cmds'
+          \<^try>\<open>raw_collect channels true stat' cmds'
             catch Partial_Ret ret =>
               let val ret0 = try_raw_collect false stat commands
                in AList.join goal_eq (K join_entry) (ret0, ret)
@@ -318,12 +374,25 @@ fun REPL_plugin (reporter : reporter) : REPL.collector =
     then if #start reporter pos
       then let
           val proof = Minilang_Aux.extract_proof remaining
-          val data = collect (#report_errors reporter, #debug reporter) state proof
-          val premise_group = map (apsnd (apfst (map fst))) data
-          val theorems = maps (fst o snd) data
           val ctxt = Toplevel.context_of state
-       in #premise_group reporter pos premise_group
-        ; #notify_theorems reporter ctxt theorems
+          fun notify data =
+            let val premise_group = map (apsnd (apfst (map fst))) data
+                val theorems = maps (fst o snd) data
+             in #premise_group reporter pos premise_group
+              ; #notify_theorems reporter ctxt theorems
+            end
+          fun notify' transformed ID data =
+            let val premise_group = map (apsnd (apfst (map fst))) data
+                val theorems = maps (fst o snd) data
+             in #premise_group' reporter (pos, transformed, ID) premise_group
+              ; #notify_theorems reporter ctxt theorems
+            end
+          val data = collect ( #report_errors reporter,
+                               #debug reporter,
+                               #start_SH reporter pos,
+                               notify' )
+                             state proof
+       in notify []
         ; (NONE, NONE)
       end
       else (NONE, NONE)
@@ -364,8 +433,13 @@ fun extraction_file path =
 fun extract_source state src =
   let val thy = Toplevel.theory_of state
       val cmds = parse_cmds thy src
+      val result = Unsynchronized.ref []
+      fun notify _ _ data = result := data @ !result
    in collect ((fn errs => warning (String.concatWith "\n" errs)),
-               (fn errs => warning (String.concatWith "\n" errs))) state cmds
+               (fn errs => warning (String.concatWith "\n" errs)),
+               (fn  _ => fn _ => true),
+               notify
+              ) state cmds
   end
 
 

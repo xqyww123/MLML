@@ -64,6 +64,7 @@ fun dirty_hack debug ctxt relevant_facts_store s =
         val i3 = List.nth (inds, 2)
      (* val i4 = List.nth (inds, 3) *)
         val s_prf = String.substring (s, i2+1, i3 - 1 -i2)
+                 |> REPL.trim_makrup
         val ast  = Symbol_Pos.explode (s_prf, Position.none)
                 |> Token.tokenize full_keywords {strict = false}
                 |> Outer_Syntax.parse_spans
@@ -81,24 +82,29 @@ fun dirty_hack debug ctxt relevant_facts_store s =
        end
   end
 
-val silence_state =
-      Proof.map_contexts (Try0.silence_methods false #> Config.put SMT_Config.verbose false)
+val silence_state = Proof.map_contexts (
+        Try0.silence_methods false
+     #> Config.put SMT_Config.verbose false
+     #> Config.put Printer.show_markup false)
 
+val SH_hard_timeout = Time.fromSeconds 120
 fun raw_premise_selection debug override stat =
   let val ctxt = Proof.context_of stat
       val goals = #goal (Proof.raw_goal stat) |> Thm.prems_of
       (* val ret : string list Synchronized.var = Synchronized.var "raw_sledgehammer" [] *)
       val sledgehammer_params =
-              ("try0", "false") :: ("preplay_timeout", "0") ::
+              ("provers", "verit z3 e spass vampire zipperposition cvc4 cvc5") ::
+              ("timeout", "90") :: ("try0", "false") :: ("preplay_timeout", "0") ::
               Phi_Sledgehammer_Solver.get_sledgehammer_params (Proof.context_of stat)
       val params = Sledgehammer_Commands.default_params (Proof.theory_of stat) sledgehammer_params
       val stat' = (silence_state stat)
       fun collect (i, goal) =
         let val relevant_facts_store = Synchronized.var "relevant_facts" []
             val _ = debug ["before run_sledgehammer"]
-            val tmp = Sledgehammer.run_sledgehammer params
+            val _ = try (Timeout.apply SH_hard_timeout
+               (Sledgehammer.run_sledgehammer params
                 Sledgehammer_Prover.Normal
-                  (SOME (dirty_hack debug ctxt relevant_facts_store)) (i+1) override
+                  (SOME (dirty_hack debug ctxt relevant_facts_store)) (i+1) override))
                 stat'
             val _ = debug ["after run_sledgehammer"]
          in (goal, Synchronized.value relevant_facts_store)
@@ -106,7 +112,7 @@ fun raw_premise_selection debug override stat =
    in map_index collect goals
   end
 
-val timeout = Time.fromSeconds 3
+val timeout = Time.fromSeconds 10
 fun premise_selection debug first_or_all wthms override toplevel =
   let val stat = Toplevel.proof_of toplevel
    in if Proof.goal_finished stat
