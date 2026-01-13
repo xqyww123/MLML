@@ -1,0 +1,305 @@
+#! /usr/bin/env python3
+from sqlitedict import SqliteDict, decode
+from IsaREPL import Client
+from data.isabelle import PISA_Data
+import json
+import argparse
+import random
+import gc
+import sqlite3
+from transformers import AutoTokenizer
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import os
+import tempfile
+import shutil
+
+data_provider = PISA_Data()
+PISA_files = set(data_provider.goal_pos_of(i).file for i in data_provider.all_cases())
+
+parser = argparse.ArgumentParser(description='Dump data from premise relevance database')
+parser.add_argument('result_file', help='Output JSONL file path')
+parser.add_argument('--use-ctxt', action='store_true', help='Include context in output')
+parser.add_argument('--use-ac', type=int, nargs='?', const=1, default=0, metavar='N',
+                    help='Include AC (set N to 0 to disable). N is the maximal number of augmented versions of each goal-premise pair')
+parser.add_argument('--num-workers', type=int, default=None, 
+                    help='Number of worker processes (default: CPU count)')
+parser.add_argument('--batch-size', type=int, default=1000,
+                    help='Number of rows to process per batch (default: 1000)')
+
+args = parser.parse_args()
+
+USE_CTXT = args.use_ctxt
+USE_AC = args.use_ac
+result_file = args.result_file
+NUM_WORKERS = args.num_workers if args.num_workers else multiprocessing.cpu_count()
+BATCH_SIZE = args.batch_size
+
+# Tokenizer will be initialized in each worker process
+
+def pretty_unicode(s):
+    #return Client.pretty_unicode(s)
+    return s
+
+def encode_goal(goal):
+    premises, concl = goal
+    premises = [pretty_unicode(premise) for premise in premises]
+    concl = pretty_unicode(concl)
+    goal = "###Premises\n" + "\n\n".join(premises) + "\n\n###Goal\n" + concl
+    if goal.count("###Premises") > 1 or goal.count("###Goal") > 1:
+        print("Warning: Found multiple occurrences of ###Premises or ###Goal in goal")
+        exit(1)
+    return goal
+
+
+def norm_ctxt(s):
+    return s.replace("\n\n\n", "\n\n")
+
+TOKEN_LIMIT = 4000
+
+def process_batch(batch_info):
+    """Process a batch of rows from the database.
+    
+    Args:
+        batch_info: tuple of (batch_id, start_rowid, end_rowid, pisa_files, use_ctxt, use_ac, 
+                             db_path, thm_db_path, temp_dir)
+    
+    Returns:
+        tuple of (batch_id, temp_file_path, num_processed, num_entries)
+    """
+    batch_id, start_rowid, end_rowid, pisa_files, use_ctxt, use_ac, db_path, thm_db_path, temp_dir = batch_info
+    
+    # Initialize tokenizer in this process
+    tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/DeepSeek-Prover-V1.5-Base", use_fast=True)
+    
+    def count_tokens(text):
+        tokens = tokenizer.encode(text, add_special_tokens=False)
+        return len(tokens)
+    
+    def trim_context(existing, ctxt):
+        tok_count = count_tokens(existing)
+        ret = []
+        segs = ctxt.split('\n\n\n')
+        for seg in segs:
+            if not seg:
+                continue
+            if tok_count >= TOKEN_LIMIT:
+                return "".join(ret)
+            seg = seg + "\n\n"
+            cnt = count_tokens(seg)
+            if tok_count + cnt > TOKEN_LIMIT:
+                return "".join(ret)
+            ret.append(seg)
+            tok_count += cnt
+        return "".join(ret)
+    
+    # Open database connections for this process
+    db_conn = sqlite3.connect(db_path)
+    db_cursor = db_conn.cursor()
+    
+    # Create temporary output file for this batch
+    temp_file = os.path.join(temp_dir, f'batch_{batch_id}.jsonl')
+    
+    # Open thm_db for this process
+    thm_db = SqliteDict(thm_db_path)
+    _CACHE = {}
+    err_num = 0
+    
+    def get_premise(premise):
+        nonlocal err_num
+        if premise in _CACHE:
+            return _CACHE[premise]
+        else:
+            try:
+                data = thm_db[premise]
+                _CACHE[premise] = data
+                return data
+            except KeyError:
+                err_num += 1
+                if err_num <= 10:  # Only print first 10 errors per process
+                    print(f"[Batch {batch_id}] Error {err_num}: {premise} not found in thm_db")
+                return ("", [])
+    
+    num_processed = 0
+    num_entries = 0
+    
+    with open(temp_file, 'w', buffering=8192) as output:
+        def gen_entry(goal, premise, ctxt):
+            nonlocal num_entries
+            goal = encode_goal(goal)
+            if use_ctxt:
+                if ctxt:
+                    goal = trim_context(goal, ctxt) + goal
+                pctxt, _ = get_premise(premise)
+                if pctxt:
+                    premise = trim_context(goal, pctxt) + premise
+            num_entries += 1
+            output.write(json.dumps((goal, premise)) + "\n")
+        
+        # Query rows in this batch range
+        db_cursor.execute('SELECT key, value FROM "unnamed" WHERE rowid >= ? AND rowid < ? ORDER BY rowid', 
+                         (start_rowid, end_rowid))
+        
+        for row in db_cursor:
+            key_str, value_bytes = row
+            pos = key_str
+            entries = decode(value_bytes)
+            num_processed += 1
+            
+            file = pos.split(':')[0]
+            if file in pisa_files:
+                continue
+            
+            for entry in entries:
+                goal, (ctxt, prems, goal_acs) = entry
+                for prem in prems:
+                    gen_entry(goal, prem, ctxt)
+                    if use_ac:
+                        N = len(goal_acs) + 1
+                        _, prem_acs = get_premise(prem)
+                        M = len(prem_acs) + 1
+                        
+                        if N == 1 and M == 1:
+                            continue
+                        
+                        max_pairs = min(use_ac, N * M)
+                        
+                        if max_pairs == N * M:
+                            selected_pairs = [(i, j) for i in range(N) for j in range(M)]
+                        elif N * M <= use_ac * 10:
+                            all_pairs = [(i, j) for i in range(N) for j in range(M)]
+                            selected_pairs = random.sample(all_pairs, max_pairs)
+                        else:
+                            selected_pairs = set()
+                            while len(selected_pairs) < max_pairs:
+                                i = random.randrange(N)
+                                j = random.randrange(M)
+                                if i == N or j == M:
+                                    continue
+                                selected_pairs.add((i, j))
+                            selected_pairs = list(selected_pairs)
+                        
+                        for i, j in selected_pairs:
+                            if i == N-1 and j == M-1:
+                                continue
+                            aug_goal = goal if i == N-1 else goal_acs[i]
+                            aug_prem = prem if j == M-1 else prem_acs[j]
+                            gen_entry(aug_goal, aug_prem, ctxt)
+    
+    db_cursor.close()
+    db_conn.close()
+    thm_db.close()
+    
+    return (batch_id, temp_file, num_processed, num_entries)
+        
+
+
+
+
+# Use direct SQLite connection to avoid Queue accumulation in SqliteDict.iteritems()
+# SqliteDict.iteritems() uses Queue which can accumulate 30GB+ when processing is slow
+db_conn = sqlite3.connect('/home/qiyuan/Current/MLML/data/premise_relevance.db')
+db_cursor = db_conn.cursor()
+
+# Still use SqliteDict for thm_db since we need random access with caching
+with SqliteDict('/home/qiyuan/Current/MLML/data/premise_info.db') as thm_db,\
+     open(result_file, 'w', buffering=8192) as output:  # Use smaller buffer to reduce memory
+    _CACHE = {}
+    err_num = 0
+    def get_premise(premise):
+        global err_num
+        if premise in _CACHE:
+            return _CACHE[premise]
+        else:
+            try:
+                data = thm_db[premise]
+                _CACHE[premise] = data
+                return data
+            except KeyError:
+                err_num += 1
+                print(f"Error {err_num}: {premise} not found in thm_db")
+                return ("", [])
+
+    print(f"Counting entries in {result_file}")
+    # Get total count
+    db_cursor.execute('SELECT COUNT(*) FROM "unnamed"')
+    TOTAL = db_cursor.fetchone()[0]
+    GENED_NUM = 0
+    print(f"Total {TOTAL} entries")
+
+    def gen_entry(goal, premise, ctxt):
+        global GENED_NUM
+        goal = encode_goal(goal)
+        if USE_CTXT:
+            if ctxt:
+                goal = trim_context(goal, ctxt) + goal
+            pctxt, _ = get_premise(premise)
+            if pctxt:
+                premise = trim_context(goal, pctxt) + premise
+        GENED_NUM += 1
+        output.write(json.dumps((goal, premise)) + "\n")
+
+    # Use direct SQLite cursor for true streaming (one record at a time)
+    # This avoids Queue accumulation in SqliteDict.iteritems()
+    db_cursor.execute('SELECT key, value FROM "unnamed" ORDER BY rowid')
+    i = 0
+    for row in db_cursor:
+        key_str, value_bytes = row
+        # Key is stored as plain string (not base64-encoded in this DB)
+        pos = key_str
+        # Value is pickled Binary, use SqliteDict's decode
+        entries = decode(value_bytes)
+        i += 1
+        
+        if i % 100 == 0:
+            print(f"Processed {i}/{TOTAL}, cache size: {len(_CACHE)}")
+        if i % 1000 == 0 and i > 0:
+            gc.collect()
+        file = pos.split(':')[0]
+        if file in PISA_files:
+            continue
+
+        for entry in entries:
+            goal, (ctxt, prems, goal_acs) = entry
+            for prem in prems:
+                gen_entry(goal, prem, ctxt)
+                if USE_AC:
+                    N = len(goal_acs) + 1
+                    _, prem_acs = get_premise(prem)
+                    M = len(prem_acs) + 1
+
+                    if N == 1 and M == 1:
+                        continue
+                    
+                    # Generate at most USE_AC unique pairs (i, j) where i < N and j < M
+                    max_pairs = min(USE_AC, N * M)
+                    
+                    if max_pairs == N * M:
+                        # If we need all pairs, generate them directly
+                        selected_pairs = [(i, j) for i in range(N) for j in range(M)]
+                    elif N * M <= USE_AC * 10:
+                        # If the total number of pairs is not too large, generate all and sample
+                        all_pairs = [(i, j) for i in range(N) for j in range(M)]
+                        selected_pairs = random.sample(all_pairs, max_pairs)
+                    else:
+                        # If the total number is very large, use random generation
+                        selected_pairs = set()
+                        while len(selected_pairs) < max_pairs:
+                            i = random.randrange(N)
+                            j = random.randrange(M)
+                            if i == N or j == M:
+                                continue
+                            selected_pairs.add((i, j))
+                        selected_pairs = list(selected_pairs)
+                    
+                    # Generate augmented versions for each selected pair
+                    for i, j in selected_pairs:
+                        if i == N-1 and j == M-1:
+                            continue
+                        aug_goal = goal if i == N-1 else goal_acs[i]
+                        aug_prem = prem if j == M-1 else prem_acs[j]
+                        gen_entry(aug_goal, aug_prem, ctxt)
+    
+    db_cursor.close()
+    db_conn.close()
+                    

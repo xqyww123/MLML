@@ -269,7 +269,7 @@ def preprocess_PISA(addr):
                 raise FileNotFoundError(f"PISA {i}: theory not found: {path}")
 
             with open(path, 'r', encoding='utf-8') as file:
-                commands = c.fast_lex(file.read())
+                commands = c.lex(file.read())
 
             match_index = -1
             for idx, (_, command) in enumerate(commands):
@@ -314,6 +314,9 @@ def preprocess_PISA(addr):
                 except (ValueError, FileNotFoundError) as e:
                     print(f"Error processing PISA {i}: {e}")
 
+#preprocess_PISA2("cslh19:6666")
+#exit()
+
 PISA_DATA_CACHE = None
 
 def load_pisa_data():
@@ -327,15 +330,18 @@ def load_pisa_data():
     if not os.path.isfile(csv_file_path):
         print(f"{csv_file_path} not found. Running preprocess_PISA...")
         preprocess_PISA("127.0.0.1:6666")
+        print("Cannot regenerate pisa_test.csv. Must run ./data/tools/annotate_data_csv_end_pos.py")
+        exit(1)
 
     with open(csv_file_path, 'r', encoding='utf-8') as csvfile:
         csv_reader = csv.reader(csvfile)
         next(csv_reader)  # Skip the header
         for row in csv_reader:
-            index, pos_spec, pos_proof, statement = row
+            index, pos_spec, pos_proof, pos_end, statement = row
             pos_spec = Position.from_s(pos_spec)
             pos_proof = Position.from_s(pos_proof)
-            data[int(index)] = (pos_spec, pos_proof, statement)
+            pos_end = Position.from_s(pos_end)
+            data[int(index)] = (pos_spec, pos_proof, pos_end, statement)
             PISA_AT[(pos_spec.file, pos_spec.line)] = int(index)
     PISA_DATA_CACHE = (data, PISA_AT)
     return PISA_DATA_CACHE
@@ -500,7 +506,7 @@ class PISA_Data(Data):
     def goal_of(self, index : int) -> str:
         PISA_DATA, PISA_AT = load_pisa_data()
         try:
-            (_, _, goal) = PISA_DATA[index]
+            (_, _, _, goal) = PISA_DATA[index]
             return goal
         except KeyError:
             raise CaseNotAvailable(index)
@@ -523,7 +529,7 @@ class PISA_Data(Data):
     def prelude_of(self, index : int, dep_depth=1, use_proofs=False, use_comments=True, maxsize=None, length_of=len, camlize=False) -> str:
         PISA_DATA, PISA_AT = load_pisa_data()
         try:
-            (pos_spec, _, _) = PISA_DATA[index]
+            (pos_spec, _, _, _) = PISA_DATA[index]
             return prelude_of(pos_spec.file, pos_spec.line, dep_depth, use_proofs, use_comments, maxsize, length_of, camlize)
         except KeyError:
             raise CaseNotAvailable(index)
@@ -531,7 +537,7 @@ class PISA_Data(Data):
     def goal_pos_of(self, index : int) -> Position:
         PISA_DATA, PISA_AT = load_pisa_data()
         try:
-            (pos_spec, _, _) = PISA_DATA[index]
+            (pos_spec, _, _, _) = PISA_DATA[index]
             return pos_spec
         except KeyError:
             raise CaseNotAvailable(index)
@@ -539,8 +545,16 @@ class PISA_Data(Data):
     def proof_pos_of(self, index : int) -> Position:
         PISA_DATA, PISA_AT = load_pisa_data()
         try:
-            (_, pos_proof, _) = PISA_DATA[index]
+            (_, pos_proof, _, _) = PISA_DATA[index]
             return pos_proof
+        except KeyError:
+            raise CaseNotAvailable(index)
+
+    def end_pos_of(self, index : int) -> Position:
+        PISA_DATA, PISA_AT = load_pisa_data()
+        try:
+            (_, _, pos_end, _) = PISA_DATA[index]
+            return pos_end
         except KeyError:
             raise CaseNotAvailable(index)
     
@@ -571,7 +585,7 @@ def _load_AFP_CASES_CACHE():
             return _AFP_CASES_CACHE
     PISA_DATA, _ = load_pisa_data()
     s = set(load_ISAR_PROOF_INDEX().keys())
-    for _, (pos_spec, pos_proof, statement) in PISA_DATA.items():
+    for _, (pos_spec, pos_proof, pos_end, statement) in PISA_DATA.items():
         if pos_spec not in s:
             logging.warning(f"PISA {pos_spec} not in ISAR proof index")
         s.discard(pos_spec)

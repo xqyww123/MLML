@@ -18,7 +18,7 @@ end
 structure Theorem_Extraction : THEOREM_EXTRACTION = struct
 open Theorem_Extraction
 
-val REPAIR_MODE = false
+val REPAIR_MODE = true
 val ac_shuffle_num = 40
 
 type defctxt = string
@@ -62,10 +62,7 @@ fun print_term_ ctxt =
     let val ctxt' = ctxt
               |> Config.put Printer.show_types true
               |> Config.put Printer.show_sorts true
-              |> Config.put Printer.show_markup false
-              |> Config.put Printer.show_structs false
-              |> Config.put Printer.show_question_marks true
-              |> Config.put Printer.show_brackets false
+              (* |> Config.put Printer.show_question_marks false *)
      in Syntax.string_of_term ctxt'
      #> REPL.trim_makrup
     end
@@ -83,12 +80,10 @@ val known_premises = Synchronized.var "Theorem_Extraction.known_premises" Symtab
 fun hotfix_underscore s =
   if Char.contains s #"_" then
   let fun pass [] = []
-        | pass (c :: #"_" :: c' :: s) =
-            if Char.isAlphaNum c andalso
-              (Char.isSpace c' orelse c' = #":" orelse c' = #")" orelse (
-                  c' = #"." andalso (case s of [] => false | c''::_ => Char.isSpace c'')))
-            then c :: #"_" :: #"'" :: #"X" :: c' :: pass s
-            else c :: #"_" :: c' :: pass s
+        | pass (c :: #"_" :: s) =
+            if Char.isAlphaNum c
+            then c :: #"_" :: #"x" :: pass s
+            else c :: #"_" :: pass s
         | pass (c :: s) = c :: pass s
    in String.implode (pass (String.explode s))
   end
@@ -97,7 +92,7 @@ fun hotfix_underscore s =
 fun repair_ctxtinfo ctxt =
   let val ctxt = Proof_Context.set_mode Proof_Context.mode_schematic ctxt
       val defctxt_of = Context_Info.defctxt_string_of ctxt
-      fun work ((goal, (thms, goal_acs)) : premise_group_old) : premise_group =
+      fun work ((goal_o, (thms_o, goal_acs_o)), ((goal, (_, _)) : premise_group_old)) : premise_group =
         let val goal_defctxt =
             let val (hs, cl) = goal
                 val hs' = map (Syntax.read_term ctxt o hotfix_underscore) hs
@@ -105,7 +100,7 @@ fun repair_ctxtinfo ctxt =
                 val prop = Logic.list_implies (hs', cl')
              in defctxt_of prop
             end
-         in (goal, (goal_defctxt, thms, goal_acs))
+         in (goal_o, (goal_defctxt, thms_o, goal_acs_o))
         end
    in work
   end
@@ -206,7 +201,7 @@ fun socket_reporter pos_tr (cin,cout) =
             then true
             else \<^try>\<open>
           let val _ = send (packPair (packInt, pos_packer)) (11, pos)
-              val old_data = read (unpackOption (unpackList unpack_premise_group_old))
+              val old_data = read (unpackOption (unpackList (unpackPair (unpack_premise_group_old, unpack_premise_group_old))))
               val _ = debug ["11 OK"]
               val old_data = case old_data of SOME x => x | NONE => error "data not exists"
               val new_data = map repair_ctxtinfo old_data
@@ -250,7 +245,7 @@ fun socket_reporter pos_tr (cin,cout) =
               val defctxt_of = Context_Info.defctxt_string_of ctxt
            in fn pos => \<^try>\<open>
           let val _ = send (packPair (packInt, pos_packer')) (14, pos)
-              val old_data = read (unpackOption (unpackList unpack_premise_group_old))
+              val old_data = read (unpackOption (unpackList (unpackPair (unpack_premise_group_old, unpack_premise_group_old))))
               val _ = debug ["14 OK"]
               val old_data = case old_data of SOME x => x | NONE => error "data not exists"
               val new_data = map repair_ctxtinfo old_data
@@ -359,8 +354,6 @@ exception Partial_Ret of
 fun join_entry ((c,pa,ga), (_,pb,gb)) = (c, AList.join (op =) (K fst) (pa, pb), union (op =) ga gb)
 
 val single_cmd_timeout = Time.fromSeconds 60
-val single_extraction_timeout = Time.fromSeconds 500
-
 fun raw_collect (report_err, debug, can_start, notify) first_goal_or_all stat commands =
   let open Minilang_Aux
       val can_start = can_start first_goal_or_all
@@ -418,12 +411,10 @@ fun raw_collect (report_err, debug, can_start, notify) first_goal_or_all stat co
                                 end
                               val do_SH = can_start (ctxt, ID)
                               val ret' = if do_SH
-                                         then Timeout.apply single_extraction_timeout (fn () =>
-                                              let val premises = get_premises ()
+                                         then let val premises = get_premises ()
                                                in notify ID premises
                                                 ; AList.join goal_eq (K join_entry) (premises, ret)
-                                              end) ()
-                                              handle Timeout.TIMEOUT _ => ret
+                                              end
                                          else ret
                               fun move_next state ((tr, Command_Span.Span (kind, _)) :: cmds) asts =
                                     let val (stat', err) =
@@ -507,25 +498,24 @@ fun parse_cmds thy src =
    in cmds
   end
 
-val translation_timeout = Time.fromSeconds 120
 fun collect (channels as (report_err, debug, _, _)) stat commands =
   let val stat' = stat
       fun try_raw_collect flag stat commands =
           \<^try>\<open>raw_collect channels flag stat commands
             catch Partial_Ret ret => ret
                 | E => ( report_err (Runtime.exn_message_list E); [] )\<close>
-   in case try (Timeout.apply translation_timeout (fn () =>
+   in case try (fn () =>
         let val _ = debug ["start elaboration"]
             val tokens = map (filter Token.is_proper o Command_Span.content o snd) commands
             val ast' = MinLang_Translator.elaborate (Unsynchronized.ref []) (stat, tokens)
-            val elaborated = MinLang_Translator.print_ast NONE NONE ast'
+            val elaborated = MinLang_Translator.print_ast ast'
             val thy = Toplevel.theory_of stat'
             val cmds' = parse_cmds thy elaborated
             val _ = Timeout.apply (Time.fromSeconds (60 + 20 * length cmds'))
                                   (fold (Toplevel.command_exception false o fst) cmds') stat'
          in debug ["Elaboration succeeds", elaborated]
           ; cmds'
-        end)) ()
+        end) ()
     of SOME cmds' =>
           \<^try>\<open>raw_collect channels true stat' cmds'
             catch Partial_Ret ret =>
@@ -598,14 +588,14 @@ fun REPL_plugin (reporter : reporter) : REPL.collector =
           fun notify data =
             let val premise_group = map (apsnd (ap23 (map fst))) data
                 val theorems = maps (#2 o snd) data
-             in #notify_theorems reporter ctxt theorems
-              ; #premise_group reporter pos premise_group
+             in #premise_group reporter pos premise_group
+              ; #notify_theorems reporter ctxt theorems
             end
           fun notify' transformed ID data =
             let val premise_group = map (apsnd (ap23 (map fst))) data
                 val theorems = maps (#2 o snd) data
-             in #notify_theorems reporter ctxt theorems
-              ; #premise_group' reporter (pos, transformed, ID) premise_group
+             in #premise_group' reporter (pos, transformed, ID) premise_group
+              ; #notify_theorems reporter ctxt theorems
             end
           val data = collect ( #report_errors reporter,
                                #debug reporter,
@@ -646,7 +636,6 @@ fun extraction_file path =
                       file = SOME path,
                       position_label = NONE,
                       additional_libs = [] (*["Minilang.Minilang_Base"]*),
-                      configs = [],
                       import_dir = NONE,
                       single_cmd_timeout = NONE,
                       attributes = [],

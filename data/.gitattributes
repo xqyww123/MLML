@@ -1,0 +1,6 @@
+pretrain_data.tar.zst filter=lfs diff=lfs merge=lfs -text
+basic_info.db.zst filter=lfs diff=lfs merge=lfs -text
+annotated_elaborated_isar.shuf.jsonl.zst filter=lfs diff=lfs merge=lfs -text
+annotations_on_elaborated_isar.db.zst filter=lfs diff=lfs merge=lfs -text
+premise_relevance.db.zst filter=lfs diff=lfs merge=lfs -text
+premise_info.db.zst filter=lfs diff=lfs merge=lfs -text

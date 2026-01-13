@@ -1,0 +1,3 @@
+session Pretrain_Extraction = Minilang_Translator +
+  theories
+    "Pretrain_Extraction"
