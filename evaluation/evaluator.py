@@ -397,7 +397,10 @@ class MinilangAgent_Base(Isar_Base):
                 else:
                     errors.append(f"Driver {driver} fails")
             except REPLFail as E:
-                errors.append(E)
+                if E.args[0].startswith("Failed to launch the Agent Manager."):
+                    raise
+                else:
+                    errors.append(E)
             except TimeoutError as E:
                 errors.append(E)
         return Result(Status.FAIL, errors, times)
@@ -670,7 +673,7 @@ def report_evaluation(response_path : str, result_path : str):
                     err = result.error
                 csv_writer.writerow([key, result.status, len(result.errors), str(result.elapsed_time), err, responses[key]])
 
-def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluator): # -> Dict[Index, Result]
+def evaluate_and_save(result_path : str | None, cases : list[Case], evaluator : Evaluator): # -> Dict[Index, Result]
     # Setup shared variables with thread-safe access
     success = 0
     unavailable = 0
@@ -693,7 +696,7 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
 
 
     logger.info(f"Starting {evaluator.__name__} evaluation of {len(cases)} cases. The result will be saved to {result_path}")
-    with SqliteDict(result_path) as db:
+    def execute(db):
         def eval_server(server_addr):
             nonlocal success, unavailable, total, results, remaining_cases
             while not task_queue.empty():
@@ -715,18 +718,20 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
                                 logger.info(f"Server {server_addr} evaluating {case.index}")
                                 
                                 # Check if result already exists in database
-                                if case.index in db and db[case.index].status != Status.CASE_NOT_AVAILABLE:
+                                if db is not None and case.index in db and db[case.index].status != Status.CASE_NOT_AVAILABLE:
                                     result = db[case.index]
                                 else:
                                     try:
                                         result = test.validate(case.index, case.code)
-                                        db[case.index] = result
-                                        db.commit()
+                                        if db is not None:
+                                            db[case.index] = result
+                                            db.commit()
                                     except REPLFail as E:
                                         logger.error(f"REPLFail error @ {case.index}: {E}")
                                         result = Result(Status.CASE_NOT_AVAILABLE, [str(E)], [])
-                                        db[case.index] = result
-                                        db.commit()
+                                        if db is not None:
+                                            db[case.index] = result
+                                            db.commit()
                                         break
                             except Exception as e:
                                 logger.error(f"Error processing case {case.index}: {str(e)}")
@@ -772,6 +777,11 @@ def evaluate_and_save(result_path : str, cases : list[Case], evaluator : Evaluat
         for thread in threads:
             thread.join()
 
+    if result_path is not None:
+        with SqliteDict(result_path) as db:
+            execute(db)
+    else:
+        execute(None)
     logger.info(f"Evaluation complete. Processed {total}/{len(cases)} cases.")
     log_state()
     return results

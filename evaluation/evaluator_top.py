@@ -15,9 +15,9 @@ logging.basicConfig(
     ]
 )
 
-def clean_mash(result_path):
+def clean_mash(result_path : str | None):
     # Ask user if they want to clean mash state
-    if not os.path.exists(result_path):
+    if result_path is not None and not os.path.exists(result_path):
         # If the result path doesn't exist, clean the mash state
         # This helps prevent issues with cached state from previous runs
         try:
@@ -37,8 +37,8 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
         formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument("driver", type=str, help="The agent driver to use, e.g., Gemini")
-    parser.add_argument("result_db", type=str, help="The path to which the results are saved. The evaluation will be resumed if the file exists.")
-    parser.add_argument("case_category", type=str, nargs="?", default="", help="The category of cases to evaluate (e.g., valid, test). Default: None")
+    parser.add_argument("--case-category", type=str, nargs="?", default="", help="The category of cases to evaluate (e.g., valid, test). Default: None")
+    parser.add_argument("--result", "-o", type=str, nargs="?", help="The path to which the results are saved. The evaluation will be resumed if the file exists.")
     parser.add_argument("--timeout", "-t", type=int, default=500, help="The overall timeout for each case")
     parser.add_argument("--connection-timeout", type=int, default=1200, help="The timeout for the connection to the server")
     parser.add_argument("--step-limit", "-n", type=int, default=30, help="The maximum number of proof steps for each case")
@@ -62,7 +62,7 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
     if not cases:
         logger.error("No cases to evaluate")
         exit(1)
-    result_db = args.result_db
+    result_db = args.result
     clean_mash(result_db)
     launch_servers()
     evaluate_and_save(
@@ -177,7 +177,7 @@ if __name__ == "__main__":
                 minilang_agent_handler(MinilangAgent_MiniF2F, "MiniF2F", category_loader, index_parser,\
                     "file of lines of cases,",\
                     "Examples:\n" \
-                    "    evaluation/evaluator_top.py agent-miniF2F Gemini result.db valid\n"
+                    "    evaluation/evaluator_top.py agent-miniF2F Gemini --result result.db --case-category valid\n"
                 )
 
             case 'agent-source':
@@ -188,9 +188,9 @@ if __name__ == "__main__":
                     return line
                 minilang_agent_handler(MinilangAgent_Source, "source text", category_loader, index_parser, "jsonl file",\
                     "Examples:\n" \
-                    "    evaluation/evaluator_top.py agent-source Gemini result.db --cases \"theory Test imports Main begin theorem \\\"(1::nat) + 1 = 2\\\"\"\n\n" \
+                    "    evaluation/evaluator_top.py agent-source Gemini --result result.db --cases \"theory Test imports Main begin theorem \\\"(1::nat) + 1 = 2\\\"\"\n\n" \
                     "    You can also put the proof goals in a file (e.g., cases.lst) where a line is a case; then evaluate them by:\n" \
-                    "    evaluation/evaluator_top.py agent-source Gemini result.db --case-file cases.lst\n"
+                    "    evaluation/evaluator_top.py agent-source Gemini --result result.db --case-file cases.lst\n"
                     )
 
             # case "eval-mini-pisa":
