@@ -310,14 +310,17 @@ class Isar_Base(Evaluator):
                 has_sorry = self.contains_sorry(code)
                 start_time = time.time()
                 if has_sorry:
-                    error = 'Contains sorry'
+                    errors.append('Contains sorry')
                     response = None
                 else:
-                    response, error = self.repl.eval(code, timeout=self._timeout * 1000, cmd_timeout=15000)
+                    try:
+                        response = self.repl.eval(code, timeout=self._timeout * 1000, cmd_timeout=15000)
+                    except REPLFail as E:
+                        errors.append(E)
+                        times.append(time.time() - start_time)
+                        continue
                 times.append(time.time() - start_time)
-                if error:
-                    errors.append(error)
-                elif response and not response[-1][3][3]:
+                if response and not response[-1].flags.has_goal:
                     return Result(Status.SUCCESS, errors, times)
                 else:
                     errors.append("Proof not finished")

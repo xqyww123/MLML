@@ -84,9 +84,9 @@ val type_classification = Symtab.make_distinct
     (\<^type_name>\<open>matrix_Matrix.matrix\<close>, "other"), (*matrix*)
     (\<^type_name>\<open>ieee_float_Float64.t\<close>, "float"),
     (\<^type_name>\<open>ieee_float_RoundingMode.mode\<close>, "float"),
+    (\<^type_name>\<open>real\<close>, "float"),
     (\<^type_name>\<open>hashtbl_Hashtbl.key\<close>, "set"),
     (\<^type_name>\<open>hashtbl_Hashtbl.t\<close>, "set"),
-    (\<^type_name>\<open>fmap_MapImpInt.t\<close>, "set"),
     (\<^type_name>\<open>floating_point_SingleFormat.single\<close>, "float"),
     (\<^type_name>\<open>floating_point_Rounding.mode\<close>, "float"),
     (\<^type_name>\<open>bintree_Tree.tree\<close>, "other") (*tree*)
@@ -248,7 +248,9 @@ fun pack_statistics {opr, quantifier, atom, depth, non_linear, symbol, total_opr
                   packPairList (packString, packInt),
                   packPairList (packString, packList packString))
           ( Symtab.dest opr |> map (apsnd ((op !) #> Symtab.dest #> map (apsnd (op !)))),
-            quantifier, atom, depth,
+            quantifier,
+            atom,
+            depth,
             Symtab.dest non_linear |> map (apsnd (op !)),
             Symtab.keys symbol,
             Symtab.dest total_opr |> map (apsnd (op !)),

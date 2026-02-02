@@ -9,9 +9,14 @@ val extraction_file : string -> unit
 val extract_source : Toplevel.state -> string
                   -> ( (string list * string)
                      * ( string
-                       * (string * (string * thm)) list
-                       * (string list * string) list)
-                     ) list
+                       * (string * (string * term * string)) list
+                       * (string list * string) list
+                       * (string list * string)
+                       * string list
+                       * (term list * term)
+                     ) ) list
+val read_term : Proof.context -> string -> term
+val print_term_full_typ : Proof.context -> term -> string
 
 end
 
@@ -22,10 +27,13 @@ val REPAIR_MODE = false
 val ac_shuffle_num = 40
 
 type defctxt = string
-type goal = string list * string
+type goal = string list (*hs*) * string (*cl*)
+type goal_i = term list * term
 type thm_expr = string
-type premise_group_old = goal * (thm_expr list * goal list (*ac-shuffle*))
-type premise_group = goal * (defctxt * thm_expr list * goal list (*ac-shuffle*))
+type premise_group_old = goal * ( defctxt * (thm_expr * term) list * goal list (*ac-shuffle*)
+                            * goal (*AC norm*) * string list (*vars*) *  goal_i)
+type premise_group = goal * ( defctxt * (thm_expr * term) list * goal list (*ac-shuffle*)
+                            * goal (*AC norm*) * string list (*vars*) *  goal_i)
 
 val goal_eq = eq_pair (eq_set (op =)) (op =)
 
@@ -41,12 +49,14 @@ type reporter = {
         premise_group': position'
                     -> premise_group list
                     -> unit,
-        notify_theorems: Proof.context -> (thm_expr * (defctxt * thm)) list -> unit,
+        notify_theorems: Proof.context -> (thm_expr * (defctxt * term * thm_expr (*AC norm*))) list -> unit,
         report_errors : string list -> unit,
         debug: string list -> unit,
 
-        repair_ctxtinfo : Proof.context -> Position.T -> bool,
-        repair_ctxtinfo': Proof.context -> position' -> bool
+        repair_vars : Proof.context -> Position.T -> bool,
+        repair_vars': Proof.context -> position'  -> bool
+     (* repair_ctxtinfo : Proof.context -> Position.T -> bool,
+        repair_ctxtinfo': Proof.context -> position' -> bool *)
      }
 
 val _ = MinLang_Translator.msorry_printing :=
@@ -58,13 +68,37 @@ fun is_goal_command (Command_Span.Command_Span (name, _)) =
   | is_goal_command _ = false
 fun is_goal_command' (Command_Span.Span (k, _)) = is_goal_command k
 
-fun print_term_ ctxt =
+fun print_term_full_typ ctxt =
     let val ctxt' = ctxt
               |> Config.put Printer.show_types true
               |> Config.put Printer.show_sorts true
               |> Config.put Printer.show_markup false
               |> Config.put Printer.show_structs false
               |> Config.put Printer.show_question_marks true
+              |> Config.put Printer.show_brackets false
+     in Syntax.string_of_term ctxt'
+     #> REPL.trim_makrup
+    end
+
+fun print_typ_full_sort ctxt =
+    let val ctxt' = ctxt
+              |> Config.put Printer.show_types true
+              |> Config.put Printer.show_sorts true
+              |> Config.put Printer.show_markup false
+              |> Config.put Printer.show_structs false
+              |> Config.put Printer.show_question_marks true
+              |> Config.put Printer.show_brackets false
+     in Syntax.string_of_typ ctxt'
+     #> REPL.trim_makrup
+    end
+
+fun print_term_ ctxt =
+    let val ctxt' = ctxt
+              |> Config.put Printer.show_types false
+              |> Config.put Printer.show_sorts false
+              |> Config.put Printer.show_markup false
+              |> Config.put Printer.show_structs false
+              |> Config.put Printer.show_question_marks false
               |> Config.put Printer.show_brackets false
      in Syntax.string_of_term ctxt'
      #> REPL.trim_makrup
@@ -82,18 +116,57 @@ val known_premises = Synchronized.var "Theorem_Extraction.known_premises" Symtab
 
 fun hotfix_underscore s =
   if Char.contains s #"_" then
-  let fun pass [] = []
+  let val meet = Unsynchronized.ref false
+      fun pass [] = []
         | pass (c :: #"_" :: c' :: s) =
             if Char.isAlphaNum c andalso
               (Char.isSpace c' orelse c' = #":" orelse c' = #")" orelse (
                   c' = #"." andalso (case s of [] => false | c''::_ => Char.isSpace c'')))
-            then c :: #"_" :: #"'" :: #"X" :: c' :: pass s
+            then (
+                meet := true
+              ; c :: #"_" :: #"'" :: #"X" :: #"X" :: #"X" :: c' :: pass s)
             else c :: #"_" :: c' :: pass s
         | pass (c :: s) = c :: pass s
-   in String.implode (pass (String.explode s))
+      val ret = String.implode (pass (String.explode s))
+   in (!meet, ret)
   end
-  else s
+  else (false, s)
 
+fun read_term ctxt =
+  let val print_old = print_term_full_typ ctxt
+      val ctxt = Proof_Context.set_mode Proof_Context.mode_pattern ctxt
+   in fn code0 =>
+  let val (meet, code) = hotfix_underscore code0
+      val tm0 = Syntax.read_term ctxt code
+      fun deXXX (origin as Free(name, T)) =
+            if String.isSuffix "_'XXX" name
+            then Free (String.substring (name, 0, size name - 4), T)
+            else origin
+        | deXXX (origin as Const(name, T)) =
+            if String.isSuffix "_'XXX" name
+            then Const (String.substring (name, 0, size name - 4), T)
+            else origin
+        | deXXX (origin as Var((name,i), T)) =
+            if String.isSuffix "_'XXX" name
+            then Var ((String.substring (name, 0, size name - 4),i), T)
+            else origin
+        | deXXX (A $ B) = deXXX A $ deXXX B
+        | deXXX (Abs (N,T,X)) =
+            let val N' = if String.isSuffix "_'XXX" N
+                         then String.substring (N, 0, size N - 4)
+                         else N
+             in Abs (N',T,deXXX X)
+            end
+        | deXXX X = X
+      val tm1 = if meet then deXXX tm0 else tm0
+      val p1 = print_old tm1 |> REPL.trim_makrup
+   in if code0 = p1
+    then tm1
+    else error ("Fail_read_term: " ^ code0 ^ "\n\nVVSS\n\n" ^ p1)
+  end end
+  
+
+(*
 fun repair_ctxtinfo ctxt =
   let val ctxt = Proof_Context.set_mode Proof_Context.mode_schematic ctxt
       val defctxt_of = Context_Info.defctxt_string_of ctxt
@@ -109,6 +182,53 @@ fun repair_ctxtinfo ctxt =
         end
    in work
   end
+*)
+
+fun add_typs (Abs (name,typ,X)) rets = add_typs X (insert (op =) (name,typ) rets)
+  | add_typs (A $ B) rets = add_typs B (add_typs A rets)
+  | add_typs (Free (name,typ)) rets = insert (op =) (name,typ) rets
+  | add_typs (Var ((name,0),typ)) rets = insert (op =) (name,typ) rets
+  | add_typs (Var ((name,i),typ)) rets = insert (op =) (name^"."^string_of_int i,typ) rets
+  | add_typs _ rets = rets
+
+fun vars_of_goal ctxt =
+  let val print_typ_full_sort = print_typ_full_sort ctxt
+   in fn (assms, concl) =>
+  let val vs = fold add_typs (concl::assms) []
+   in map (fn (v,T) => String.concat [v, "::", print_typ_full_sort T]) vs
+  end
+  end
+
+fun vars_of_term ctxt =
+  let val print_typ_full_sort = print_typ_full_sort ctxt
+   in fn term =>
+  let val vs = add_typs term []
+   in map (fn (v,T) => String.concat [v, "::", print_typ_full_sort T]) vs
+  end
+  end
+
+fun repair_vars ctxt =
+  let val defctxt_of = Context_Info.defctxt_string_of ctxt
+      val vars_of_goal = vars_of_goal ctxt
+   (* val norm_AC_goal = norm_AC_goal (Context.Proof ctxt)
+      val print = print_term_ ctxt
+      val read_term = read_term ctxt
+      val get_acs = ac_shuffle_goal ac_shuffle_num (Context.Proof ctxt)
+       *)
+      fun work ((goal0, (defctxt, thms, acs, acn, vars, goali)) : premise_group_old) : premise_group =
+        let val prop = Logic.list_implies goali
+         in (goal0,( defctxt_of prop
+                   , thms
+                   , acs
+                   , acn
+                   , vars_of_goal goali
+                   , goali))
+        end
+   in work
+  end
+
+fun ap23 f (a,b,c) = (a,f b,c)
+fun ap26 F (a,b,c,d,e,f) = (a,F b,c,d,e,f)
 
 fun socket_reporter pos_tr (cin,cout) =
   let open MessagePackBinIO.Unpack MessagePackBinIO.Pack
@@ -121,23 +241,35 @@ fun socket_reporter pos_tr (cin,cout) =
                           ; ret
                         end
       val pack_goal = packPair (packList packString, packString)
+      val pack_term = REPL_Serialize.pack_raw_term
+      val unpack_term = REPL_Serialize.unpack_raw_term
+      val pack_goal_i = packPair (packList pack_term, pack_term)
+      val unpack_goal_i = unpackPair (unpackList unpack_term, unpack_term)
       val unpack_goal = unpackPair (unpackList unpackString, unpackString)
       val pack_defctxt = packString
       val unpack_defctxt = unpackString
       val printer_locker = Synchronized.var "" ()
 
-      val unpack_premise_group_old =
+      val unpack_premise_group_old : premise_group_old unpacker =
             unpackPair (unpack_goal,
-                        unpackPair (
+                        unpackTuple6 (
+                          unpack_defctxt,
+                          unpackPairList (unpackString, unpack_term),
+                          unpackList unpack_goal,
+                          unpack_goal,
                           unpackList unpackString,
-                          unpackList unpack_goal))
-      val pack_premise_group = packPair (
+                          unpack_goal_i
+                       ))
+      val pack_premise_group : premise_group packer = packPair (
                         pack_goal,
-                        packTuple3 (
+                        packTuple6 (
                           pack_defctxt,
+                          packPairList (packString, pack_term),
+                          packList pack_goal,
+                          pack_goal,
                           packList packString,
-                          packList pack_goal))
-      (* fun debug errs = Synchronized.change printer_locker (fn () => (
+                          pack_goal_i))
+   (* fun debug errs = Synchronized.change printer_locker (fn () => (
               doPack (packPair (packInt, packList packString)) (9, errs) cout
             ; BinIO.StreamIO.flushOut cout )) *)
       val debug = K ()
@@ -145,6 +277,26 @@ fun socket_reporter pos_tr (cin,cout) =
       fun send packer data = (
               doPack packer data cout
             ; BinIO.StreamIO.flushOut cout)
+
+      fun notify_theorems ctxt premises =
+        Synchronized.change known_premises (fn tabs =>
+          let val premises' = filter_out (Symtab.defined tabs o fst) premises
+              val _ = doPack (packPair (packInt, packList packString))
+                             (2, map fst premises') cout
+              val _ = BinIO.StreamIO.flushOut cout
+              val seen = read (unpackList unpackString)
+              val print = print_term_ ctxt
+              val get_ac = ac_shuffle ac_shuffle_num (Context.Proof ctxt)
+              val vars_of_term = vars_of_term ctxt
+              fun print_ac thm = map print (get_ac thm)
+              val premises'1 = filter_out (member (op =) seen o fst) premises'
+                            |> map (apsnd (fn (d,th,an) => (d,print_ac th,an,vars_of_term th, th)))
+           in doPack (packPair (packInt,
+                    packPairList (packString, packTuple5 (pack_defctxt, packList packString, packString, packList packString, pack_term)))
+                ) (3, premises'1) cout
+            ; BinIO.StreamIO.flushOut cout
+            ; fold (Symtab.update o rpair ()) seen tabs
+          end )
 
    in { start = (fn pos =>
           let val _ = doPack (packPair (packInt, pos_packer)) (0, pos) cout 
@@ -168,31 +320,110 @@ fun socket_reporter pos_tr (cin,cout) =
                  cout
         ; BinIO.StreamIO.flushOut cout
         )),
-        notify_theorems = (fn ctxt => fn premises =>
-          Synchronized.change known_premises (fn tabs =>
-          let val premises' = filter_out (Symtab.defined tabs o fst) premises
-              val _ = doPack (packPair (packInt, packList packString))
-                             (2, map fst premises') cout
-              val _ = BinIO.StreamIO.flushOut cout
-              val seen = read (unpackList unpackString)
-              val print = print_term_ ctxt
-              val get_ac = ac_shuffle ac_shuffle_num (Context.Proof ctxt)
-              fun pass thm = map print (get_ac (Thm.prop_of thm))
-              val premises'1 = filter_out (member (op =) seen o fst) premises'
-                            |> map (apsnd (apsnd pass))
-           in doPack (packPair (packInt,
-                    packPairList (packString, packPair (pack_defctxt, packList packString)))
-                ) (3, premises'1) cout
-            ; BinIO.StreamIO.flushOut cout
-            ; fold (Symtab.update o rpair ()) seen tabs
-          end )),
+        notify_theorems = notify_theorems,
         report_errors = (fn errs => (
               doPack (packPair (packInt, packList packString)) (4, errs) cout
             ; BinIO.StreamIO.flushOut cout )),
-        debug = K () (* (fn errs => Synchronized.change printer_locker (fn () => (
+        debug = K (), (*
+        debug = (fn errs => Synchronized.change printer_locker (fn () => (
               doPack (packPair (packInt, packList packString)) (9, errs) cout
-            ; BinIO.StreamIO.flushOut cout ))) *),
+            ; BinIO.StreamIO.flushOut cout ))), *)
 
+        repair_vars = (fn ctxt => 
+          let val repair_vars = repair_vars ctxt
+              val norm_AC = norm_AC (Context.Proof ctxt)
+              val print_term_ = print_term_ ctxt
+              val defctxt_of = Context_Info.defctxt_string_of ctxt
+              val get_ac = ac_shuffle ac_shuffle_num (Context.Proof ctxt)
+              val vars_of_term = vars_of_term ctxt
+           in fn pos =>
+          let val _ = debug ["Enter repair_ctxtinfo", the (Position.file_of pos)]
+              val _ = send (packPair (packInt, pos_packer)) (17, pos)
+              val mode = read unpackBool
+              val _ = debug [if mode then "mode true" else "mode false"]
+           in if mode
+            then true
+            else \<^try>\<open>
+          let val _ = send (packPair (packInt, pos_packer)) (11, pos)
+              val old_data = read (unpackOption (unpackList unpack_premise_group_old))
+              val _ = debug ["11 OK"]
+              val old_data = case old_data of SOME x => x | NONE => error "data not exists"
+              val new_data = map repair_vars old_data
+           in if null new_data
+           then true
+           else (Synchronized.change known_premises (fn tabs =>
+              let val premises = maps (#2 o snd) new_data
+                  val premises' = filter_out (Symtab.defined tabs o fst) premises
+                  val _ = debug ["before 2"]
+                  val _ = send (packPair (packInt, packList (packString o fst))) (2, premises')
+                  val seen = read (unpackList unpackString)
+                  val _ = debug ["2 OK"]
+                  val premises'1 = filter_out (member (op =) seen o fst) premises'
+
+                  val data' = map (fn (_, prop) =>
+                      (print_term_ prop, (defctxt_of prop,
+                                          map print_term_ (get_ac prop),
+                                          print_term_ (norm_AC prop),
+                                          vars_of_term prop,
+                                          prop)) ) premises'1
+                  
+               in send (packPair (packInt,
+                      packPairList (packString, packTuple5 (pack_defctxt, packList packString, packString, packList packString, pack_term)))
+                  ) (3, data')
+                ; fold (Symtab.update o rpair ()) seen tabs
+              end )
+            ; send (packTuple3 (packInt, pos_packer, packList pack_premise_group)) (1, pos, new_data)
+            ; debug ["repair succeess"]
+            ; false )
+          end catch 
+              (* ERROR "data not exists" => false
+            | *) err => (debug ["AAAA", Runtime.exn_message err |> REPL.trim_makrup]; true)\<close>
+          end end ),
+
+        repair_vars' = (fn ctxt => 
+          let val repair_vars = repair_vars ctxt
+              val norm_AC = norm_AC (Context.Proof ctxt)
+              val print_term_ = print_term_ ctxt
+              val defctxt_of = Context_Info.defctxt_string_of ctxt
+              val get_ac = ac_shuffle ac_shuffle_num (Context.Proof ctxt)
+              val vars_of_term = vars_of_term ctxt
+           in fn pos => \<^try>\<open>
+          let val _ = send (packPair (packInt, pos_packer')) (14, pos)
+              val old_data = read (unpackOption (unpackList unpack_premise_group_old))
+              val _ = debug ["14 OK"]
+              val old_data = case old_data of SOME x => x | NONE => error "data not exists"
+              val new_data = map repair_vars old_data
+           in if null new_data
+            then true
+            else(Synchronized.change known_premises (fn tabs =>
+              let val premises = maps (#2 o snd) new_data
+                  val premises' = filter_out (Symtab.defined tabs o fst) premises
+                  val _ = debug ["before 2"]
+                  val _ = send (packPair (packInt, packList (packString o fst))) (2, premises')
+                  val seen = read (unpackList unpackString)
+                  val _ = debug ["2 OK"]
+                  val premises'1 = filter_out (member (op =) seen o fst) premises'
+
+                  val data' = map (fn (_, prop) =>
+                      (print_term_ prop, (defctxt_of prop,
+                                          map print_term_ (get_ac prop),
+                                          print_term_ (norm_AC prop),
+                                          vars_of_term prop,
+                                          prop)) ) premises'1
+               in send (packPair (packInt,
+                      packPairList (packString, packTuple5 (pack_defctxt, packList packString, packString, packList packString, pack_term)))
+                  ) (3, data')
+                ; fold (Symtab.update o rpair ()) seen tabs
+              end )
+            ; send (packTuple3 (packInt, pos_packer', packList pack_premise_group)) (7, pos, new_data)
+            ; debug ["repair succeess"]
+            ; false)
+          end catch
+              (* ERROR "data not exists" => (debug ["data not exists"]; false)
+            | *) err => (debug ["AAAA", Runtime.exn_message err |> REPL.trim_makrup]; true)\<close>
+          end )
+
+(*
         repair_ctxtinfo = (fn ctxt0 => 
           let val repair_ctxtinfo = repair_ctxtinfo ctxt0
               val ctxt = Proof_Context.set_mode Proof_Context.mode_schematic ctxt0
@@ -287,6 +518,7 @@ fun socket_reporter pos_tr (cin,cout) =
             ; false
           end catch err => (debug ["BBBBB", Runtime.exn_message err]; true)\<close>
           end)
+*)
     } : reporter
   end
 
@@ -312,11 +544,13 @@ val (interactive_reporter : reporter) = let open Pretty
     premise_group = (fn pos => fn data =>
       tracing (string_of (chunks (
             block [str "Position:", brk 1, position pos]
-         :: map (fn (goal, (_, thms, acs)) =>
+         :: map (fn (goal, (_, thms, acs, norm_ac, _, _)) =>
               item [chunks [
                   block (print_goal goal)
                 , str "Dependent theorems"
-                , chunks (map (item o text) thms) 
+                , chunks (map (item o text o fst) thms) 
+                , str "norm AC"
+                , block (print_goal goal)
                 , str "AC shuffle"
                 , chunks (map (item o print_goal) acs)
                   ]]) data
@@ -326,11 +560,13 @@ val (interactive_reporter : reporter) = let open Pretty
             block [str "Position:", brk 1, position pos,
                    str (if transformed then " transformed " else " original "),
                    str (string_of_int ID) ]
-         :: map (fn (goal, (_, thms, acs)) =>
+         :: map (fn (goal, (_, thms, acs, norm_ac, _, _)) =>
               item [chunks [
                   block (print_goal goal)
                 , str "Dependent theorems"
-                , chunks (map (item o text) thms) 
+                , chunks (map (item o text o fst) thms) 
+                , str "norm AC"
+                , block (print_goal goal)
                 , str "AC shuffle"
                 , chunks (map (item o print_goal) acs)
                   ]]) data
@@ -338,25 +574,31 @@ val (interactive_reporter : reporter) = let open Pretty
     notify_theorems = (fn ctxt => fn thms =>
       tracing (string_of (chunks (
           para "New theorem(s):"
-       :: map (fn (_, (_, th)) =>
-            item [Syntax.pretty_term ctxt (Thm.prop_of th)]
+       :: map (fn (_, (_, th, _)) =>
+            item [Syntax.pretty_term ctxt th]
           ) thms )))),
     report_errors = (fn errs =>
       warning (string_of (chunks (map para errs))) ),
     debug = (fn info =>
       warning (string_of (chunks (map para info))) ),
-    repair_ctxtinfo = (fn _ => fn _ => true),
-    repair_ctxtinfo'= (fn _ => fn _ => true)
+    repair_vars  = (fn _ => fn _ => true),
+    repair_vars' = (fn _ => fn _ => true)
+(*    repair_ctxtinfo = (fn _ => fn _ => true),
+    repair_ctxtinfo'= (fn _ => fn _ => true) *)
     }
   end
 
 exception Partial_Ret of
-    ((string list * string) *
-     (string * (string * (string * thm)) list *
-      (string list * string) list)
-    ) list
+    ( (string list * string)
+    * (string * (string * (string * term * string)) list
+    * (string list * string) list
+    * (string list * string)
+    * string list
+    * (term list * term)
+    )) list
 
-fun join_entry ((c,pa,ga), (_,pb,gb)) = (c, AList.join (op =) (K fst) (pa, pb), union (op =) ga gb)
+fun join_entry ((c,pa,ga,ca,vs,raw), (_,pb,gb,_,_,_)) =
+    (c, AList.join (op =) (K fst) (pa, pb), union (op =) ga gb,ca,vs,raw)
 
 val single_cmd_timeout = Time.fromSeconds 60
 val single_extraction_timeout = Time.fromSeconds 500
@@ -400,6 +642,9 @@ fun raw_collect (report_err, debug, can_start, notify) first_goal_or_all stat co
                                             catch E => (report_err (Runtime.exn_message_list E) ; [])\<close>
                                     val _ = debug ["After premise selection"]
                                     val print = print_term_ ctxt
+                                    val vars_of_goal = vars_of_goal ctxt
+                                    val norm_AC = norm_AC (Context.Proof ctxt)
+                                    val norm_AC_goal = norm_AC_goal (Context.Proof ctxt)
                                     fun print_goal (assms, goal) = (map print assms, print goal)
                                     val get_acs = ac_shuffle_goal ac_shuffle_num (Context.Proof ctxt)
                                     val assms = Assumption.all_assms_of (Toplevel.context_of stat)
@@ -411,9 +656,13 @@ fun raw_collect (report_err, debug, can_start, notify) first_goal_or_all stat co
                                             ( defctxt_string_of prop,
                                               map (fn prem =>
                                                 let val prop = Thm.prop_of prem
-                                                 in (print prop, (defctxt_string_of prop, prem))
+                                                 in (print prop, (defctxt_string_of prop, prop, print (norm_AC prop)))
                                                 end ) prems,
-                                              map print_goal (get_acs (assms, goal))))
+                                              map print_goal (get_acs (assms, goal)),
+                                              print_goal (norm_AC_goal (assms, goal)),
+                                              vars_of_goal (assms, goal),
+                                              (assms, goal)
+                                            ))
                                       end )
                                 end
                               val do_SH = can_start (ctxt, ID)
@@ -428,7 +677,7 @@ fun raw_collect (report_err, debug, can_start, notify) first_goal_or_all stat co
                               fun move_next state ((tr, Command_Span.Span (kind, _)) :: cmds) asts =
                                     let val (stat', err) =
                                             case try (Timeout.apply single_cmd_timeout (Toplevel.transition false tr)) state
-                                              of SOME ret => ret
+                                              of SOME ret => ret   
                                                | NONE => raise Partial_Ret ret'
                                         val _ = case err of NONE => ()
                                                   | SOME (E, _) => (
@@ -539,8 +788,6 @@ fun collect (channels as (report_err, debug, _, _)) stat commands =
 
 (* fun repair ctxt  *)
 
-fun ap23 f (a,b,c) = (a,f b,c)
-
 val extract_proof =
   let datatype ele = FWD | BWD
       fun pop _ [] = error "Malformed Source"
@@ -581,28 +828,28 @@ fun REPL_plugin (reporter : reporter) : REPL.collector =
     then if ( if REPAIR_MODE
               then \<^try>\<open>let
                    val proof = extract_proof remaining
-                   val has_define = exists (fn (_, Command_Span.Span (Command_Span.Command_Span (name, _), _)) =>
+                   (* val has_define = exists (fn (_, Command_Span.Span (Command_Span.Command_Span (name, _), _)) =>
                               name = "define"
-                            | _ => false) proof
+                            | _ => false) proof *)
                 in #debug reporter ["ENTER1", the (Position.file_of pos), string_of_int (the (Position.line_of pos))]
-                 ; (if has_define then #debug reporter ["Has define"]
-                   else ())
+              (* ; (if has_define then #debug reporter ["Has define"]
+                   else ()) *)
                  ; #start reporter pos andalso (
-                   has_define orelse
-                   #repair_ctxtinfo reporter (Toplevel.context_of state) pos )
+                   (* has_define orelse (#debug reporter ["TTT1"]; *)
+                   #repair_vars reporter (Toplevel.context_of state) pos )
                end catch err => (#debug reporter ["EEE1", Runtime.exn_message err]; true)\<close>
               else #start reporter pos )
       then let
           val proof = Minilang_Aux.extract_proof remaining
           val ctxt = Toplevel.context_of state
           fun notify data =
-            let val premise_group = map (apsnd (ap23 (map fst))) data
+            let val premise_group = map (apsnd (ap26 (map (apsnd #2)))) data
                 val theorems = maps (#2 o snd) data
              in #notify_theorems reporter ctxt theorems
               ; #premise_group reporter pos premise_group
             end
           fun notify' transformed ID data =
-            let val premise_group = map (apsnd (ap23 (map fst))) data
+            let val premise_group = map (apsnd (ap26 (map (apsnd #2)))) data
                 val theorems = maps (#2 o snd) data
              in #notify_theorems reporter ctxt theorems
               ; #premise_group' reporter (pos, transformed, ID) premise_group
@@ -612,7 +859,7 @@ fun REPL_plugin (reporter : reporter) : REPL.collector =
                                (fn transformed => fn (ctxt, ID) =>
                                   if REPAIR_MODE
                                   then #start_SH reporter pos transformed ID andalso
-                                       #repair_ctxtinfo' reporter ctxt (pos, transformed, ID)
+                                       #repair_vars' reporter ctxt (pos, transformed, ID)
                                   else #start_SH reporter pos transformed ID ),
                                notify' )
                              state proof

@@ -24,3 +24,4 @@ __pycache__
 /run
 /tmp
 /translation/statistics_cache.json
+*.marks

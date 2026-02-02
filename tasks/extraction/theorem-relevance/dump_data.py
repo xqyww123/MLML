@@ -15,15 +15,18 @@ import time
 from datetime import datetime, timedelta
 import msgpack
 import glob
+import re
 
 # Tokenizer will be initialized in each worker process
 
+TOKEN_LIMIT = 7997
 
-
-def norm_ctxt(s):
-    return s.replace("\n\n\n", "\n\n")
-
-TOKEN_LIMIT = 32500
+def post_process(s):
+    s = re.sub(r'::type\b', '', s)
+    s = re.sub(r'__\b', '', s)
+    s = re.sub(r'‹', '\"', s)
+    s = re.sub(r'›', '\"', s)
+    return s
 
 def process_batch(batch_info):
     """Process a batch of data from a chunk file.
@@ -46,11 +49,11 @@ def process_batch(batch_info):
             return Client.pretty_unicode(s)
         return s
     
-    def encode_goal(goal):
+    def encode_goal(goal, goal_vars):
         premises, concl = goal
-        premises = [pretty_unicode(premise) for premise in premises]
-        concl = pretty_unicode(concl)
-        goal = "###Premises\n" + "\n\n".join(premises) + "\n\n###Conclusion\n" + concl
+        goal = "###Variables\n" + "".join([gv + "\n\n" for gv in goal_vars])\
+             + "###Premises\n" + "".join([premise + "\n\n" for premise in premises])\
+             + "###Conclusion\n" + concl
         if goal.count("###Premises") > 1 or goal.count("###Conclusion") > 1:
             print(f"[Batch {batch_id}] Warning: Found multiple occurrences of ###Premises or ###Conclusion in goal")
             # Don't exit in worker process, just continue
@@ -60,25 +63,71 @@ def process_batch(batch_info):
         tokens = tokenizer.encode(text, add_special_tokens=False)
         return len(tokens)
     
-    def trim_context(existing, ctxt):
-        if isinstance(existing, int):
-            tok_count = existing
-        else:
-            tok_count = count_tokens(str(existing))
+    def shrink_tokens(existing, for_goal):
+        if not isinstance(existing, str):
+            existing = str(existing)
+        tok_count = count_tokens(existing)
+        if tok_count > TOKEN_LIMIT:
+            if not for_goal:
+                raise ValueError(f"tok_count {tok_count} is greater than TOKEN_LIMIT {TOKEN_LIMIT}")
+            lines = existing.split('\n')
+            ret_lines = []
+            for i,line in enumerate(lines):
+                if line.startswith('###'):
+                    ret_lines.append(line)
+                    continue
+                if not line:
+                    ret_lines.append(line)
+                    continue
+                tok_count -= count_tokens(line)
+                if tok_count <= TOKEN_LIMIT:
+                    if len(lines) <= 0:
+                        raise ValueError(f"tok_count {tok_count} is greater than TOKEN_LIMIT {TOKEN_LIMIT}")
+                    ret_lines.extend(lines[i+1:])
+                    # if count_tokens("".join(ret_lines)) > TOKEN_LIMIT:
+                    #     raise ValueError(f"DDDD tok_count {count_tokens(''.join(ret_lines))} is greater than TOKEN_LIMIT {TOKEN_LIMIT} {for_goal}")
+                    return "\n".join(ret_lines)
+            raise ValueError(f"tok_count {tok_count} is greater than TOKEN_LIMIT {TOKEN_LIMIT}")
+        return existing
+    def trim_context(existing : str, ctxt, for_goal):
+        tok_count = count_tokens(existing)
+        if tok_count == TOKEN_LIMIT:
+            return existing
+        if tok_count > TOKEN_LIMIT:
+            return shrink_tokens(existing, for_goal)
+
         ret = []
         segs = ctxt.split('\n\n\n')
         for seg in segs:
             if not seg:
                 continue
+            if not for_goal and seg.startswith('theory '):
+                continue
             if tok_count >= TOKEN_LIMIT:
-                return "".join(ret)
+                break
             seg = seg + "\n\n"
             cnt = count_tokens(seg)
             if tok_count + cnt > TOKEN_LIMIT:
-                return "".join(ret)
+                break
             ret.append(seg)
             tok_count += cnt
-        return "".join(ret)
+        def m(cmd : str) -> int:
+            if cmd.startswith('theory '):
+                return -1
+            elif cmd.startswith('notation '):
+                return 0
+            elif cmd.startswith('class '):
+                return 1
+            elif cmd.startswith('fact '):
+                return 3
+            else:
+                return 2
+        k_ret = [(m(cmd), cmd) for cmd in ret]
+        k_ret.sort(key=lambda x: x[0])
+        ret = [cmd for _, cmd in k_ret]
+        # if count_tokens("".join(ret)) > TOKEN_LIMIT:
+        #     raise ValueError(f"AAAAAAAAAAAA tok_count {count_tokens(''.join(ret))} is greater than TOKEN_LIMIT {TOKEN_LIMIT}")
+        return "".join(ret) + existing
     
     # Create temporary output file for this batch
     temp_file = os.path.join(temp_dir, f'batch_{batch_id}.jsonl')
@@ -95,15 +144,15 @@ def process_batch(batch_info):
             return _CACHE[premise]
         else:
             try:
-                data = thm_db[premise]
-                _CACHE[premise] = data
+                pctxt, prem_acs, norm_prem, vars, _ = thm_db[premise]
+                _CACHE[premise] = (pctxt, prem_acs, norm_prem, vars)
                 total_num += 1
-                return data
+                return (pctxt, prem_acs, norm_prem, vars)
             except KeyError:
                 err_num += 1
                 print(f"\033[91m[Batch {batch_id}] Error {err_num}/{total_num}: {premise}\033[0m")
                 # Cache the missing premise result to avoid repeated errors
-                missing_result = ("", [])
+                missing_result = ("", [], "", [])
                 _CACHE[premise] = missing_result
                 return missing_result
     
@@ -111,16 +160,32 @@ def process_batch(batch_info):
     num_entries = 0
     
     with open(temp_file, 'w', buffering=8192) as output:
-        def gen_goal(goal, ctxt):
-            goal = encode_goal(goal)
-            if use_ctxt:
-                if ctxt:
-                    goal = "#Goal\n" + trim_context(goal, ctxt) + goal
+        def gen_goal(goal, ctxt, goal_vars):
+            goal = encode_goal(goal, goal_vars)
+            goal = pretty_unicode(goal)
+            goal = post_process(goal)
+            if use_ctxt and ctxt:
+                goal = trim_context(goal, ctxt, True)
+            else:
+                goal = shrink_tokens(goal, True)
+            goal = "#Goal\n" + goal
+            num = count_tokens(goal)
+            if num > TOKEN_LIMIT + 3:
+                raise ValueError(f"BBBB Goal has {num} tokens, which is greater than TOKEN_LIMIT {TOKEN_LIMIT} {bool(use_ctxt and ctxt)}")
             return goal
-        def gen_premise(premise, pctxt):
-            if use_ctxt:
-                if pctxt:
-                    premise = "#Fact\n" + trim_context(premise, pctxt) + premise
+        def gen_premise(premise, pctxt, prem_vars):
+            premise = "###Variables\n" + "".join([pv + "\n\n" for pv in prem_vars])\
+                    + "###Statement\n" + premise
+            premise = pretty_unicode(premise)
+            premise = post_process(premise)
+            if use_ctxt and pctxt:
+                premise = trim_context(premise, pctxt, False)
+            else:
+                premise = shrink_tokens(premise, False)
+            premise = "#Fact\n" + premise
+            num = count_tokens(premise)
+            if num > TOKEN_LIMIT + 3:
+                raise ValueError(f"CCCC Goal has {num} tokens, which is greater than TOKEN_LIMIT {TOKEN_LIMIT}")
             return premise
         def write_entry(goal, premise):
             nonlocal num_entries
@@ -137,8 +202,10 @@ def process_batch(batch_info):
         
         # Process each item in the chunk
         # chunk_data is a list of (goal_str, (goal, ctxt, prem_list, goal_acs))
-        for goal_str, (goal, ctxt, prem_list, goal_acs) in chunk_data:
+        for goal_str, (goal, ctxt, prem_list, goal_acs, goal_norm, goal_vars) in chunk_data:
             num_processed += 1
+            ctxt = pretty_unicode(ctxt)
+            ctxt = post_process(ctxt)
             
             # Print progress every 100 items or every 5 seconds
             current_time = time.time()
@@ -153,43 +220,63 @@ def process_batch(batch_info):
                 last_progress_time = current_time
             
             # Note: PISA files filtering is already done in dedup.py, so we don't need to filter here
-            goal_str = gen_goal(goal, ctxt)
+            try:
+                if use_ac == -1:
+                    goal_str = gen_goal(goal_norm, ctxt, goal_vars)
+                else:
+                    goal_str = gen_goal(goal, ctxt, goal_vars)
+            except ValueError as e:
+                print(f"\033[91m[Batch {batch_id}] Error {err_num}/{total_num}: {e}\033[0m")
+                continue
             for prem in prem_list:
-                pctxt, prem_acs = get_premise(prem)
-                prem_str = gen_premise(prem, pctxt)
-                write_entry(goal_str, prem_str)
-                if use_ac:
+                pctxt, prem_acs, norm_prem, prem_vars = get_premise(prem)
+                pctxt = pretty_unicode(pctxt)
+                pctxt = post_process(pctxt)
+                try:
+                    if use_ac == -1:
+                        prem_str = gen_premise(norm_prem, pctxt, prem_vars)
+                    else:
+                        prem_str = gen_premise(prem, pctxt, prem_vars)
+                    write_entry(goal_str, prem_str)
+                except ValueError as e:
+                    print(f"\033[91m[Batch {batch_id}] Error {err_num}/{total_num}: {e}\033[0m")
+                    continue
+                if use_ac > 0:
                     N = len(goal_acs) + 1
-                    M = len(prem_acs) + 1
+                    M = 1 # len(prem_acs) + 1
                     
                     if N == 1 and M == 1:
                         continue
                     
-                    max_pairs = min(use_ac, N * M)
+                    max_pairs = min(use_ac, N * M - 1)
                     
-                    if max_pairs == N * M:
-                        selected_pairs = [(i, j) for i in range(N) for j in range(M)]
-                    elif N * M <= use_ac * 10:
-                        all_pairs = [(i, j) for i in range(N) for j in range(M)]
+                    if max_pairs == N * M - 1:
+                        selected_pairs = [(i, j) for i in range(N) for j in range(M) if not (i == N-1 and j == M-1)]
+                    elif N * M - 1 <= use_ac * 10:
+                        all_pairs = [(i, j) for i in range(N) for j in range(M) if not (i == N-1 and j == M-1)]
                         selected_pairs = random.sample(all_pairs, max_pairs)
                     else:
                         selected_pairs = set()
                         while len(selected_pairs) < max_pairs:
                             i = random.randrange(N)
                             j = random.randrange(M)
-                            if i == N or j == M:
+                            if i == N-1 and j == M-1:
                                 continue
                             selected_pairs.add((i, j))
                         selected_pairs = list(selected_pairs)
                     
                     for i, j in selected_pairs:
                         if i == N-1 and j == M-1:
-                            continue
+                            raise ValueError("i == N-1 and j == M-1")
                         aug_goal = goal if i == N-1 else goal_acs[i]
                         aug_prem = prem if j == M-1 else prem_acs[j]
-                        aug_goal_str = gen_goal(aug_goal, ctxt)
-                        aug_prem_str = gen_premise(aug_prem, pctxt)
-                        write_entry(aug_goal_str, aug_prem_str)
+                        try:
+                            aug_goal_str = gen_goal(aug_goal, ctxt, goal_vars)
+                            aug_prem_str = gen_premise(aug_prem, pctxt, prem_vars)
+                            write_entry(aug_goal_str, aug_prem_str)
+                        except ValueError as e:
+                            print(f"\033[91m[Batch {batch_id}] Error {err_num}/{total_num}: {e}\033[0m")
+                            continue
     
     thm_db.close()
     

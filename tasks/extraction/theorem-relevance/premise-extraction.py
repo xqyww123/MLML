@@ -53,9 +53,10 @@ def watcher(client_id, status):
 
 def mk_mode_db():
     i = 0
-    with SqliteDict('./cache/premise_relevance.db') as old_db,\
+        #SqliteDict('/lustre/scratch/users/qiyuan.xu/MLML_data/premise_relevance.ac_norm.db') as db,\
+    with SqliteDict('/lustre/scratch/users/qiyuan.xu/MLML_data/premise_relevance.ac_norm.db') as old_db,\
          SqliteDict('./cache/mode.db') as mode_db:
-         for key in old_db.keys():
+        for key in old_db.keys():
             parts = key.split(':')
             pos = f"{parts[0]}:{parts[1]}"
             num = len(parts)
@@ -69,6 +70,20 @@ def mk_mode_db():
             if i % 100 == 0:
                 print(f"Processed {i} keys")
                 mode_db.commit()
+        #for key in db.keys():
+        #    parts = key.split(':')
+        #    pos = f"{parts[0]}:{parts[1]}"
+        #    num = len(parts)
+        #    if num == 4:
+        #        mode_db[pos] = key
+        #    elif num == 2:
+        #        pass
+        #    else:
+        #        raise ValueError(f"Invalid key: {key}")
+        #    i += 1
+        #    if i % 100 == 0:
+        #        print(f"Processed {i} keys")
+        #        mode_db.commit()
 
 # mk_mode_db()
 # exit(0)
@@ -139,12 +154,12 @@ def extract():
     #        task_group = tasks[i:i+5]
     #        task_queue.put(task_group)
 
-    with SqliteDict('./cache/premise_relevance.db') as old_db,\
-        SqliteDict('./cache/premise_extration_control.db') as control_db,\
-        SqliteDict('./cache/premise_equivalence.db') as old_thm_db,\
+    # SqliteDict('/lustre/scratch/users/qiyuan.xu/MLML_data/premise_relevance.ac_norm.db') as old_db,\
+    # SqliteDict('/lustre/scratch/users/qiyuan.xu/MLML_data/premise_info.ac_norm.db') as old_thm_db,\
+    # SqliteDict('./cache/mode.db') as mode_db:
+    with SqliteDict('./cache/premise_extration_control.db') as control_db,\
         SqliteDict('/lustre/scratch/users/qiyuan.xu/MLML_data/premise_relevance.db') as db,\
-        SqliteDict('/lustre/scratch/users/qiyuan.xu/MLML_data/premise_info.db') as thm_db,\
-        SqliteDict('./cache/mode.db') as mode_db:
+        SqliteDict('/lustre/scratch/users/qiyuan.xu/MLML_data/premise_info.db') as thm_db:
         total_pairs = 0
         if '$total' in control_db:
             total_pairs = control_db['$total']
@@ -166,35 +181,39 @@ def extract():
                         match c.unpack.unpack():
                             case (0, pos):
                                 pos = encode_pos(pos)
-                                run = pos not in db
+                                run = (pos not in db) or (all (len(thms) == 0 or any (thm not in thm_db for thm in thms) for _, (_, thms, _, _, _, _) in db[pos]))
                                 mp.pack(run, c.cout)
                                 c.cout.flush()
                                 #logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - {pos} - reached")
                             case (6, pos, transformed, id):
                                 pos = encode_pos(pos)
                                 key = f"{pos}:{'T' if transformed else 'O'}:{id}"
-                                run = (pos not in db) and (key not in db)
+                                #run = (pos not in db) and (key not in db)
+                                run = (pos not in db or all (len(thms) == 0 or any (thm not in thm_db for thm in thms) for _, (_, thms, _, _, _, _) in db[pos])) and\
+                                      (key not in db or all (len(thms) == 0 or any (thm not in thm_db for thm in thms) for _, (_, thms, _, _, _, _) in db[key]))
                                 mp.pack(run, c.cout)
                                 c.cout.flush()
                             case (1, pos, data):
                                 pos = encode_pos(pos)
-                                lens = [len(r) for _, (_, r, _) in data]
-                                AC_equivs = [len(ac) for _, (_, _, ac) in data]
+                                lens = [len(r) for _, (_, r, _, _, _, _) in data]
+                                AC_equivs = [len(ac) for _, (_, _, ac, _, _, _) in data]
                                 total_pairs += sum(lens)
                                 logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - {pos} - finished {len(data)} goals, each of length {lens}, AC equivs {AC_equivs}, and {sum(lens)} pairs. In total {total_pairs} pairs are collected.")
                                 db[pos] = data
                                 db.commit()
+                                #print(data)
                                 control_db['$total'] = total_pairs
                                 control_db.commit()
                             case (7, (pos, transformed, id), data):
                                 pos = encode_pos(pos)
                                 key = f"{pos}:{'T' if transformed else 'O'}:{id}"
-                                lens = [len(r) for _, (_, r, _) in data]
-                                AC_equivs = [len(ac) for _, (_, _, ac) in data]
+                                lens = [len(r) for _, (_, r, _, _, _, _) in data]
+                                AC_equivs = [len(ac) for _, (_, _, ac, _, _, _) in data]
                                 total_pairs += sum(lens)
                                 logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - {key} - finished {len(data)} goals, each of length {lens}, AC equivs {AC_equivs}, and {sum(lens)} pairs. In total {total_pairs} pairs are collected.")
                                 db[key] = data
                                 db.commit()
+                                #print(data)
                                 control_db['$total'] = total_pairs
                                 control_db.commit()
                             case (2, premises):
@@ -202,14 +221,15 @@ def extract():
                                 mp.pack(seen, c.cout)
                                 c.cout.flush()
                             case (3, premises):
-                                for premise, (defctxt, equivs) in premises.items():
+                                for premise, data in premises.items():
                                     # existing = []
                                     # if premise in thm_db:
                                     #     (defctxt, existing) = thm_db[premise]
                                     # existing += [x for x in equivs if x not in existing]
-                                    thm_db[premise] = (defctxt, equivs)
+                                    thm_db[premise] = data
+                                    #print(data)
                                 thm_db.commit()
-                                lens = [len(r) for _, r in premises.values()]
+                                lens = [len(r) for _, r, _, _, _ in premises.values()]
                                 logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - meet {len(premises)} premises, each of {lens} AC equivs.")
                             case (4, errs):
                                 logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - file {rpath} - position {pos} - Error: {"\n\n".join(errs)}")
@@ -219,41 +239,41 @@ def extract():
                                 raise REPLFail(f"{pos} REPL failed: " + err)
                             case (9, msgs):
                                 logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - {msgs}")
-                            case (11, pos):
-                                pos = encode_pos(pos)
-                                try:
-                                    data = old_db[pos]
-                                    #data = [(x, norm_premise_group(x)) for x in data]
-                                except KeyError:
-                                    data = None
-                                mp.pack(data, c.cout)
-                                c.cout.flush()
-                            case (13, premises):
-                                def get(premise):
-                                    try:
-                                        return old_thm_db[premise]
-                                    except KeyError:
-                                        return None
-                                ret = [get(premise) for premise in premises]
-                                mp.pack(ret, c.cout)
-                                c.cout.flush()
-                            case (14, (pos, transformed, id)):
-                                pos = encode_pos(pos)
-                                key = f"{pos}:{'T' if transformed else 'O'}:{id}"
-                                try:
-                                    data = old_db[key]
-                                    #data = [(x, norm_premise_group(x)) for x in data]
-                                except KeyError:
-                                    data = None
-                                mp.pack(data, c.cout)
-                                c.cout.flush()
-                            case (17, pos):
-                                pos = encode_pos(pos)
-                                new_version = pos in mode_db
-                                # if new_version:
-                                #     logger.warning(f"New version {pos}: {mode_db[pos]}")
-                                mp.pack(new_version, c.cout)
-                                c.cout.flush()
+                            # case (11, pos):
+                            #     pos = encode_pos(pos)
+                            #     try:
+                            #         data = old_db[pos]
+                            #         #data = [(x, norm_premise_group(x)) for x in data]
+                            #     except KeyError:
+                            #         data = None
+                            #     mp.pack(data, c.cout)
+                            #     c.cout.flush()
+                            # case (13, premises):
+                            #     def get(premise):
+                            #         try:
+                            #             return old_thm_db[premise]
+                            #         except KeyError:
+                            #             return None
+                            #     ret = [get(premise) for premise in premises]
+                            #     mp.pack(ret, c.cout)
+                            #     c.cout.flush()
+                            # case (14, (pos, transformed, id)):
+                            #     pos = encode_pos(pos)
+                            #     key = f"{pos}:{'T' if transformed else 'O'}:{id}"
+                            #     try:
+                            #         data = old_db[key]
+                            #         #data = [(x, norm_premise_group(x)) for x in data]
+                            #     except KeyError:
+                            #         data = None
+                            #     mp.pack(data, c.cout)
+                            #     c.cout.flush()
+                            # case (17, pos):
+                            #     pos = encode_pos(pos)
+                            #     new_version = pos in mode_db
+                            #     # if new_version:
+                            #     #     logger.warning(f"New version {pos}: {mode_db[pos]}")
+                            #     mp.pack(new_version, c.cout)
+                            #     c.cout.flush()
                             case X:
                                 raise REPLFail(f"{pos} Invalid message " + str(X))
 

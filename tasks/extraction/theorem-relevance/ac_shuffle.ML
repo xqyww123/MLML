@@ -9,7 +9,8 @@ val ac_shuffle_goal : AC_shuffle_max_num -> Context.generic -> term list * term 
 val install_AC : Context.generic -> Context.generic -> Context.generic
 val install_AC_by_rewriting : thm list -> Context.generic -> Context.generic
 val remove_AC : constant_name list (*oprs*) -> Context.generic -> Context.generic
-
+val norm_AC : Context.generic -> term -> term
+val norm_AC_goal : Context.generic -> term list * term -> term list * term
 
 end
 
@@ -86,14 +87,14 @@ fun chk_A'_pair (Const(N1, _) $ A1 $ (Const(M1, _) $ B1 $ C1),
       if is_Var A1 andalso is_Var B1 andalso is_Var C1 andalso
          is_Var A2 andalso is_Var B2 andalso is_Var C2 andalso
          N1 = N2 andalso M1 = M2 andalso A1 aconv A2 andalso B1 aconv B2 andalso C1 aconv C2
-      then SOME (Assoc (N1, M1))
+      then SOME (Assoc' (N1, M1))
       else NONE
   | chk_A'_pair (Const(M2, _) $ (Const(N2, _) $ A2 $ B2) $ C2,
                  Const(N1, _) $ A1 $ (Const(M1, _) $ B1 $ C1)) =
       if is_Var A1 andalso is_Var B1 andalso is_Var C1 andalso
          is_Var A2 andalso is_Var B2 andalso is_Var C2 andalso
          N1 = N2 andalso M1 = M2 andalso A1 aconv A2 andalso B1 aconv B2 andalso C1 aconv C2
-      then SOME (Assoc (N1, M1))
+      then SOME (Assoc' (N1, M1))
       else NONE
   | chk_A'_pair _ = NONE
 fun chk_AC_pair pair =
@@ -220,6 +221,89 @@ fun random_binding_name name =
   end
 *)
 
+fun norm_AC gctxt =
+  let val ctxt = Context.proof_of gctxt
+      val syn = Proof_Context.syntax_of ctxt
+      val prtabs = Syntax.prtabs syn
+      val table = AC_table.get gctxt
+      fun apply term =
+        let fun fallback term =
+               case term
+                 of A $ B => apply A $ apply B
+                  | Abs (name, typ, X) => Abs (name, typ, apply X)
+                  | atom => atom
+            fun norm_implies term =
+              let val prems = Logic.strip_imp_prems term
+                           |> sort Term_Ord.term_ord
+                           |> map apply
+                  val concl = Logic.strip_imp_concl term
+                           |> apply
+               in Logic.list_implies (prems, concl)
+              end
+
+            fun norm_A is_C (cname,typ) term =
+              let val name' = "\<^const>" ^ cname
+                  fun dest ret (origin as Const(C,T) $ A $ B) =
+                        if C = cname andalso T = typ
+                        then dest (dest ret B) A
+                        else origin :: ret
+                    | dest ret x = x::ret
+                  val lst = dest [] term
+                         |> map apply
+                         |> is_C ? sort Term_Ord.term_ord
+               in if length lst <= 2
+               then fallback term
+               else let
+                  val foldA = case Printer.get_infix prtabs name'
+                                of SOME {assoc=Printer.Right_Assoc, ...} => foldr1
+                                 | _ => foldl1
+               in foldA (fn (A,B) => Const (cname,typ) $ A $ B) lst
+              end end
+
+
+         in case term
+         of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ (Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _) =>
+              norm_implies term
+          | (Const(N', typ) $ AA $ BB) =>
+            let val acs = the_default [] (Symtab.lookup table N')
+                val is_A = exists (fn Assoc  (a,b) => a = N' andalso b = N'
+                                    | Assoc' (a,b) => a = N' andalso b = N'
+                                    | AssocC (a,b) => a = N' andalso b = N'
+                                    | _ => false) acs
+                val is_C = exists (fn AssocC (a,b) => a = N' andalso b = N'
+                                    | Comm a => a = N'
+                                    | _ => false) acs
+             in case (is_A, is_C)
+             of (true, _) => norm_A is_C (N', typ) term
+              | (false, true) =>
+                let val AA = apply AA
+                    val BB = apply BB
+                 in case Term_Ord.term_ord (AA,BB)
+                      of GREATER => Const(N', typ) $ BB $ AA
+                       | _ => fallback term
+                end
+              | (false, false) => fallback term
+            end
+        (* | Const (cname1, _) $ Abs (_, _, Const (cname2, _) $ Abs (_, _, _)) =>
+              if cname1 = cname2 andalso
+                 member (op =) [\<^const_name>\<open>All\<close>] cname1
+              then shuffle_quantifiers AC_max_num cname1 term
+              else fallback term *)
+        (* | Abs (name, ty, X) =>
+              let val names' = random_binding_names 3 name
+               in apply AC_max_num X
+                |> maps (fn X' => map (fn name' => Abs (name', ty, X')) names')
+                |> take_shuf AC_max_num
+              end *)
+          | _ => fallback term
+        end
+   in apply
+  end
+
+fun norm_AC_goal ctxt =
+  let val norm_AC = norm_AC ctxt
+   in fn (hs, cl) => (sort Term_Ord.term_ord (map norm_AC hs), norm_AC cl)
+  end 
 
 fun apply_AC AC_max_num table =
   let fun take_shuf AC_max_num L =

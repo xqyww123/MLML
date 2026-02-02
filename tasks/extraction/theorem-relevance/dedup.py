@@ -42,9 +42,12 @@ if args.include:
 GOALS_TO_EXCLUDE = set()
 with SqliteDict(args.db_path) as db:
     for key in KEYS_TO_EXCLUDE:
-        for goal, _ in db[key]:
-            goal_str = msgpack.packb(goal)
-            GOALS_TO_EXCLUDE.add(goal_str)
+        try:
+            for goal, _ in db[key]:
+                goal_str = msgpack.packb(goal)
+                GOALS_TO_EXCLUDE.add(goal_str)
+        except KeyError:
+            pass
 print(f"Excluded {len(GOALS_TO_EXCLUDE)} goals and {len(KEYS_TO_EXCLUDE)} keys")
 if KEYS_TO_INCLUDE is not None:
     print(f"Included {len(KEYS_TO_INCLUDE)} keys")
@@ -74,7 +77,7 @@ with SqliteDict(args.thm_db_path) as thm_db:
                 GOALS_TO_EXCLUDE.add(goal_str)
             continue
         for entry in entries:
-            goal, (ctxt, prems, goal_acs) = entry
+            goal, (ctxt, prems, goal_acs, norm_goal, vars, _) = entry
             goal_str = msgpack.packb(goal)
             if goal_str in GOALS_TO_EXCLUDE:
                 continue
@@ -83,7 +86,7 @@ with SqliteDict(args.thm_db_path) as thm_db:
             try:
                 store = DATA[goal_str]
             except KeyError:
-                store = (goal, ctxt, set(), goal_acs)
+                store = (goal, ctxt, set(), goal_acs, norm_goal, vars)
                 DATA[goal_str] = store
             prem_set = store[2]
             for prem in prems:
@@ -94,7 +97,7 @@ with SqliteDict(args.thm_db_path) as thm_db:
             #prem_set.update(prems)
             DUP_NUM += len(prems)
 
-NUM = sum(len(prem_set) for (_, _, prem_set, _) in DATA.values())
+NUM = sum(len(prem_set) for (_, _, prem_set, _, _, _) in DATA.values())
 print(f"Exported number: {NUM}, the duplicated number: {DUP_NUM}")
 
 # # Filter out premises that don't exist in thm_db
@@ -135,10 +138,10 @@ for chunk_idx in range(args.chunks):
         break
     
     chunk_data = []
-    for goal_str, (goal, ctxt, prem_set, goal_acs) in data_items[start_idx:end_idx]:
+    for goal_str, (goal, ctxt, prem_set, goal_acs, norm_goal, vars) in data_items[start_idx:end_idx]:
         # Convert set to list for msgpack serialization
         prem_list = list(prem_set)
-        chunk_data.append((goal_str, (goal, ctxt, prem_list, goal_acs)))
+        chunk_data.append((goal_str, (goal, ctxt, prem_list, goal_acs, norm_goal,vars)))
     
     chunk_path = os.path.join(args.output, f'chunk.{chunk_idx}')
     chunk_len = len(chunk_data)  # Save length before deleting

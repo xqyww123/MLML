@@ -197,7 +197,7 @@ if __name__ == "__main__":
                     raise e
                     exit(1)
         threads = []
-        for _ in range(20):
+        for _ in range(8):
             thread = threading.Thread(target=worker)
             thread.daemon = True  # Make threads daemon so they exit if main thread exits
             threads.append(thread)

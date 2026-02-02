@@ -100,7 +100,6 @@ fun extern_name ctxt =
       val qualifier = Context.theory_base_name (Proof_Context.theory_of ctxt) ^ "."
    in fn name =>
     let val ret = Name_Space.extern ctxt space name
-        val _ = if name = "Product_Type.prod" then () else ()
      in if String.isPrefix qualifier ret orelse String.isPrefix "??." ret
       then Long_Name.base_name name
       else ret
@@ -121,11 +120,11 @@ fun extern_name_T ctxt =
 
 fun string_of_term ctxt =
     let val ctxt' = ctxt
-              |> Config.put Printer.show_types true
-              |> Config.put Printer.show_sorts true
+              |> Config.put Printer.show_types false
+              |> Config.put Printer.show_sorts false
               |> Config.put Printer.show_markup false
               |> Config.put Printer.show_structs false
-              |> Config.put Printer.show_question_marks true
+              |> Config.put Printer.show_question_marks false
               |> Config.put Printer.show_brackets false
      in Syntax.string_of_term ctxt'
      #> REPL.trim_makrup
@@ -160,11 +159,11 @@ fun put_type ctxt buf =
 
 fun string_of_typ ctxt =
     let val ctxt' = ctxt
-              |> Config.put Printer.show_types true
-              |> Config.put Printer.show_sorts true
+              |> Config.put Printer.show_types false
+              |> Config.put Printer.show_sorts false
               |> Config.put Printer.show_markup false
               |> Config.put Printer.show_structs false
-              |> Config.put Printer.show_question_marks true
+              |> Config.put Printer.show_question_marks false
               |> Config.put Printer.show_brackets false
      in Syntax.string_of_typ ctxt'
      #> REPL.trim_makrup
@@ -180,7 +179,7 @@ fun has_syntax ctxt =
      in is_some (Printer.get_infix prtabs name') orelse
         is_some (Printer.get_prefix prtabs name') orelse
         is_some (Printer.get_binder prtabs name') orelse
-        not (null (Symtab.lookup_list tab name))
+        not (null (Symtab.lookup_list tab name'))
     end
   end
 
@@ -244,17 +243,17 @@ fun put_record ctxt buf name =
       ; put_type ctxt buf typ ))
     ; put buf "}"
     ; (case #parent info
-        of SOME ([], typ) => (
+        of SOME (args, typ) => (
             put buf " extends ";
-            put buf typ)
-         | SOME (args, typ) => (
-            put buf " extends \<open>";
-            put_type ctxt buf (Type (typ, args));
-            put buf "\<close>")
+            put_type ctxt buf (Type (typ, args)))
          | NONE => ())
     ; put buf "\n\n\n"
   end
 
+fun is_atomT (Type (_, [])) = true
+  | is_atomT (TFree _) = true
+  | is_atomT (TVar _) = true
+  | is_atomT _ = false
 
 fun put_ADT ctxt buf const_name =
   let open Ctr_Sugar
@@ -292,34 +291,43 @@ fun put_ADT ctxt buf const_name =
             val sels = if length sels = 0
                        then List.tabulate (length args, K NONE)
                        else if length sels = length args
-                       then let fun chk (tm as (Const (name, _))) =
-                                      if String.isPrefix "un_" name andalso
-                                         String.substring (name, 3, size name - 3) = name
+                       then let fun chk (tm as (Const (cname, _))) =
+                                   let val cname = Long_Name.base_name cname
+                                     in if String.isPrefix "un_" cname
                                       then NONE
-                                      else SOME name
+                                      else SOME cname
+                                    end
                                   | chk _ = NONE
                          in map chk sels
                         end
                        else error ("BUG2: put_ADT " ^ Syntax.string_of_typ ctxt (#T info))
-         in (case disc of SOME (Const (name, _)) => (put buf (extern name); put buf ": ")
+         in (case disc of SOME (Const (dname, _)) =>
+                            if Long_Name.base_name dname = "is_" ^ Long_Name.base_name name
+                            then ()
+                            else (put buf (extern dname); put buf ": ")
                         | SOME _ => ()
                         | NONE => ())
           ; put buf (extern name)
-          ; List.app (fn (typ, sel) => (
+          ; List.app (fn (typ, sel) =>
+            if is_atomT typ andalso not (is_some sel)
+            then (
+              put buf " "
+            ; put_type ctxt buf typ )
+            else (
               put buf " \<open>"
             ; (case sel of SOME s => (put buf (extern s) ; put buf ": ") | NONE => ())
             ; put_type ctxt buf typ
             ; put buf "\<close>"
             )) (args ~~ sels)
         end )
-    ; (case bnf' of NONE => ()
+  (*  ; (case bnf' of NONE => ()
           | SOME bnf =>
         let fun pp title tail term =
               case term of Const (name, _) => (put buf title; put buf (extern name); put buf tail)
                          | _ => ()
          in put buf "          " (*10 spaces*)
           ; pp "mapper: \<open>" "\<close> " (BNF_Def.map_of_bnf bnf)
-          ; pp "predicate: \<open>" "\<close> " (BNF_Def.map_of_bnf bnf)
+          ; pp "predicate: \<open>" "\<close> " (BNF_Def.pred_of_bnf bnf)
           ; pp "relation: \<open>" "\<close> " (BNF_Def.rel_of_bnf bnf)
           ; (case map_filter (fn Const (name, _) => SOME (extern name) | _ => NONE)
                              (BNF_Def.sets_of_bnf bnf)
@@ -328,7 +336,7 @@ fun put_ADT ctxt buf const_name =
                   put buf "set: \<open>"
                 ; intercalate buf "\<close> \<open>" L (K (put buf))
                 ; put buf "\<close>"))
-        end)
+        end) *)
     ; put buf "\n\n\n"
   end
 
@@ -514,8 +522,9 @@ fun fold_atom_typs f (T as Type (_, Ts)) = f T #> fold (fold_atom_typs f) Ts
 
 fun defctxt_of ctxt =
   let val has_syntax = has_syntax ctxt
-      fun gen lev term =
-  let fun consts_of term =
+      fun gen (queue,rets,ret_len) term0 =
+  let val term = singleton (Syntax.uncheck_terms ctxt) term0
+      fun consts_of term =
             Term.fold_aterms (
               fn Const (name, _) => if is_wellknown name then I else insert (op =) name
                | _ => I) term []
@@ -585,27 +594,43 @@ fun defctxt_of ctxt =
                 then insert ctxt_info_eq (Class class)
                 else I
               ) (classes_of term) []
-      val ret = distinct ctxt_info_eq (class_deps @ const_deps)
+      val ret = class_deps @ const_deps
+             |> distinct ctxt_info_eq
+             |> filter_out (fn x => exists (fn y => member (op ctxt_info_eq) y x) rets)
              |> sort weak_ord_ctxt_info
-   in if lev <= 0
+      val rets = ret :: rets
+      val ret_len = ret_len + length ret
+   in if ret_len >= 300
+    then flat (rev rets)
+    else let val queue = fold (
+                fn Fact term => Queue.enqueue term
+                 | _ => I
+              ) ret queue
+      in if Queue.is_empty queue
+      then flat (rev rets)
+      else let val (next, queue) = Queue.dequeue queue
+        in gen (queue,rets,ret_len) next
+       end
+     end
+
+(* if lev <= 0
     then ret
     else let
-      in fold_rev (
-            fn Fact term => (fn data as (_, num) =>
+      in fold (
+            fn Fact term => (fn data as (ret, num) =>
                 if num >= 300 then data
                 else let val new = gen (lev-1) term
-                  in fold (fn x => fn (ret, num) =>
-                      if member ctxt_info_eq ret x
-                      then (ret, num)
-                      else (x :: ret, num+1) ) new data
+                                |> filter_out (fn x => exists (fn y => member (op ctxt_info_eq) y x) ret)
+                  in (new::ret, num + length new)
                 end)
              | _ => I
-          ) ret (ret, length ret)
-      |> fst
+          ) ret ([ret], length ret)
+      |> fst |> rev |> flat
       |> distinct ctxt_info_eq
-     end
+      |> sort weak_ord_ctxt_info
+     end *)
   end
-   in gen 1
+   in gen (Queue.empty, [], 0)
   end
 
 fun put_defctxt ctxt  =
@@ -617,12 +642,16 @@ fun put_defctxt ctxt  =
         | print buf (Fact expr) =
             let val ([expr'], _) = Variable.import_terms true [expr] ctxt
              in put buf "fact \<open>"
-              ; put_term buf expr
+              ; put_term buf expr'
               ; put buf "\<close>\n\n\n"
             end
         | print buf (Syntax synt) = (try (put_syntax buf) synt; ())
         | print buf (Class l) = (try (put_class buf) l; ())
-   in print
+   in fn buf => (
+      put buf "theory "
+    ; put buf (Context.theory_long_name (Proof_Context.theory_of ctxt))
+    ; put buf "\n\n\n"
+    ; print buf )
   end
 
 
