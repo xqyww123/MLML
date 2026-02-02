@@ -17,3 +17,7 @@
 	path = contrib/Automation_Base
 	url = git@github.com:xqyww123/Automation_Base.git
   branch = main
+[submodule "contrib/Isabelle_RPC"]
+	path = contrib/Isabelle_RPC
+	url = git@github.com:xqyww123/Isabelle_RPC.git
+	branch = main
