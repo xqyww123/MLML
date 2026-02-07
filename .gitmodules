@@ -21,3 +21,6 @@
 	path = contrib/Isabelle_RPC
 	url = git@github.com:xqyww123/Isabelle_RPC.git
 	branch = main
+[submodule "contrib/Premise_Embedding"]
+	path = contrib/Premise_Embedding
+	url = git@github.com:xqyww123/Premise_Embedding.git
