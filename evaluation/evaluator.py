@@ -538,7 +538,7 @@ class REPL_FileLine_Mixin:
                 column = 0
             case (file,):
                 if file.startswith("data"):
-                    file = "/home/xero/Current/NTP4Verif/" + file
+                    file = "/home/xero/Current/NTP4Verif_fixing/iclr-NTP4Verif/" + file
                 line = type(self).locate_proof_goal(file)
                 if line is None:
                     raise ValueError(f"Invalid index: {index}")
