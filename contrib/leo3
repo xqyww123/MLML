@@ -1,0 +1,15 @@
+#!/bin/bash
+# Leo3 launcher script
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+JAR_FILE="$SCRIPT_DIR/leo3-v1.7.18.jar"
+
+# Check if JAR file exists
+if [ ! -f "$JAR_FILE" ]; then
+    echo "Error: $JAR_FILE not found"
+    exit 1
+fi
+
+# Run the JAR file with all passed arguments
+exec java -jar "$JAR_FILE" "$@"

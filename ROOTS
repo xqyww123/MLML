@@ -1,4 +1,4 @@
 contrib
 tasks/extraction/theorem-relevance
 tasks/extraction/pretrain
-tasks/NTP4Verif
+#tasks/NTP4Verif
