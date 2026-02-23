@@ -5,8 +5,8 @@ import sys
 import argparse
 
 parser = argparse.ArgumentParser(description="Run agent with file location")
-parser.add_argument("driver", help="the agent driver you will use, e.g., Gemini")
 parser.add_argument("file_line_column", help="File location in format <file>:<line>:<column>")
+parser.add_argument("--driver", default="ClaudeCode", help="the agent driver you will use, e.g., ClaudeCode")
 parser.add_argument("--repl", default="127.0.0.1:6666", help="REPL server address (default: 127.0.0.1:6666)")
 parser.add_argument("--timeout", type=int, default=500, help="Timeout in seconds (default: 500)")
 parser.add_argument("--connection-timeout", type=int, default=1200, help="Connection timeout in seconds (default: 1200)")
