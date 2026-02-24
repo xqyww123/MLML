@@ -390,7 +390,7 @@ class MinilangAgent_Base(Isar_Base):
             if i > 0:
                 self.repl.rollback('EVAL')
             try:
-                self.repl.run_app('MiniLang_Agent')
+                self.repl.run_app('MiniLang_Agent.AoA')
                 mp.pack((driver, self._budget), self.repl.cout)
                 self.repl.cout.flush()
                 (success, elapsed, cpu_time) = Client._parse_control_(self.repl.unpack.unpack())
