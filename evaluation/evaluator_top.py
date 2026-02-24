@@ -93,7 +93,7 @@ if __name__ == "__main__":
                 report_evaluation(proof_jsonl, result_db)
             case 'isar':
                 if len(sys.argv) != 4:
-                    print("Usage: ./evaluation/evaluator_top.py mini <proof.jsonl> <result.db>")
+                    print("Usage: ./evaluation/evaluator_top.py isar <proof.jsonl> <result.db>")
                     exit(1)
                 proof_jsonl = sys.argv[2]
                 result_db = sys.argv[3]
@@ -101,6 +101,17 @@ if __name__ == "__main__":
                 clean_mash(result_db)
                 launch_servers()
                 evaluate_and_save(result_db, cases, Isar)
+                report_evaluation(proof_jsonl, result_db)
+            case 'SH-embed':
+                if len(sys.argv) != 4:
+                    print("Usage: ./evaluation/evaluator_top.py SH-embed <proof.jsonl> <result.db>")
+                    exit(1)
+                proof_jsonl = sys.argv[2]
+                result_db = sys.argv[3]
+                cases = Case.jsonl(proof_jsonl)
+                clean_mash(result_db)
+                launch_servers()
+                evaluate_and_save(result_db, cases, lambda addr: MiniLang(addr, SH_params="timeout=60, mini_use_improved_SH=false, fact_filter=embd"))
                 report_evaluation(proof_jsonl, result_db)
             # case 'agent':
             #     if len(sys.argv) != 4:
@@ -148,6 +159,17 @@ if __name__ == "__main__":
                     exit(1)
                 proof_jsonl = sys.argv[2]
                 result_db = sys.argv[3]
+                report_evaluation(proof_jsonl, result_db)
+            case 'SH-embed-pisa':
+                if len(sys.argv) != 4:
+                    print("Usage: ./evaluation/evaluator_top.py SH-embed-pisa <proof.jsonl> <result.db>")
+                    exit(1)
+                proof_jsonl = sys.argv[2]
+                result_db = sys.argv[3]
+                clean_mash(result_db)
+                launch_servers()
+                cases = Case.jsonl(proof_jsonl)
+                evaluate_and_save(result_db, cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout=60, mini_use_improved_SH=false, fact_filter=embd"))
                 report_evaluation(proof_jsonl, result_db)
             case "isar-pisa":
                 if len(sys.argv) != 4:
