@@ -22,5 +22,8 @@
 	url = git@github.com:xqyww123/Isabelle_RPC.git
 	branch = master
 [submodule "contrib/Premise_Embedding"]
-	path = contrib/Premise_Embedding
+	path = contrib/Semantic_Embedding
 	url = git@github.com:xqyww123/Premise_Embedding.git
+[submodule "contrib/Performant_Isabelle_ML"]
+	path = contrib/Performant_Isabelle_ML
+	url = git@github.com:xqyww123/Performant_Isabelle_ML.git
