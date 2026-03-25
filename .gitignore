@@ -25,3 +25,4 @@ __pycache__
 /tmp
 /translation/statistics_cache.json
 *.marks
+secret.sh
