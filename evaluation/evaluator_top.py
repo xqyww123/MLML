@@ -1,5 +1,6 @@
 #!/bin/env python3
 import sys
+import asyncio
 from evaluation import *
 from data import *
 from tools.server import launch_servers
@@ -29,6 +30,12 @@ def clean_mash(result_path : str | None):
         except Exception as e:
             logger.error(f"Error cleaning mash state: {e}")
 
+def _no_category(msg: str):
+    def _loader(_category):
+        logger.error(msg)
+        exit(1)
+    return _loader
+
 def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil_format, epilog):
     import argparse
     parser = argparse.ArgumentParser(
@@ -36,7 +43,7 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
         epilog = epilog,
         formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("driver", type=str, help="The agent driver to use, e.g., Gemini")
+    parser.add_argument("driver", type=str, help="Driver in format DRIVER[.ARG], e.g., Claude.opus-4-6")
     parser.add_argument("--case-category", type=str, nargs="?", default="", help="The category of cases to evaluate (e.g., valid, test). Default: None")
     parser.add_argument("--result", "-o", type=str, nargs="?", help="The path to which the results are saved. The evaluation will be resumed if the file exists.")
     parser.add_argument("--timeout", "-t", type=int, default=500, help="The overall timeout for each case")
@@ -45,6 +52,13 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
     parser.add_argument("--parallel-runs", "-p", type=int, default=1, help="The number of parallel runs for each case")
     parser.add_argument("--query-ret-num", type=int, default=30, help="The number of queries to return by the command RETRIVE")
     parser.add_argument("--pass", type=int, dest="pass_num", default=1, help="pass@N, the number of attempts to try independently")
+    parser.add_argument("--log-dir", type=str, default=None, help="Directory for agent invocation logs (default: use Isabelle config)")
+    parser.add_argument("--retrieval-forking", type=str, default=None,
+        choices=["with_ctxt", "without_ctxt", "cheaper_no_ctxt"],
+        help="Retrieval forking mode (default: with_ctxt)")
+    parser.add_argument("--interactive-retrieval", type=str, default=None,
+        choices=["no", "yes", "yes_recursive"],
+        help="Interactive retrieval mode (default: no)")
     parser.add_argument("-c", "--cases", action="append", nargs="+", help="One or more cases to evaluate")
     parser.add_argument("-f", "--case-file", help=f"A {case_fil_format} from which to read the cases to evaluate")
 
@@ -54,7 +68,7 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
     else:
         cases = []
     if args.cases:
-        cases.extend([index_parser(item) for sub in args.cases for item in sub]) 
+        cases.extend([index_parser(item) for sub in args.cases for item in sub])
     if args.case_file:
         with open(args.case_file, "r") as f:
             cases.extend([index_parser(line.strip()) for line in f])
@@ -64,17 +78,22 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
         exit(1)
     result_db = args.result
     clean_mash(result_db)
-    launch_servers()
-    evaluate_and_save(
+    async def _run():
+        await launch_servers()
+        await evaluate_and_save(
         result_db, cases,
         lambda addr: cls(
-            addr, 
+            addr,
             timeout=args.timeout,
             connection_timeout=args.connection_timeout,
             step_limit=args.step_limit,
             parallel_runs=args.parallel_runs,
             query_ret_num=args.query_ret_num,
+            log_dir=args.log_dir,
+            retrieval_forking=args.retrieval_forking,
+            interactive_retrieval=args.interactive_retrieval,
         ))
+    asyncio.run(_run())
 
 
 if __name__ == "__main__":
@@ -88,8 +107,10 @@ if __name__ == "__main__":
                 result_db = sys.argv[3]
                 cases = Case.jsonl(proof_jsonl)
                 clean_mash(result_db)
-                launch_servers()
-                evaluate_and_save(result_db, cases, lambda addr: MiniLang(addr, SH_params="timeout = 30"))
+                async def _run():
+                    await launch_servers()
+                    await evaluate_and_save(result_db, cases, lambda addr: MiniLang(addr, SH_params="timeout = 30"))
+                asyncio.run(_run())
                 report_evaluation(proof_jsonl, result_db)
             case 'isar':
                 if len(sys.argv) != 4:
@@ -99,8 +120,10 @@ if __name__ == "__main__":
                 result_db = sys.argv[3]
                 cases = Case.jsonl(proof_jsonl)
                 clean_mash(result_db)
-                launch_servers()
-                evaluate_and_save(result_db, cases, Isar)
+                async def _run():
+                    await launch_servers()
+                    await evaluate_and_save(result_db, cases, Isar)
+                asyncio.run(_run())
                 report_evaluation(proof_jsonl, result_db)
             case 'SH-embed':
                 if len(sys.argv) != 4:
@@ -110,8 +133,10 @@ if __name__ == "__main__":
                 result_db = sys.argv[3]
                 cases = Case.jsonl(proof_jsonl)
                 clean_mash(result_db)
-                launch_servers()
-                evaluate_and_save(result_db, cases, lambda addr: MiniLang(addr, SH_params="timeout=60, mini_use_improved_SH=false, fact_filter=embd"))
+                async def _run():
+                    await launch_servers()
+                    await evaluate_and_save(result_db, cases, lambda addr: MiniLang(addr, SH_params="timeout=60, mini_use_improved_SH=false, fact_filter=embd"))
+                asyncio.run(_run())
                 report_evaluation(proof_jsonl, result_db)
             # case 'agent':
             #     if len(sys.argv) != 4:
@@ -138,9 +163,11 @@ if __name__ == "__main__":
                 proof_jsonl = sys.argv[2]
                 result_db = sys.argv[3]
                 clean_mash(result_db)
-                launch_servers()
                 cases = Case.jsonl(proof_jsonl)
-                evaluate_and_save(result_db, cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout = 30"))
+                async def _run():
+                    await launch_servers()
+                    await evaluate_and_save(result_db, cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout = 30"))
+                asyncio.run(_run())
                 report_evaluation(proof_jsonl, result_db)
             case "mini-pisa-raw-SH":
                 if len(sys.argv) != 4:
@@ -149,9 +176,11 @@ if __name__ == "__main__":
                 proof_jsonl = sys.argv[2]
                 result_db = sys.argv[3]
                 clean_mash(result_db)
-                launch_servers()
                 cases = Case.jsonl(proof_jsonl)
-                evaluate_and_save(result_db, cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout = 30, mini_use_improved_SH = false"))
+                async def _run():
+                    await launch_servers()
+                    await evaluate_and_save(result_db, cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout = 30, mini_use_improved_SH = false"))
+                asyncio.run(_run())
                 report_evaluation(proof_jsonl, result_db)
             case "mini-pisa-raw-SH-report":
                 if len(sys.argv) != 4:
@@ -167,9 +196,11 @@ if __name__ == "__main__":
                 proof_jsonl = sys.argv[2]
                 result_db = sys.argv[3]
                 clean_mash(result_db)
-                launch_servers()
                 cases = Case.jsonl(proof_jsonl)
-                evaluate_and_save(result_db, cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout=60, mini_use_improved_SH=false, fact_filter=embd"))
+                async def _run():
+                    await launch_servers()
+                    await evaluate_and_save(result_db, cases, lambda addr: MiniLang_PISA(addr, SH_params="timeout=60, mini_use_improved_SH=false, fact_filter=embd"))
+                asyncio.run(_run())
                 report_evaluation(proof_jsonl, result_db)
             case "isar-pisa":
                 if len(sys.argv) != 4:
@@ -178,10 +209,11 @@ if __name__ == "__main__":
                 proof_jsonl = sys.argv[2]
                 result_db = sys.argv[3]
                 clean_mash(result_db)
-                launch_servers()
                 cases = Case.jsonl(proof_jsonl)
-                #evaluate_and_save(result_db, cases, Isar_PISA)
-                evaluate_and_save(result_db, cases, lambda addr: Isar_PISA(addr, libs=['Auto_Sledgehammer.Auto_Sledgehammer']))
+                async def _run():
+                    await launch_servers()
+                    await evaluate_and_save(result_db, cases, lambda addr: Isar_PISA(addr, libs=['Auto_Sledgehammer.Auto_Sledgehammer']))
+                asyncio.run(_run())
                 report_evaluation(proof_jsonl, result_db)
             case "isar-pisa-report":
                 if len(sys.argv) != 4:
@@ -192,28 +224,54 @@ if __name__ == "__main__":
                 report_evaluation(proof_jsonl, result_db)
 
             case 'agent-miniF2F':
-                def category_loader(category):
-                    return MiniF2F_Data().cases_of(category)
-                def index_parser(line):
-                    return line
-                minilang_agent_handler(MinilangAgent_MiniF2F, "MiniF2F", category_loader, index_parser,\
-                    "file of lines of cases,",\
-                    "Examples:\n" \
+                minilang_agent_handler(MinilangAgent_MiniF2F, "MiniF2F",
+                    lambda category: MiniF2F_Data().cases_of(category),
+                    lambda line: line,
+                    "file of lines of cases,",
+                    "Examples:\n"
                     "    evaluation/evaluator_top.py agent-miniF2F Gemini --result result.db --case-category valid\n"
                 )
 
             case 'agent-source':
-                def category_loader(category):
-                    logger.error(f"To use agent-source, you should indicate the Isabelle source of the target proof goals")
-                    exit(1)
-                def index_parser(line):
-                    return line
-                minilang_agent_handler(MinilangAgent_Source, "source text", category_loader, index_parser, "jsonl file",\
-                    "Examples:\n" \
-                    "    evaluation/evaluator_top.py agent-source Gemini --result result.db --cases \"theory Test imports Main begin theorem \\\"(1::nat) + 1 = 2\\\"\"\n\n" \
-                    "    You can also put the proof goals in a file (e.g., cases.lst) where a line is a case; then evaluate them by:\n" \
+                minilang_agent_handler(MinilangAgent_Source, "source text",
+                    _no_category("To use agent-source, you should indicate the Isabelle source of the target proof goals"),
+                    lambda line: line,
+                    "jsonl file",
+                    "Examples:\n"
+                    "    evaluation/evaluator_top.py agent-source Gemini --result result.db --cases \"theory Test imports Main begin theorem \\\"(1::nat) + 1 = 2\\\"\"\n\n"
+                    "    You can also put the proof goals in a file (e.g., cases.lst) where a line is a case; then evaluate them by:\n"
                     "    evaluation/evaluator_top.py agent-source Gemini --result result.db --case-file cases.lst\n"
-                    )
+                )
+
+            case 'agent-pisa':
+                minilang_agent_handler(MinilangAgent_PISA, "PISA",
+                    _no_category("PISA dataset does not support categories. Use --cases or --case-file instead."),
+                    int,
+                    "file of lines of PISA case indices (integers 0-2999)",
+                    "Examples:\n"
+                    "    evaluation/evaluator_top.py agent-pisa ClaudeCode --result result.db --cases 0 1 2\n"
+                )
+
+            case 'agent-afp':
+                def _afp_index_parser(line):
+                    from IsaREPL import Position
+                    return Position.from_s(line)
+                minilang_agent_handler(MinilangAgent_AFP, "AFP",
+                    _no_category("AFP dataset does not support categories. Use --cases or --case-file instead."),
+                    _afp_index_parser,
+                    "file of lines of AFP positions (file:line format)",
+                    "Examples:\n"
+                    "    evaluation/evaluator_top.py agent-afp ClaudeCode --result result.db --cases /path/to/Theory.thy:42\n"
+                )
+
+            case 'agent':
+                minilang_agent_handler(MinilangAgent, "file:line:column",
+                    _no_category("Generic agent mode does not support categories. Use --cases or --case-file instead."),
+                    lambda line: line,
+                    "file of lines of file:line:column locations",
+                    "Examples:\n"
+                    "    evaluation/evaluator_top.py agent ClaudeCode --result result.db --cases path/to/Theory.thy:42:0\n"
+                )
 
             # case "eval-mini-pisa":
             #     clean_mash("./evaluation/minilang_pisa_result.db")

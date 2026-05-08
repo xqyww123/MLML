@@ -1,6 +1,7 @@
 from transformers import AutoTokenizer
 from data.tokenizer import is_codepoint_supported
-from IsaREPL import SYMBOLS
+from Isabelle_RPC_Host.unicode import get_SYMBOLS
+SYMBOLS = get_SYMBOLS()
 from isabelle import Data
 
 def mk_unicode_table(model_name):

@@ -2,19 +2,17 @@ import json
 import os
 import sys
 from IsaREPL import Client, Position, REPLFail
-from Isa_Mini import Mini
+from IsaMini.REPL import REPL as MiniREPL
 import csv
 import logging
 from enum import Enum
 from data.isabelle import CaseNotAvailable, PISA_Data, get_MINIF2F_VALIDATION, get_MINIF2F_TEST, MiniF2F_Data, AFP_Data
 from sqlitedict import SqliteDict
-import threading
-import concurrent.futures
-import queue  # Add standard queue module
+import asyncio
 import time
 import traceback
 from tools.server import SERVERS
-from typing import Callable, Tuple
+from typing import Callable, Tuple, TYPE_CHECKING
 import msgpack as mp
 
 logger = logging.getLogger(__name__)
@@ -54,7 +52,7 @@ class Case:
     @staticmethod
     def jsonl(response_path):
         ret = []
-        with open(response_path, "r", encoding="utf-8") as f: 
+        with open(response_path, "r", encoding="utf-8") as f:
                 for line in f:
                     data = json.loads(line)
                     if "response" in data:
@@ -74,16 +72,16 @@ class Case:
         return ret
 
 class Evaluator:
-    def __enter__(self):
+    async def __aenter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    async def __aexit__(self, exc_type, exc_value, traceback):
         return None
-    
+
     def all_cases(self): # -> enumerate[Index]:
         raise NotImplementedError("all_cases must be implemented by subclass")
 
-    def validate(self, index, proofs : str | list[str]) -> Result:
+    async def validate(self, index, proofs : str | list[str]) -> Result:
         """
         When proofs is a list:
           This method evaluates the proofs sequentially from the first to the last.
@@ -96,51 +94,56 @@ class Evaluator:
           explaining why the proof fails.
         """
         raise NotImplementedError("validate must be implemented by subclass")
-    
-    def start_case(self, index) -> None:
+
+    async def start_case(self, index) -> None:
         raise NotImplementedError("start_case must be implemented by subclass")
 
 class MiniLang_Base(Evaluator):
     def __init__(self, addr, timeout=500, connection_timeout=1200, *args, **kwargs):
         self.addr = addr
         self._timeout = timeout
-        self.mini = Mini(self.addr, 'HOL', ML_base_injection=False, timeout=max(connection_timeout, timeout + 20), *args, **kwargs)
+        self._connection_timeout = connection_timeout
+        self._args = args
+        self._kwargs = kwargs
+        self.mini: MiniREPL = None  # type: ignore[assignment]  # set in __aenter__
 
-    def __enter__(self):
-        if self.mini:
-            self.mini.__enter__()
-        super().__enter__()
+    async def __aenter__(self):
+        self.mini = MiniREPL(self.addr, 'HOL', ML_base_injection=False,
+                        timeout=max(self._connection_timeout, self._timeout + 20),
+                        *self._args, **self._kwargs)
+        await self.mini.__aenter__()
+        await super().__aenter__()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    async def __aexit__(self, exc_type, exc_value, traceback):
         if self.mini:
-            self.mini.__exit__(exc_type, exc_value, traceback)
-            self.mini = None
-        super().__exit__(exc_type, exc_value, traceback)
+            await self.mini.__aexit__(exc_type, exc_value, traceback)
+            self.mini = None  # type: ignore[assignment]
+        await super().__aexit__(exc_type, exc_value, traceback)
         return None
 
-    def close(self):
+    async def close(self):
         if self.mini:
-            self.mini.close()
-            self.mini = None
-    
-    def validate(self, index, proofs):
+            await self.mini.close()
+            self.mini = None  # type: ignore[assignment]
+
+    async def validate(self, index, proofs):
         try:
-            self.start_case(index)
+            await self.start_case(index)
         except CaseNotAvailable:
             return Result(Status.CASE_NOT_AVAILABLE, ["Case not available"], [])
         if isinstance(proofs, str):
             proofs = [proofs]
         if len(proofs) > 1:
-            self.mini.record('EVAL')
+            await self.mini.record('EVAL')
         errors = []
         times = []
         for i, code in enumerate(proofs):
             if i > 0:
-                self.mini.rollback('EVAL')
+                await self.mini.rollback('EVAL')
             start_time = time.time()
             try:
-                _, finished = self.mini.eval(code, self._timeout * 1000, timeout_cmd=5000)
+                _, finished = await self.mini.eval(code, self._timeout * 1000, timeout_cmd=5000)
                 times.append(time.time() - start_time)
                 if finished:
                     return Result(Status.SUCCESS, errors, times)
@@ -154,12 +157,12 @@ class MiniLang_Base(Evaluator):
                 errors.append(E)
         return Result(Status.FAIL, errors, times)
 
-    def move_to(self, file, line, column):
+    async def move_to(self, file, line, column):
         file = os.path.abspath(file)
-        self.mini.move_to(file, line, column)
+        await self.mini.move_to(file, line, column)
 
-    def reset_eval(self, src):
-        self.mini.set_theory_and_goal(src)
+    async def reset_eval(self, src):
+        await self.mini.set_theory_and_goal(src)
 
 class MiniLang_PISA(MiniLang_Base, PISA_Data):
 
@@ -167,21 +170,21 @@ class MiniLang_PISA(MiniLang_Base, PISA_Data):
         MiniLang_Base.__init__(self, addr, *args, **kwargs)
         PISA_Data.__init__(self)
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        PISA_Data.__exit__(self, exc_type, exc_value, traceback)
-        MiniLang_Base.__exit__(self, exc_type, exc_value, traceback)
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await PISA_Data.__aexit__(self, exc_type, exc_value, traceback)
+        await MiniLang_Base.__aexit__(self, exc_type, exc_value, traceback)
         return None
-    
-    def __enter__(self):
-        PISA_Data.__enter__(self)
-        MiniLang_Base.__enter__(self)
-        return self
-    
-    def close(self):
-        PISA_Data.close(self)
-        MiniLang_Base.close(self)
 
-    def start_case(self, index : int):
+    async def __aenter__(self):
+        await PISA_Data.__aenter__(self)
+        await MiniLang_Base.__aenter__(self)
+        return self
+
+    async def close(self):
+        await PISA_Data.close(self)
+        await MiniLang_Base.close(self)
+
+    async def start_case(self, index : int):
         """
         index is the index of the case in the PISA dataset, from 0 to 2999
         """
@@ -194,42 +197,42 @@ class MiniLang_PISA(MiniLang_Base, PISA_Data):
             logger.error(f"Case Not Available: {index} is not in the dateset")
             raise CaseNotAvailable(index, f"MiniLang_PISA: case {index} not available")
         try:
-            self.move_to(pos.file, pos.line, pos.column)
+            await self.move_to(pos.file, pos.line, pos.column)
         except TimeoutError as E:
             logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
             raise CaseNotAvailable(index, f"MiniLang_PISA: case {index} not available")
         except REPLFail as E:
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
             raise CaseNotAvailable(index, f"MiniLang_PISA: case {index} not available")
-    
+
 class MiniLang_AFP(MiniLang_Base, AFP_Data):
 
     def __init__(self, addr, *args, **kwargs):
         MiniLang_Base.__init__(self, addr, *args, **kwargs)
         AFP_Data.__init__(self)
 
-    def __enter__(self):
-        AFP_Data.__enter__(self)
-        MiniLang_Base.__enter__(self)
+    async def __aenter__(self):
+        await AFP_Data.__aenter__(self)
+        await MiniLang_Base.__aenter__(self)
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        AFP_Data.__exit__(self, exc_type, exc_value, traceback)
-        MiniLang_Base.__exit__(self, exc_type, exc_value, traceback)
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await AFP_Data.__aexit__(self, exc_type, exc_value, traceback)
+        await MiniLang_Base.__aexit__(self, exc_type, exc_value, traceback)
         return None
 
-    def close(self):
-        AFP_Data.close(self)
-        MiniLang_Base.close(self)
+    async def close(self):
+        await AFP_Data.close(self)
+        await MiniLang_Base.close(self)
 
-    def start_case(self, index : Position):
+    async def start_case(self, index : Position):
         try:
             pos = self.proof_pos_of(index)
         except KeyError:
             logger.error(f"Case Not Available: {index} is not in the dateset")
             raise CaseNotAvailable(index, f"MiniLang_AFP: case {index} not available")
         try:
-            self.move_to(pos.file, pos.line, pos.column)
+            await self.move_to(pos.file, pos.line, pos.column)
         except REPLFail as E:
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
             raise CaseNotAvailable(index, f"MiniLang_AFP: case {index} not available")
@@ -239,7 +242,7 @@ class MiniLang_AFP(MiniLang_Base, AFP_Data):
 
 class MiniLang(MiniLang_Base):
 
-    def start_case(self, index : str):
+    async def start_case(self, index : str):
         """
         index is a string of format <file>:<line>:[column]
         """
@@ -251,7 +254,7 @@ class MiniLang(MiniLang_Base):
             case _:
                 raise ValueError(f"Invalid index: {index}")
         try:
-            self.move_to(file, int(line), int(column))
+            await self.move_to(file, int(line), int(column))
         except TimeoutError as E:
             logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
             raise CaseNotAvailable(index, f"MiniLang: case {index} not available")
@@ -265,47 +268,52 @@ class Isar_Base(Evaluator):
 
     def __init__(self, addr, libs=[], timeout=500, connection_timeout=1200):
         self.addr = addr
-        self.repl = Client(addr, 'HOL', timeout=max(connection_timeout, timeout + 20))
+        self._libs = libs
         self._timeout = timeout
-        self.repl.record_state("init")
-        if libs:
-            self.repl.add_lib(libs)
+        self._connection_timeout = connection_timeout
+        self.repl: Client = None  # type: ignore[assignment]  # set in __aenter__
 
-    def __enter__(self):
-        self.repl.__enter__()
-        super().__enter__()
+    async def __aenter__(self):
+        self.repl = Client(self.addr, 'HOL', timeout=max(self._connection_timeout, self._timeout + 20))
+        await self.repl.__aenter__()
+        await self.repl.record_state("init")
+        if self._libs:
+            await self.repl.add_lib(self._libs)
+        await super().__aenter__()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.repl.__exit__(exc_type, exc_value, traceback)
-        super().__exit__(exc_type, exc_value, traceback)
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        if self.repl:
+            await self.repl.__aexit__(exc_type, exc_value, traceback)
+        await super().__aexit__(exc_type, exc_value, traceback)
         return None
 
-    def close(self):
-        self.repl.close()
+    async def close(self):
+        if self.repl:
+            self.repl.close()
 
-    def move_to(self, file, line, column=0):
-        self.repl.rollback("init")
-        self.repl.file (os.path.abspath(file), line, column, cache_position=False, use_cache=False)
-    
-    def reset_eval(self, src):
-        self.repl.rollback("init")
-        self.repl.eval(src)
+    async def move_to(self, file, line, column=0):
+        await self.repl.rollback("init")
+        await self.repl.file(os.path.abspath(file), line, column, cache_position=False, use_cache=False)
 
-    def validate(self, index, proofs):
+    async def reset_eval(self, src):
+        await self.repl.rollback("init")
+        await self.repl.eval(src)
+
+    async def validate(self, index, proofs):
         try:
-            self.start_case(index)
+            await self.start_case(index)
         except CaseNotAvailable:
             return Result(Status.CASE_NOT_AVAILABLE, ["Case not available"], [])
         if isinstance(proofs, str):
             proofs = [proofs]
         if len(proofs) > 1:
-            self.repl.record_state('EVAL')
+            await self.repl.record_state('EVAL')
         errors = []
         times = []
         for i, code in enumerate(proofs):
             if i > 0:
-                self.repl.rollback('EVAL')
+                await self.repl.rollback('EVAL')
             try:
                 has_sorry = self.contains_sorry(code)
                 start_time = time.time()
@@ -314,7 +322,7 @@ class Isar_Base(Evaluator):
                     response = None
                 else:
                     try:
-                        response = self.repl.eval(code, timeout=self._timeout * 1000, cmd_timeout=15000)
+                        response = await self.repl.eval(code, timeout=self._timeout * 1000, cmd_timeout=15000)
                     except REPLFail as E:
                         errors.append(E)
                         times.append(time.time() - start_time)
@@ -341,11 +349,11 @@ class Isar_Base(Evaluator):
                     else:
                         return None
         return line_num if line_num > 0 else None
-    
+
     @classmethod
     def filter_comment(cls, code):
         output = []
-        comment_level = 0 
+        comment_level = 0
         for i, c in enumerate(code):
             if c == '(' and i+1 < len(code) and code[i+1] == '*':
                 comment_level += 1
@@ -365,16 +373,37 @@ class Isar_Base(Evaluator):
         return False
 
 class MinilangAgent_Base(Isar_Base):
-    def __init__(self, addr, timeout=500, connection_timeout=1200,
-                step_limit=30, parallel_runs=1, query_ret_num=30):
-        self._budget = (step_limit, timeout, parallel_runs, query_ret_num)
-        super().__init__(addr, timeout=timeout, connection_timeout=connection_timeout, libs=[])
-        self.repl.set_trace(False)
-        self.repl.load_theory(['Minilang_Agent.Minilang_Agent'])
+    _invocation_serial = 0
+    _invocation_serial_lock = asyncio.Lock()
 
-    def validate(self, index, proofs):
+    @classmethod
+    async def _make_invocation_id(cls):
+        async with cls._invocation_serial_lock:
+            cls._invocation_serial += 1
+            serial = cls._invocation_serial
+        ms = int(time.time() * 1000)
+        hex_ms = format(ms, 'x')
+        return f"{hex_ms[-9:]}_{format(serial, 'x')}"
+
+    def __init__(self, addr, timeout=500, connection_timeout=1200,
+                timeout_seconds=14400, max_tool_calls=10000, max_retries=8,
+                log_dir=None, retrieval_forking=None, interactive_retrieval=None):
+        super().__init__(addr, timeout=timeout, connection_timeout=connection_timeout)
+        self._cfg = None
+        self._budget = (timeout_seconds, max_tool_calls, max_retries)
+        self._log_dir = log_dir
+        self._retrieval_forking = retrieval_forking
+        self._interactive_retrieval = interactive_retrieval
+
+    async def __aenter__(self):
+        await super().__aenter__()
+        await self.repl.set_trace(False)
+        await self.repl.load_theory(['Minilang_Agent.Minilang_Agent'])
+        return self
+
+    async def validate(self, index, proofs):
         try:
-            self.start_case(index)
+            await self.start_case(index)
         except CaseNotAvailable:
             return Result(Status.CASE_NOT_AVAILABLE, ["Case not available"], [])
         if isinstance(proofs, str):
@@ -384,21 +413,32 @@ class MinilangAgent_Base(Isar_Base):
         else:
             raise ValueError(f"Invalid proofs: {proofs}")
 
+        if len(proofs) > 1:
+            await self.repl.record_state('EVAL')
         errors = []
         times = []
         for i, driver in enumerate(proofs):
             if i > 0:
-                self.repl.rollback('EVAL')
+                await self.repl.rollback('EVAL')
             try:
-                self.repl.run_app('MiniLang_Agent.AoA')
-                mp.pack((driver, self._budget), self.repl.cout)
-                self.repl.cout.flush()
-                (success, elapsed, cpu_time) = Client._parse_control_(self.repl.unpack.unpack())
+                await self.repl.run_app('Minilang.AoA')
+                invocation_id = await self._make_invocation_id()
+                await self.repl._write((
+                    invocation_id, driver,
+                    (self._cfg, self._budget), self._log_dir,
+                    self._retrieval_forking, self._interactive_retrieval
+                ))
+                (status, elapsed, cpu_time, detail) = Client._parse_control_(await self.repl._feed_and_unpack())
                 times.append(elapsed)
-                if success:
+                if status == "success":
                     return Result(Status.SUCCESS, errors, times)
+                elif status == "remote_error":
+                    errors.append(f"Driver {driver}: remote calling failure (elapsed={elapsed}ms, cpu={cpu_time}ms)")
+                elif status in ("stuck", "false_statement", "resource_exhausted"):
+                    det = f": {detail}" if detail else ""
+                    errors.append(f"Driver {driver}: {status}{det} (elapsed={elapsed}ms, cpu={cpu_time}ms)")
                 else:
-                    errors.append(f"Driver {driver} fails")
+                    errors.append(f"Driver {driver}: unknown status '{status}' (elapsed={elapsed}ms, cpu={cpu_time}ms)")
             except REPLFail as E:
                 if E.args[0].startswith("Failed to launch the Agent Manager."):
                     raise
@@ -410,14 +450,18 @@ class MinilangAgent_Base(Isar_Base):
 
 
 class REPL_PISA_Mixin:
-    def start_case(self, index : int):
+    if TYPE_CHECKING:
+        def proof_pos_of(self, index: int) -> Position: ...
+        async def move_to(self, file: str, line: int, column: int = 0) -> None: ...
+
+    async def start_case(self, index : int):
         try:
             pos = self.proof_pos_of(index)
         except KeyError:
             logger.error(f"Case Not Available: {index} is not in the dateset")
             raise CaseNotAvailable(index, f"Isar_PISA: case {index} not available")
         try:
-            self.move_to(pos.file, pos.line, pos.column)
+            await self.move_to(pos.file, pos.line, pos.column)
         except TimeoutError as E:
             logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
             raise CaseNotAvailable(index, f"Isar_PISA: case {index} not available")
@@ -431,50 +475,54 @@ class Isar_PISA(REPL_PISA_Mixin, Isar_Base, PISA_Data):
         Isar_Base.__init__(self, addr, *args, **kwargs)
         PISA_Data.__init__(self)
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        PISA_Data.__exit__(self, exc_type, exc_value, traceback)
-        Isar_Base.__exit__(self, exc_type, exc_value, traceback)
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await PISA_Data.__aexit__(self, exc_type, exc_value, traceback)
+        await Isar_Base.__aexit__(self, exc_type, exc_value, traceback)
         return None
-    
-    def __enter__(self):
-        PISA_Data.__enter__(self)
-        Isar_Base.__enter__(self)
+
+    async def __aenter__(self):
+        await PISA_Data.__aenter__(self)
+        await Isar_Base.__aenter__(self)
         return self
 
-    def close(self):
-        PISA_Data.close(self)
-        Isar_Base.close(self)
+    async def close(self):
+        await PISA_Data.close(self)
+        await Isar_Base.close(self)
 
 
 class MinilangAgent_PISA(REPL_PISA_Mixin, MinilangAgent_Base, PISA_Data):
+
     def __init__(self, addr, *args, **kwargs):
         MinilangAgent_Base.__init__(self, addr, *args, **kwargs)
         PISA_Data.__init__(self)
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        PISA_Data.__exit__(self, exc_type, exc_value, traceback)
-        MinilangAgent_Base.__exit__(self, exc_type, exc_value, traceback)
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await PISA_Data.__aexit__(self, exc_type, exc_value, traceback)
+        await MinilangAgent_Base.__aexit__(self, exc_type, exc_value, traceback)
         return None
-    
-    def __enter__(self):
-        PISA_Data.__enter__(self)
-        MinilangAgent_Base.__enter__(self)
+
+    async def __aenter__(self):
+        await PISA_Data.__aenter__(self)
+        await MinilangAgent_Base.__aenter__(self)
         return self
 
-    def close(self):
-        PISA_Data.close(self)
-        MinilangAgent_Base.close(self)
+    async def close(self):
+        await PISA_Data.close(self)
+        await MinilangAgent_Base.close(self)
 
 class REPL_AFP_Mixin:
+    if TYPE_CHECKING:
+        def proof_pos_of(self, index: Position) -> Position: ...
+        async def move_to(self, file: str, line: int, column: int = 0) -> None: ...
 
-    def start_case(self, index : Position):
+    async def start_case(self, index : Position):
         try:
             pos = self.proof_pos_of(index)
         except KeyError:
             logger.error(f"Case Not Available: {index} is not in the dateset")
             raise CaseNotAvailable(index, f"Isar_AFP: case {index} not available")
         try:
-            self.move_to(pos.file, pos.line, pos.column)
+            await self.move_to(pos.file, pos.line, pos.column)
         except TimeoutError as E:
             logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
             raise CaseNotAvailable(index, f"Isar_AFP: case {index} not available")
@@ -489,19 +537,19 @@ class Isar_AFP(REPL_AFP_Mixin, Isar_Base, AFP_Data):
         Isar_Base.__init__(self, addr, *args, **kwargs)
         AFP_Data.__init__(self)
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        AFP_Data.__exit__(self, exc_type, exc_value, traceback)
-        Isar_Base.__exit__(self, exc_type, exc_value, traceback)
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await AFP_Data.__aexit__(self, exc_type, exc_value, traceback)
+        await Isar_Base.__aexit__(self, exc_type, exc_value, traceback)
         return None
-    
-    def __enter__(self):
-        AFP_Data.__enter__(self)
-        Isar_Base.__enter__(self)
+
+    async def __aenter__(self):
+        await AFP_Data.__aenter__(self)
+        await Isar_Base.__aenter__(self)
         return self
 
-    def close(self):
-        AFP_Data.close(self)
-        Isar_Base.close(self)
+    async def close(self):
+        await AFP_Data.close(self)
+        await Isar_Base.close(self)
 
 
 class MinilangAgent_AFP(REPL_AFP_Mixin, MinilangAgent_Base, AFP_Data):
@@ -510,24 +558,28 @@ class MinilangAgent_AFP(REPL_AFP_Mixin, MinilangAgent_Base, AFP_Data):
         MinilangAgent_Base.__init__(self, addr, *args, **kwargs)
         AFP_Data.__init__(self)
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        AFP_Data.__exit__(self, exc_type, exc_value, traceback)
-        MinilangAgent_Base.__exit__(self, exc_type, exc_value, traceback)
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await AFP_Data.__aexit__(self, exc_type, exc_value, traceback)
+        await MinilangAgent_Base.__aexit__(self, exc_type, exc_value, traceback)
         return None
-    
-    def __enter__(self):
-        AFP_Data.__enter__(self)
-        MinilangAgent_Base.__enter__(self)
+
+    async def __aenter__(self):
+        await AFP_Data.__aenter__(self)
+        await MinilangAgent_Base.__aenter__(self)
         return self
 
-    def close(self):
-        AFP_Data.close(self)
-        MinilangAgent_Base.close(self)
+    async def close(self):
+        await AFP_Data.close(self)
+        await MinilangAgent_Base.close(self)
 
 
 class REPL_FileLine_Mixin:
+    if TYPE_CHECKING:
+        async def move_to(self, file: str, line: int, column: int = 0) -> None: ...
+        @classmethod
+        def locate_proof_goal(cls, file: str) -> int | None: ...
 
-    def start_case(self, index : str):
+    async def start_case(self, index : str):
         """
         index is a string of format <file>:<line>:[column]
         """
@@ -543,15 +595,17 @@ class REPL_FileLine_Mixin:
                 if line is None:
                     raise ValueError(f"Invalid index: {index}")
                 column = 0
+            case _:
+                raise ValueError(f"Invalid index: {index}")
         try:
-            self.move_to(file, int(line), int(column))
+            await self.move_to(file, int(line), int(column))
         except TimeoutError as E:
             logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
             raise CaseNotAvailable(index, f"Isar: case {index} not available")
         except REPLFail as E:
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
             raise CaseNotAvailable(index, f"Isar: case {index} not available")
-    
+
 
 class Isar(REPL_FileLine_Mixin, Isar_Base):
     pass
@@ -574,18 +628,21 @@ class MinilangAgent(REPL_FileLine_Mixin, MinilangAgent_Base):
 #        assert(test.validate("test", 1, ["using assms unfolding echelon_form_upt_k_def by auto"])[0] == Result.SUCCESS)
 
 class MiniF2F_Mixin:
+    if TYPE_CHECKING:
+        async def reset_eval(self, src: str) -> None: ...
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._data = MiniF2F_Data()
 
-    def start_case(self, index : str):
+    async def start_case(self, index : str):
         try:
             src = self._data.prelude_and_statement_of(index)
         except KeyError:
             logger.error(f"Case Not Available: {index} is not in the dateset")
             raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
         try:
-            self.reset_eval(src)
+            await self.reset_eval(src)
         except REPLFail as E:
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
             raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
@@ -603,9 +660,12 @@ class MinilangAgent_MiniF2F(MiniF2F_Mixin, MinilangAgent_Base):
     pass
 
 class SourceText_Mixin:
-    def start_case(self, index : str):
+    if TYPE_CHECKING:
+        async def reset_eval(self, src: str) -> None: ...
+
+    async def start_case(self, index : str):
         try:
-            self.reset_eval(index)
+            await self.reset_eval(index)
         except REPLFail as E:
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
             raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
@@ -627,7 +687,7 @@ class MinilangAgent_Source(SourceText_Mixin, MinilangAgent_Base):
 #    with MiniLang_MiniF2F("127.0.0.1:6666") as test:
 #        assert(test.validate("valid", "aime_1983_p9", [
 #            r"""DEFINE y where "y=x * sin x"
-#            HAVE fact0: "12 \<le> (9 * y^2 + 4) / y" 
+#            HAVE fact0: "12 \<le> (9 * y^2 + 4) / y"
 #                HAVE fact1: "y>0" UNFOLD y_def END WITH sin_gt_zero assms
 #                HAVE fact2: "0 \<le> (3 * y - 2)^2" END
 #            END WITH fact1 fact2 field_simps power2_eq_square
@@ -640,15 +700,15 @@ class MinilangAgent_Source(SourceText_Mixin, MinilangAgent_Base):
 #        assert(test.validate("valid", "aime_1983_p9", [
 #            r""" proof -
 #    define y where "y=x * sin x"
-#    have "12 \<le> (9 * y^2 + 4) / y" 
+#    have "12 \<le> (9 * y^2 + 4) / y"
 #    proof -
-#        have "y>0" using assms unfolding y_def 
+#        have "y>0" using assms unfolding y_def
 #        by (simp add: sin_gt_zero)
 #        moreover have "0 \<le> (3 * y - 2)^2" by auto
 #        ultimately show ?thesis unfolding power2_eq_square
 #        by (auto simp:field_simps)
 #    qed
-#    then show ?thesis unfolding y_def 
+#    then show ?thesis unfolding y_def
 #        by (auto simp:power2_eq_square algebra_simps)
 #    qed"""
 #        ])[0] == Result.SUCCESS)
@@ -676,56 +736,57 @@ def report_evaluation(response_path : str, result_path : str):
                     err = result.error
                 csv_writer.writerow([key, result.status, len(result.errors), str(result.elapsed_time), err, responses[key]])
 
-def evaluate_and_save(result_path : str | None, cases : list[Case], evaluator : Evaluator): # -> Dict[Index, Result]
-    # Setup shared variables with thread-safe access
+async def evaluate_and_save(result_path : str | None, cases : list[Case], evaluator): # -> Dict[Index, Result]
+    # Setup shared variables with asyncio-safe access
     success = 0
     unavailable = 0
     total = 0
     results = {}
-    lock = threading.Lock()
+    lock = asyncio.Lock()
 
     # Create a task queue from all cases
-    task_queue = queue.Queue()
+    task_queue = asyncio.Queue()
     for case in cases:
-        task_queue.put(case)
+        task_queue.put_nowait(case)
 
     remaining_cases = task_queue.qsize()
-    def log_state():
+    async def log_state():
         nonlocal remaining_cases
-        with lock:
+        async with lock:
             success_rate = success / (total-unavailable) if total - unavailable > 0 else 0
             unavailable_rate = unavailable / total if total > 0 else 0
             logger.info(f"Success: {success_rate:.5f}, Unavailable: {unavailable_rate:.5f}, Remaining: {remaining_cases}")
 
 
-    logger.info(f"Starting {evaluator.__name__} evaluation of {len(cases)} cases. The result will be saved to {result_path}")
-    def execute(db):
-        def eval_server(server_addr):
+    logger.info(f"Starting {getattr(evaluator, '__qualname__', getattr(evaluator, '__name__', repr(evaluator)))} evaluation of {len(cases)} cases. The result will be saved to {result_path}")
+    async def execute(db):
+        async def eval_server(server_addr):
             nonlocal success, unavailable, total, results, remaining_cases
             while not task_queue.empty():
                 logger.info(f"Connecting to server {server_addr}")
                 try:
-                    with evaluator(server_addr) as test:
+                    test = evaluator(server_addr)
+                    async with test:
                         while True:
                             try:
                                 # Get next task from queue with timeout
-                                case : Case = task_queue.get(timeout=1)
-                            except queue.Empty:
+                                case : Case = await asyncio.wait_for(task_queue.get(), timeout=1)
+                            except asyncio.TimeoutError:
                                 if remaining_cases == 0:
                                     return
                                 else:
-                                    time.sleep(1)
+                                    await asyncio.sleep(1)
                                     continue
-                            
+
                             try:
                                 logger.info(f"Server {server_addr} evaluating {case.index}")
-                                
+
                                 # Check if result already exists in database
                                 if db is not None and case.index in db and db[case.index].status != Status.CASE_NOT_AVAILABLE:
                                     result = db[case.index]
                                 else:
                                     try:
-                                        result = test.validate(case.index, case.code)
+                                        result = await test.validate(case.index, case.code)
                                         if db is not None:
                                             db[case.index] = result
                                             db.commit()
@@ -740,13 +801,13 @@ def evaluate_and_save(result_path : str | None, cases : list[Case], evaluator : 
                                 logger.error(f"Error processing case {case.index}: {str(e)}")
                                 logger.error(f"Traceback:\n{traceback.format_exc()}")
                                 # Put the task back in the queue to retry
-                                task_queue.put(case)
+                                await task_queue.put(case)
                                 break
                             finally:
                                 # Mark task as done
                                 task_queue.task_done()
-                                    
-                            with lock:
+
+                            async with lock:
                                 # Update statistics
                                 if result.status == Status.SUCCESS:
                                     success += 1
@@ -757,35 +818,31 @@ def evaluate_and_save(result_path : str | None, cases : list[Case], evaluator : 
                                 total += 1
                                 results[case.index] = result
 
-                            log_state()
+                            await log_state()
                             if result.status == Status.CASE_NOT_AVAILABLE:
                                 break
 
                 except ConnectionRefusedError:
                     logger.error(f"Fail to connect to {server_addr}. Retrying in 10 seconds...")
-                    time.sleep(10)
+                    await asyncio.sleep(10)
                 except Exception as e:
-                    logger.error(f"Worker thread for server {server_addr} encountered an error: {str(e)}. Retrying in 10 seconds...")
-                    time.sleep(10)
-        
-        # Create and start worker threads for each server
-        threads = []
+                    logger.error(f"Worker task for server {server_addr} encountered an error: {str(e)}. Retrying in 10 seconds...")
+                    await asyncio.sleep(10)
+
+        # Create and start worker tasks for each server
+        tasks = []
         for server_addr in SERVER_INSTANCES:
-            thread = threading.Thread(target=eval_server, args=(server_addr,))
-            thread.daemon = True  # Make threads daemon so they exit if main thread exits
-            threads.append(thread)
-            thread.start()
-            
-        # Wait for all threads to complete
-        for thread in threads:
-            thread.join()
+            task = asyncio.create_task(eval_server(server_addr))
+            tasks.append(task)
+
+        # Wait for all tasks to complete
+        await asyncio.gather(*tasks)
 
     if result_path is not None:
         with SqliteDict(result_path) as db:
-            execute(db)
+            await execute(db)
     else:
-        execute(None)
+        await execute(None)
     logger.info(f"Evaluation complete. Processed {total}/{len(cases)} cases.")
-    log_state()
+    await log_state()
     return results
-

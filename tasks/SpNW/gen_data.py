@@ -7,7 +7,7 @@ from data.isabelle import AFP_Data, CaseNotAvailable, PISA_Data, get_data_class
 from transformers import AutoTokenizer
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
-from IsaREPL import Client
+from Isabelle_RPC_Host.unicode import pretty_unicode
 import os
 from tools.logger import configure_logging
 
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         for partNum in range(parallelNum):
             future = executor.submit(
                 gen_data,
-                proof_lang, result_path, model_name, partNum, parallelNum, data_source, token_limit, include_proof, Client.pretty_unicode
+                proof_lang, result_path, model_name, partNum, parallelNum, data_source, token_limit, include_proof, pretty_unicode
             )
             futures.append(future)
             logging.info(f"Scheduled process {partNum+1}/{parallelNum}")

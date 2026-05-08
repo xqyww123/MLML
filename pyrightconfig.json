@@ -3,6 +3,14 @@
     "./evaluation",
     "./data",
     "./tools",
-    "."
+    ".",
+    "./contrib/Semantic_Embedding",
+    "./contrib/Isabelle_RPC",
+    "./contrib/Isa-REPL",
+    "./contrib/Isa-Mini"
   ],
-} 
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.12",
+  "pythonPlatform": "Linux"
+}

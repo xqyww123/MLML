@@ -5,8 +5,8 @@ import subprocess
 import atexit
 from IsaREPL import Client, REPLFail
 import time
+import asyncio
 import concurrent.futures
-import threading
 from .base import MLML_BASE
 from .logger import configure_logging
 from . import slurm
@@ -60,9 +60,9 @@ SERVERS = CFG_SERVERS.copy()
 CLUSTER = os.getenv("CLUSTER", "ssh")
 BASE_SESSION = os.getenv("SESSION", "AFP-1-PISA")
 
-def test_server(addr, timeout_retry=6):
+async def test_server(addr, timeout_retry=6):
     try:
-        Client.test_server(addr, timeout=300)
+        await Client.test_server(addr, timeout=300)
         return True
     except KeyboardInterrupt as E:
         raise E
@@ -73,7 +73,7 @@ def test_server(addr, timeout_retry=6):
     except TimeoutError as E:
         if timeout_retry > 0:
             logger.error(f"Cannot connect to server {addr}: {E}")
-            return test_server(addr, timeout_retry-1)
+            return await test_server(addr, timeout_retry-1)
         else:
             logger.error(f"Cannot connect to server {addr}: {E}")
             return False
@@ -81,8 +81,8 @@ def test_server(addr, timeout_retry=6):
         logger.error(f"Cannot connect to server {addr}: {E}")
         return False
 
-def launch_server(server, retry=6, timeout=600):
-    if test_server(server):
+async def launch_server(server, retry=6, timeout=600):
+    if await test_server(server):
         logger.info(f"Server on {server} is already running")
         return (True, server, "Already running")
     else:
@@ -107,29 +107,29 @@ def launch_server(server, retry=6, timeout=600):
 
         start_time = time.monotonic()  # 返回以秒为单位的浮点数
         end_time = start_time + timeout
-        
+
         while time.monotonic() < end_time:
-            if test_server(server):
+            if await test_server(server):
                 elapsed_time = time.monotonic() - start_time
                 logger.info(f"Server on {host}:{port} started after {elapsed_time:.1f} seconds")
                 return (True, server, f"Started successfully after {elapsed_time:.1f} seconds")
-            
+
             elapsed_time = time.monotonic() - start_time
-            
+
             if elapsed_time <= 90:  # First 90 seconds
                 msg = f"Waiting for server {host}:{port} to start ({elapsed_time:.1f}/{timeout:.0f} seconds). Calm down, it typically takes 90 seconds to start."
             else:
                 msg = f"Waiting for server {host}:{port} to start ({elapsed_time:.1f}/{timeout:.0f} seconds). Maybe it is not working, check the log file ./cache/repl_tmps/{host}_{port}/log.txt"
-            
+
             logger.info(msg)
             # Use a shorter sleep interval for more responsive checking
-            time.sleep(10)
+            await asyncio.sleep(10)
 
         if retry > 1:
             logger.warning(f"Server on {host}:{port} failed to start after {timeout:.0f} seconds, retrying...")
             if CLUSTER == "slurm" or CLUSTER == "slurmx":
                 slurm.restart_job(host)
-            return launch_server(server, retry-1, timeout)
+            return await launch_server(server, retry-1, timeout)
         else:
             elapsed_time = time.monotonic() - start_time
             logger.warning(f"Server on {host}:{port} failed to start after {elapsed_time:.1f} seconds")
@@ -156,69 +156,63 @@ class ServerSupervisor:
         if not self._initialized:
             self.check_interval = check_interval
             self.is_running = False
-            self.supervision_threads = {}  # Dictionary to track supervision threads for each server
-            self._lock = threading.Lock()  # Lock for thread-safe operations
+            self.supervision_tasks = {}  # Dictionary to track supervision tasks for each server
             self._initialized = True
 
     def start(self):
-        """Start the server supervision with a dedicated thread for each server"""
-        with self._lock:
-            if self.is_running:
-                logger.info("Server supervisor is already running")
-                return
-
-            self.is_running = True
-
-            # Create and start a thread for each server
-            for server in SERVERS.keys():
-                self._start_server_supervision(server)
-
-            logger.info(f"Server supervisor started with dedicated threads for {len(SERVERS)} servers, checking every {self.check_interval} seconds")
-
-    def _start_server_supervision(self, server):
-        """Start a dedicated supervision thread for the specified server"""
-        if server in self.supervision_threads and self.supervision_threads[server].is_alive():
-            logger.debug(f"Supervision thread for {server} is already running")
+        """Start the server supervision with a dedicated asyncio task for each server"""
+        if self.is_running:
+            logger.info("Server supervisor is already running")
             return
 
-        thread = threading.Thread(
-            target=self._server_supervision_loop,
-            args=(server,),
-            daemon=True,
+        self.is_running = True
+
+        # Create and start a task for each server
+        for server in SERVERS.keys():
+            self._start_server_supervision(server)
+
+        logger.info(f"Server supervisor started with dedicated tasks for {len(SERVERS)} servers, checking every {self.check_interval} seconds")
+
+    def _start_server_supervision(self, server):
+        """Start a dedicated supervision task for the specified server"""
+        if server in self.supervision_tasks and not self.supervision_tasks[server].done():
+            logger.debug(f"Supervision task for {server} is already running")
+            return
+
+        task = asyncio.create_task(
+            self._server_supervision_loop(server),
             name=f"supervisor-{server}"
         )
-        self.supervision_threads[server] = thread
-        thread.start()
-        logger.debug(f"Started supervision thread for server {server}")
+        self.supervision_tasks[server] = task
+        logger.debug(f"Started supervision task for server {server}")
 
     def stop(self):
-        """Stop all server supervision threads"""
-        with self._lock:
-            if not self.is_running:
-                return
+        """Stop all server supervision tasks"""
+        if not self.is_running:
+            return
 
-            self.is_running = False
+        self.is_running = False
 
-            # Wait for all supervision threads to terminate
-            for server, thread in self.supervision_threads.items():
-                if thread.is_alive():
-                    thread.join(timeout=10)
-                    logger.debug(f"Stopped supervision thread for server {server}")
+        # Cancel all supervision tasks
+        for server, task in self.supervision_tasks.items():
+            if not task.done():
+                task.cancel()
+                logger.debug(f"Cancelled supervision task for server {server}")
 
-            self.supervision_threads.clear()
-            logger.info("Server supervisor stopped")
+        self.supervision_tasks.clear()
+        logger.info("Server supervisor stopped")
 
-    def _server_supervision_loop(self, server):
+    async def _server_supervision_loop(self, server):
         """Supervision loop for a specific server that checks its health periodically"""
         logger.debug(f"Starting supervision loop for server {server}")
         while self.is_running:
-            self._check_and_restart_server(server)
+            await self._check_and_restart_server(server)
             # Sleep for the specified interval
-            time.sleep(self.check_interval)
+            await asyncio.sleep(self.check_interval)
 
-    def _check_and_restart_server(self, server):
+    async def _check_and_restart_server(self, server):
         """Check health of a specific server and restart it if down"""
-        is_running = test_server(server)
+        is_running = await test_server(server)
         if is_running:
             logger.debug(f"Server {server} is UP")
         else:
@@ -226,12 +220,12 @@ class ServerSupervisor:
             if CLUSTER == "slurm" or CLUSTER == "slurmx":
                 host, _ = server.split(":")
                 slurm.restart_job(host)
-            self._restart_server(server)
+            await self._restart_server(server)
 
-    def _restart_server(self, server):
+    async def _restart_server(self, server):
         """Restart a specific server"""
         try:
-            success, _, message = launch_server(server)
+            success, _, message = await launch_server(server)
             if success:
                 logger.info(f"Successfully restarted server {server}: {message}")
             else:
@@ -243,8 +237,8 @@ class ServerSupervisor:
 # Add this near the top of the file with other global variables
 _launch_servers_called = False
 
-def launch_servers():
-    """Launch all REPL servers in parallel using ThreadPoolExecutor."""
+async def launch_servers():
+    """Launch all REPL servers in parallel using asyncio tasks."""
     global _launch_servers_called
 
     if _launch_servers_called:
@@ -261,7 +255,7 @@ def launch_servers():
             server_names = list(set(map(lambda x: x.split(":")[0], SERVERS.keys())))
             print(server_names)
             slurm.alloc_servers(server_names)
-            time.sleep(15)
+            await asyncio.sleep(15)
             allocated_servers = slurm.allocated_servers()
             for server in SERVERS.keys():
                 if server not in allocated_servers:
@@ -279,7 +273,7 @@ def launch_servers():
                 server_names[host].append((port, info["numprocs"]))
             print(server_names)
             slurm.run_servers(server_names) # The only difference from slurm is `run_servers` instead of `alloc_servers`
-            time.sleep(15)
+            await asyncio.sleep(15)
         case _:
             raise ValueError(f"Invalid cluster configuration: {CLUSTER}")
 
@@ -291,21 +285,24 @@ def launch_servers():
 
     logger.info(f"Launching {len(servers_to_launch)} servers")
 
-    # Use a ThreadPoolExecutor to launch servers in parallel
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(servers_to_launch)) as executor:
-        # Submit all tasks and map them to their servers for tracking
-        future_to_server = {executor.submit(lambda s: launch_server(s, retry=1, timeout=600), server): server for server in servers_to_launch}
+    # Launch servers in parallel using asyncio tasks
+    async def launch_one(server):
+        return await launch_server(server, retry=1, timeout=600)
 
-        # Process results as they complete
-        success_count = 0
-        for future in concurrent.futures.as_completed(future_to_server):
-            server = future_to_server[future]
-            try:
-                success, server, message = future.result()
-                if success:
-                    success_count += 1
-            except Exception as e:
-                logger.error(f"Server {server} launch raised an exception: {str(e)}")
+    results = await asyncio.gather(
+        *(launch_one(server) for server in servers_to_launch),
+        return_exceptions=True
+    )
+
+    # Process results
+    success_count = 0
+    for server, result in zip(servers_to_launch, results):
+        if isinstance(result, Exception):
+            logger.error(f"Server {server} launch raised an exception: {str(result)}")
+        else:
+            success, _, message = result
+            if success:
+                success_count += 1
 
     # Final report
     logger.info(f"Server launch complete: {success_count}/{len(servers_to_launch)} servers running")

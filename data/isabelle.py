@@ -256,9 +256,9 @@ def common_prefix(a, b):
 
 PISA_TEST_PATH=f"{MLML_BASE}/data/PISA"
 
-def preprocess_PISA(addr):
-    with Client(addr, 'HOL') as c:
-        def read_PISA(i):
+async def preprocess_PISA(addr):
+    async with Client(addr, 'HOL') as c:
+        async def read_PISA(i):
             src_path = PISA_TEST_PATH+'/test_name_'+str(i)+'.json'
             with open(src_path, 'r', encoding='utf-8') as file:
                 [[path,lemma]] = json.load(file)
@@ -269,7 +269,7 @@ def preprocess_PISA(addr):
                 raise FileNotFoundError(f"PISA {i}: theory not found: {path}")
 
             with open(path, 'r', encoding='utf-8') as file:
-                commands = c.lex(file.read())
+                commands = await c.lex(file.read())
 
             match_index = -1
             for idx, (_, command) in enumerate(commands):
@@ -309,7 +309,7 @@ def preprocess_PISA(addr):
             csv_writer.writerow(['Index', 'Position_before', 'Position', 'Statement'])  # Write header
             for i in range(3000):
                 try:
-                    position_before, position, statement = read_PISA(i)
+                    position_before, position, statement = await read_PISA(i)
                     csv_writer.writerow([i, position_before, position, statement])  # Write each result immediately
                 except (ValueError, FileNotFoundError) as e:
                     print(f"Error processing PISA {i}: {e}")
@@ -329,7 +329,8 @@ def load_pisa_data():
     # Check if the CSV file exists
     if not os.path.isfile(csv_file_path):
         print(f"{csv_file_path} not found. Running preprocess_PISA...")
-        preprocess_PISA("127.0.0.1:6666")
+        import asyncio
+        asyncio.run(preprocess_PISA("127.0.0.1:6666"))
         print("Cannot regenerate pisa_test.csv. Must run ./data/tools/annotate_data_csv_end_pos.py")
         exit(1)
 
@@ -378,11 +379,11 @@ def load_ISAR_PROOF_INDEX():
     _ISAR_PROOF_INDEX_CACHE = indexes
     return indexes
 
-def preprocess_MiniF2F(addr):
-    with Client(addr, 'HOL') as c:
-        def parse(path):
+async def preprocess_MiniF2F(addr):
+    async with Client(addr, 'HOL') as c:
+        async def parse(path):
             with open(path, 'r', encoding='utf-8') as file:
-                commands = c.fast_lex(file.read())
+                commands = await c.fast_lex(file.read())
             # Find the first theorem command
             theorem_index = -1
             for idx, (_, command) in enumerate(commands):
@@ -395,23 +396,24 @@ def preprocess_MiniF2F(addr):
             
             src = '\n'.join([command[1] for command in commands[:theorem_index+1]])
             return src
-        def mk_dataset(path):
+        async def mk_dataset(path):
             validate_files = [f for f in os.listdir(path)]
             validation_set = {}
             for file in validate_files:
-                src = parse(f'{path}/{file}')
+                src = await parse(f'{path}/{file}')
                 name, _ = os.path.splitext(os.path.basename(file))
                 validation_set[name] = src
             return validation_set
-        validate_set = mk_dataset(f'{MLML_BASE}/data/miniF2F/isabelle/valid')
-        test_set = mk_dataset(f'{MLML_BASE}/data/miniF2F/isabelle/test')
+        validate_set = await mk_dataset(f'{MLML_BASE}/data/miniF2F/isabelle/valid')
+        test_set = await mk_dataset(f'{MLML_BASE}/data/miniF2F/isabelle/test')
         with open(f'{MLML_BASE}/data/miniF2F_validation.json', 'w', encoding='utf-8') as f:
             json.dump(validate_set, f, ensure_ascii=False, indent=4)
         with open(f'{MLML_BASE}/data/miniF2F_test.json', 'w', encoding='utf-8') as f:
             json.dump(test_set, f, ensure_ascii=False, indent=4)
 
 if not os.path.isfile(f'{MLML_BASE}/data/miniF2F_validation.json') or not os.path.isfile(f'{MLML_BASE}/data/miniF2F_test.json'):
-    preprocess_MiniF2F("127.0.0.1:6666")
+    import asyncio
+    asyncio.run(preprocess_MiniF2F("127.0.0.1:6666"))
 
 _MINIF2F_VALIDATION = None
 _MINIF2F_TEST = None
@@ -487,13 +489,13 @@ class PISA_Data(Data):
     def __init__(self):
         self.db = SqliteDict(f'{MLML_BASE}/data/translation/results.db')
 
-    def close(self):
+    async def close(self):
         self.db.close()
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.close()
-    
-    def __enter__(self):
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.close()
+
+    async def __aenter__(self):
         return self
 
     def index_type(self) -> type:
@@ -600,13 +602,13 @@ class AFP_Data(Data):
         self.db = SqliteDict(f'{MLML_BASE}/data/translation/results.db')
         self._all_cases = _load_AFP_CASES_CACHE()
 
-    def close(self):
+    async def close(self):
         self.db.close()
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.close()
-    
-    def __enter__(self):
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.close()
+
+    async def __aenter__(self):
         return self
 
     def index_type(self) -> type:

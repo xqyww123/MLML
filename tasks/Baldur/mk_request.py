@@ -6,9 +6,8 @@ import json
 import os
 import sys
 import glob
-import queue
+import asyncio
 import logging
-import threading
 from tools.logger import configure_logging
 
 configure_logging(level=logging.INFO)
@@ -63,25 +62,25 @@ def count_tokens(text, model_name):
     return token_count
 
 
-def gen_request(c : Client, source : str, file_name : str, model_name : str) -> list:
+async def gen_request(c : Client, source : str, file_name : str, model_name : str) -> list:
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     def count_tokens(text):
         tokens = tokenizer.encode(text)
         return len(tokens)
 
     ret = []
-    cmds = c.fast_lex(source)
+    cmds = await c.fast_lex(source)
     preludes = []
     parent_preludes = []
     dir = os.path.dirname(file_name)
 
     for (_, src) in cmds:
         if src.startswith('theory'):
-            _, imports, _ = c.parse_thy_header(src)
+            _, imports, _ = await c.parse_thy_header(src)
             for i in imports:
-                path = c.path_of_theory(i, dir)
+                path = await c.path_of_theory(i, dir)
                 with open(path, 'r') as f:
-                    for (_, src) in c.fast_lex(f.read()):
+                    for (_, src) in await c.fast_lex(f.read()):
                         parent_preludes.append((src, count_tokens(src)))
 
     def get_prelude(sum) :
@@ -141,42 +140,35 @@ if __name__ == "__main__":
         else:
             logging.warning(f"Warning: {source_path} is neither a file nor a directory")
     
-    task_queue = queue.Queue()
+    task_queue = asyncio.Queue()
     for file_name in thy_files:
-        task_queue.put(file_name)
+        task_queue.put_nowait(file_name)
 
-    lock = threading.Lock()
-    with open(args.output, 'w') as fout:
+    async def run():
         counter = 0
-        def worker():
-            global counter
-            with Client(args.address, 'HOL') as c:
-                try:
-                    while True:
-                        try:
-                            file_name = task_queue.get(timeout=1)
-                        except queue.Empty:
-                            return
-                        logging.info(f"[{counter}/{len(thy_files)}] Processing {file_name}")
-                        with open(file_name, 'r') as f:
-                            source = f.read()
-                        reqs = gen_request(c, source, file_name, args.model)
-                        with lock:
+        with open(args.output, 'w') as fout:
+            async def worker():
+                nonlocal counter
+                async with Client(args.address, 'HOL') as c:
+                    try:
+                        while True:
+                            try:
+                                file_name = task_queue.get_nowait()
+                            except asyncio.QueueEmpty:
+                                return
+                            logging.info(f"[{counter}/{len(thy_files)}] Processing {file_name}")
+                            with open(file_name, 'r') as f:
+                                source = f.read()
+                            reqs = await gen_request(c, source, file_name, args.model)
                             ret.extend(reqs)
                             for req in reqs:
                                 fout.write(json.dumps(req) + '\n')
                             counter += 1
-                except Exception as e:
-                    logging.error(f"Error: {e}")
-                    exit(1)
-        threads = []
-        for _ in range(2):
-            thread = threading.Thread(target=worker)
-            thread.daemon = True  # Make threads daemon so they exit if main thread exits
-            threads.append(thread)
-            thread.start()
-            
-        # Wait for all threads to complete
-        for thread in threads:
-            thread.join()
+                    except Exception as e:
+                        logging.error(f"Error: {e}")
+                        exit(1)
+
+            await asyncio.gather(*(worker() for _ in range(2)))
+
+    asyncio.run(run())
 

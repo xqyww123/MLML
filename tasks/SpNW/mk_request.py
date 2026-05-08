@@ -6,10 +6,9 @@ import json
 import os
 import sys
 import glob
-import queue
+import asyncio
 import logging
 from tools.logger import configure_logging
-import threading
 
 configure_logging(level=logging.INFO)
 
@@ -74,14 +73,14 @@ def encode_prompt(req):
         prompt += f"\nPROOF:\n{req['proof']}"
     return prompt
 
-def gen_request(c : Client, source : str, file_name : str, model_name : str) -> list:
+async def gen_request(c : Client, source : str, file_name : str, model_name : str) -> list:
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     def length_of(text):
         tokens = tokenizer.encode(text)
         return len(tokens)
 
     rets = []
-    cmds = c.fast_lex(source)
+    cmds = await c.fast_lex(source)
 
     for i, (pos, src) in enumerate(cmds):
         if (src.startswith('lemma ') or src.startswith('theorem ') or src.startswith('corollary ') or
@@ -90,8 +89,8 @@ def gen_request(c : Client, source : str, file_name : str, model_name : str) -> 
             cmds[i + 1][1].startswith('sorry'):
             pos = cmds[i + 1][0]
 
-            c.file(file_name, pos.line, pos.column)
-            local_facts_origin, _, _, fixes, goals = c.context('pretty')
+            await c.file(file_name, pos.line, pos.column)
+            local_facts_origin, _, _, fixes, goals = await c.context('pretty')
 
             local_facts = {}
             for name, fact in local_facts_origin.items():
@@ -115,7 +114,8 @@ def gen_request(c : Client, source : str, file_name : str, model_name : str) -> 
             #     (fixed term variabls, fixed type variables): (dict[str, typ], dict[str, sort]),
             #     goals: [term]
             # )
-            process = Client.pretty_unicode
+            from Isabelle_RPC_Host.unicode import pretty_unicode
+            process = pretty_unicode
             ret = {
                 'index': f"{file_name}:{pos.line}",
                 'goals': [process(goal) for goal in goals],
@@ -128,7 +128,7 @@ def gen_request(c : Client, source : str, file_name : str, model_name : str) -> 
             
 
             premises = {}
-            all_premises = c.premise_selection('final', 1000, ['mesh'], {}, 'pretty')
+            all_premises = await c.premise_selection('final', 1000, ['mesh'], {}, 'pretty')
             for name, fact in all_premises.items():
                 length = length_of(name) + length_of(fact) + 2
                 if length + toks > TOKEN_LIMIT:
@@ -167,43 +167,35 @@ if __name__ == "__main__":
         return dir.endswith('isabelle') and 'lib/isabelle' not in dir
     thy_files = [f for f in thy_files if filter_thy_file(f)]
 
-    task_queue = queue.Queue()
+    task_queue = asyncio.Queue()
     for file_name in thy_files:
-        task_queue.put(file_name)
+        task_queue.put_nowait(file_name)
 
-    lock = threading.Lock()
-    with open(args.output, 'w') as fout:
+    async def run():
         counter = 0
-        def worker():
-            global counter
-            with Client(args.address, 'HOL') as c:
-                try:
-                    while True:
-                        try:
-                            file_name = task_queue.get(timeout=1)
-                        except queue.Empty:
-                            return
-                        logging.info(f"[{counter}/{len(thy_files)}] Processing {file_name}")
-                        with open(file_name, 'r') as f:
-                            source = f.read()
-                        reqs = gen_request(c, source, file_name, args.model)
-                        with lock:
+        with open(args.output, 'w') as fout:
+            async def worker():
+                nonlocal counter
+                async with Client(args.address, 'HOL') as c:
+                    try:
+                        while True:
+                            try:
+                                file_name = task_queue.get_nowait()
+                            except asyncio.QueueEmpty:
+                                return
+                            logging.info(f"[{counter}/{len(thy_files)}] Processing {file_name}")
+                            with open(file_name, 'r') as f:
+                                source = f.read()
+                            reqs = await gen_request(c, source, file_name, args.model)
                             ret.extend(reqs)
                             for req in reqs:
                                 fout.write(json.dumps(req) + '\n')
                             counter += 1
-                except Exception as e:
-                    logging.error(f"Error: {e}")
-                    raise e
-                    exit(1)
-        threads = []
-        for _ in range(8):
-            thread = threading.Thread(target=worker)
-            thread.daemon = True  # Make threads daemon so they exit if main thread exits
-            threads.append(thread)
-            thread.start()
-            
-        # Wait for all threads to complete
-        for thread in threads:
-            thread.join()
+                    except Exception as e:
+                        logging.error(f"Error: {e}")
+                        raise e
+
+            await asyncio.gather(*(worker() for _ in range(8)))
+
+    asyncio.run(run())
 

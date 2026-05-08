@@ -7,11 +7,9 @@ from sqlitedict import SqliteDict
 import msgpack as mp
 import sys
 import os
-import concurrent.futures
-import threading
+import asyncio
 import time
 from IsaREPL import Client, REPLFail
-import queue
 import atexit
 import tools.slurm as slurm
 from tools.server import test_server
@@ -64,14 +62,12 @@ def encode_pos2 (pos):
     #print(pos)
     return f'{norm_file(pos[3][1])}:{pos[0]}:{pos[1]}'
 
-def translate():
+async def translate():
 
     total_theories = 0
     finished_theories = 0
     total_goals = 0
     finished_goals = {}
-    # Add a lock for thread-safe counter operations
-    task_counter_lock = threading.Lock()
 
     def add_goal(ret):
         for cat in ret:
@@ -95,9 +91,9 @@ def translate():
             all_tasks.append(line)
             total_theories += 1
     all_task_num = len(all_tasks)
-    task_queue = queue.Queue()
+    task_queue = asyncio.Queue()
     for task in all_tasks:
-        task_queue.put(task)
+        task_queue.put_nowait(task)
     ## Group tasks by directory
     #grouped_tasks = {}
     #for task in all_tasks:
@@ -118,22 +114,22 @@ def translate():
 
     with SqliteDict('./cache/translation/results.db') as db:
         with SqliteDict('./cache/translation/declarations.db', autocommit=True) as db_decl:
-            def translate_one(server, rpath):
+            async def translate_one(server, rpath):
                 path=os.path.abspath(rpath)
                 rpath=norm_file(path)
                 if all(f"{rpath}:{target}" in db_decl for target in translation_targets):
                     logger.info(f"skipped {rpath}")
                     return
-                with Client(server, 'HOL', timeout=None) as c:
-                    c.set_register_thy(False)
-                    c.set_trace(False)
-                    c.load_theory(['Minilang_Translator.MS_Translator_Top'])
-                    c.run_ML("Minilang_Translator.MS_Translator_Top", INIT_SCRIPT)
+                async with Client(server, 'HOL', timeout=None) as c:
+                    await c.set_register_thy(False)
+                    await c.set_trace(False)
+                    await c.load_theory(['Minilang_Translator.MS_Translator_Top'])
+                    await c.run_ML("Minilang_Translator.MS_Translator_Top", INIT_SCRIPT)
 
-                    def interact():
+                    async def interact():
                         nonlocal total_goals, finished_goals
                         while True:
-                            match c.unpack.unpack():
+                            match await c._feed_and_unpack():
                                 case (0, pos):
                                     pos = encode_pos(pos)
                                     run = False
@@ -142,8 +138,8 @@ def translate():
                                         if key not in db: # or db[key][1]:
                                             run = True
                                             break
-                                    mp.pack(run, c.cout)
-                                    c.cout.flush()
+                                    c.writer.write(mp.packb(run))
+                                    await c.writer.drain()
                                 case (2, pos_spec, pos_prf, ret):
                                     total_goals += 1
                                     spec_offset = pos_spec[1]
@@ -177,38 +173,37 @@ def translate():
                                 case X:
                                     raise REPLFail("Invalid message " + str(X))
 
-                    c.run_app("Minilang-Translator")
+                    await c.run_app("Minilang-Translator")
                     logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - translating {rpath}")
-                    mp.pack((path, translation_targets), c.cout)
-                    c.cout.flush()
-                    interact()
+                    c.writer.write(mp.packb((path, translation_targets)))
+                    await c.writer.drain()
+                    await interact()
                     for target in translation_targets:
                         db_decl[f"{rpath}:{target}"] = True
                     db_decl.commit()
                     logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - finished {rpath}")
 
-            def worker(server):
+            async def worker(server):
                 nonlocal finished_theories, all_task_num
                 while True:
-                    if not test_server(server):
+                    if not await test_server(server):
                         logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Server is down")
-                        time.sleep(60)
+                        await asyncio.sleep(60)
                         continue
                     try:
-                        task = task_queue.get(timeout=1)
-                    except queue.Empty:
+                        task = task_queue.get_nowait()
+                    except asyncio.QueueEmpty:
                         if all_task_num == 0:
                             break
                         logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - No tasks available, waiting...")
-                        time.sleep(60)
+                        await asyncio.sleep(60)
                         continue
-                    
+
+                    reentry = True
                     try:
-                        # Create a copy of the group for iteration
-                        reentry = True
                         for _ in range(5):
                             try:
-                                translate_one(server, task)
+                                await translate_one(server, task)
                                 reentry = False
                                 finished_theories += 1
                                 break
@@ -221,7 +216,7 @@ def translate():
                                 break
                             except ConnectionError:
                                 logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Connection error translating {task}")
-                                time.sleep(180)
+                                await asyncio.sleep(180)
                             except Exception as e:
                                 reentry = False
                                 finished_theories += 1
@@ -229,31 +224,20 @@ def translate():
                                     db_decl[f"{task}:{target}"] = True
                                 traceback.print_exc()
                                 logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error translating {task}: {e}")
-                                #time.sleep(10)
                     finally:
-                        # Mark the current group as done and requeue any remaining failed tasks
-                        task_queue.task_done()
-                        
-                        # Put any remaining tasks back in the queue
                         if reentry:
-                            task_queue.put(task)
+                            task_queue.put_nowait(task)
                         else:
-                            # Use lock to make the decrement operation atomic
-                            with task_counter_lock:
-                                all_task_num -= 1
+                            all_task_num -= 1
 
-            # Create and start worker threads for each server
-            threads = []
-            for server_addr in SERVER_INSTANCES:
-                thread = threading.Thread(target=worker, args=(server_addr,))
-                thread.daemon = True  # Make threads daemon so they exit if main thread exits
-                threads.append(thread)
-                thread.start()
-                
-            # Wait for all threads to complete
-            for thread in threads:
-                thread.join()
+            # Create and start worker tasks for each server
+            await asyncio.gather(
+                *(worker(server_addr) for server_addr in SERVER_INSTANCES)
+            )
+
+async def main():
+    await launch_servers()
+    await translate()
 
 if __name__ == "__main__":
-    launch_servers()
-    translate()
+    asyncio.run(main())

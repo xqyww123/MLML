@@ -11,7 +11,7 @@ import argparse
 import glob
 import os
 from pathlib import Path
-from IsaREPL import Client
+from Isabelle_RPC_Host.unicode import unicode_of_ascii, ascii_of_unicode
 
 
 def find_thy_files(paths):
@@ -38,10 +38,10 @@ def convert_file(file_path, to_unicode=True):
         
         # Convert the content
         if to_unicode:
-            converted = Client.unicode_of_ascii(content)
+            converted = unicode_of_ascii(content)
             direction = "unicode"
         else:
-            converted = Client.ascii_of_unicode(content)
+            converted = ascii_of_unicode(content)
             direction = "ASCII"
         
         # Write the converted content
