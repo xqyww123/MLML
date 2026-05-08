@@ -1,5 +1,5 @@
 from sqlitedict import SqliteDict
-from IsaREPL import Client, REPLFail
+from Isabelle_RPC_Host.unicode import pretty_unicode
 
 with SqliteDict('/lustre/scratch/users/qiyuan.xu/MLML_data/premise_relevance.db') as db_org,\
     SqliteDict('/lustre/scratch/users/qiyuan.xu/MLML_data/premise_info.db') as thm_db_org,\
@@ -7,6 +7,6 @@ with SqliteDict('/lustre/scratch/users/qiyuan.xu/MLML_data/premise_relevance.db'
     SqliteDict('/lustre/scratch/users/qiyuan.xu/MLML_data/premise_info.unicode.db') as thm_db:
     for key, value in db_org.items():
         premises, concl = key
-        premises = [Client.pretty_unicode(premise) for premise in premises]
-        concl = Client.pretty_unicode(concl)
+        premises = [pretty_unicode(premise) for premise in premises]
+        concl = pretty_unicode(concl)
         key2 = (premises, concl)

@@ -8,11 +8,9 @@ from sqlitedict import SqliteDict, decode
 import msgpack as mp
 import sys
 import os
-import concurrent.futures
-import threading
+import asyncio
 import time
 from IsaREPL import Client, REPLFail
-import queue
 import atexit
 import tools.slurm as slurm
 from tools.server import test_server
@@ -137,14 +135,12 @@ def norm_premise_group(premise_group):
     
 
 
-def extract():
+async def extract():
 
     total_theories = 0
     finished_theories = 0
     total_goals = 0
     finished_goals = 0
-    # Add a lock for thread-safe counter operations
-    task_counter_lock = threading.Lock()
 
     def report():
         logger.info(f"theories: {finished_theories/total_theories*100:.2f}%, goals: {finished_goals}/{total_goals} = {finished_goals/total_goals*100:.2f}%")
@@ -158,9 +154,9 @@ def extract():
             all_tasks.append(line)
             total_theories += 1
     all_task_num = len(all_tasks)
-    task_queue = queue.Queue()
+    task_queue = asyncio.Queue()
     for task in all_tasks:
-        task_queue.put(task)
+        task_queue.put_nowait(task)
     ## Group tasks by directory
     #grouped_tasks = {}
     #for task in all_tasks:
@@ -185,34 +181,34 @@ def extract():
         total_pairs = 0
         if '$total' in control_db:
             total_pairs = control_db['$total']
-        def translate_one(server, rpath):
+        async def translate_one(server, rpath):
             path=os.path.abspath(rpath)
             rpath=norm_file(path)
             if rpath in control_db and rpath not in TROUBLE:
                 logger.info(f"skipped {rpath}")
                 return
-            with Client(server, 'HOL', timeout=None) as c:
-                c.set_register_thy(False)
-                c.set_trace(False)
-                c.load_theory(['Premise_Extraction.Premise_Extraction'])
+            async with Client(server, 'HOL', timeout=None) as c:
+                await c.set_register_thy(False)
+                await c.set_trace(False)
+                await c.load_theory(['Premise_Extraction.Premise_Extraction'])
 
-                def interact():
+                async def interact():
                     nonlocal total_goals, finished_goals, total_pairs
                     pos = None
                     while True:
-                        match c.unpack.unpack():
+                        match await c._feed_and_unpack():
                             case (0, pos):
                                 pos = encode_pos(pos)
                                 run = pos in TROUBLE2
-                                mp.pack(run, c.cout)
-                                c.cout.flush()
+                                c.writer.write(mp.packb(run))
+                                await c.writer.drain()
                                 logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - {pos} - reached")
                             case (6, pos, transformed, id):
                                 pos = encode_pos(pos)
                                 key = f"{pos}:{'T' if transformed else 'O'}:{id}"
                                 run = key in TROUBLE4
-                                mp.pack(run, c.cout)
-                                c.cout.flush()
+                                c.writer.write(mp.packb(run))
+                                await c.writer.drain()
                             case (1, pos, data):
                                 pos = encode_pos(pos)
                                 lens = [len(r) for _, (_, r, _) in data]
@@ -236,8 +232,8 @@ def extract():
                                 control_db.commit()
                             case (2, premises):
                                 seen = [premise for premise in premises if premise in thm_db]
-                                mp.pack(seen, c.cout)
-                                c.cout.flush()
+                                c.writer.write(mp.packb(seen))
+                                await c.writer.drain()
                             case (3, premises):
                                 for premise, (defctxt, equivs) in premises.items():
                                     # existing = []
@@ -294,75 +290,56 @@ def extract():
                             case X:
                                 raise REPLFail(f"{pos} Invalid message " + str(X))
 
-                c.run_app("Premise_Extraction")
+                await c.run_app("Premise_Extraction")
                 logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - extracting {rpath}")
-                mp.pack(path, c.cout)
-                c.cout.flush()
-                interact()
+                c.writer.write(mp.packb(path))
+                await c.writer.drain()
+                await interact()
                 control_db[rpath] = True
                 control_db.commit()
                 logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} {c.client_id} - finished {rpath}")
 
-        def worker(server):
+        async def worker(server):
             nonlocal finished_theories, all_task_num
             while True:
-                if not test_server(server):
+                if not await test_server(server):
                     logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Server is down")
-                    time.sleep(60)
+                    await asyncio.sleep(60)
                     continue
                 try:
-                    task = task_queue.get(timeout=1)
-                except queue.Empty:
+                    task = task_queue.get_nowait()
+                except asyncio.QueueEmpty:
                     if all_task_num == 0:
                         break
                     logger.info(f"[{finished_theories/total_theories*100:.2f}%] - {server} - No tasks available, waiting...")
-                    time.sleep(60)
+                    await asyncio.sleep(60)
                     continue
-                
+
                 reentry = True
                 try:
-                    # Create a copy of the group for iteration
                     for _ in range(5):
                         try:
-                            translate_one(server, task)
+                            await translate_one(server, task)
                             reentry = False
                             finished_theories += 1
                             break
                         except ConnectionError:
                             logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Connection error in extraction {task}")
-                            time.sleep(180)
+                            await asyncio.sleep(180)
                         except Exception as e:
-                            # reentry = False
-                            # finished_theories += 1
                             traceback.print_exc()
                             logger.error(f"[{finished_theories/total_theories*100:.2f}%] - {server} - Error extracting {task}: {e}")
                 finally:
-                    # Mark the current group as done and requeue any remaining failed tasks
-                    task_queue.task_done()
-                    
-                    # Put any remaining tasks back in the queue
                     if reentry:
-                        task_queue.put(task)
+                        task_queue.put_nowait(task)
                     else:
-                        # Use lock to make the decrement operation atomic
-                        with task_counter_lock:
-                            all_task_num -= 1
+                        all_task_num -= 1
 
-        # Create and start worker threads for each server
-        threads = []
-        for server_addr in SERVER_INSTANCES:
-            thread = threading.Thread(target=worker, args=(server_addr,))
-            thread.daemon = True  # Make threads daemon so they exit if main thread exits
-            threads.append(thread)
-            thread.start()
-            
-        # Wait for all threads to complete
-        for thread in threads:
-            thread.join()
+        await asyncio.gather(*(worker(server_addr) for server_addr in SERVER_INSTANCES))
+
+async def main():
+    await launch_servers()
+    await extract()
 
 if __name__ == "__main__":
-    launch_servers()
-    # ACTIVE_SERVERS = {k for k, v in SERVERS.items() if v["num-translator"] > 0}
-    # for server in ACTIVE_SERVERS:
-    #     Client.install_watcher(server, watcher, interval=1)
-    extract()
+    asyncio.run(main())

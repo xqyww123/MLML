@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 from sqlitedict import SqliteDict
-from IsaREPL import Client
+from Isabelle_RPC_Host.unicode import pretty_unicode as _pretty_unicode
 import json
 import argparse
 import random
@@ -46,7 +46,7 @@ def process_batch(batch_info):
     # Define pretty_unicode function based on use_unicode flag
     def pretty_unicode(s):
         if use_unicode:
-            return Client.pretty_unicode(s)
+            return _pretty_unicode(s)
         return s
     
     def encode_goal(goal, goal_vars):

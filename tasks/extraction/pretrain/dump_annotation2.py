@@ -3,7 +3,7 @@ from sqlitedict import SqliteDict
 import json
 import os
 import argparse
-from IsaREPL import Client
+from Isabelle_RPC_Host.unicode import pretty_unicode
 from data.isabelle import PISA_Data
 
 parser = argparse.ArgumentParser(description='Dump annotations from database')
@@ -112,7 +112,7 @@ with open(args.output_path, 'w') as f:
         else:
             repo = 'unknown'
         content = annotate(original_path)
-        content = Client.pretty_unicode(content)
+        content = pretty_unicode(content)
         sha = hashlib.sha256((content or "").encode('utf-8')).hexdigest()
         f.write(json.dumps({"text": content, "meta": {"path": key, "repo": repo, "sha": sha}}))
         f.write("\n")

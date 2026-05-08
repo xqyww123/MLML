@@ -1,6 +1,6 @@
 from sqlitedict import SqliteDict
 import numpy as np
-from IsaREPL import Client
+from Isabelle_RPC_Host.unicode import pretty_unicode
 from collections import Counter
 import io
 from scipy.sparse import csr_matrix, save_npz, load_npz

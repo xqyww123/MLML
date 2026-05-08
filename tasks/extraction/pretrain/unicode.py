@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from IsaREPL import Client
+from Isabelle_RPC_Host.unicode import pretty_unicode
 import sys
 import json
 
@@ -9,7 +9,7 @@ if len(sys.argv) != 2:
 path = sys.argv[1]
 
 def unicode(data):
-    data['text'] = Client.pretty_unicode(data['text'])
+    data['text'] = pretty_unicode(data['text'])
     return data
 
 with open(path, 'r') as f:
