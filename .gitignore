@@ -79,3 +79,4 @@ secret.sh
 /data/sorted_thy.txt.zst
 /data/declarations.json.zst
 /tasks/extraction/theorem-relevance/premise_relevance.validate.keys.zst
+*.unicode.thy
