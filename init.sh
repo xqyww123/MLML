@@ -4,9 +4,7 @@ set -e
 echo "Initializing system..."
 #git pull
 git submodule update --init --recursive --remote
-git lfs install
-git lfs pull
-pip install -q sqlitedict
+pip install -q sqlitedict huggingface_hub
 pip install -q isarepl isamini --upgrade
 mkdir -p ./cache/downloads
 mkdir -p ./translation/results
@@ -60,7 +58,7 @@ else
     echo "Isabelle2024 is out of date. Reinstalling..."
     rm -rf ./contrib/Isabelle2024
     rm -rf ./contrib/afp-2025-02-12
-    wget -c -P contrib https://pub-c3f03f00a3cd44b2b253ab682c338e95.r2.dev/isabelle/Isabelle2024_and_afp-2025-02-12.tar.zst
+    python3 manage_data.py get contrib/Isabelle2024_and_afp-2025-02-12.tar.zst -y
     tar --zstd -xf ./contrib/Isabelle2024_and_afp-2025-02-12.tar.zst -C ./contrib
     rm ./contrib/Isabelle2024_and_afp-2025-02-12.tar.zst
     echo "Isabelle2024 and AFP reinstalled."
