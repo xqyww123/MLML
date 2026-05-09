@@ -48,9 +48,9 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
     parser.add_argument("--result", "-o", type=str, nargs="?", help="The path to which the results are saved. The evaluation will be resumed if the file exists.")
     parser.add_argument("--timeout", "-t", type=int, default=500, help="The overall timeout for each case")
     parser.add_argument("--connection-timeout", type=int, default=1200, help="The timeout for the connection to the server")
-    parser.add_argument("--step-limit", "-n", type=int, default=30, help="The maximum number of proof steps for each case")
-    parser.add_argument("--parallel-runs", "-p", type=int, default=1, help="The number of parallel runs for each case")
-    parser.add_argument("--query-ret-num", type=int, default=30, help="The number of queries to return by the command RETRIVE")
+    parser.add_argument("--timeout-seconds", type=int, default=14400, help="The overall timeout in seconds for each case (default: 14400)")
+    parser.add_argument("--max-tool-calls", type=int, default=10000, help="The maximum number of tool calls for each case (default: 10000)")
+    parser.add_argument("--max-retries", type=int, default=8, help="The maximum number of retries for each case (default: 8)")
     parser.add_argument("--pass", type=int, dest="pass_num", default=1, help="pass@N, the number of attempts to try independently")
     parser.add_argument("--log-dir", type=str, default=None, help="Directory for agent invocation logs (default: use Isabelle config)")
     parser.add_argument("--retrieval-forking", type=str, default=None,
@@ -86,9 +86,9 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
             addr,
             timeout=args.timeout,
             connection_timeout=args.connection_timeout,
-            step_limit=args.step_limit,
-            parallel_runs=args.parallel_runs,
-            query_ret_num=args.query_ret_num,
+            timeout_seconds=args.timeout_seconds,
+            max_tool_calls=args.max_tool_calls,
+            max_retries=args.max_retries,
             log_dir=args.log_dir,
             retrieval_forking=args.retrieval_forking,
             interactive_retrieval=args.interactive_retrieval,
