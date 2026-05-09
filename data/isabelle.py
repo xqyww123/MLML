@@ -92,16 +92,20 @@ def location_of(thy):
 
 def topological_sort():
     ranks = {}
+    in_progress = set()
     def ranking(thy):
         if thy in ranks:
             return ranks[thy]
-        else:
-            rank = 0
-            for dep in deps_of(thy):
-                rank = max(rank, ranking(dep))
-            rank += 1
-            ranks[thy] = rank
-            return rank
+        if thy in in_progress:
+            ranks[thy] = 0
+            return 0
+        in_progress.add(thy)
+        rank = 0
+        for dep in THEORIES.get(thy, {}).get('deps', []):
+            rank = max(rank, ranking(dep) + 1)
+        ranks[thy] = rank
+        in_progress.discard(thy)
+        return rank
     sorted_thy = sorted(THEORIES, key=lambda x: ranking(x))
     with open(f'{MLML_BASE}/data/sorted_thy.txt', 'w') as f:
         for thy in sorted_thy:

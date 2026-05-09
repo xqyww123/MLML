@@ -159,7 +159,10 @@ def cmd_get(args):
         status = file_status(entry)
         size = format_size(entry["size"])
 
-        if status == "present" and not args.yes:
+        if status == "present" and args.skip_existing:
+            print(f"  Skipped {entry['path']} (already exists).")
+            continue
+        elif status == "present" and not args.yes:
             ans = input(f"{entry['path']} already exists ({size}). Overwrite? [y/N] ").strip().lower()
             if ans != "y":
                 print(f"  Skipped.")
@@ -291,6 +294,7 @@ def main():
     p_get.add_argument("--all", action="store_true", help="Download all files")
     p_get.add_argument("--group", choices=GROUPS, help="Download all files in a group")
     p_get.add_argument("-y", "--yes", action="store_true", help="Overwrite without prompting")
+    p_get.add_argument("--skip-existing", action="store_true", help="Skip files that already exist")
 
     p_verify = sub.add_parser("verify", help="Verify downloaded file integrity")
     p_verify.add_argument("paths", nargs="*", default=[], help="File paths to verify (default: all)")

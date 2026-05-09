@@ -6,6 +6,7 @@ echo "Initializing system..."
 git submodule update --init --recursive --remote
 pip install -q sqlitedict huggingface_hub
 pip install -q -e ./contrib/Isa-Mini -e ./contrib/Isa-REPL -e ./contrib/Semantic_Embedding -e ./contrib/Isabelle_RPC
+python3 manage_data.py get --group core --skip-existing
 mkdir -p ./cache/downloads
 mkdir -p ./translation/results
 mkdir -p ./cache/translation/tmp
