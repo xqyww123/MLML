@@ -5,7 +5,7 @@ echo "Initializing system..."
 #git pull
 git submodule update --init --recursive --remote
 pip install -q sqlitedict huggingface_hub
-pip install -q isarepl isamini --upgrade
+pip install -q -e ./contrib/Isa-Mini -e ./contrib/Isa-REPL -e ./contrib/Semantic_Embedding -e ./contrib/Isabelle_RPC
 mkdir -p ./cache/downloads
 mkdir -p ./translation/results
 mkdir -p ./cache/translation/tmp
