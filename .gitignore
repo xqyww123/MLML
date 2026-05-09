@@ -1,4 +1,7 @@
 /.lfsconfig
+/.claude/
+/.codex
+/.mcp.json
 *.swp
 *.swo
 .~lock*
