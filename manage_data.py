@@ -4,12 +4,23 @@
 import argparse
 import json
 import os
+import subprocess
 import sys
 
 MLML_BASE = os.path.dirname(os.path.abspath(__file__))
 MANIFEST_PATH = os.path.join(MLML_BASE, "data", "manifest.json")
 GROUPS = ["core", "tools", "optional"]
 GITIGNORE_PATH = os.path.join(MLML_BASE, ".gitignore")
+
+
+def remote_path(path):
+    if path.endswith(".zst"):
+        return path
+    return path + ".zst"
+
+
+def needs_compression(path):
+    return not path.endswith(".zst")
 
 
 def load_gitignore():
@@ -21,15 +32,19 @@ def load_gitignore():
 
 
 def ensure_gitignore(path):
-    entry = f"/{path}"
     content = load_gitignore()
     lines = content.splitlines()
-    if entry in lines:
+    entries = [f"/{path}"]
+    if needs_compression(path):
+        entries.append(f"/{remote_path(path)}")
+    new_entries = [e for e in entries if e not in lines]
+    if not new_entries:
         return
     with open(GITIGNORE_PATH, "a") as f:
         if content and not content.endswith("\n"):
             f.write("\n")
-        f.write(entry + "\n")
+        for e in new_entries:
+            f.write(e + "\n")
 
 
 def load_manifest():
@@ -157,14 +172,22 @@ def cmd_get(args):
                 print(f"  Skipped.")
                 continue
 
+        rpath = remote_path(entry["path"])
         print(f"[{i}/{len(targets)}] Downloading {entry['path']} ({size})...")
         hf_hub_download(
             repo_id=manifest["repo_id"],
-            filename=entry["path"],
+            filename=rpath,
             repo_type=manifest["repo_type"],
             local_dir=MLML_BASE,
             force_download=True,
         )
+
+        if needs_compression(entry["path"]):
+            zst_file = os.path.join(MLML_BASE, rpath)
+            orig_file = os.path.join(MLML_BASE, entry["path"])
+            print(f"  Decompressing...")
+            subprocess.run(["zstd", "-d", "-f", zst_file, "-o", orig_file], check=True)
+            os.remove(zst_file)
 
     print("Done.")
 
@@ -232,15 +255,29 @@ def cmd_add(args):
             print("Error: huggingface_hub is required for upload. Install with: pip install huggingface_hub",
                   file=sys.stderr)
             sys.exit(1)
-        print(f"Uploading {path} to {manifest['repo_id']}...")
+
+        rpath = remote_path(path)
+        compress = needs_compression(path)
+        if compress:
+            zst_file = full_path + ".zst"
+            print(f"Compressing {path}...")
+            subprocess.run(["zstd", "-f", full_path, "-o", zst_file], check=True)
+            upload_path = zst_file
+        else:
+            upload_path = full_path
+
+        print(f"Uploading {rpath} to {manifest['repo_id']}...")
         api = HfApi()
         api.upload_file(
-            path_or_fileobj=full_path,
-            path_in_repo=path,
+            path_or_fileobj=upload_path,
+            path_in_repo=rpath,
             repo_id=manifest["repo_id"],
             repo_type=manifest["repo_type"],
         )
         print(f"Uploaded.")
+
+        if compress:
+            os.remove(zst_file)
 
 
 def main():

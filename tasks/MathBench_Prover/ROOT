@@ -1,0 +1,17 @@
+session MathBench_Prover = "HOL-Analysis" +
+  sessions
+    "HOL-Algebra"
+    "HOL-Library"
+    "HOL-Number_Theory"
+    "HOL-Decision_Procs"
+    "Lifting_the_Exponent"
+    "Gauss_Jordan"
+    "Polynomial_Factorization"
+    "Catalan_Numbers"
+    "Bernoulli"
+    "Bell_Numbers_Spivey"
+    (*Minilang_Agent
+    Semantic_Embedding*)
+    Auto_Sledgehammer
+  theories
+    MathBench_Prover

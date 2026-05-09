@@ -4,51 +4,39 @@
   "repo_type": "dataset",
   "files": [
     {
-      "path": "data/declarations.json",
-      "size": 111833730,
-      "description": "Declaration metadata for all theories",
-      "group": "core"
-    },
-    {
-      "path": "data/translation/declarations.db.gz",
-      "size": 65739038,
-      "description": "Translation declarations database",
-      "group": "core"
-    },
-    {
-      "path": "data/translation/results.db.gz",
-      "size": 599425079,
-      "description": "Translation results database",
-      "group": "core"
-    },
-    {
-      "path": "data/proof_context.db.zst",
-      "size": 190606015,
-      "description": "Proof context database",
-      "group": "core"
-    },
-    {
-      "path": "data/basic_info.db.zst",
-      "size": 250076642,
+      "path": "data/basic_info.db",
+      "size": 3259596800,
       "description": "Basic theory information database",
       "group": "core"
     },
     {
-      "path": "contrib/cvc5-Linux-x86_64-static-gpl.tar.zst",
-      "size": 52431822,
-      "description": "CVC5 SMT solver (Linux x86_64)",
-      "group": "tools"
+      "path": "data/proof_context.db",
+      "size": 4430712832,
+      "description": "Proof context database",
+      "group": "core"
     },
     {
-      "path": "contrib/leo3-v1.7.18.jar",
-      "size": 9374090,
-      "description": "Leo-III higher-order ATP v1.7.18",
-      "group": "tools"
-    },
-    {
-      "path": "data/premise_info.db.zst",
-      "size": 341142620,
+      "path": "data/premise_info.db",
+      "size": 9210118144,
       "description": "Premise information database",
+      "group": "optional"
+    },
+    {
+      "path": "data/premise_relevance.db",
+      "size": 77618585600,
+      "description": "Premise relevance database",
+      "group": "optional"
+    },
+    {
+      "path": "data/annotations_on_elaborated_isar.db",
+      "size": 13339643904,
+      "description": "Annotations on elaborated Isar proofs",
+      "group": "optional"
+    },
+    {
+      "path": "data/premise_selection/SH.pretty.db",
+      "size": 29431762944,
+      "description": "Sledgehammer premise selection database",
       "group": "optional"
     },
     {
@@ -58,34 +46,34 @@
       "group": "optional"
     },
     {
-      "path": "data/annotations_on_elaborated_isar.db.zst",
-      "size": 543199793,
-      "description": "Annotations on elaborated Isar proofs",
-      "group": "optional"
-    },
-    {
-      "path": "data/premise_relevance.db.zst",
-      "size": 2459072095,
-      "description": "Premise relevance database",
-      "group": "optional"
-    },
-    {
-      "path": "data/premise_selection/SH.pretty.db.zst",
-      "size": 2214432341,
-      "description": "Sledgehammer premise selection database",
-      "group": "optional"
-    },
-    {
       "path": "data/sorted_thy.txt",
       "size": 329771,
       "description": "Topologically sorted theory names",
       "group": "core"
     },
     {
+      "path": "data/declarations.json",
+      "size": 111833730,
+      "description": "Declaration metadata for all theories",
+      "group": "core"
+    },
+    {
       "path": "tasks/extraction/theorem-relevance/premise_relevance.validate.keys",
       "size": 3835499,
-      "description": "Validation set keys for premise relevance (50k samples, non-reproducible)",
+      "description": "Validation set keys for premise relevance (50k samples)",
       "group": "optional"
+    },
+    {
+      "path": "data/translation/declarations.db",
+      "size": 331649024,
+      "description": "Translation declarations database",
+      "group": "core"
+    },
+    {
+      "path": "data/translation/results.db",
+      "size": 5838761984,
+      "description": "Translation results database",
+      "group": "core"
     },
     {
       "path": "contrib/Isabelle2024_and_afp-2025-02-12.tar.zst",
