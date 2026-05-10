@@ -95,6 +95,7 @@ async def launch_server(server, retry=6, timeout=600):
             ssh_command = f"ssh {host} \"bash -lc \'cd {pwd} && " + \
                 f"mkdir -p ./cache/repl_tmps/{host}_{port} && " + \
                 f"source ./envir.sh && " + \
+                f"([ -f ./secret.sh ] && source ./secret.sh) ; " + \
                 f"(fuser -n tcp -k {port} || true) && " + \
                 f"MASH_STATE_PATH={pwd}/cache/repl_tmps/{host}_{port}/mash_state nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} {BASE_SESSION} {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &\'\""
 
