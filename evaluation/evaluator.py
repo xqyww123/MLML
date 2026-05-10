@@ -408,7 +408,7 @@ class MinilangAgent_Base(Isar_Base):
     async def __aenter__(self):
         await super().__aenter__()
         await self.repl.set_trace(False)
-        await self.repl.load_theory(['MathBench_Prover.MathBench_Prover', 'Minilang_Agent.Minilang_Agent'])
+        await self.repl.add_lib(['MathBench_Prover.MathBench_Prover', 'Minilang_Agent.Minilang_Agent'])
         return self
 
     async def validate(self, index, proofs):
