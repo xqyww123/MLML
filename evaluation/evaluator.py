@@ -34,13 +34,22 @@ class Status(Enum):
     CASE_NOT_AVAILABLE = "CASE_NOT_AVAILABLE"
 
 class Result:
-    def __init__(self, status : Status, errors : list[Exception | str], elapsed_time : list[float]):
+    def __init__(self, status : Status, errors : list[Exception | str], elapsed_time : list[float], data : dict | None = None):
         self.status = status
         self.errors = errors
         self.elapsed_time = elapsed_time
+        self.data = data
 
     def __str__(self):
-        return f"{self.status} ({self.elapsed_time}) {self.errors}"
+        s = f"{self.status} ({self.elapsed_time}) {self.errors}"
+        if self.data:
+            s += f" data={self.data}"
+        return s
+
+    def __getattr__(self, name):
+        if name == 'data':
+            return None
+        raise AttributeError(f"'Result' object has no attribute {name!r}")
 
 class Case:
     def __init__(self, index, code : str | list[str]):
@@ -417,6 +426,7 @@ class MinilangAgent_Base(Isar_Base):
             await self.repl.record_state('EVAL')
         errors = []
         times = []
+        costs = []
         for i, driver in enumerate(proofs):
             if i > 0:
                 await self.repl.rollback('EVAL')
@@ -428,10 +438,21 @@ class MinilangAgent_Base(Isar_Base):
                     (self._cfg, self._budget), self._log_dir,
                     self._retrieval_forking, self._interactive_retrieval
                 ))
-                (status, elapsed, cpu_time, detail) = Client._parse_control_(await self.repl._feed_and_unpack())
+                (status, elapsed, cpu_time, detail, cost_tuple) = Client._parse_control_(await self.repl._feed_and_unpack())
                 times.append(elapsed)
+                cost_data = {
+                    "input_tokens": cost_tuple[0],
+                    "cache_creation_tokens": cost_tuple[1],
+                    "cache_read_tokens": cost_tuple[2],
+                    "output_tokens": cost_tuple[3],
+                    "cost_usd": cost_tuple[4],
+                    "tool_calls": cost_tuple[5],
+                    "isabelle_time": cost_tuple[6],
+                    "model_time": cost_tuple[7],
+                }
+                costs.append(cost_data)
                 if status == "success":
-                    return Result(Status.SUCCESS, errors, times)
+                    return Result(Status.SUCCESS, errors, times, data={"costs": costs})
                 elif status == "remote_error":
                     errors.append(f"Driver {driver}: remote calling failure (elapsed={elapsed}ms, cpu={cpu_time}ms)")
                 elif status in ("stuck", "false_statement", "resource_exhausted"):
@@ -446,7 +467,7 @@ class MinilangAgent_Base(Isar_Base):
                     errors.append(E)
             except TimeoutError as E:
                 errors.append(E)
-        return Result(Status.FAIL, errors, times)
+        return Result(Status.FAIL, errors, times, data={"costs": costs})
 
 
 class REPL_PISA_Mixin:
