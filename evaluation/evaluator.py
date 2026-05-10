@@ -396,9 +396,10 @@ class MinilangAgent_Base(Isar_Base):
 
     def __init__(self, addr, timeout=500, connection_timeout=1200,
                 timeout_seconds=14400, max_tool_calls=10000, max_retries=8,
-                log_dir=None, retrieval_forking=None, interactive_retrieval=None):
+                log_dir=None, retrieval_forking=None, interactive_retrieval=None,
+                auto_interpret_for_embedding=None):
         super().__init__(addr, timeout=max(60, timeout_seconds), connection_timeout=max(60, timeout_seconds))
-        self._cfg = None
+        self._cfg = auto_interpret_for_embedding
         self._budget = (timeout_seconds, max_tool_calls, max_retries)
         self._log_dir = log_dir
         self._retrieval_forking = retrieval_forking
