@@ -758,7 +758,7 @@ def report_evaluation(response_path : str, result_path : str):
                     err = result.error
                 csv_writer.writerow([key, result.status, len(result.errors), str(result.elapsed_time), err, responses[key]])
 
-async def evaluate_and_save(result_path : str | None, cases : list[Case], evaluator): # -> Dict[Index, Result]
+async def evaluate_and_save(result_path : str | None, cases : list[Case], evaluator, retry_failure : bool = False): # -> Dict[Index, Result]
     # Setup shared variables with asyncio-safe access
     success = 0
     unavailable = 0
@@ -804,7 +804,7 @@ async def evaluate_and_save(result_path : str | None, cases : list[Case], evalua
                                 logger.info(f"Server {server_addr} evaluating {case.index}")
 
                                 # Check if result already exists in database
-                                if db is not None and case.index in db and db[case.index].status != Status.CASE_NOT_AVAILABLE:
+                                if db is not None and case.index in db and ((s := db[case.index].status) == Status.SUCCESS or (s == Status.FAIL and not retry_failure)):
                                     result = db[case.index]
                                 else:
                                     try:

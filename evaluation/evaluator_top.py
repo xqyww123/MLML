@@ -61,6 +61,8 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
         help="Interactive retrieval mode (default: no)")
     parser.add_argument("-c", "--cases", action="append", nargs="+", help="One or more cases to evaluate")
     parser.add_argument("-f", "--case-file", help=f"A {case_fil_format} from which to read the cases to evaluate")
+    parser.add_argument("--retry-failure", action="store_true", default=False,
+        help="Re-evaluate cases that previously failed (default: skip them)")
 
     args = parser.parse_args(sys.argv[2:])
     if args.case_category:
@@ -92,7 +94,8 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
             log_dir=args.log_dir,
             retrieval_forking=args.retrieval_forking,
             interactive_retrieval=args.interactive_retrieval,
-        ))
+        ),
+        retry_failure=args.retry_failure)
     asyncio.run(_run())
 
 
