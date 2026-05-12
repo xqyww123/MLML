@@ -10,6 +10,7 @@ theory MathBench_Prover
     "Bernoulli.Bernoulli"
     "Bell_Numbers_Spivey.Bell_Numbers"
     "Gauss_Jordan.Determinants_IArrays"
+    Symmetric_Polynomials.Symmetric_Polynomials
     (*"HOL-Algebra.Algebra"*)
     (*Minilang_Agent.Minilang_Agent*)
     Auto_Sledgehammer.Auto_Sledgehammer

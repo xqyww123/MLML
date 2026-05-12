@@ -10,6 +10,7 @@ session MathBench_Prover = "HOL-Analysis" +
     "Catalan_Numbers"
     "Bernoulli"
     "Bell_Numbers_Spivey"
+    Symmetric_Polynomials
     (*Minilang_Agent
     Semantic_Embedding*)
     Auto_Sledgehammer
