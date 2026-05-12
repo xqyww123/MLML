@@ -283,6 +283,50 @@ def cmd_add(args):
             os.remove(zst_file)
 
 
+def cmd_remove(args):
+    manifest = load_manifest()
+    targets = resolve_files(manifest, paths=args.paths, group=args.group, all_files=args.all)
+
+    if not targets:
+        print("No matching files found.")
+        return
+
+    print("Files to remove from manifest:")
+    for entry in targets:
+        print(f"  {entry['path']}  ({format_size(entry['size'])})")
+
+    if args.delete_remote:
+        print("\n  --delete-remote: will also delete from HF Hub.")
+
+    if not args.yes:
+        ans = input(f"\nRemove {len(targets)} file(s)? [y/N] ").strip().lower()
+        if ans != "y":
+            print("Aborted.")
+            return
+
+    if args.delete_remote:
+        try:
+            from huggingface_hub import HfApi
+        except ImportError:
+            print("Error: huggingface_hub is required for --delete-remote. "
+                  "Install with: pip install huggingface_hub", file=sys.stderr)
+            sys.exit(1)
+        api = HfApi()
+        for entry in targets:
+            rpath = remote_path(entry["path"])
+            print(f"  Deleting {rpath} from {manifest['repo_id']}...")
+            api.delete_file(
+                path_in_repo=rpath,
+                repo_id=manifest["repo_id"],
+                repo_type=manifest["repo_type"],
+            )
+
+    removed_paths = {e["path"] for e in targets}
+    manifest["files"] = [f for f in manifest["files"] if f["path"] not in removed_paths]
+    save_manifest(manifest)
+    print(f"Removed {len(targets)} file(s) from manifest.")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Manage MLML data files on Hugging Face Hub.")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -306,8 +350,16 @@ def main():
     p_add.add_argument("--upload", action="store_true", help="Also upload the file to HF Hub")
     p_add.add_argument("-y", "--yes", action="store_true", help="Overwrite existing entry without prompting")
 
+    p_remove = sub.add_parser("remove", help="Remove files from manifest (and optionally from HF Hub)")
+    p_remove.add_argument("paths", nargs="*", default=[], help="File paths or prefixes to remove")
+    p_remove.add_argument("--all", action="store_true", help="Remove all files")
+    p_remove.add_argument("--group", choices=GROUPS, help="Remove all files in a group")
+    p_remove.add_argument("--delete-remote", action="store_true", help="Also delete from HF Hub")
+    p_remove.add_argument("-y", "--yes", action="store_true", help="Skip confirmation prompt")
+
     args = parser.parse_args()
-    {"list": cmd_list, "get": cmd_get, "verify": cmd_verify, "add": cmd_add}[args.command](args)
+    {"list": cmd_list, "get": cmd_get, "verify": cmd_verify, "add": cmd_add,
+     "remove": cmd_remove}[args.command](args)
 
 
 if __name__ == "__main__":
