@@ -22,6 +22,14 @@ no_notation BNF_Cardinal_Arithmetic.cexp (infixr "^c" 90)
 no_notation BNF_Wellorder_Constructions.ordIso2 (infix "=o" 50)
 no_notation BNF_Wellorder_Constructions.ordLess2 (infix "=o" 50)
 no_notation BNF_Wellorder_Constructions.ordLeq2 (infix "<=o" 50)
+no_notation matrix_scalar_mult (infixl "*k" 70)
+no_notation vector_scalar_mult (infixl "*s" 70)
+no_notation matrix_vector_mult_iarray (infixl "*iv" 70)
+no_notation vector_matrix_mult_iarray (infixl "v*i" 70)
+no_notation matrix_vector_mult (infixl "*v" 70)
+no_notation vector_matrix_mult (infixl "v*" 70)
+no_notation word_sless ("'(<s')")
+no_notation word_sless ("(_/ <s _)"  [51, 51] 50)
 
 hide_type (open) Commutative_Ring.pol Commutative_Ring.polex Commutative_Ring.mon
   Reflective_Field.fexpr Reflective_Field.pexpr Reflective_Field.pexpr1 Reflective_Field.pexpr2
@@ -49,6 +57,7 @@ hide_const (open)
   Reflective_Field.npepow Reflective_Field.npemul Reflective_Field.npeadd
   Reflective_Field.npesub Reflective_Field.npeneg
   Reflective_Field.isin Reflective_Field.split_aux Reflective_Field.fnorm
+  Sigma_Algebra.measure
 
 declare [[smt_oracle, z3_extensions, smt_nat_as_int]]
 declare [[auto_sledgehammer_params = "provers = verit z3 e spass vampire zipperposition cvc5, smt_proofs = true"]]
