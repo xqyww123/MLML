@@ -457,7 +457,7 @@ class MinilangAgent_Base(Isar_Base):
                     return Result(Status.SUCCESS, errors, times, data={"costs": costs})
                 elif status == "remote_error":
                     errors.append(f"Driver {driver}: remote calling failure (elapsed={elapsed}ms, cpu={cpu_time}ms)")
-                elif status in ("stuck", "false_statement", "resource_exhausted"):
+                elif status in ("surrender", "refute", "resource_exhausted"):
                     det = f": {detail}" if detail else ""
                     errors.append(f"Driver {driver}: {status}{det} (elapsed={elapsed}ms, cpu={cpu_time}ms)")
                 else:
