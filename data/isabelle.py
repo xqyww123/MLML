@@ -401,7 +401,7 @@ async def preprocess_MiniF2F(addr):
             src = '\n'.join([command[1] for command in commands[:theorem_index+1]])
             return src
         async def mk_dataset(path):
-            validate_files = [f for f in os.listdir(path)]
+            validate_files = [f for f in os.listdir(path) if f.endswith('.thy')]
             validation_set = {}
             for file in validate_files:
                 src = await parse(f'{path}/{file}')
