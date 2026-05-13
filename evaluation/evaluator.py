@@ -450,6 +450,7 @@ class MinilangAgent_Base(Isar_Base):
                     "tool_calls": cost_tuple[5],
                     "isabelle_time": cost_tuple[6],
                     "model_time": cost_tuple[7],
+                    "quota_wait_time": cost_tuple[8],
                 }
                 costs.append(cost_data)
                 if status == "success":
