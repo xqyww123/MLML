@@ -49,6 +49,7 @@ def budget_curve(values: list[float], total: int) -> tuple[list[float], list[flo
         return [0.0], [0.0]
 
     values = sorted(values)
+    values = [v / 60.0 for v in values]
     thresholds = []
     rates = []
     for i, v in enumerate(values):
@@ -115,7 +116,7 @@ def main():
             ax.plot(mt_thresh, mt_rates, linestyle="--", color=line.get_color(),
                     label=mt_label)
 
-    ax.set_xlabel("Per-Case Time Limit (s)")
+    ax.set_xlabel("Per-Case Time Limit (min)")
     ax.set_ylabel("Pass Rate (%)")
     ax.set_title(args.title or "Per-Case Time Limit vs Pass Rate")
     ax.set_ylim(bottom=0)

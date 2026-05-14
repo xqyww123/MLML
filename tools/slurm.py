@@ -7,6 +7,7 @@ import subprocess
 import threading
 
 USER = os.environ.get("USER", "qiyuan.xu")
+JOB_NAME = os.environ.get("SBATCH_JOB_NAME", "minilang")
 
 def allocated_servers():
     cmd = f"squeue -u {USER}"
@@ -19,7 +20,7 @@ def check_node(node):
 
 
 def alloc_server(node):
-    cmd = f"srun --job-name=minilang --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=128 --time=120:00:00 sleep 10000000000"
+    cmd = f"srun --job-name={JOB_NAME} --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=128 --time=120:00:00 sleep 10000000000"
     subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def restart_job(node):
@@ -36,7 +37,7 @@ def restart_job(node):
 def alloc_server(node):
     while True:
         if not check_node(node):
-            cmd = f"srun --job-name=minilang --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=128 --time=120:00:00 sleep 10000000000"
+            cmd = f"srun --job-name={JOB_NAME} --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=128 --time=120:00:00 sleep 10000000000"
             subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(10)
 
@@ -49,7 +50,7 @@ def alloc_servers(node_list):
 
 
 def free_servers():
-    getjobs_cmd = 'squeue --format="%.18i %.9P %.30j %.8u %.8T %.10M %.9l %.6D %R" --me | grep "minilang" > tmp.txt'
+    getjobs_cmd = f'squeue --format="%.18i %.9P %.30j %.8u %.8T %.10M %.9l %.6D %R" --me | grep {JOB_NAME} > tmp.txt'
     os.system(getjobs_cmd)
 
     with open('tmp.txt','r') as f:
@@ -76,6 +77,6 @@ def run_server(node, numprocss):
             args = ""
             for port, numprocs in numprocss:
                 args += f"{port} {numprocs} "
-            cmd = f"srun --job-name=minilang --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=128 --time=120:00:00 ./tools/slurm_run_server.sh {node} {args}"
+            cmd = f"srun --job-name={JOB_NAME} --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=128 --time=120:00:00 ./tools/slurm_run_server.sh {node} {args}"
             subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(10)
