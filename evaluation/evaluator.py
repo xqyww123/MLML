@@ -428,12 +428,14 @@ class MinilangAgent_Base(Isar_Base):
         errors = []
         times = []
         costs = []
+        log_ids = []
         for i, driver in enumerate(proofs):
             if i > 0:
                 await self.repl.rollback('EVAL')
             try:
                 await self.repl.run_app('Minilang.AoA')
                 invocation_id = await self._make_invocation_id()
+                log_ids.append(invocation_id)
                 await self.repl._write((
                     invocation_id, driver,
                     (self._cfg, self._budget), self._log_dir,
@@ -454,7 +456,7 @@ class MinilangAgent_Base(Isar_Base):
                 }
                 costs.append(cost_data)
                 if status == "success":
-                    return Result(Status.SUCCESS, errors, times, data={"costs": costs})
+                    return Result(Status.SUCCESS, errors, times, data={"log_ids": log_ids, "costs": costs})
                 elif status == "remote_error":
                     det = f": {detail}" if detail else ""
                     errors.append(f"Driver {driver}: remote calling failure{det} (elapsed={elapsed}ms, cpu={cpu_time}ms)")
@@ -470,7 +472,7 @@ class MinilangAgent_Base(Isar_Base):
                     errors.append(E)
             except TimeoutError as E:
                 errors.append(E)
-        return Result(Status.FAIL, errors, times, data={"costs": costs})
+        return Result(Status.FAIL, errors, times, data={"log_ids": log_ids, "costs": costs})
 
 
 class REPL_PISA_Mixin:
