@@ -84,6 +84,7 @@ def main():
     parser.add_argument("--dpi", type=int, default=150, help="Output DPI (default 150)")
     parser.add_argument("--model-time", action="store_true",
                         help="Also plot model thinking time as a dashed line")
+    parser.add_argument("--log", action="store_true", help="Use logarithmic X-axis")
     args = parser.parse_args()
 
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -120,7 +121,10 @@ def main():
     ax.set_ylabel("Pass Rate (%)")
     ax.set_title(args.title or "Per-Case Time Limit vs Pass Rate")
     ax.set_ylim(bottom=0)
-    ax.set_xlim(left=0)
+    if args.log:
+        ax.set_xscale("log")
+    else:
+        ax.set_xlim(left=0)
     if show_legend:
         ax.legend()
     ax.grid(True, alpha=0.3)

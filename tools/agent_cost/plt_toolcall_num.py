@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Plot per-case USD budget cap vs pass rate from evaluation result DBs.
+"""Plot per-case tool-call limit vs pass rate from evaluation result DBs.
 
-Each point (X, Y) means: if each case is given a budget of X USD,
+Each point (X, Y) means: if each case is given a budget of X tool calls,
 the pass rate is Y%.  A case counts as passed when it succeeded AND
-its cost was <= X.
+its tool-call count was <= X.
 
 Usage:
-    python -m tools.agent_cost.plt_usd db1.sqlite [db2.sqlite ...]
-    python -m tools.agent_cost.plt_usd db1.sqlite:label1 db2.sqlite:label2
-    python -m tools.agent_cost.plt_usd db1.sqlite -o output.png
+    python -m tools.agent_cost.plt_toolcall_num db1.sqlite [db2.sqlite ...]
+    python -m tools.agent_cost.plt_toolcall_num db1.sqlite:label1 db2.sqlite:label2
+    python -m tools.agent_cost.plt_toolcall_num db1.sqlite -o output.png
 """
 
 import argparse
@@ -20,51 +20,45 @@ from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 from evaluation.evaluator import Status
 
 
-def load_entries(db_path: str) -> list[tuple[float, float, bool]]:
-    """Load a result DB and return [(cost, quota_wait_time, is_success), ...].
+def load_entries(db_path: str) -> list[tuple[int, bool]]:
+    """Load a result DB and return [(tool_call_count, is_success), ...].
 
     CASE_NOT_AVAILABLE entries are excluded.
-    Cases without cost data are treated as zero-cost.
+    Cases without cost data are treated as zero tool calls.
     """
     entries = []
     with SqliteDict(db_path, flag='r') as db:
         for _key, result in db.items():
             if result.status == Status.CASE_NOT_AVAILABLE:
                 continue
-            cost = 0.0
-            quota_wait = 0.0
+            tc = 0
             if result.data and "costs" in result.data:
-                cost = sum(c.get("cost_usd", 0.0) for c in result.data["costs"])
-                quota_wait = sum(c.get("quota_wait_time", 0.0) for c in result.data["costs"])
-            entries.append((cost, quota_wait, result.status == Status.SUCCESS))
+                tc = sum(c.get("tool_calls", 0) for c in result.data["costs"])
+            entries.append((tc, result.status == Status.SUCCESS))
     return entries
 
 
-def budget_curve(entries: list[tuple[float, float, bool]]) -> tuple[list[float], list[float]]:
-    """Return (budget_thresholds, pass_rates) for per-case budget cap plot.
-
-    For each unique cost value X among successful cases, compute
-    pass_rate = (cases that succeeded with cost <= X) / total_cases.
-    """
+def budget_curve(entries: list[tuple[int, bool]]) -> tuple[list[int], list[float]]:
+    """Return (tool_call_thresholds, pass_rates) for per-case budget plot."""
     if not entries:
         return [], []
 
     total = len(entries)
-    success_costs = sorted(c for c, _qw, s in entries if s)
-    if not success_costs:
-        return [0.0], [0.0]
+    success_counts = sorted(tc for tc, s in entries if s)
+    if not success_counts:
+        return [0], [0.0]
 
-    budgets = []
-    rates = []
-    for i, cost in enumerate(success_costs):
+    thresholds: list[int] = []
+    rates: list[float] = []
+    for i, tc in enumerate(success_counts):
         rate = 100.0 * (i + 1) / total
-        if budgets and budgets[-1] == cost:
+        if thresholds and thresholds[-1] == tc:
             rates[-1] = rate
         else:
-            budgets.append(cost)
+            thresholds.append(tc)
             rates.append(rate)
 
-    return budgets, rates
+    return thresholds, rates
 
 
 def parse_db_arg(arg: str) -> tuple[str, str | None]:
@@ -79,7 +73,7 @@ def parse_db_arg(arg: str) -> tuple[str, str | None]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Plot cumulative USD budget vs pass rate.")
+    parser = argparse.ArgumentParser(description="Plot per-case tool-call limit vs pass rate.")
     parser.add_argument("dbs", nargs="+", metavar="DB[:LABEL]",
                         help="Path to result SQLite DB, optionally with :label suffix")
     parser.add_argument("-o", "--output", default=None,
@@ -100,22 +94,20 @@ def main():
             continue
 
         total = len(entries)
-        successes = sum(1 for *_, s in entries if s)
-        total_cost = sum(c for c, _qw, _s in entries)
-        success_cost = sum(c for c, _qw, s in entries if s)
-        total_quota_wait = sum(qw for _c, qw, _s in entries)
+        successes = sum(1 for _, s in entries if s)
+        total_tc = sum(tc for tc, _ in entries)
+        success_tc = sum(tc for tc, s in entries if s)
         display = label or path
-        avg_success = f"${success_cost/successes:.4f}" if successes else "N/A"
-        quota_str = f", quota_wait {total_quota_wait:.0f}s" if total_quota_wait > 0 else ""
+        avg_success = f"{success_tc/successes:.1f}" if successes else "N/A"
         print(f"{display}: {total} cases, {successes} passed ({100*successes/total:.1f}%), "
-              f"total ${total_cost:.2f}, avg {avg_success}/pass{quota_str}")
+              f"total {total_tc} tool calls, avg {avg_success}/pass")
 
-        budgets, rates = budget_curve(entries)
-        ax.plot(budgets, rates, label=label)
+        thresholds, rates = budget_curve(entries)
+        ax.plot(thresholds, rates, label=label)
 
-    ax.set_xlabel("Per-Case Budget (USD)")
+    ax.set_xlabel("Per-Case Tool Call Limit")
     ax.set_ylabel("Pass Rate (%)")
-    ax.set_title(args.title or "Per-Case Budget vs Pass Rate")
+    ax.set_title(args.title or "Per-Case Tool Call Limit vs Pass Rate")
     ax.set_ylim(bottom=0)
     if args.log:
         ax.set_xscale("log")

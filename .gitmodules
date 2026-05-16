@@ -27,3 +27,6 @@
 [submodule "contrib/Performant_Isabelle_ML"]
 	path = contrib/Performant_Isabelle_ML
 	url = git@github.com:xqyww123/Performant_Isabelle_ML.git
+[submodule "data/PutnamBench"]
+	path = data/PutnamBench
+	url = https://github.com/xqyww123/PutnamBench

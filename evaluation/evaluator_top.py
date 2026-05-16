@@ -63,6 +63,10 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
     parser.add_argument("-f", "--case-file", help=f"A {case_fil_format} from which to read the cases to evaluate")
     parser.add_argument("--retry-failure", action="store_true", default=False,
         help="Re-evaluate cases that previously failed (default: skip them)")
+    parser.add_argument("--force-retry", action="append", nargs="+",
+        help="Cases to force re-evaluate regardless of previous result")
+    parser.add_argument("--force-retry-file",
+        help="A file of cases (one per line) to force re-evaluate regardless of previous result")
 
     args = parser.parse_args(sys.argv[2:])
     if args.case_category:
@@ -78,6 +82,14 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
     if not cases:
         logger.error("No cases to evaluate")
         exit(1)
+    force_retry_cases = []
+    if args.force_retry:
+        force_retry_cases.extend([index_parser(item) for sub in args.force_retry for item in sub])
+    if args.force_retry_file:
+        with open(args.force_retry_file, "r") as f:
+            force_retry_cases.extend([index_parser(line.strip()) for line in f if line.strip()])
+    force_retry_set = frozenset(force_retry_cases)
+
     result_db = args.result
     clean_mash(result_db)
     async def _run():
@@ -95,7 +107,8 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
             retrieval_forking=args.retrieval_forking,
             interactive_retrieval=args.interactive_retrieval,
         ),
-        retry_failure=args.retry_failure)
+        retry_failure=args.retry_failure,
+        force_retry=force_retry_set)
     asyncio.run(_run())
 
 
