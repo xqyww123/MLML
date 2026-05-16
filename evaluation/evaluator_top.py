@@ -248,6 +248,15 @@ if __name__ == "__main__":
                     "    evaluation/evaluator_top.py agent-miniF2F Gemini --result result.db --case-category valid\n"
                 )
 
+            case 'agent-putnam':
+                minilang_agent_handler(MinilangAgent_PutnamBench, "PutnamBench",
+                    lambda category: PutnamBench_Data().cases_of(category),
+                    lambda line: line,
+                    "file of lines of cases,",
+                    "Examples:\n"
+                    "    evaluation/evaluator_top.py agent-putnam Claude.opus-4-6 --result result.db --case-category test\n"
+                )
+
             case 'agent-source':
                 minilang_agent_handler(MinilangAgent_Source, "source text",
                     _no_category("To use agent-source, you should indicate the Isabelle source of the target proof goals"),

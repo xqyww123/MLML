@@ -419,6 +419,40 @@ if not os.path.isfile(f'{MLML_BASE}/data/miniF2F_validation.json') or not os.pat
     import asyncio
     asyncio.run(preprocess_MiniF2F("127.0.0.1:6666"))
 
+async def preprocess_PutnamBench(addr):
+    async with Client(addr, 'HOL') as c:
+        async def parse(path):
+            with open(path, 'r', encoding='utf-8') as file:
+                commands = await c.fast_lex(file.read())
+            theorem_index = -1
+            for idx, (_, command) in enumerate(commands):
+                if command.strip().startswith("theorem"):
+                    theorem_index = idx
+                    break
+            if theorem_index == -1:
+                return None
+            src = '\n'.join([command[1] for command in commands[:theorem_index+1]])
+            return src
+        base_dir = f'{MLML_BASE}/data/PutnamBench/isabelle'
+        thy_files = [f for f in os.listdir(base_dir) if f.endswith('.thy')]
+        dataset = {}
+        skipped = []
+        for file in thy_files:
+            src = await parse(f'{base_dir}/{file}')
+            if src is None:
+                skipped.append(file)
+                continue
+            name, _ = os.path.splitext(file)
+            dataset[name] = src
+        if skipped:
+            logging.warning(f"PutnamBench: skipped {len(skipped)} files (no theorem found after fast_lex): {skipped}")
+        with open(f'{MLML_BASE}/data/putnamBench.json', 'w', encoding='utf-8') as f:
+            json.dump(dataset, f, ensure_ascii=False, indent=4)
+
+if not os.path.isfile(f'{MLML_BASE}/data/putnamBench.json'):
+    import asyncio
+    asyncio.run(preprocess_PutnamBench("127.0.0.1:6666"))
+
 _MINIF2F_VALIDATION = None
 _MINIF2F_TEST = None
 _MINIF2F_ALL = None
@@ -442,6 +476,15 @@ def get_MINIF2F_ALL():
     if _MINIF2F_ALL is None:
         _MINIF2F_ALL = get_MINIF2F_VALIDATION() | get_MINIF2F_TEST()
     return _MINIF2F_ALL
+
+_PUTNAMBENCH = None
+
+def get_PUTNAMBENCH():
+    global _PUTNAMBENCH
+    if _PUTNAMBENCH is None:
+        with open(f'{MLML_BASE}/data/putnamBench.json', 'r', encoding='utf-8') as f:
+            _PUTNAMBENCH = json.load(f)
+    return _PUTNAMBENCH
 
 class CaseNotAvailable(Exception):
     """Exception raised when an evaluation case is not available."""
@@ -692,6 +735,32 @@ class MiniF2F_Data(Data):
             raise ValueError("use_proofs must be False. MiniF2F does not support proofs")
         if maxsize is not None:
             raise ValueError("maxsize must be None. MiniF2F does not support maxsize")
+        raise NotImplementedError("TODO")
+
+class PutnamBench_Data(Data):
+    def index_type(self) -> type:
+        return str
+
+    def prelude_and_statement_of(self, index: str):
+        return get_PUTNAMBENCH()[index]
+
+    def all_cases(self):
+        return get_PUTNAMBENCH().keys()
+
+    def all_categories(self):
+        return ['test']
+
+    def cases_of(self, category: str):
+        match category:
+            case 'test':
+                return get_PUTNAMBENCH().keys()
+            case _:
+                raise ValueError(f"Invalid category: {category}")
+
+    def goal_of(self, index) -> str:
+        raise NotImplementedError("TODO")
+
+    def prelude_of(self, index, dep_depth=None, use_proofs=False, use_comments=True, maxsize=None, camlize=False):
         raise NotImplementedError("TODO")
 
 def get_data_class(data_source):

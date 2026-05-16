@@ -6,7 +6,7 @@ from IsaMini.REPL import REPL as MiniREPL
 import csv
 import logging
 from enum import Enum
-from data.isabelle import CaseNotAvailable, PISA_Data, get_MINIF2F_VALIDATION, get_MINIF2F_TEST, MiniF2F_Data, AFP_Data
+from data.isabelle import CaseNotAvailable, PISA_Data, get_MINIF2F_VALIDATION, get_MINIF2F_TEST, MiniF2F_Data, AFP_Data, PutnamBench_Data
 from sqlitedict import SqliteDict
 import asyncio
 import time
@@ -665,16 +665,16 @@ class MiniF2F_Mixin:
         try:
             src = self._data.prelude_and_statement_of(index)
         except KeyError:
-            logger.error(f"Case Not Available: {index} is not in the dateset")
-            raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
+            logger.error(f"Case Not Available: {index} is not in the dataset")
+            raise CaseNotAvailable(index, f"MiniF2F: case {index} not available")
         try:
             await self.reset_eval(src)
         except REPLFail as E:
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
-            raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
+            raise CaseNotAvailable(index, f"MiniF2F: case {index} not available")
         except TimeoutError as E:
             logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
-            raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
+            raise CaseNotAvailable(index, f"MiniF2F: case {index} not available")
 
 class MiniLang_MiniF2F(MiniF2F_Mixin, MiniLang_Base):
     pass
@@ -683,6 +683,38 @@ class Isar_MiniF2F(MiniF2F_Mixin, Isar_Base):
     pass
 
 class MinilangAgent_MiniF2F(MiniF2F_Mixin, MinilangAgent_Base):
+    pass
+
+class PutnamBench_Mixin:
+    if TYPE_CHECKING:
+        async def reset_eval(self, src: str) -> None: ...
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._data = PutnamBench_Data()
+
+    async def start_case(self, index: str):
+        try:
+            src = self._data.prelude_and_statement_of(index)
+        except KeyError:
+            logger.error(f"Case Not Available: {index} is not in the dataset")
+            raise CaseNotAvailable(index, f"PutnamBench: case {index} not available")
+        try:
+            await self.reset_eval(src)
+        except REPLFail as E:
+            logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
+            raise CaseNotAvailable(index, f"PutnamBench: case {index} not available")
+        except TimeoutError as E:
+            logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
+            raise CaseNotAvailable(index, f"PutnamBench: case {index} not available")
+
+class MiniLang_PutnamBench(PutnamBench_Mixin, MiniLang_Base):
+    pass
+
+class Isar_PutnamBench(PutnamBench_Mixin, Isar_Base):
+    pass
+
+class MinilangAgent_PutnamBench(PutnamBench_Mixin, MinilangAgent_Base):
     pass
 
 class SourceText_Mixin:
@@ -694,10 +726,10 @@ class SourceText_Mixin:
             await self.reset_eval(index)
         except REPLFail as E:
             logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
-            raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
+            raise CaseNotAvailable(index, f"SourceText: case {index} not available")
         except TimeoutError as E:
             logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
-            raise CaseNotAvailable(f"{self.__class__.__name__}: case {index} not available")
+            raise CaseNotAvailable(index, f"SourceText: case {index} not available")
 
 class MiniLang_Source(SourceText_Mixin, MiniLang_Base):
     pass
