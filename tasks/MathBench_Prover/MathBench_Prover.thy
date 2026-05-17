@@ -1,10 +1,10 @@
 theory MathBench_Prover
   imports
+    "Lifting_the_Exponent.LTE"
     "HOL-Analysis.Analysis"
     "HOL-Library.Library"
     "HOL-Library.Code_Target_Numeral"
     "HOL-Computational_Algebra.Computational_Algebra"
-    "Lifting_the_Exponent.LTE"
     "Polynomial_Factorization.Prime_Factorization"
     "Catalan_Numbers.Catalan_Numbers"
     "Bernoulli.Bernoulli"
