@@ -419,33 +419,72 @@ if not os.path.isfile(f'{MLML_BASE}/data/miniF2F_validation.json') or not os.pat
     import asyncio
     asyncio.run(preprocess_MiniF2F("127.0.0.1:6666"))
 
+def _extract_solution_comment(text: str) -> str | None:
+    """Extract the solution answer from a (* ... *) comment appended after 'undefined' in a fast_lex command."""
+    undef_pos = text.find("undefined")
+    if undef_pos == -1:
+        return None
+    comment_open = text.find("(*", undef_pos)
+    if comment_open == -1:
+        return None
+    comment_close = text.find("*)", comment_open)
+    if comment_close == -1:
+        return None
+    answer = text[comment_open + 2 : comment_close].strip()
+    if answer.startswith(("Note", "NOTE", "note", "uses", "This problem")):
+        return None
+    return answer
+
 async def preprocess_PutnamBench(addr):
+    """Preprocess PutnamBench with solution constants inlined (Easy Mode)."""
     async with Client(addr, 'HOL') as c:
-        async def parse(path):
-            with open(path, 'r', encoding='utf-8') as file:
-                commands = await c.fast_lex(file.read())
+        base_dir = f'{MLML_BASE}/data/PutnamBench/isabelle'
+        thy_files = sorted(f for f in os.listdir(base_dir) if f.endswith('.thy'))
+        dataset = {}
+        skipped = []
+        inlined = 0
+
+        for file in thy_files:
+            name = os.path.splitext(file)[0]
+            with open(f'{base_dir}/{file}', 'r', encoding='utf-8') as f:
+                content = f.read()
+            commands = await c.fast_lex(content)
+
             theorem_index = -1
-            for idx, (_, command) in enumerate(commands):
-                if command.strip().startswith("theorem"):
+            for idx, (_, text) in enumerate(commands):
+                if text.strip().startswith("theorem"):
                     theorem_index = idx
                     break
             if theorem_index == -1:
-                return None
-            src = '\n'.join([command[1] for command in commands[:theorem_index+1]])
-            return src
-        base_dir = f'{MLML_BASE}/data/PutnamBench/isabelle'
-        thy_files = [f for f in os.listdir(base_dir) if f.endswith('.thy')]
-        dataset = {}
-        skipped = []
-        for file in thy_files:
-            src = await parse(f'{base_dir}/{file}')
-            if src is None:
-                skipped.append(file)
+                skipped.append(name)
                 continue
-            name, _ = os.path.splitext(file)
+
+            solution_name = f"{name}_solution"
+            defn_index = None
+            for idx, (_, text) in enumerate(commands[:theorem_index]):
+                if f"definition {solution_name}" in text or f"fun {solution_name}" in text:
+                    defn_index = idx
+                    break
+
+            if defn_index is None or "undefined" not in commands[defn_index][1]:
+                src = '\n'.join(cmd[1] for cmd in commands[:theorem_index + 1])
+                dataset[name] = src
+                continue
+
+            answer = _extract_solution_comment(commands[defn_index][1])
+            if answer is None:
+                skipped.append(name)
+                continue
+
+            remaining = [cmd for i, cmd in enumerate(commands[:theorem_index + 1]) if i != defn_index]
+            src = '\n'.join(cmd[1] for cmd in remaining)
+            src = src.replace(solution_name, f"({answer})")
             dataset[name] = src
+            inlined += 1
+
         if skipped:
-            logging.warning(f"PutnamBench: skipped {len(skipped)} files (no theorem found after fast_lex): {skipped}")
+            logging.warning(f"PutnamBench: skipped {len(skipped)} files: {skipped}")
+        logging.info(f"PutnamBench: {len(dataset)} problems total, {inlined} solutions inlined")
         with open(f'{MLML_BASE}/data/putnamBench.json', 'w', encoding='utf-8') as f:
             json.dump(dataset, f, ensure_ascii=False, indent=4)
 

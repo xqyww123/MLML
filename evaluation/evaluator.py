@@ -398,7 +398,8 @@ class MinilangAgent_Base(Isar_Base):
                 timeout_seconds=14400, max_tool_calls=10000, max_retries=8,
                 log_dir=None, retrieval_forking=None, interactive_retrieval=None,
                 auto_interpret_for_embedding=False):
-        super().__init__(addr, timeout=max(60, timeout_seconds), connection_timeout=max(60, timeout_seconds))
+        super().__init__(addr, libs=['MathBench_Prover.MathBench_Prover', 'Minilang_Agent.Minilang_Agent'],
+                         timeout=max(60, timeout_seconds), connection_timeout=max(60, timeout_seconds))
         self._cfg = auto_interpret_for_embedding
         self._budget = (timeout_seconds, max_tool_calls, max_retries)
         self._log_dir = log_dir
@@ -408,7 +409,6 @@ class MinilangAgent_Base(Isar_Base):
     async def __aenter__(self):
         await super().__aenter__()
         await self.repl.set_trace(False)
-        await self.repl.add_lib(['MathBench_Prover.MathBench_Prover', 'Minilang_Agent.Minilang_Agent'])
         return self
 
     async def validate(self, index, proofs):
