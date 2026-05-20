@@ -1,8 +1,8 @@
 theory MathBench_Prover
   imports
     (* Tool infrastructure *)
-    Auto_Sledgehammer.Auto_Sledgehammer
     "HOL-Decision_Procs.Reflective_Field"
+    Auto_Sledgehammer.Auto_Sledgehammer
     (* HOL bundles *)
     "HOL-Library.Library"
     "HOL-Combinatorics.Combinatorics"
@@ -79,8 +79,6 @@ hide_const (open)
   Reflective_Field.npesub Reflective_Field.npeneg
   Reflective_Field.isin Reflective_Field.split_aux Reflective_Field.fnorm
   Sigma_Algebra.measure MPoly_Type.degree
-
-print_syntax
 
 declare [[smt_oracle, z3_extensions, smt_nat_as_int]]
 declare [[auto_sledgehammer_params = "provers = verit z3 e spass vampire zipperposition cvc5, smt_proofs = true"]]
@@ -165,18 +163,24 @@ next
   qed
 qed
 
+ML \<open>
+structure Sqrt_Prime_Rat = struct
+fun simproc ctxt ct =
+  let
+    val ((_ $ (_ $ (_ $ bits))) $ _) = Thm.term_of ct
+  in
+    @{lemma \<open>prime (numeral n :: int) \<Longrightarrow> (sqrt (numeral n :: real) \<in> \<rat>) = False\<close> for n
+         by (metis sqrt_prime_irrational[of "numeral n"] of_int_eq_numeral_iff)}
+    |> Thm.instantiate' [] [SOME (Thm.cterm_of ctxt bits)]
+    |> (fn thm => thm RS @{thm eq_reflection})
+    |> SOME
+  end
+  handle Match => NONE | THM _ => NONE
+end
+\<close>
+
 simproc_setup sqrt_prime_rat (\<open>sqrt (numeral n) \<in> \<rat>\<close>) =
-  \<open>K (fn ctxt => fn ct =>
-    let
-      val ((_ $ (_ $ (_ $ bits))) $ _) = Thm.term_of ct
-    in
-      @{lemma \<open>prime (numeral n :: int) \<Longrightarrow> (sqrt (numeral n :: real) \<in> \<rat>) = False\<close> for n
-           by (metis sqrt_prime_irrational[of "numeral n"] of_int_eq_numeral_iff)}
-      |> Thm.instantiate' [] [SOME (Thm.cterm_of ctxt bits)]
-      |> (fn thm => thm RS @{thm eq_reflection})
-      |> SOME
-    end
-    handle Match => NONE | THM _ => NONE)\<close>
+  \<open>K Sqrt_Prime_Rat.simproc\<close>
  
 lemma "sqrt 23 \<notin> \<rat>"
   by simp
@@ -185,70 +189,70 @@ declare [[ML_debugger]]
 ML_file \<open>eval_simproc.ML\<close>
 
 simproc_setup eval_ord ("ord m n") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 5)\<close>
 
 simproc_setup eval_cong ("[a = b] (mod c)") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 5)\<close>
 
 simproc_setup eval_coprime ("coprime a b") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 3)\<close>
 
 simproc_setup eval_totient ("totient n") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 5)\<close>
 
 simproc_setup eval_multiplicity ("multiplicity p n") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 5)\<close>
 
 simproc_setup eval_prime_factorization ("prime_factorization n") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 10)\<close>
 
 simproc_setup eval_squarefree ("squarefree n") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 3)\<close>
 
 simproc_setup eval_residue_primroot ("residue_primroot n a") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 5)\<close>
 
 simproc_setup eval_catalan ("catalan n") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 3)\<close>
 
 simproc_setup eval_bernoulli ("bernoulli n") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 5)\<close>
 
 simproc_setup eval_Bell ("Bell n") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 3)\<close>
 
 simproc_setup eval_Stirling ("Stirling n k") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 3)\<close>
 
 simproc_setup eval_sum ("sum f S") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 10)\<close>
 
 simproc_setup eval_prod ("prod f S") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 10)\<close>
 
 simproc_setup eval_fib ("fib n") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 3)\<close>
 
 simproc_setup eval_fact ("fact n") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 3)\<close>
 
 simproc_setup eval_choose ("n choose k") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 3)\<close>
 
 simproc_setup eval_gcd ("gcd a b") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 3)\<close>
 
 simproc_setup eval_lcm ("lcm a b") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 3)\<close>
 
 simproc_setup eval_primes_upto ("primes_upto n") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 5)\<close>
 
 simproc_setup eval_prime ("prime n") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 3)\<close>
 
 simproc_setup eval_prime_factors ("prime_factors x") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 10)\<close>
 
 \<comment> \<open>Make HOL-Analysis det executable via Gauss-Jordan on IArrays\<close>
 code_datatype set List.coset \<comment> \<open>restore coset as code constructor (undoes Gauss_Jordan/Code_Set.thy)\<close>
@@ -256,7 +260,19 @@ code_datatype vec_lambda
 lemma vec_nth_vec_lambda_code [code]: "vec_nth (vec_lambda f) i = f i" by simp
 
 simproc_setup eval_det ("det m") =
-  \<open>K Eval_Simproc.eval_ground\<close>
+  \<open>K (Eval_Simproc.eval_ground 10)\<close>
+
+\<comment> \<open>Pre-compile ground evaluation functions to speed up Code_Evaluation\<close>
+code_reflect Eval_Reflect
+  datatypes multiset = mset
+  functions
+    "fib" "catalan" "Bell" "Stirling"
+    "Binomial.binomial"
+    "totient" "primes_upto"
+    "gcd :: _ \<Rightarrow> _ \<Rightarrow> _" "lcm :: _ \<Rightarrow> _ \<Rightarrow> _"
+    "prime :: _ \<Rightarrow> bool" "coprime :: _ \<Rightarrow> _ \<Rightarrow> bool"
+    "squarefree :: _ \<Rightarrow> bool"
+    "multiplicity :: _ \<Rightarrow> _ \<Rightarrow> _"
 
 declare Primes.prime_nat_numeral_eq[simp del]
 
@@ -272,32 +288,55 @@ setup \<open>
     in Simplifier.addloop (ctxt, ("field", Ring_Field_Algebra.field_looper)) end)
 \<close>
 
-(*
-(*test*)
-lemma \<open>poly [:1, -3, 2::int:] 5 = 36\<close> by simp
-lemma \<open>degree [:1, -3, 2::int:] = 2\<close> by simp
-lemma \<open>card {2, 3, 5, 7::nat} = 4\<close> by simp
-lemma \<open>(\<Sum>i<5. i) = (10::nat)\<close> by simp
-lemma \<open>(\<Prod>i=1..4. i) = (24::nat)\<close> by simp
-lemma \<open>fib 10 = (55::nat)\<close> by simp
-lemma \<open>fact 5 = (120::nat)\<close> by simp
-lemma \<open>(10::nat) choose 3 = 120\<close> by simp
-lemma \<open>gcd (12::nat) 8 = 4\<close> by simp
-lemma \<open>lcm (12::nat) 8 = 24\<close> by simp
-lemma \<open>\<lfloor>3.7::real\<rfloor> = 3\<close> by simp
-lemma \<open>\<lceil>3.2::real\<rceil> = 4\<close> by simp
+setup \<open>fn thy =>
+  let
+    val ctxt = Proof_Context.init_global thy
+    fun read_pat s =
+      let val t = Proof_Context.read_term_pattern ctxt s
+          val ctxt' = Proof_Context.augment t ctxt
+          val [t'] = Variable.export_terms ctxt' ctxt [t]
+      in t' end
+    fun mk_eval seconds name pat =
+      {name = name, pattern = read_pat pat,
+       proc = Eval_Simproc.eval_ground seconds,
+       scope = Pre_Simproc.Everywhere} : Pre_Simproc.entry
+    val entries = [
+      mk_eval  5 "eval_ord" "ord m n",
+      mk_eval  5 "eval_cong" "[a = b] (mod c)",
+      mk_eval  3 "eval_coprime" "coprime a b",
+      mk_eval  5 "eval_totient" "totient n",
+      mk_eval  5 "eval_multiplicity" "multiplicity p n",
+      mk_eval 10 "eval_prime_factorization" "prime_factorization n",
+      mk_eval  3 "eval_squarefree" "squarefree n",
+      mk_eval  5 "eval_residue_primroot" "residue_primroot n a",
+      mk_eval  3 "eval_catalan" "catalan n",
+      mk_eval  5 "eval_bernoulli" "bernoulli n",
+      mk_eval  3 "eval_Bell" "Bell n",
+      mk_eval  3 "eval_Stirling" "Stirling n k",
+      mk_eval 10 "eval_sum" "sum f S",
+      mk_eval 10 "eval_prod" "prod f S",
+      mk_eval  3 "eval_fib" "fib n",
+      mk_eval  3 "eval_fact" "fact n",
+      mk_eval  3 "eval_choose" "n choose k",
+      mk_eval  3 "eval_gcd" "gcd a b",
+      mk_eval  3 "eval_lcm" "lcm a b",
+      mk_eval  5 "eval_primes_upto" "primes_upto n",
+      mk_eval  3 "eval_prime" "prime n",
+      mk_eval 10 "eval_prime_factors" "prime_factors x",
+      mk_eval 10 "eval_det" "det m",
+      {name = "sqrt_prime_rat",
+       pattern = read_pat "sqrt (numeral n) \<in> \<rat>",
+       proc = Sqrt_Prime_Rat.simproc,
+       scope = Pre_Simproc.Everywhere},
+      {name = "ring_field_eq",
+       pattern = read_pat "(x::'a::comm_ring_1) = y",
+       proc = Ring_Field_Algebra.ring_field_simproc,
+       scope = Pre_Simproc.Concl_Only}
+    ]
+  in Context.theory_map (fold Pre_Simproc.register entries) thy end
+\<close>
 
-lemma \<open>squarefree (30::nat)\<close>
-  by simp
-
-lemma \<open>\<not> squarefree (12::nat)\<close>
-  by  simp
-*)
-
-
-declare [[simp _trace]]
 lemma "prime_factors (1 + 3 * \<i>\<^sub>\<int>) = {2 + \<i>\<^sub>\<int>, 1 + \<i>\<^sub>\<int>}"
-  by aut  
-
+  by auto'
 
 end
