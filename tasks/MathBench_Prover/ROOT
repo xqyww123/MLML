@@ -17,6 +17,18 @@ session MathBench_Prover = "HOL-Complex_Analysis" +
     Symmetric_Polynomials
     "Lp"
     "Ergodic_Theory"
+    Derangements
+    Card_Number_Partitions
+    Pell
+    Lucas_Theorem
+    Bertrands_Postulate
+    Stirling_Formula
+    Euler_MacLaurin
+    Chebyshev_Polynomials
+    Dirichlet_Series
+    Linear_Recurrences
+    Gaussian_Integers
+    Power_Sum_Polynomials
     (*Minilang_Agent
     Semantic_Embedding*)
     Auto_Sledgehammer
