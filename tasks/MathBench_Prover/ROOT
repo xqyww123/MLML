@@ -1,16 +1,22 @@
-session MathBench_Prover = "HOL-Analysis" +
+session MathBench_Prover = "HOL-Complex_Analysis" +
   sessions
     "HOL-Algebra"
     "HOL-Library"
     "HOL-Number_Theory"
     "HOL-Decision_Procs"
+    "HOL-Probability"
     "Lifting_the_Exponent"
     "Gauss_Jordan"
     "Polynomial_Factorization"
     "Catalan_Numbers"
     "Bernoulli"
     "Bell_Numbers_Spivey"
+    "Fourier"
+    "Budan_Fourier"
+    Weighted_Arithmetic_Geometric_Mean
     Symmetric_Polynomials
+    "Lp"
+    "Ergodic_Theory"
     (*Minilang_Agent
     Semantic_Embedding*)
     Auto_Sledgehammer

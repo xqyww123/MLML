@@ -1,27 +1,42 @@
 theory MathBench_Prover
   imports
-    "Lifting_the_Exponent.LTE"
-    "HOL-Analysis.Analysis"
-    "HOL-Library.Library"
-    "HOL-Library.Code_Target_Numeral"
-    "HOL-Computational_Algebra.Computational_Algebra"
-    "Polynomial_Factorization.Prime_Factorization"
-    "Catalan_Numbers.Catalan_Numbers"
-    "Bernoulli.Bernoulli"
-    "Bell_Numbers_Spivey.Bell_Numbers"
-    "Gauss_Jordan.Determinants_IArrays"
-    Symmetric_Polynomials.Symmetric_Polynomials
-    (*"HOL-Algebra.Algebra"*)
-    (*Minilang_Agent.Minilang_Agent*)
+    (* Tool infrastructure *)
     Auto_Sledgehammer.Auto_Sledgehammer
     "HOL-Decision_Procs.Reflective_Field"
+    (* HOL bundles *)
+    "HOL-Library.Library"
+    "HOL-Combinatorics.Combinatorics"
+    (* Basic math *)
+    "Weighted_Arithmetic_Geometric_Mean.Weighted_Arithmetic_Geometric_Mean"
+    Derangements.Derangements
+    "Bell_Numbers_Spivey.Bell_Numbers"
+    Card_Number_Partitions.Card_Number_Partitions
+    Pell.Pell_Algorithm
+    Lucas_Theorem.Lucas_Theorem
+    "Budan_Fourier.Budan_Fourier"
+    "Lifting_the_Exponent.LTE"
+    "Bertrands_Postulate.Bertrand"
+    (* Analysis / matrices *)
+    "Gauss_Jordan.Determinants_IArrays"
+    "Catalan_Numbers.Catalan_Numbers"
+    Stirling_Formula.Stirling_Formula
+    "Fourier.Fourier"
+    (* Complex analysis / number theory *)
+    Euler_MacLaurin.Euler_MacLaurin_Landau
+    Chebyshev_Polynomials.Chebyshev_Polynomials
+    Dirichlet_Series.Dirichlet_Series_Analysis
+    Linear_Recurrences.Rational_FPS_Asymptotics
+    Gaussian_Integers.Gaussian_Integers_Everything
+    (* Last: polynomial-related, so Polynomial.degree wins name resolution *)
+    Power_Sum_Polynomials.Power_Sum_Polynomials
 begin
 
+no_notation fps_nth (infixl "$" 75)
 no_notation BNF_Cardinal_Arithmetic.cprod (infixr "*c" 80)
 no_notation BNF_Cardinal_Arithmetic.csum (infixr "+c" 65)
 no_notation BNF_Cardinal_Arithmetic.cexp (infixr "^c" 90)
 no_notation BNF_Wellorder_Constructions.ordIso2 (infix "=o" 50)
-no_notation BNF_Wellorder_Constructions.ordLess2 (infix "=o" 50)
+no_notation BNF_Wellorder_Constructions.ordLess2 (infix "<o" 50)
 no_notation BNF_Wellorder_Constructions.ordLeq2 (infix "<=o" 50)
 no_notation matrix_scalar_mult (infixl "*k" 70)
 no_notation vector_scalar_mult (infixl "*s" 70)
@@ -31,6 +46,11 @@ no_notation matrix_vector_mult (infixl "*v" 70)
 no_notation vector_matrix_mult (infixl "v*" 70)
 no_notation word_sless ("'(<s')")
 no_notation word_sless ("(_/ <s _)"  [51, 51] 50)
+no_notation word_sle ("'(<=s')")
+no_notation word_sle ("(_/ <=s _)" [51, 51] 50)
+no_notation Set_Algebras.elt_set_times (infixl "*o" 80)
+no_notation Set_Algebras.elt_set_plus (infixl "+o" 70)
+no_notation Set_Algebras.elt_set_eq (infix "=o" 50)
 
 hide_type (open) Commutative_Ring.pol Commutative_Ring.polex Commutative_Ring.mon
   Reflective_Field.fexpr Reflective_Field.pexpr Reflective_Field.pexpr1 Reflective_Field.pexpr2
@@ -58,7 +78,9 @@ hide_const (open)
   Reflective_Field.npepow Reflective_Field.npemul Reflective_Field.npeadd
   Reflective_Field.npesub Reflective_Field.npeneg
   Reflective_Field.isin Reflective_Field.split_aux Reflective_Field.fnorm
-  Sigma_Algebra.measure
+  Sigma_Algebra.measure MPoly_Type.degree
+
+print_syntax
 
 declare [[smt_oracle, z3_extensions, smt_nat_as_int]]
 declare [[auto_sledgehammer_params = "provers = verit z3 e spass vampire zipperposition cvc5, smt_proofs = true"]]
@@ -225,6 +247,9 @@ simproc_setup eval_primes_upto ("primes_upto n") =
 simproc_setup eval_prime ("prime n") =
   \<open>K Eval_Simproc.eval_ground\<close>
 
+simproc_setup eval_prime_factors ("prime_factors x") =
+  \<open>K Eval_Simproc.eval_ground\<close>
+
 \<comment> \<open>Make HOL-Analysis det executable via Gauss-Jordan on IArrays\<close>
 code_datatype set List.coset \<comment> \<open>restore coset as code constructor (undoes Gauss_Jordan/Code_Set.thy)\<close>
 code_datatype vec_lambda
@@ -268,5 +293,11 @@ lemma \<open>squarefree (30::nat)\<close>
 lemma \<open>\<not> squarefree (12::nat)\<close>
   by  simp
 *)
+
+
+declare [[simp _trace]]
+lemma "prime_factors (1 + 3 * \<i>\<^sub>\<int>) = {2 + \<i>\<^sub>\<int>, 1 + \<i>\<^sub>\<int>}"
+  by aut  
+
 
 end
