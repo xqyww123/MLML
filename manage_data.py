@@ -97,7 +97,7 @@ def resolve_files(manifest, paths=None, group=None, all_files=False):
         print("Error: specify file paths, --group, or --all.", file=sys.stderr)
         sys.exit(1)
     result = []
-    for p in paths:
+    for p in (os.path.normpath(x) for x in paths):
         exact = [f for f in files if f["path"] == p]
         if exact:
             result.extend(exact)
@@ -115,6 +115,38 @@ def resolve_files(manifest, paths=None, group=None, all_files=False):
             seen.add(f["path"])
             deduped.append(f)
     return deduped
+
+
+def upload_file(manifest, path, full_path):
+    try:
+        from huggingface_hub import HfApi
+    except ImportError:
+        print("Error: huggingface_hub is required for upload. Install with: pip install huggingface_hub",
+              file=sys.stderr)
+        sys.exit(1)
+
+    rpath = remote_path(path)
+    compress = needs_compression(path)
+    if compress:
+        zst_file = full_path + ".zst"
+        print(f"  Compressing {path}...")
+        subprocess.run(["zstd", "-f", full_path, "-o", zst_file], check=True)
+        upload_path = zst_file
+    else:
+        upload_path = full_path
+
+    print(f"  Uploading {rpath} to {manifest['repo_id']}...")
+    api = HfApi()
+    api.upload_file(
+        path_or_fileobj=upload_path,
+        path_in_repo=rpath,
+        repo_id=manifest["repo_id"],
+        repo_type=manifest["repo_type"],
+    )
+    print(f"  Uploaded.")
+
+    if compress:
+        os.remove(zst_file)
 
 
 def cmd_list(_args):
@@ -224,6 +256,7 @@ def cmd_add(args):
     path = args.path
     if os.path.isabs(path):
         path = os.path.relpath(path, MLML_BASE)
+    path = os.path.normpath(path)
 
     full_path = os.path.join(MLML_BASE, path)
     if not os.path.isfile(full_path):
@@ -252,35 +285,7 @@ def cmd_add(args):
     print(f"Added {path} ({format_size(size)}) to manifest [{args.group}].")
 
     if args.upload:
-        try:
-            from huggingface_hub import HfApi
-        except ImportError:
-            print("Error: huggingface_hub is required for upload. Install with: pip install huggingface_hub",
-                  file=sys.stderr)
-            sys.exit(1)
-
-        rpath = remote_path(path)
-        compress = needs_compression(path)
-        if compress:
-            zst_file = full_path + ".zst"
-            print(f"Compressing {path}...")
-            subprocess.run(["zstd", "-f", full_path, "-o", zst_file], check=True)
-            upload_path = zst_file
-        else:
-            upload_path = full_path
-
-        print(f"Uploading {rpath} to {manifest['repo_id']}...")
-        api = HfApi()
-        api.upload_file(
-            path_or_fileobj=upload_path,
-            path_in_repo=rpath,
-            repo_id=manifest["repo_id"],
-            repo_type=manifest["repo_type"],
-        )
-        print(f"Uploaded.")
-
-        if compress:
-            os.remove(zst_file)
+        upload_file(manifest, path, full_path)
 
 
 def cmd_remove(args):
@@ -327,6 +332,47 @@ def cmd_remove(args):
     print(f"Removed {len(targets)} file(s) from manifest.")
 
 
+def cmd_update(args):
+    manifest = load_manifest()
+    targets = resolve_files(manifest, paths=args.paths)
+
+    present = []
+    for entry in targets:
+        full_path = os.path.join(MLML_BASE, entry["path"])
+        if not os.path.isfile(full_path):
+            print(f"  Warning: {entry['path']} not found locally, skipping.")
+            continue
+        new_size = os.path.getsize(full_path)
+        present.append((entry, full_path, new_size))
+
+    if not present:
+        print("No files to update.")
+        return
+
+    print(f"Files to update ({len(present)}):")
+    for entry, _, new_size in present:
+        old_str = format_size(entry["size"])
+        new_str = format_size(new_size)
+        if new_size != entry["size"]:
+            print(f"  {entry['path']}  {old_str} -> {new_str}")
+        else:
+            print(f"  {entry['path']}  {new_str}")
+
+    if not args.yes:
+        ans = input(f"\nUpload {len(present)} file(s)? [y/N] ").strip().lower()
+        if ans != "y":
+            print("Aborted.")
+            return
+
+    for i, (entry, full_path, new_size) in enumerate(present, 1):
+        print(f"[{i}/{len(present)}] Updating {entry['path']}...")
+        entry["size"] = new_size
+        upload_file(manifest, entry["path"], full_path)
+
+    save_manifest(manifest)
+    print(f"\nUpdated {len(present)} file(s).")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Manage MLML data files on Hugging Face Hub.")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -357,9 +403,13 @@ def main():
     p_remove.add_argument("--delete-remote", action="store_true", help="Also delete from HF Hub")
     p_remove.add_argument("-y", "--yes", action="store_true", help="Skip confirmation prompt")
 
+    p_update = sub.add_parser("update", help="Re-upload files to HF Hub and update manifest sizes")
+    p_update.add_argument("paths", nargs="+", help="File paths or prefixes to update")
+    p_update.add_argument("-y", "--yes", action="store_true", help="Skip confirmation prompt")
+
     args = parser.parse_args()
     {"list": cmd_list, "get": cmd_get, "verify": cmd_verify, "add": cmd_add,
-     "remove": cmd_remove}[args.command](args)
+     "remove": cmd_remove, "update": cmd_update}[args.command](args)
 
 
 if __name__ == "__main__":

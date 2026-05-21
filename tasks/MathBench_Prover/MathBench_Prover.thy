@@ -336,7 +336,4 @@ setup \<open>fn thy =>
   in Context.theory_map (fold Pre_Simproc.register entries) thy end
 \<close>
 
-lemma "prime_factors (1 + 3 * \<i>\<^sub>\<int>) = {2 + \<i>\<^sub>\<int>, 1 + \<i>\<^sub>\<int>}"
-  by auto'
-
 end
