@@ -77,7 +77,7 @@
     },
     {
       "path": "contrib/Isabelle2024_and_afp-2025-02-12.tar.zst",
-      "size": 4907527593,
+      "size": 1048855472,
       "description": "Isabelle2024 + AFP 2025-02-12 distribution",
       "group": "tools"
     }
