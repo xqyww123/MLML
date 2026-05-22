@@ -80,6 +80,12 @@
       "size": 1050944234,
       "description": "Isabelle2024 + AFP 2025-02-12 distribution",
       "group": "tools"
+    },
+    {
+      "path": "contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst",
+      "size": 3749973873,
+      "description": "semantic and embedding database",
+      "group": "optional"
     }
   ]
 }

@@ -80,3 +80,5 @@ secret.sh
 /data/declarations.json.zst
 /tasks/extraction/theorem-relevance/premise_relevance.validate.keys.zst
 *.unicode.thy
+/contrib/Semantic_Embedding/Isabelle_Premise_Embedding.tar.zst
+/contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst
