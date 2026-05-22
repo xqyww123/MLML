@@ -92,12 +92,12 @@ async def launch_server(server, retry=6, timeout=600):
             # Construct the SSH command to launch the REPL server
             # ./contrib/Isa-REPL/repl_server_watch_dog.sh 0.0.0.0:6666 HOL /tmp/repl_outputs -o threads=32
             numprocs = SERVERS[server]["numprocs"]
-            ssh_command = f"ssh {host} \"bash -lc \'cd {pwd} && " + \
+            ssh_command = f"ssh {host} \"cd {pwd} && " + \
                 f"mkdir -p ./cache/repl_tmps/{host}_{port} && " + \
                 f"source ./envir.sh && " + \
-                f"([ -f ./secret.sh ] && source ./secret.sh) ; " + \
+                f"([ -f ./secret.sh ] && source ./secret.sh) && " + \
                 f"(fuser -n tcp -k {port} || true) && " + \
-                f"MASH_STATE_PATH={pwd}/cache/repl_tmps/{host}_{port}/mash_state nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} {BASE_SESSION} {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &\'\""
+                f"MASH_STATE_PATH={pwd}/cache/repl_tmps/{host}_{port}/mash_state nohup ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port} {BASE_SESSION} {pwd}/cache/repl_tmps/{host}_{port} -o threads={numprocs} > ./cache/repl_tmps/{host}_{port}/log.txt 2>&1 &\""
 
             # Log the command being executed
             logger.info(f"Launching server on {host}:{port} with command: {ssh_command}")

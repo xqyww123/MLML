@@ -11,6 +11,7 @@ fi
 
 # Create necessary directories
 source ./envir.sh
+source ./secret.sh
 set -e
 
 # Process each port/numproc pair
@@ -33,7 +34,7 @@ while [ $# -gt 0 ]; do
   mkdir -p $mash_dir
   
   # Start the server instance
-  MASH_STATE_PATH=$mash_dir/mash_state ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:$port AFP-1-PISA $dir -o threads=$numprocs > $dir/log.txt 2>&1 &
+  MASH_STATE_PATH=$mash_dir/mash_state ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:$port MathBench_Prover $dir -o threads=$numprocs > $dir/log.txt 2>&1 &
   
   #echo "Started server on port $port"
 done
