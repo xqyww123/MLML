@@ -1,4 +1,4 @@
-session MathBench_Prover = "HOL-Complex_Analysis" +
+session MathBench_ProverBase in Base = "HOL-Complex_Analysis" +
   sessions
     "HOL-Algebra"
     "HOL-Library"
@@ -29,8 +29,23 @@ session MathBench_Prover = "HOL-Complex_Analysis" +
     Linear_Recurrences
     Gaussian_Integers
     Power_Sum_Polynomials
+    Count_Complex_Roots
+    Ordinary_Differential_Equations
+    (* New imports from PutnamBench analysis *)
+    Lie_Groups
+    Sturm_Sequences
+    Gauss_Sums
+    Falling_Factorial_Sum
+    DigitsInBase
+    Continued_Fractions
+    Minkowskis_Theorem
+    Hermite_Lindemann
     (*Minilang_Agent
     Semantic_Embedding*)
     Auto_Sledgehammer
+  theories
+    MathBench_ProverBase
+
+session MathBench_Prover = MathBench_ProverBase +
   theories
     MathBench_Prover

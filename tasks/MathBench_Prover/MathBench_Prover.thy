@@ -1,34 +1,5 @@
 theory MathBench_Prover
-  imports
-    (* Tool infrastructure *)
-    "HOL-Decision_Procs.Reflective_Field"
-    Auto_Sledgehammer.Auto_Sledgehammer
-    (* HOL bundles *)
-    "HOL-Library.Library"
-    "HOL-Combinatorics.Combinatorics"
-    (* Basic math *)
-    "Weighted_Arithmetic_Geometric_Mean.Weighted_Arithmetic_Geometric_Mean"
-    Derangements.Derangements
-    "Bell_Numbers_Spivey.Bell_Numbers"
-    Card_Number_Partitions.Card_Number_Partitions
-    Pell.Pell_Algorithm
-    Lucas_Theorem.Lucas_Theorem
-    "Budan_Fourier.Budan_Fourier"
-    "Lifting_the_Exponent.LTE"
-    "Bertrands_Postulate.Bertrand"
-    (* Analysis / matrices *)
-    "Gauss_Jordan.Determinants_IArrays"
-    "Catalan_Numbers.Catalan_Numbers"
-    Stirling_Formula.Stirling_Formula
-    "Fourier.Fourier"
-    (* Complex analysis / number theory *)
-    Euler_MacLaurin.Euler_MacLaurin_Landau
-    Chebyshev_Polynomials.Chebyshev_Polynomials
-    Dirichlet_Series.Dirichlet_Series_Analysis
-    Linear_Recurrences.Rational_FPS_Asymptotics
-    Gaussian_Integers.Gaussian_Integers_Everything
-    (* Last: polynomial-related, so Polynomial.degree wins name resolution *)
-    Power_Sum_Polynomials.Power_Sum_Polynomials
+  imports MathBench_ProverBase
 begin
 
 no_notation fps_nth (infixl "$" 75)
@@ -51,6 +22,13 @@ no_notation word_sle ("(_/ <=s _)" [51, 51] 50)
 no_notation Set_Algebras.elt_set_times (infixl "*o" 80)
 no_notation Set_Algebras.elt_set_plus (infixl "+o" 70)
 no_notation Set_Algebras.elt_set_eq (infix "=o" 50)
+
+no_syntax (ASCII)
+  "_Sum_any" :: "pttrn \<Rightarrow> 'a \<Rightarrow> 'a::comm_monoid_add" ("(3SUM _. _)" [0, 10] 10)
+no_syntax
+  "_Sum_any" :: "pttrn \<Rightarrow> 'a \<Rightarrow> 'a::comm_monoid_add" ("(3\<Sum>_. _)" [0, 10] 10)
+no_translations
+  "\<Sum>a. b" \<rightleftharpoons> "CONST Sum_any (\<lambda>a. b)"
 
 hide_type (open) Commutative_Ring.pol Commutative_Ring.polex Commutative_Ring.mon
   Reflective_Field.fexpr Reflective_Field.pexpr Reflective_Field.pexpr1 Reflective_Field.pexpr2
@@ -78,25 +56,16 @@ hide_const (open)
   Reflective_Field.npepow Reflective_Field.npemul Reflective_Field.npeadd
   Reflective_Field.npesub Reflective_Field.npeneg
   Reflective_Field.isin Reflective_Field.split_aux Reflective_Field.fnorm
-  Sigma_Algebra.measure MPoly_Type.degree
+  Sigma_Algebra.measure
+  MPoly_Type.degree MPoly_Type.monom MPoly_Type.coeff MPoly_Type.smult MPoly_Type.coeffs
+  up_ring.monom up_ring.coeff module.smult Unique_Factorization.coprime
+  Square_Matrix.det Square_Matrix.trace Square_Matrix.transpose Square_Matrix.row
+  Square_Matrix.adjugate Square_Matrix.diag Square_Matrix.map_sq_matrix
 
 declare [[smt_oracle, z3_extensions, smt_nat_as_int]]
+setup \<open>Context.theory_map (Config.put_generic Pre_Simproc.simplify_timeout_seconds 60)\<close>
 declare [[auto_sledgehammer_params = "provers = verit z3 e spass vampire zipperposition cvc5, smt_proofs = true"]]
 
-lemma strip_Trueprop_eq: \<open>(Trueprop P \<equiv> Trueprop Q) \<Longrightarrow> P \<equiv> Q\<close>
-unfolding atomize_eq
-proof rule
-  assume A: \<open>Trueprop P \<equiv> Trueprop Q\<close>
-     and B: P
-  from B[unfolded A]
-  show "Q" .
-next
-  assume A: \<open>Trueprop P \<equiv> Trueprop Q\<close>
-     and B: Q
-  show "P"
-    unfolding A
-    using B .
-qed
 
 theorem sqrt_prime_irrational:
   fixes p :: int
@@ -181,11 +150,7 @@ end
 
 simproc_setup sqrt_prime_rat (\<open>sqrt (numeral n) \<in> \<rat>\<close>) =
   \<open>K Sqrt_Prime_Rat.simproc\<close>
- 
-lemma "sqrt 23 \<notin> \<rat>"
-  by simp
 
-declare [[ML_debugger]]
 ML_file \<open>eval_simproc.ML\<close>
 
 simproc_setup eval_ord ("ord m n") =
@@ -277,9 +242,16 @@ code_reflect Eval_Reflect
 declare Primes.prime_nat_numeral_eq[simp del]
 
 ML_file \<open>ring_field_algebra.ML\<close>
+ML_file \<open>sturm_simproc.ML\<close>
 
 simproc_setup ring_field_eq ("(x::'a::comm_ring_1) = y") =
   \<open>K Ring_Field_Algebra.ring_field_simproc\<close>
+
+simproc_setup sturm_forall (\<open>\<forall>x::real. P x\<close>) =
+  \<open>K Sturm_Simproc.sturm_simproc\<close>
+
+simproc_setup sturm_card (\<open>card {x::real. P x} = n\<close>) =
+  \<open>K Sturm_Simproc.sturm_simproc\<close>
 
 setup \<open>
   map_theory_simpset (fn ctxt =>
@@ -331,6 +303,14 @@ setup \<open>fn thy =>
       {name = "ring_field_eq",
        pattern = read_pat "(x::'a::comm_ring_1) = y",
        proc = Ring_Field_Algebra.ring_field_simproc,
+       scope = Pre_Simproc.Concl_Only},
+      {name = "sturm_forall",
+       pattern = read_pat "\<forall>x::real. P x",
+       proc = Sturm_Simproc.sturm_simproc,
+       scope = Pre_Simproc.Concl_Only},
+      {name = "sturm_card",
+       pattern = read_pat "card {x::real. P x} = n",
+       proc = Sturm_Simproc.sturm_simproc,
        scope = Pre_Simproc.Concl_Only}
     ]
   in Context.theory_map (fold Pre_Simproc.register entries) thy end

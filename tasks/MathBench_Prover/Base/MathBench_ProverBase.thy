@@ -1,0 +1,55 @@
+theory MathBench_ProverBase
+  imports
+    (* Tool infrastructure *)
+    "HOL-Decision_Procs.Reflective_Field"
+    Auto_Sledgehammer.Auto_Sledgehammer
+    (* Multivariate polynomials — FIRST so later Polynomial imports shadow MPoly_Type names *)
+    Power_Sum_Polynomials.Power_Sum_Polynomials
+    (* HOL bundles *)
+    "HOL-Library.Library"
+    "HOL-Combinatorics.Combinatorics"
+    (* Basic math *)
+    "Weighted_Arithmetic_Geometric_Mean.Weighted_Arithmetic_Geometric_Mean"
+    Derangements.Derangements
+    "Bell_Numbers_Spivey.Bell_Numbers"
+    Card_Number_Partitions.Card_Number_Partitions
+    Pell.Pell_Algorithm
+    Lucas_Theorem.Lucas_Theorem
+    "Budan_Fourier.Budan_Fourier"
+    "Lifting_the_Exponent.LTE"
+    "Bertrands_Postulate.Bertrand"
+    (* Analysis / matrices *)
+    "Gauss_Jordan.Determinants_IArrays"
+    "Catalan_Numbers.Catalan_Numbers"
+    Stirling_Formula.Stirling_Formula
+    "Fourier.Fourier"
+    (* Complex analysis / number theory *)
+    Euler_MacLaurin.Euler_MacLaurin_Landau
+    Chebyshev_Polynomials.Chebyshev_Polynomials
+    Dirichlet_Series.Dirichlet_Series_Analysis
+    Linear_Recurrences.Rational_FPS_Asymptotics
+    Gaussian_Integers.Gaussian_Integers_Everything
+    (* Polynomial root counting & factorization *)
+    Count_Complex_Roots.Count_Complex_Roots
+    Polynomial_Factorization.Fundamental_Theorem_Algebra_Factorized
+    (* ODE existence/uniqueness: Picard-Lindelöf, Grönwall *)
+    Ordinary_Differential_Equations.ODE_Analysis
+    (* Cayley-Hamilton theorem transferred to 'a^'n^'n *)
+    Lie_Groups.Transfer_Cayley_Hamilton
+    (* Exact real root counting (complements Budan_Fourier) *)
+    Sturm_Sequences.Sturm_Method
+    (* Roots of unity, DFT on finite groups *)
+    Gauss_Sums.Complex_Roots_Of_Unity
+    (* Falling factorial / Vandermonde identities *)
+    Falling_Factorial_Sum.Falling_Factorial_Sum_Combinatorics
+    (* Base-b digit representation *)
+    DigitsInBase.DigitsInBase
+    (* Continued fractions, best rational approximation, quadratic irrationals *)
+    Continued_Fractions.Continued_Fractions
+    (* Geometry of numbers: Minkowski's lattice point theorem *)
+    Minkowskis_Theorem.Minkowskis_Theorem
+    (* Transcendence: cos(algebraic) is transcendental, \<pi> transcendental *)
+    Hermite_Lindemann.Hermite_Lindemann
+begin
+
+end
