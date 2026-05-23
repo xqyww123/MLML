@@ -2,7 +2,6 @@ theory MathBench_ProverBase
   imports
     (* Tool infrastructure *)
     "HOL-Decision_Procs.Reflective_Field"
-    Auto_Sledgehammer.Auto_Sledgehammer
     (* Multivariate polynomials — FIRST so later Polynomial imports shadow MPoly_Type names *)
     Power_Sum_Polynomials.Power_Sum_Polynomials
     (* HOL bundles *)

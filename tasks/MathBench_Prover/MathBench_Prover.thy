@@ -1,5 +1,5 @@
 theory MathBench_Prover
-  imports MathBench_ProverBase.MathBench_ProverBase
+  imports Auto_Sledgehammer.Auto_Sledgehammer MathBench_ProverBase.MathBench_ProverBase
 begin
 
 no_notation fps_nth (infixl "$" 75)
