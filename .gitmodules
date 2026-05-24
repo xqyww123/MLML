@@ -30,3 +30,9 @@
 [submodule "data/PutnamBench"]
 	path = data/PutnamBench
 	url = https://github.com/xqyww123/PutnamBench
+[submodule "data/NTP4VC"]
+	path = data/NTP4VC
+	url = https://github.com/xqyww123/NTP4VC.git
+[submodule "contrib/AutoCorrode"]
+	path = contrib/AutoCorrode
+	url = https://github.com/awslabs/AutoCorrode

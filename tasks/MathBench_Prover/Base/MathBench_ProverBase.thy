@@ -1,8 +1,12 @@
 theory MathBench_ProverBase
   imports
+    (* Transcendence — FIRST: its transitive dep on Jordan_Normal_Form
+       introduces JNF's mat/row/vec/det; placing it first lets later
+       HOL-Analysis imports shadow those names. *)
+    Hermite_Lindemann.Hermite_Lindemann
     (* Tool infrastructure *)
     "HOL-Decision_Procs.Reflective_Field"
-    (* Multivariate polynomials — FIRST so later Polynomial imports shadow MPoly_Type names *)
+    (* Multivariate polynomials — early so later Polynomial imports shadow MPoly_Type names *)
     Power_Sum_Polynomials.Power_Sum_Polynomials
     (* HOL bundles *)
     "HOL-Library.Library"
@@ -47,8 +51,6 @@ theory MathBench_ProverBase
     Continued_Fractions.Continued_Fractions
     (* Geometry of numbers: Minkowski's lattice point theorem *)
     Minkowskis_Theorem.Minkowskis_Theorem
-    (* Transcendence: cos(algebraic) is transcendental, \<pi> transcendental *)
-    Hermite_Lindemann.Hermite_Lindemann
 begin
 
 end

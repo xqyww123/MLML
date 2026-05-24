@@ -3,6 +3,10 @@ theory MathBench_Prover
 begin
 
 no_notation fps_nth (infixl "$" 75)
+no_notation fds_nth (infixl "$" 75)
+no_notation fds (binder "\<chi>" 10)
+no_notation Matrix.scalar_prod (infix "\<bullet>" 70)
+no_notation Group.m_inv ("inv\<index> _" [81] 80)
 no_notation BNF_Cardinal_Arithmetic.cprod (infixr "*c" 80)
 no_notation BNF_Cardinal_Arithmetic.csum (infixr "+c" 65)
 no_notation BNF_Cardinal_Arithmetic.cexp (infixr "^c" 90)
@@ -10,10 +14,9 @@ no_notation BNF_Wellorder_Constructions.ordIso2 (infix "=o" 50)
 no_notation BNF_Wellorder_Constructions.ordLess2 (infix "<o" 50)
 no_notation BNF_Wellorder_Constructions.ordLeq2 (infix "<=o" 50)
 no_notation matrix_scalar_mult (infixl "*k" 70)
-no_notation vector_scalar_mult (infixl "*s" 70)
+no_notation smult_sq_matrix (infixr "*s" 75)
 no_notation matrix_vector_mult_iarray (infixl "*iv" 70)
 no_notation vector_matrix_mult_iarray (infixl "v*i" 70)
-no_notation matrix_vector_mult (infixl "*v" 70)
 no_notation vector_matrix_mult (infixl "v*" 70)
 no_notation word_sless ("'(<s')")
 no_notation word_sless ("(_/ <s _)"  [51, 51] 50)
@@ -56,11 +59,50 @@ hide_const (open)
   Reflective_Field.npepow Reflective_Field.npemul Reflective_Field.npeadd
   Reflective_Field.npesub Reflective_Field.npeneg
   Reflective_Field.isin Reflective_Field.split_aux Reflective_Field.fnorm
-  Sigma_Algebra.measure
   MPoly_Type.degree MPoly_Type.monom MPoly_Type.coeff MPoly_Type.smult MPoly_Type.coeffs
   up_ring.monom up_ring.coeff module.smult Unique_Factorization.coprime
   Square_Matrix.det Square_Matrix.trace Square_Matrix.transpose Square_Matrix.row
   Square_Matrix.adjugate Square_Matrix.diag Square_Matrix.map_sq_matrix
+  Sturm_Tarski.sign Sturm_Tarski.cross Sturm_Tarski.changes
+  Sturm_Tarski.variation Sturm_Tarski.taq
+  Sturm_Tarski.sgn_pos_inf Sturm_Tarski.sgn_neg_inf
+  Sturm_Tarski.sign_r_pos Sturm_Tarski.jump_poly Sturm_Tarski.cindex_poly
+  Sturm_Tarski.smods Sturm_Tarski.changes_poly_at
+  Sturm_Tarski.changes_poly_pos_inf Sturm_Tarski.changes_poly_neg_inf
+  Sturm_Tarski.changes_itv_smods Sturm_Tarski.changes_gt_smods
+  Sturm_Tarski.changes_le_smods Sturm_Tarski.changes_R_smods
+  Symmetric_Polynomials.lead_coeff Symmetric_Polynomials.lead_monom
+  (* HOL-Algebra: locale predicates *)
+  Group.group Group.group_axioms
+  Group.monoid Group.monoid_axioms
+  Group.subgroup Group.submonoid
+  Group.comm_monoid Group.comm_group
+  Group.hom Group.iso Group.mon Group.epi Group.is_iso
+  Group.generate Group.Units
+  Coset.order Coset.kernel Coset.normal Coset.flatten
+  Coset.RCOSETS Coset.FactGroup
+  Ring.ring Ring.cring Ring.domain Ring.field Ring.semiring
+  Ring.ring_hom Ring.genideal Ring.cgenideal
+  Ring.abelian_monoid Ring.abelian_group
+  Ring.finsum
+  Ideal.ideal Ideal.primeideal Ideal.maximalideal Ideal.principalideal
+  (* HOL-Algebra: record fields that shadow standard HOL *)
+  Congruence.partial_object.carrier
+  Congruence.eq_object.eq
+  Group.monoid.one Group.monoid.mult
+  Ring.ring.zero Ring.ring.add
+  (* HOL-Algebra: order/lattice *)
+  Order.gorder.le Order.lless
+  Order.bottom Order.isotone Order.idempotent
+  Order.least Order.greatest Order.commuting
+  Lattice.meet Lattice.join Lattice.supr Lattice.infi
+  Lattice.isGlb Lattice.isLb Lattice.isLub Lattice.isUb
+  FiniteProduct.finprod FiniteProduct.foldD
+  (* Angles *)
+  Angles.angle
+
+declare [[coercion_delete "enat :: nat \<Rightarrow> enat"]]
+declare [[coercion_delete "of_nat :: nat \<Rightarrow> ennreal"]]
 
 declare [[smt_oracle, z3_extensions, smt_nat_as_int]]
 setup \<open>Context.theory_map (Config.put_generic Pre_Simproc.simplify_timeout_seconds 60)\<close>
@@ -315,5 +357,23 @@ setup \<open>fn thy =>
     ]
   in Context.theory_map (fold Pre_Simproc.register entries) thy end
 \<close>
+
+(*
+ML ‹
+val ctxt = @{context};
+val thy = Proof_Context.theory_of ctxt;
+val {const_space, constants, ...} = Consts.dest (Sign.consts_of thy);
+val out = TextIO.openOut "/tmp/open_constants.tsv";
+val _ = List.app (fn (long_name, _) =>
+  let
+    val short = Name_Space.extern ctxt const_space long_name
+  in
+    if not (String.isSubstring "." short) then
+      TextIO.output (out, short ^ "\t" ^ long_name ^ "\n")
+    else ()
+  end) constants;
+val _ = TextIO.closeOut out
+›
+*)
 
 end
