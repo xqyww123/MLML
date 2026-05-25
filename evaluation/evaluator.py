@@ -794,7 +794,7 @@ def report_evaluation(response_path : str, result_path : str):
                     err = result.error
                 csv_writer.writerow([key, result.status, len(result.errors), str(result.elapsed_time), err, responses[key]])
 
-async def evaluate_and_save(result_path : str | None, cases : list[Case], evaluator, retry_failure : bool = False, force_retry : frozenset = frozenset()): # -> Dict[Index, Result]
+async def evaluate_and_save(result_path : str | None, cases : list[Case], evaluator, retry_failure : bool = False, force_retry : frozenset = frozenset(), server_instances : list[str] | None = None): # -> Dict[Index, Result]
     # Setup shared variables with asyncio-safe access
     success = 0
     unavailable = 0
@@ -889,7 +889,8 @@ async def evaluate_and_save(result_path : str | None, cases : list[Case], evalua
 
         # Create and start worker tasks for each server
         tasks = []
-        for server_addr in SERVER_INSTANCES:
+        instances = server_instances if server_instances is not None else SERVER_INSTANCES
+        for server_addr in instances:
             task = asyncio.create_task(eval_server(server_addr))
             tasks.append(task)
 

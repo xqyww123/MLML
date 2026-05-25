@@ -2,11 +2,13 @@ theory MathBench_Prover
   imports Auto_Sledgehammer.Auto_Sledgehammer MathBench_ProverBase.MathBench_ProverBase
 begin
 
+no_notation fds (binder "χ" 10)
 no_notation fps_nth (infixl "$" 75)
 no_notation fds_nth (infixl "$" 75)
+no_notation Matrix.vec_index (infixl "$" 100)
+no_notation blinfun_apply (infixl "$" 999)
 no_notation fds (binder "\<chi>" 10)
 no_notation Matrix.scalar_prod (infix "\<bullet>" 70)
-no_notation Group.m_inv ("inv\<index> _" [81] 80)
 no_notation BNF_Cardinal_Arithmetic.cprod (infixr "*c" 80)
 no_notation BNF_Cardinal_Arithmetic.csum (infixr "+c" 65)
 no_notation BNF_Cardinal_Arithmetic.cexp (infixr "^c" 90)
@@ -35,6 +37,7 @@ no_translations
 
 hide_type (open) Commutative_Ring.pol Commutative_Ring.polex Commutative_Ring.mon
   Reflective_Field.fexpr Reflective_Field.pexpr Reflective_Field.pexpr1 Reflective_Field.pexpr2
+  Matrix.mat Matrix.vec
 
 hide_const (open)
   Commutative_Ring.Pc Commutative_Ring.Pinj Commutative_Ring.PX
@@ -72,34 +75,90 @@ hide_const (open)
   Sturm_Tarski.changes_itv_smods Sturm_Tarski.changes_gt_smods
   Sturm_Tarski.changes_le_smods Sturm_Tarski.changes_R_smods
   Symmetric_Polynomials.lead_coeff Symmetric_Polynomials.lead_monom
-  (* HOL-Algebra: locale predicates *)
-  Group.group Group.group_axioms
-  Group.monoid Group.monoid_axioms
-  Group.subgroup Group.submonoid
-  Group.comm_monoid Group.comm_group
-  Group.hom Group.iso Group.mon Group.epi Group.is_iso
-  Group.generate Group.Units
-  Coset.order Coset.kernel Coset.normal Coset.flatten
-  Coset.RCOSETS Coset.FactGroup
-  Ring.ring Ring.cring Ring.domain Ring.field Ring.semiring
-  Ring.ring_hom Ring.genideal Ring.cgenideal
-  Ring.abelian_monoid Ring.abelian_group
-  Ring.finsum
+  (* HOL-Algebra: only hide constants NOT used by PutnamBench.
+     PutnamBench USES: group, carrier, field, subgroup, generate, comm_group,
+     abelian_group, one (\<one>), zero (\<zero>), vangle — keep these OPEN. *)
+  Coset.order
+  Group.group_axioms Group.group_hom Group.group_isomorphisms
+  Group.DirProd Group.submonoid
+  Group.hom Group.is_iso Group.mon Group.epi
+  Group.Units Group.units_of Group.pow
+  Coset.kernel Coset.flatten
+  Coset.l_coset Coset.r_coset Coset.r_congruent
+  Coset.RCOSETS Coset.SET_INV Coset.FactGroup Coset.trivial_homomorphism
+  Ring.ring Ring.cring Ring.semiring
+  Ring.ring_hom_cring Ring.abelian_monoid
+  Ring.finsum Ring.add_monoid Ring.add_pow Ring.a_inv Ring.a_minus
+  Ring.ring.add Ring.ring.zero
   Ideal.ideal Ideal.primeideal Ideal.maximalideal Ideal.principalideal
-  (* HOL-Algebra: record fields that shadow standard HOL *)
-  Congruence.partial_object.carrier
+  Ideal.genideal Ideal.cgenideal
   Congruence.eq_object.eq
-  Group.monoid.one Group.monoid.mult
-  Ring.ring.zero Ring.ring.add
-  (* HOL-Algebra: order/lattice *)
-  Order.gorder.le Order.lless
-  Order.bottom Order.isotone Order.idempotent
-  Order.least Order.greatest Order.commuting
-  Lattice.meet Lattice.join Lattice.supr Lattice.infi
-  Lattice.isGlb Lattice.isLb Lattice.isLub Lattice.isUb
+  Congruence.elem Congruence.not_elem Congruence.equivalence
+  Congruence.eq_classes Congruence.eq_class_of Congruence.eq_closure_of
+  Congruence.eq_is_closed Congruence.not_eq Congruence.set_eq Congruence.set_not_eq
+  Order.gorder.le Order.lless Order.bottom
+  Order.isotone Order.idempotent Order.least Order.greatest Order.commuting
+  Order.at_least_at_most Order.inv_gorder Order.is_glb Order.is_lub
+  Order.Lower Order.Upper Order.Monotone Order.order_emb
+  Order.partial_order Order.total_order
+  Order.weak_partial_order Order.weak_partial_order_bottom
+  Order.weak_partial_order_top Order.weak_total_order
+  Lattice.meet Lattice.supr Lattice.infi
+  Lattice.lattice Lattice.bounded_lattice Lattice.LEAST_FP Lattice.GREATEST_FP
+  Lattice.join_pres Lattice.meet_pres
+  Lattice.lower_semilattice Lattice.upper_semilattice
+  Lattice.weak_lattice Lattice.weak_lower_semilattice Lattice.weak_upper_semilattice
+  Lattice.weak_bounded_lattice
   FiniteProduct.finprod FiniteProduct.foldD
-  (* Angles *)
+  FiniteProduct.foldSetD FiniteProduct.foldSetDp FiniteProduct.ACeD FiniteProduct.LCD
+  AbelCoset.abelian_group_hom AbelCoset.abelian_subgroup AbelCoset.additive_subgroup
+  AbelCoset.A_FactGroup AbelCoset.a_kernel AbelCoset.a_l_coset
+  AbelCoset.a_r_congruent AbelCoset.a_r_coset AbelCoset.A_RCOSETS
+  AbelCoset.A_SET_INV AbelCoset.set_add
+  Generated_Groups.generatep
+  Generated_Groups.derived Generated_Groups.derived_set
+  Generated_Groups.subgroup_generated
+  (* Budan_Fourier / Count_Complex_Roots / Extended_Sturm *)
+  BF_Misc.fcompose BF_Misc.proots_count BF_Misc.proots_within
+  Budan_Fourier.all_roots_real Budan_Fourier.pders
+  Budan_Fourier.changes_itv_der Budan_Fourier.changes_gt_der Budan_Fourier.changes_le_der
+  Extended_Sturm.changes_alt Extended_Sturm.cross_alt
+  Extended_Sturm.changes_alt_itv_smods Extended_Sturm.changes_alt_poly_at
+  Extended_Sturm.cindex_polyE Extended_Sturm.cindex_poly_ubd
+  Extended_Sturm.cindexP_pathE Extended_Sturm.cindexP_lineE
+  Extended_Sturm.jumpF_polyR Extended_Sturm.jumpF_polyL
+  Extended_Sturm.jumpF_poly_top Extended_Sturm.jumpF_poly_bot
+  Extended_Sturm.psign_diff Extended_Sturm.psign_aux Extended_Sturm.cdiff_aux
+  Count_Line.unbounded_line Count_Line.proots_line Count_Line.proots_line_card
+  Count_Line.proots_unbounded_line Count_Line.proots_unbounded_line_card
+  Count_Line.no_proots_line
+  Count_Circle.proots_ball Count_Circle.proots_ball_card
+  Count_Circle.proots_cball Count_Circle.proots_cball_card
+  Count_Circle.proots_sphere Count_Circle.proots_sphere_card
+  Count_Half_Plane.proots_upper Count_Half_Plane.proots_upper_card
+  Count_Half_Plane.proots_half
+  Count_Rectangle.proots_rect Count_Rectangle.proots_crect
+  Count_Rectangle.proots_rect_border Count_Rectangle.proots_rect_ll
+  Count_Rectangle.not_rect_vertex Count_Rectangle.not_rect_vanishing
+  (* Angles: angle is locally defined in putnam_1972_b5, safe to hide *)
   Angles.angle
+  (* JNF: import reorder insufficient, explicit hide needed *)
+  Determinant.det
+  Matrix.mat Matrix.row Matrix.col Matrix.scalar_prod Matrix.orthogonal
+  Matrix.zero_vec
+  (* Cayley_Hamilton: C and X shadow common free variables *)
+  Cayley_Hamilton.C Cayley_Hamilton.X
+  (* Perm: order shadows Polynomial.order, swap shadows Product_Type.prod.swap *)
+  Perm.order Perm.swap
+  (* Miscellaneous.linear from Rank_Nullity_Theorem shadows HOL-Analysis linear *)
+  Miscellaneous.linear
+  (* Diagonal_Subsequence.subseqs shadows List.subseqs *)
+  Diagonal_Subsequence.subseqs
+  (* MPoly_Type.Var shadows free variable Var *)
+  MPoly_Type.Var
+  (* Topology class shadows from AFP *)
+  Abstract_Topological_Spaces.t0_space
+  T1_Spaces.t1_space
 
 declare [[coercion_delete "enat :: nat \<Rightarrow> enat"]]
 declare [[coercion_delete "of_nat :: nat \<Rightarrow> ennreal"]]
@@ -371,6 +430,21 @@ val _ = List.app (fn (long_name, _) =>
     if not (String.isSubstring "." short) then
       TextIO.output (out, short ^ "\t" ^ long_name ^ "\n")
     else ()
+  end) constants;
+val _ = TextIO.closeOut out
+›
+
+ML ‹
+val ctxt = @{context};
+val thy = Proof_Context.theory_of ctxt;
+val {const_space, constants, ...} = Consts.dest (Sign.consts_of thy);
+val out = TextIO.openOut "/tmp/all_constants_with_short.tsv";
+val _ = List.app (fn (long_name, _) =>
+  let
+    val base = Long_Name.base_name long_name
+    val extern = Name_Space.extern ctxt const_space long_name
+  in
+    TextIO.output (out, base ^ "\t" ^ extern ^ "\t" ^ long_name ^ "\n")
   end) constants;
 val _ = TextIO.closeOut out
 ›

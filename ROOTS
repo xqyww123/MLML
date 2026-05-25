@@ -1,5 +1,6 @@
 contrib
 tasks/MathBench_Prover
+tasks/MiniF2F_Prover
 tasks/extraction/theorem-relevance
 tasks/extraction/pretrain
 #tasks/NTP4Verif
