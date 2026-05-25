@@ -35,4 +35,4 @@
 	url = https://github.com/xqyww123/NTP4VC.git
 [submodule "contrib/AutoCorrode"]
 	path = contrib/AutoCorrode
-	url = https://github.com/awslabs/AutoCorrode
+	url = https://github.com/xqyww123/AutoCorrode
