@@ -36,6 +36,81 @@ def _no_category(msg: str):
         exit(1)
     return _loader
 
+def autocorrode_handler(cls, dataset, category_loader, index_parser):
+    import argparse
+    parser = argparse.ArgumentParser(
+        description=f"Evaluate AutoCorrode for {dataset}",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument("--case-category", type=str, nargs="?", default="",
+        help="Category of cases (e.g., valid, test)")
+    parser.add_argument("--result", "-o", type=str, nargs="?",
+        help="Path to save results (SQLite DB). Resumes if exists.")
+    parser.add_argument("--timeout-seconds", type=int, default=3600,
+        help="Timeout per case in seconds (default: 3600)")
+    parser.add_argument("--workers", "-w", type=int, default=1,
+        help="Number of parallel workers (default: 1)")
+    parser.add_argument("--display", type=str, default=":99",
+        help="X11 DISPLAY (default: :99)")
+    parser.add_argument("--isabelle-bin", type=str, default=None,
+        help="Path to isabelle binary (auto-detected if omitted)")
+    parser.add_argument("--iq-session-dir", type=str, default=None,
+        help="Path to iq session directory (auto-detected if omitted)")
+    parser.add_argument("--threads", type=int, default=None,
+        help="Number of Isabelle threads per worker (default: Isabelle default)")
+    parser.add_argument("-c", "--cases", action="append", nargs="+",
+        help="One or more cases to evaluate")
+    parser.add_argument("-f", "--case-file",
+        help="File of cases (one per line)")
+    parser.add_argument("--retry-failure", action="store_true", default=False,
+        help="Re-evaluate previously failed cases")
+    parser.add_argument("--force-retry", action="append", nargs="+",
+        help="Cases to force re-evaluate")
+    parser.add_argument("--force-retry-file",
+        help="File of cases to force re-evaluate (one per line)")
+
+    args = parser.parse_args(sys.argv[2:])
+
+    cases = []
+    if args.case_category:
+        cases.extend(category_loader(args.case_category))
+    if args.cases:
+        cases.extend([index_parser(item) for sub in args.cases for item in sub])
+    if args.case_file:
+        with open(args.case_file, "r") as f:
+            cases.extend([index_parser(line.strip()) for line in f if line.strip()])
+    cases = [Case(item, ["autocorrode"]) for item in cases]
+    if not cases:
+        logger.error("No cases to evaluate")
+        exit(1)
+
+    force_retry_cases = []
+    if args.force_retry:
+        force_retry_cases.extend([index_parser(item) for sub in args.force_retry for item in sub])
+    if args.force_retry_file:
+        with open(args.force_retry_file, "r") as f:
+            force_retry_cases.extend([index_parser(line.strip()) for line in f if line.strip()])
+    force_retry_set = frozenset(force_retry_cases)
+
+    worker_ids = [f"w{i}" for i in range(args.workers)]
+    result_db = args.result
+
+    async def _run():
+        await evaluate_and_save(
+            result_db, cases,
+            lambda wid: cls(
+                wid,
+                isabelle_bin=args.isabelle_bin,
+                iq_session_dir=args.iq_session_dir,
+                timeout_seconds=args.timeout_seconds,
+                display=args.display,
+                threads=args.threads,
+            ),
+            retry_failure=args.retry_failure,
+            force_retry=force_retry_set,
+            server_instances=worker_ids)
+    asyncio.run(_run())
+
 def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil_format, epilog):
     import argparse
     parser = argparse.ArgumentParser(
@@ -256,6 +331,18 @@ if __name__ == "__main__":
                     "Examples:\n"
                     "    evaluation/evaluator_top.py agent-putnam Claude.opus-4-6 --result result.db --case-category test\n"
                 )
+
+            case 'autocorrode-miniF2F':
+                from evaluation.autocorrode import AutoCorrode_MiniF2F
+                autocorrode_handler(AutoCorrode_MiniF2F, "MiniF2F",
+                    lambda category: MiniF2F_Data().cases_of(category),
+                    lambda line: line)
+
+            case 'autocorrode-putnam':
+                from evaluation.autocorrode import AutoCorrode_PutnamBench
+                autocorrode_handler(AutoCorrode_PutnamBench, "PutnamBench",
+                    lambda category: PutnamBench_Data().cases_of(category),
+                    lambda line: line)
 
             case 'agent-source':
                 minilang_agent_handler(MinilangAgent_Source, "source text",

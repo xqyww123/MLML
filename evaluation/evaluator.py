@@ -5,6 +5,7 @@ from IsaREPL import Client, Position, REPLFail
 from IsaMini.REPL import REPL as MiniREPL
 import csv
 import logging
+from typing import TypedDict
 from enum import Enum
 from data.isabelle import CaseNotAvailable, PISA_Data, get_MINIF2F_VALIDATION, get_MINIF2F_TEST, MiniF2F_Data, AFP_Data, PutnamBench_Data
 from sqlitedict import SqliteDict
@@ -50,6 +51,19 @@ class Result:
         if name == 'data':
             return None
         raise AttributeError(f"'Result' object has no attribute {name!r}")
+
+class AgentCostData(TypedDict, total=False):
+    input_tokens: int
+    cache_creation_tokens: int
+    cache_read_tokens: int
+    output_tokens: int
+    cost_usd: float
+    tool_calls: int
+    api_requests: int
+    elapsed: int
+    model_time: float
+    isabelle_time: float
+    quota_wait_time: float
 
 class Case:
     def __init__(self, index, code : str | list[str]):
@@ -443,13 +457,15 @@ class MinilangAgent_Base(Isar_Base):
                 ))
                 (status, elapsed, cpu_time, detail, cost_tuple) = Client._parse_control_(await self.repl._feed_and_unpack())
                 times.append(elapsed)
-                cost_data = {
+                cost_data: AgentCostData = {
                     "input_tokens": cost_tuple[0],
                     "cache_creation_tokens": cost_tuple[1],
                     "cache_read_tokens": cost_tuple[2],
                     "output_tokens": cost_tuple[3],
                     "cost_usd": cost_tuple[4],
                     "tool_calls": cost_tuple[5],
+                    "api_requests": -1,
+                    "elapsed": elapsed,
                     "isabelle_time": cost_tuple[6],
                     "model_time": cost_tuple[7],
                     "quota_wait_time": cost_tuple[8],
