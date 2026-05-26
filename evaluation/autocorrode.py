@@ -183,7 +183,7 @@ class AutoCorrode_Base(Evaluator):
         if os.path.isfile(thy_path):
             with open(thy_path, "r", encoding="utf-8") as f:
                 final_thy = f.read()
-            sorry_present = Isar_Base.contains_sorry(final_thy)
+            sorry_present = Isar_Base.contains_sorry(final_thy, original_code=content)
         else:
             sorry_present = True
 

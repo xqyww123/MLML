@@ -387,11 +387,22 @@ class Isar_Base(Evaluator):
         return ''.join(output)
 
     @classmethod
-    def contains_sorry(cls, code):
+    def _strip_comments(cls, code):
         if '(*' in code:
             code = cls.filter_comment(code)
-        # Check for \<sorry\> or \<admitted\> in the code using regex
-        if re.search(r'\bsorry\b', code) or re.search(r'\badmit\b', code):
+        return code
+
+    @classmethod
+    def contains_sorry(cls, code, original_code=None):
+        code = cls._strip_comments(code)
+        if re.search(r'\bsorry\b', code) or re.search(r'\badmit\b', code) or re.search(r'\boops\b', code):
+            return True
+        if re.search(r'\\<proof>', code):
+            return True
+        if re.search(r'Skip_Proof|cheat_tac', code):
+            return True
+        orig_count = len(re.findall(r'\baxiomatization\b', cls._strip_comments(original_code))) if original_code else 0
+        if len(re.findall(r'\baxiomatization\b', code)) > orig_count:
             return True
         return False
 
