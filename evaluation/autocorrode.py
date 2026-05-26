@@ -14,6 +14,27 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Per-million-token pricing: (input, cached_input, output)
+MODEL_PRICING: dict[str, tuple[float, float, float]] = {
+    "gpt-5.5":       (2.0,  0.5,  8.0),
+    "gpt-4.1":       (2.0,  0.5,  8.0),
+    "gpt-4.1-mini":  (0.4,  0.1,  1.6),
+    "gpt-4.1-nano":  (0.1,  0.025, 0.4),
+    "gpt-4o":        (2.5,  1.25, 10.0),
+    "o3":            (2.0,  0.5,  8.0),
+    "o4-mini":       (1.1,  0.275, 4.4),
+    "claude-sonnet-4-5-20250514": (3.0, 0.3, 15.0),
+    "claude-opus-4-5-20250414":   (15.0, 1.5, 75.0),
+}
+
+def compute_cost_usd(model: str, uncached: int, cached: int, output: int) -> float:
+    key = model.removeprefix("openai/")
+    if key not in MODEL_PRICING:
+        logger.warning(f"Unknown model '{model}' for pricing, cost_usd will be 0")
+        return 0.0
+    inp_price, cached_price, out_price = MODEL_PRICING[key]
+    return (uncached * inp_price + cached * cached_price + output * out_price) / 1_000_000
+
 
 def _detect_isabelle_bin():
     for candidate in [
@@ -43,13 +64,15 @@ class AutoCorrode_Base(Evaluator):
                  iq_session_dir: str | None = None,
                  timeout_seconds: int = 3600,
                  display: str = ":99",
-                 threads: int | None = None):
+                 threads: int | None = None,
+                 model: str = "gpt-5.5"):
         self._worker_id = worker_id
         self._isabelle_bin = isabelle_bin or _detect_isabelle_bin()
         self._iq_session_dir = iq_session_dir or _detect_iq_session_dir()
         self._timeout_seconds = timeout_seconds
         self._display = display
         self._threads = threads
+        self._model = model
         self._tmpdir: str | None = None
 
     async def __aenter__(self):
@@ -159,11 +182,15 @@ class AutoCorrode_Base(Evaluator):
                 response_text = rj.get("response", rj.get("error", ""))
                 input_tokens = rj.get("prompt_tokens", 0)
                 cached_tokens = rj.get("cached_tokens", 0)
+                uncached_tokens = input_tokens - cached_tokens
+                output_tokens = rj.get("completion_tokens", 0)
+                cost_usd = compute_cost_usd(self._model, uncached_tokens, cached_tokens, output_tokens)
                 cost = AgentCostData(
                     input_tokens=input_tokens,
-                    cache_creation_tokens=input_tokens - cached_tokens,
+                    cache_creation_tokens=uncached_tokens,
                     cache_read_tokens=cached_tokens,
-                    output_tokens=rj.get("completion_tokens", 0),
+                    output_tokens=output_tokens,
+                    cost_usd=cost_usd,
                     api_requests=rj.get("api_requests", -1),
                     tool_calls=rj.get("tool_calls", -1),
                     elapsed=rj.get("elapsed_ms", elapsed_ms),
@@ -171,6 +198,11 @@ class AutoCorrode_Base(Evaluator):
             except Exception as e:
                 logger.error(f"Worker {self._worker_id}: failed to parse result JSON: {e}")
                 agent_status = "result_parse_error"
+
+        if agent_status == "error" and os.path.isfile(log_path):
+            with open(log_path, "r", encoding="utf-8") as f:
+                log_tail = f.read()[-2000:]
+            logger.error(f"Worker {self._worker_id}: Isabelle log tail for {index}:\n{log_tail}")
 
         def _make_data():
             return {"costs": [cost], "response": response_text,
