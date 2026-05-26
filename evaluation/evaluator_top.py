@@ -58,8 +58,6 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
         help="Path to iq session directory (auto-detected if omitted)")
     parser.add_argument("--threads", type=int, default=None,
         help="Number of Isabelle threads per worker (default: Isabelle default)")
-    parser.add_argument("--model", type=str, default="gpt-5.5",
-        help="LLM model name for cost calculation (default: gpt-5.5)")
     parser.add_argument("-c", "--cases", action="append", nargs="+",
         help="One or more cases to evaluate")
     parser.add_argument("-f", "--case-file",
@@ -107,7 +105,6 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
                 timeout_seconds=args.timeout_seconds,
                 display=args.display,
                 threads=args.threads,
-                model=args.model,
             ),
             retry_failure=args.retry_failure,
             force_retry=force_retry_set,

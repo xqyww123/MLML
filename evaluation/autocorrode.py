@@ -64,15 +64,13 @@ class AutoCorrode_Base(Evaluator):
                  iq_session_dir: str | None = None,
                  timeout_seconds: int = 3600,
                  display: str = ":99",
-                 threads: int | None = None,
-                 model: str = "gpt-5.5"):
+                 threads: int | None = None):
         self._worker_id = worker_id
         self._isabelle_bin = isabelle_bin or _detect_isabelle_bin()
         self._iq_session_dir = iq_session_dir or _detect_iq_session_dir()
         self._timeout_seconds = timeout_seconds
         self._display = display
         self._threads = threads
-        self._model = model
         self._tmpdir: str | None = None
 
     async def __aenter__(self):
@@ -184,7 +182,8 @@ class AutoCorrode_Base(Evaluator):
                 cached_tokens = rj.get("cached_tokens", 0)
                 uncached_tokens = input_tokens - cached_tokens
                 output_tokens = rj.get("completion_tokens", 0)
-                cost_usd = compute_cost_usd(self._model, uncached_tokens, cached_tokens, output_tokens)
+                model = rj.get("model", "unknown")
+                cost_usd = compute_cost_usd(model, uncached_tokens, cached_tokens, output_tokens)
                 cost = AgentCostData(
                     input_tokens=input_tokens,
                     cache_creation_tokens=uncached_tokens,
