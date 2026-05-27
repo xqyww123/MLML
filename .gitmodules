@@ -36,3 +36,7 @@
 [submodule "contrib/AutoCorrode"]
 	path = contrib/AutoCorrode
 	url = https://github.com/xqyww123/AutoCorrode
+[submodule "contrib/my_better_isabelle_prover"]
+	path = contrib/my_better_isabelle_prover
+	url = git@github.com:xqyww123/my_better_isabelle_prover.git
+	branch = main

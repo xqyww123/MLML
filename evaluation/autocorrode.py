@@ -7,6 +7,7 @@ import shutil
 import tempfile
 import time
 
+from IsaREPL import Client as REPLClient, REPLFail
 from data.isabelle import CaseNotAvailable, MiniF2F_Data, PutnamBench_Data
 from .evaluator import Evaluator, Result, Status, AgentCostData, Isar_Base
 
@@ -65,7 +66,8 @@ class AutoCorrode_Base(Evaluator):
                  timeout_seconds: int = 3600,
                  display: str = ":99",
                  threads: int | None = None,
-                 log_dir: str | None = None):
+                 log_dir: str | None = None,
+                 repl_addr: str = "127.0.0.1:6666"):
         self._worker_id = worker_id
         self._isabelle_bin = isabelle_bin or _detect_isabelle_bin()
         self._iq_session_dir = iq_session_dir or _detect_iq_session_dir()
@@ -74,14 +76,26 @@ class AutoCorrode_Base(Evaluator):
         self._threads = threads
         self._log_dir = log_dir
         self._tmpdir: str | None = None
+        self._repl_addr = repl_addr
+        self._repl: REPLClient | None = None
 
     async def __aenter__(self):
         if not self._log_dir:
             self._tmpdir = tempfile.mkdtemp(prefix=f"autocorrode_{self._worker_id}_")
             logger.info(f"Worker {self._worker_id}: temp dir {self._tmpdir}")
+        self._repl = REPLClient(self._repl_addr, 'HOL', timeout=600)
+        await self._repl.__aenter__()
+        await self._repl.record_state("init")
+        logger.info(f"Worker {self._worker_id}: REPL verification client connected to {self._repl_addr}")
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
+        if self._repl:
+            try:
+                self._repl.close()
+            except Exception:
+                pass
+            self._repl = None
         if self._tmpdir and os.path.isdir(self._tmpdir):
             shutil.rmtree(self._tmpdir, ignore_errors=True)
             self._tmpdir = None
@@ -98,11 +112,40 @@ class AutoCorrode_Base(Evaluator):
     def _inject_import(self) -> str | None:
         return None
 
+    def _import_dir(self) -> str | None:
+        return None
+
     def all_cases(self):
         raise NotImplementedError
 
     async def start_case(self, index):
         pass
+
+    async def _verify_via_repl(self, final_thy: str) -> tuple[bool, str]:
+        assert self._repl is not None
+        try:
+            await self._repl.rollback("init")
+            response = await self._repl.eval(
+                final_thy,
+                timeout=120000,
+                cmd_timeout=30000,
+                import_dir=self._import_dir(),
+            )
+            if response is None:
+                return False, "REPL returned no output"
+            all_errors = []
+            for cmd_out in response:
+                if cmd_out.errors:
+                    all_errors.extend(cmd_out.errors)
+            if all_errors:
+                return False, "; ".join(str(e) for e in all_errors[:5])
+            return True, ""
+        except REPLFail as e:
+            return False, str(e)
+        except TimeoutError:
+            return False, "REPL verification timed out"
+        except Exception as e:
+            return False, f"REPL verification error: {e}"
 
     async def validate(self, index, proofs):
         try:
@@ -231,11 +274,19 @@ class AutoCorrode_Base(Evaluator):
             sorry_present = Isar_Base.contains_sorry(final_thy, original_code=content)
         else:
             sorry_present = True
+            final_thy = None
 
         status = Status.SUCCESS if not sorry_present else Status.FAIL
         errors = []
         if sorry_present:
             errors.append(f"Agent status: {agent_status}, sorry still present")
+        elif final_thy:
+            verified, verify_error = await self._verify_via_repl(final_thy)
+            if not verified:
+                status = Status.FAIL
+                errors.append(f"REPL verification failed: {verify_error}")
+            else:
+                logger.info(f"Worker {self._worker_id}: REPL verification passed for {index}")
 
         return Result(status, errors, [elapsed_s], data=_make_data())
 
@@ -259,6 +310,9 @@ class AutoCorrode_MiniF2F_Mixin:
 
     def _inject_import(self) -> str | None:
         return "MiniF2F_Prover.MiniF2F_Prover"
+
+    def _import_dir(self) -> str | None:
+        return MINIF2F_PROVER_DIR
 
     def all_cases(self):
         return self._data.all_cases()

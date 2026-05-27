@@ -70,6 +70,10 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
         help="Cases to force re-evaluate")
     parser.add_argument("--force-retry-file",
         help="File of cases to force re-evaluate (one per line)")
+    parser.add_argument("--repl-addr", type=str, default="127.0.0.1:6666",
+        help="REPL server address (host:port) for independent proof verification.\n"
+             "Each proof that passes the sorry check is re-verified via Isa-REPL\n"
+             "to confirm it has no errors. (default: 127.0.0.1:6666)")
 
     args = parser.parse_args(sys.argv[2:])
 
@@ -97,6 +101,11 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
     worker_ids = [f"w{i}" for i in range(args.workers)]
     result_db = args.result
 
+    log_dir = args.log_dir
+    if log_dir is None and result_db is not None:
+        log_dir = os.path.splitext(result_db)[0] + "-logs"
+        logger.info(f"Auto log dir: {log_dir}")
+
     async def _run():
         await evaluate_and_save(
             result_db, cases,
@@ -107,7 +116,8 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
                 timeout_seconds=args.timeout_seconds,
                 display=args.display,
                 threads=args.threads,
-                log_dir=args.log_dir,
+                log_dir=log_dir,
+                repl_addr=args.repl_addr,
             ),
             retry_failure=args.retry_failure,
             force_retry=force_retry_set,
