@@ -64,18 +64,21 @@ class AutoCorrode_Base(Evaluator):
                  iq_session_dir: str | None = None,
                  timeout_seconds: int = 3600,
                  display: str = ":99",
-                 threads: int | None = None):
+                 threads: int | None = None,
+                 log_dir: str | None = None):
         self._worker_id = worker_id
         self._isabelle_bin = isabelle_bin or _detect_isabelle_bin()
         self._iq_session_dir = iq_session_dir or _detect_iq_session_dir()
         self._timeout_seconds = timeout_seconds
         self._display = display
         self._threads = threads
+        self._log_dir = log_dir
         self._tmpdir: str | None = None
 
     async def __aenter__(self):
-        self._tmpdir = tempfile.mkdtemp(prefix=f"autocorrode_{self._worker_id}_")
-        logger.info(f"Worker {self._worker_id}: temp dir {self._tmpdir}")
+        if not self._log_dir:
+            self._tmpdir = tempfile.mkdtemp(prefix=f"autocorrode_{self._worker_id}_")
+            logger.info(f"Worker {self._worker_id}: temp dir {self._tmpdir}")
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
@@ -124,20 +127,27 @@ class AutoCorrode_Base(Evaluator):
             return Result(Status.FAIL, ["Cannot parse theorem name from content"], [])
         thm_name = thm_match.group(1)
 
-        assert self._tmpdir is not None, "validate() called outside async context manager"
-        thy_path = os.path.join(self._tmpdir, f"{theory_name}.thy")
+        if self._log_dir:
+            safe_index = str(index).replace("/", "_").replace("\\", "_")
+            work_dir = os.path.join(self._log_dir, safe_index)
+            os.makedirs(work_dir, exist_ok=True)
+        else:
+            assert self._tmpdir is not None, "validate() called outside async context manager"
+            work_dir = self._tmpdir
+
+        thy_path = os.path.join(work_dir, f"{theory_name}.thy")
         with open(thy_path, "w", encoding="utf-8") as f:
             f.write(content)
             f.write("\n  sorry\nend\n")
 
-        result_file = os.path.join(self._tmpdir, f"result_{theory_name}.json")
+        result_file = os.path.join(work_dir, f"result_{theory_name}.json")
 
         mash_dir = f"/run/screen/repl_tmps/autocorrode_{self._worker_id}"
         os.makedirs(mash_dir, exist_ok=True)
 
         env = os.environ.copy()
         env["DISPLAY"] = self._display
-        env["IQ_MCP_ALLOWED_ROOTS"] = self._tmpdir
+        env["IQ_MCP_ALLOWED_ROOTS"] = work_dir
         env["MASH_STATE_PATH"] = os.path.join(mash_dir, "mash_state")
         env["ASSISTANT_BATCH_PROMPT"] = f"Complete the proof of theorem {thm_name}"
         env["ASSISTANT_BATCH_RESULT_FILE"] = result_file
@@ -149,23 +159,23 @@ class AutoCorrode_Base(Evaluator):
         if self._threads is not None:
             cmd.extend(["-o", f"threads={self._threads}"])
         cmd.extend(["-l", self._session_name(), thy_path])
-        log_path = os.path.join(self._tmpdir, f"isabelle_{theory_name}.log")
+        log_path = os.path.join(work_dir, f"isabelle_{theory_name}.log")
         log_file = open(log_path, "w")
-        proc = await asyncio.create_subprocess_exec(
-            *cmd,
-            env=env,
-            stdout=log_file,
-            stderr=asyncio.subprocess.STDOUT,
-        )
-
         timed_out = False
         try:
-            await asyncio.wait_for(proc.wait(), timeout=self._timeout_seconds)
-        except asyncio.TimeoutError:
-            timed_out = True
-            logger.warning(f"Worker {self._worker_id}: killing timed-out process for {index}")
-            proc.kill()
-            await proc.wait()
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                env=env,
+                stdout=log_file,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=self._timeout_seconds)
+            except asyncio.TimeoutError:
+                timed_out = True
+                logger.warning(f"Worker {self._worker_id}: killing timed-out process for {index}")
+                proc.kill()
+                await proc.wait()
         finally:
             log_file.close()
 

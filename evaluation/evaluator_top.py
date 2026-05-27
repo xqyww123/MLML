@@ -62,6 +62,8 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
         help="One or more cases to evaluate")
     parser.add_argument("-f", "--case-file",
         help="File of cases (one per line)")
+    parser.add_argument("--log-dir", type=str, default=None,
+        help="Directory to persist per-case Isabelle logs")
     parser.add_argument("--retry-failure", action="store_true", default=False,
         help="Re-evaluate previously failed cases")
     parser.add_argument("--force-retry", action="append", nargs="+",
@@ -105,6 +107,7 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
                 timeout_seconds=args.timeout_seconds,
                 display=args.display,
                 threads=args.threads,
+                log_dir=args.log_dir,
             ),
             retry_failure=args.retry_failure,
             force_retry=force_retry_set,
