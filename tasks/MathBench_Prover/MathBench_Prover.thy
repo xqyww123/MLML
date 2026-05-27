@@ -64,6 +64,17 @@ hide_const (open)
   Reflective_Field.isin Reflective_Field.split_aux Reflective_Field.fnorm
   MPoly_Type.degree MPoly_Type.monom MPoly_Type.coeff MPoly_Type.smult MPoly_Type.coeffs
   up_ring.monom up_ring.coeff module.smult Unique_Factorization.coprime
+  Henstock_Kurzweil_Integration.content
+  (* Record selectors: align resolution with PutnamBench (avoid AFP-only winners) *)
+  UnivPoly.up_ring.extend UnivPoly.up_ring.fields UnivPoly.up_ring.make
+  UnivPoly.up_ring.more UnivPoly.up_ring.more_update UnivPoly.up_ring.truncate
+  Module.module.extend Module.module.fields Module.module.make
+  Module.module.more Module.module.more_update Module.module.truncate
+  Ring.ring.extend Ring.ring.fields Ring.ring.make
+  Ring.ring.more Ring.ring.more_update Ring.ring.truncate
+  Group.monoid.extend Group.monoid.fields Group.monoid.make
+  Group.monoid.more Group.monoid.more_update Group.monoid.truncate
+  Group.monoid.mult
   Square_Matrix.det Square_Matrix.trace Square_Matrix.transpose Square_Matrix.row
   Square_Matrix.adjugate Square_Matrix.diag Square_Matrix.map_sq_matrix
   Sturm_Tarski.sign Sturm_Tarski.cross Sturm_Tarski.changes
@@ -79,7 +90,8 @@ hide_const (open)
      PutnamBench USES: group, carrier, field, subgroup, generate, comm_group,
      abelian_group, one (\<one>), zero (\<zero>), vangle — keep these OPEN. *)
   Coset.order
-  Group.group_axioms Group.group_hom Group.group_isomorphisms
+  Groups.group_axioms
+  Group.group_hom Group.group_isomorphisms
   Group.DirProd Group.submonoid
   Group.hom Group.is_iso Group.mon Group.epi
   Group.Units Group.units_of Group.pow
@@ -433,21 +445,53 @@ val _ = List.app (fn (long_name, _) =>
   end) constants;
 val _ = TextIO.closeOut out
 ›
+*)
 
+(*
 ML ‹
 val ctxt = @{context};
 val thy = Proof_Context.theory_of ctxt;
 val {const_space, constants, ...} = Consts.dest (Sign.consts_of thy);
-val out = TextIO.openOut "/tmp/all_constants_with_short.tsv";
-val _ = List.app (fn (long_name, _) =>
-  let
-    val base = Long_Name.base_name long_name
-    val extern = Name_Space.extern ctxt const_space long_name
+
+(* Enumerate ALL constants accessible by a given base name.
+   Iteratively intern the base name, record the first match, hide it
+   from base-name access (fully=false), and repeat until intern
+   returns a hidden ("??."-prefixed) result. *)
+fun all_accessible space base =
+  let val result = Name_Space.intern space base
   in
-    TextIO.output (out, base ^ "\t" ^ extern ^ "\t" ^ long_name ^ "\n")
-  end) constants;
-val _ = TextIO.closeOut out
+    if Long_Name.is_hidden result then []
+    else result :: all_accessible (Name_Space.hide false result space) base
+  end;
+
+(* Collect all base names that have >1 constant *)
+val by_base = fold (fn (long_name, _) =>
+    Symtab.map_default (Long_Name.base_name long_name, []) (cons long_name)
+  ) constants Symtab.empty;
+
+(* For each such base name, find which constants are actually accessible
+   (not hidden by hide_const). Report only genuine conflicts (>1 accessible). *)
+val conflicts = Symtab.dest by_base
+  |> map_filter (fn (base, _) =>
+    let val accessible = all_accessible const_space base
+    in if length accessible > 1 then SOME (base, accessible) else NONE end)
+  |> sort (string_ord o apply2 fst);
+
+val out = TextIO.openOut "/tmp/conflicting_exposed_constants.tsv";
+val _ = List.app (fn (base, accessible) =>
+  let val current = Name_Space.intern const_space base
+  in List.app (fn long_name =>
+    let val mark = if long_name = current then "*" else ""
+    in TextIO.output (out, base ^ "\t" ^ long_name ^ "\t" ^ mark ^ "\n") end
+  ) accessible end
+) conflicts;
+val _ = TextIO.closeOut out;
+
+val _ = writeln (string_of_int (length conflicts) ^ " conflicting base names, " ^
+  string_of_int (List.foldl (fn ((_, acc), n) => n + length acc) 0 conflicts) ^
+  " exposed constants total")
 ›
 *)
+
 
 end
