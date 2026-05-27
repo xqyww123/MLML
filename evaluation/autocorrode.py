@@ -132,9 +132,13 @@ class AutoCorrode_Base(Evaluator):
 
         result_file = os.path.join(self._tmpdir, f"result_{theory_name}.json")
 
+        mash_dir = f"/run/screen/repl_tmps/autocorrode_{self._worker_id}"
+        os.makedirs(mash_dir, exist_ok=True)
+
         env = os.environ.copy()
         env["DISPLAY"] = self._display
         env["IQ_MCP_ALLOWED_ROOTS"] = self._tmpdir
+        env["MASH_STATE_PATH"] = os.path.join(mash_dir, "mash_state")
         env["ASSISTANT_BATCH_PROMPT"] = f"Complete the proof of theorem {thm_name}"
         env["ASSISTANT_BATCH_RESULT_FILE"] = result_file
 
