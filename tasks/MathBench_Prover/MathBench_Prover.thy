@@ -492,6 +492,19 @@ val _ = writeln (string_of_int (length conflicts) ^ " conflicting base names, " 
   " exposed constants total")
 ›
 *)
-
-
+(*
+ML \<open>
+val syn = Proof_Context.syntax_of @{context};
+val buf = Unsynchronized.ref ([] : string list);
+val old_writeln = ! Private_Output.writeln_fn;
+val _ = Private_Output.writeln_fn := (fn ss => buf := implode ss :: ! buf);
+val result = Exn.capture Syntax.print_syntax syn;
+val _ = Private_Output.writeln_fn := old_writeln;
+val _ = Exn.release result;
+val content = String.concatWith "\n" (rev (! buf));
+val out = TextIO.openOut "/tmp/mathbench_syntax.txt";
+val _ = TextIO.output (out, content);
+val _ = TextIO.closeOut out
+\<close>
+*)
 end

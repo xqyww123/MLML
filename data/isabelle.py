@@ -776,6 +776,53 @@ class MiniF2F_Data(Data):
             raise ValueError("maxsize must be None. MiniF2F does not support maxsize")
         raise NotImplementedError("TODO")
 
+NTPVC_BASE = f"{MLML_BASE}/data/NTP4VC"
+_NTPVC = None
+
+def get_NTPVC():
+    global _NTPVC
+    if _NTPVC is None:
+        lst = f"{NTPVC_BASE}/test_set.isabelle.lst"
+        _NTPVC = {}
+        with open(lst, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    _NTPVC[line] = os.path.join(NTPVC_BASE, line)
+    return _NTPVC
+
+class NTPVC_Data(Data):
+    def index_type(self) -> type:
+        return str
+
+    def file_of(self, index: str) -> str:
+        cases = get_NTPVC()
+        if index not in cases:
+            raise KeyError(index)
+        return cases[index]
+
+    def all_cases(self):
+        return get_NTPVC().keys()
+
+    def all_categories(self):
+        return ['frama_c', 'pearl']
+
+    def cases_of(self, category: str):
+        match category:
+            case 'frama_c':
+                return [k for k in get_NTPVC() if '/frama_c/' in k]
+            case 'pearl':
+                return [k for k in get_NTPVC() if '/pearl/' in k]
+            case _:
+                raise ValueError(f"Invalid category: {category}")
+
+    def goal_of(self, index) -> str:
+        raise NotImplementedError("TODO")
+
+    def prelude_of(self, index, dep_depth=None, use_proofs=False,
+                   use_comments=True, maxsize=None, camlize=False):
+        raise NotImplementedError("TODO")
+
 class PutnamBench_Data(Data):
     def index_type(self) -> type:
         return str

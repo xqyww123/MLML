@@ -7,7 +7,7 @@ import csv
 import logging
 from typing import TypedDict
 from enum import Enum
-from data.isabelle import CaseNotAvailable, PISA_Data, get_MINIF2F_VALIDATION, get_MINIF2F_TEST, MiniF2F_Data, AFP_Data, PutnamBench_Data
+from data.isabelle import CaseNotAvailable, PISA_Data, get_MINIF2F_VALIDATION, get_MINIF2F_TEST, MiniF2F_Data, AFP_Data, PutnamBench_Data, NTPVC_Data
 from sqlitedict import SqliteDict
 import asyncio
 import time
@@ -642,8 +642,6 @@ class REPL_FileLine_Mixin:
             case (file, line):
                 column = 0
             case (file,):
-                if file.startswith("data"):
-                    file = "/home/xero/Current/NTP4Verif_fixing/iclr-NTP4Verif/" + file
                 line = type(self).locate_proof_goal(file)
                 if line is None:
                     raise ValueError(f"Invalid index: {index}")
@@ -765,6 +763,40 @@ class Isar_Source(SourceText_Mixin, Isar_Base):
     pass
 
 class MinilangAgent_Source(SourceText_Mixin, MinilangAgent_Base):
+    pass
+
+class NTPVC_Mixin:
+    if TYPE_CHECKING:
+        async def move_to(self, file: str, line: int, column: int = 0) -> None: ...
+        @classmethod
+        def locate_proof_goal(cls, file: str) -> int | None: ...
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._data = NTPVC_Data()
+
+    async def start_case(self, index: str):
+        try:
+            file = self._data.file_of(index)
+        except KeyError:
+            logger.error(f"Case Not Available: {index} is not in the dataset")
+            raise CaseNotAvailable(index, f"NTPVC: case {index} not available")
+        line = type(self).locate_proof_goal(file)
+        if line is None:
+            raise CaseNotAvailable(index, f"NTPVC: no unique sorry in {index}")
+        try:
+            await self.move_to(file, line, 0)
+        except TimeoutError as E:
+            logger.error(f"Case Not Available: TimeoutError @ {index}: {E}")
+            raise CaseNotAvailable(index, f"NTPVC: case {index} not available")
+        except REPLFail as E:
+            logger.error(f"Case Not Available: REPLFail error @ {index}: {E}")
+            raise CaseNotAvailable(index, f"NTPVC: case {index} not available")
+
+class Isar_NTPVC(NTPVC_Mixin, Isar_Base):
+    pass
+
+class MinilangAgent_NTPVC(NTPVC_Mixin, MinilangAgent_Base):
     pass
 
 #if __name__ == "__main__":

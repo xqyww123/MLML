@@ -345,6 +345,15 @@ if __name__ == "__main__":
                     "    evaluation/evaluator_top.py agent-putnam Claude.opus-4-6 --result result.db --case-category test\n"
                 )
 
+            case 'agent-ntp4vc':
+                minilang_agent_handler(MinilangAgent_NTPVC, "NTP4VC",
+                    lambda category: NTPVC_Data().cases_of(category),
+                    lambda line: line,
+                    "file of lines of cases,",
+                    "Examples:\n"
+                    "    evaluation/evaluator_top.py agent-ntp4vc Claude.opus-4-6 --result result.db --case-category frama_c\n"
+                )
+
             case 'autocorrode-miniF2F':
                 from evaluation.autocorrode import AutoCorrode_MiniF2F
                 autocorrode_handler(AutoCorrode_MiniF2F, "MiniF2F",
