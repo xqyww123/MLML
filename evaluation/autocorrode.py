@@ -78,6 +78,8 @@ class AutoCorrode_Base(Evaluator):
         self._tmpdir: str | None = None
         self._repl_addr = repl_addr
         self._repl: REPLClient | None = None
+        self._baseline_props: list | None = None
+        self._baseline_axioms: list | None = None
 
     async def __aenter__(self):
         if not self._log_dir:
@@ -121,9 +123,52 @@ class AutoCorrode_Base(Evaluator):
     async def start_case(self, index):
         pass
 
+    def _oracle_whitelist(self) -> list[str]:
+        return []
+
+    async def _snapshot_goals(self, original_source: str) -> tuple[bool, str]:
+        assert self._repl is not None
+        self._baseline_props = None
+        self._baseline_axioms = None
+        try:
+            await self._repl.set_register_thy(False)
+            await self._repl.rollback("init")
+            response = await self._repl.eval(
+                original_source,
+                timeout=120000,
+                cmd_timeout=30000,
+                import_dir=self._import_dir(),
+            )
+            if response is not None:
+                for cmd_out in response:
+                    if cmd_out.errors:
+                        await self._repl.set_register_thy(True)
+                        return False, "Snapshot eval errors: " + "; ".join(
+                            str(e) for e in cmd_out.errors[:5])
+            await self._repl.run_app("verify_proof")
+            await self._repl._write("snapshot")
+            result = REPLClient._parse_control_(await self._repl._feed_and_unpack())
+            self._baseline_props = result[0]
+            self._baseline_axioms = result[1]
+            await self._repl.set_register_thy(True)
+            return True, ""
+        except REPLFail as e:
+            try:
+                await self._repl.set_register_thy(True)
+            except Exception:
+                pass
+            return False, f"Snapshot failed: {e}"
+        except Exception as e:
+            try:
+                await self._repl.set_register_thy(True)
+            except Exception:
+                pass
+            return False, f"Snapshot error: {e}"
+
     async def _verify_via_repl(self, final_thy: str) -> tuple[bool, str]:
         assert self._repl is not None
         try:
+            await self._repl.set_register_thy(False)
             await self._repl.rollback("init")
             response = await self._repl.eval(
                 final_thy,
@@ -139,6 +184,28 @@ class AutoCorrode_Base(Evaluator):
                     all_errors.extend(cmd_out.errors)
             if all_errors:
                 return False, "; ".join(str(e) for e in all_errors[:5])
+            if self._baseline_props is None:
+                return False, "Baseline snapshot unavailable, cannot verify"
+            await self._repl.run_app("verify_proof")
+            await self._repl._write("verify")
+            await self._repl._write((self._baseline_props, self._baseline_axioms,
+                                     self._oracle_whitelist()))
+            result = REPLClient._parse_control_(await self._repl._feed_and_unpack())
+            goal_preserved, goal_results, bad_oracles, oracles_ok, new_axioms, axioms_ok = result
+            errors = []
+            if not goal_preserved:
+                mutated = [name for name, ok in goal_results if not ok]
+                errors.append(f"Goal mutation detected in: {', '.join(mutated)}")
+            if not oracles_ok:
+                oracle_names = [o.decode("utf-8") if isinstance(o, bytes) else str(o)
+                                for o in bad_oracles]
+                errors.append(f"Untrusted oracles: {', '.join(oracle_names)}")
+            if not axioms_ok:
+                axiom_names = [a.decode("utf-8") if isinstance(a, bytes) else str(a)
+                               for a in new_axioms]
+                errors.append(f"New axioms injected: {', '.join(axiom_names)}")
+            if errors:
+                return False, "; ".join(errors)
             return True, ""
         except REPLFail as e:
             return False, str(e)
@@ -179,9 +246,13 @@ class AutoCorrode_Base(Evaluator):
             work_dir = self._tmpdir
 
         thy_path = os.path.join(work_dir, f"{theory_name}.thy")
+        original_with_sorry = content + "\n  sorry\nend\n"
         with open(thy_path, "w", encoding="utf-8") as f:
-            f.write(content)
-            f.write("\n  sorry\nend\n")
+            f.write(original_with_sorry)
+
+        snap_ok, snap_err = await self._snapshot_goals(original_with_sorry)
+        if not snap_ok:
+            logger.warning(f"Worker {self._worker_id}: snapshot failed for {index}: {snap_err}")
 
         result_file = os.path.join(work_dir, f"result_{theory_name}.json")
 
@@ -243,7 +314,7 @@ class AutoCorrode_Base(Evaluator):
                 cost_usd = compute_cost_usd(model, uncached_tokens, cached_tokens, output_tokens)
                 cost = AgentCostData(
                     input_tokens=input_tokens,
-                    cache_creation_tokens=uncached_tokens,
+                    cache_creation_tokens=0,
                     cache_read_tokens=cached_tokens,
                     output_tokens=output_tokens,
                     cost_usd=cost_usd,
