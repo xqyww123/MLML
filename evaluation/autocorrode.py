@@ -26,6 +26,10 @@ MODEL_PRICING: dict[str, tuple[float, float, float]] = {
     "o4-mini":       (1.1,  0.275, 4.4),
     "claude-sonnet-4-5-20250514": (3.0, 0.3, 15.0),
     "claude-opus-4-5-20250414":   (15.0, 1.5, 75.0),
+    "claude-opus-4-6":            (15.0, 1.5, 75.0),
+    "claude-opus-4-7":            (15.0, 1.5, 75.0),
+    "claude-opus-4-8":            (15.0, 1.5, 75.0),
+    "claude-sonnet-4-6":          (3.0,  0.3, 15.0),
 }
 
 def compute_cost_usd(model: str, uncached: int, cached: int, output: int) -> float:
@@ -87,6 +91,7 @@ class AutoCorrode_Base(Evaluator):
             logger.info(f"Worker {self._worker_id}: temp dir {self._tmpdir}")
         self._repl = REPLClient(self._repl_addr, 'HOL', timeout=600)
         await self._repl.__aenter__()
+        await self._repl.load_theory(["MLML_Verify.MLML_Verify"])
         await self._repl.record_state("init")
         logger.info(f"Worker {self._worker_id}: REPL verification client connected to {self._repl_addr}")
         return self
@@ -115,6 +120,12 @@ class AutoCorrode_Base(Evaluator):
         return None
 
     def _import_dir(self) -> str | None:
+        return None
+
+    def _include_sessions(self) -> list[str]:
+        return []
+
+    def _jedit_extra_imports(self) -> str | None:
         return None
 
     def all_cases(self):
@@ -247,8 +258,19 @@ class AutoCorrode_Base(Evaluator):
 
         thy_path = os.path.join(work_dir, f"{theory_name}.thy")
         original_with_sorry = content + "\n  sorry\nend\n"
+
+        jedit_extra = self._jedit_extra_imports()
+        if jedit_extra:
+            jedit_content = re.sub(
+                r'(imports)\s+',
+                rf'\1\n  {jedit_extra}\n  ',
+                content, count=1)
+            jedit_with_sorry = jedit_content + "\n  sorry\nend\n"
+        else:
+            jedit_with_sorry = original_with_sorry
+
         with open(thy_path, "w", encoding="utf-8") as f:
-            f.write(original_with_sorry)
+            f.write(jedit_with_sorry)
 
         snap_ok, snap_err = await self._snapshot_goals(original_with_sorry)
         if not snap_ok:
@@ -256,12 +278,19 @@ class AutoCorrode_Base(Evaluator):
 
         result_file = os.path.join(work_dir, f"result_{theory_name}.json")
 
-        mash_dir = f"/run/screen/repl_tmps/autocorrode_{self._worker_id}"
+        mash_dir = os.path.join(PROJECT_ROOT, "cache", "repl_tmps", f"autocorrode_{self._worker_id}")
         os.makedirs(mash_dir, exist_ok=True)
 
         env = os.environ.copy()
         env["DISPLAY"] = self._display
         env["IQ_MCP_ALLOWED_ROOTS"] = work_dir
+        # Give each worker a distinct I/Q MCP base port so concurrent jEdit
+        # instances don't all contend for the default 8765. Spacing of 100
+        # matches the plugin's MAX_PORT_SCAN so per-worker scan ranges (each
+        # base..base+100) don't overlap. The plugin still scans upward from
+        # this base on BindException as a safety net.
+        worker_idx = int((re.findall(r"\d+", self._worker_id) or ["0"])[0])
+        env["IQ_MCP_PORT"] = str(8765 + worker_idx * 100)
         env["MASH_STATE_PATH"] = os.path.join(mash_dir, "mash_state")
         env["ASSISTANT_BATCH_PROMPT"] = f"Complete the proof of theorem {thm_name}"
         env["ASSISTANT_BATCH_RESULT_FILE"] = result_file
@@ -270,6 +299,8 @@ class AutoCorrode_Base(Evaluator):
         cmd = [self._isabelle_bin, "jedit"]
         for d in self._session_dirs():
             cmd.extend(["-d", d])
+        for s in self._include_sessions():
+            cmd.extend(["-i", s])
         if self._threads is not None:
             cmd.extend(["-o", f"threads={self._threads}"])
         cmd.extend(["-l", self._session_name(), thy_path])
@@ -306,14 +337,16 @@ class AutoCorrode_Base(Evaluator):
                     rj = json.load(f)
                 agent_status = rj.get("status", "unknown")
                 response_text = rj.get("response", rj.get("error", ""))
-                input_tokens = rj.get("prompt_tokens", 0)
+                uncached_tokens = rj.get("uncached_prompt_tokens", 0)
                 cached_tokens = rj.get("cached_tokens", 0)
-                uncached_tokens = input_tokens - cached_tokens
                 output_tokens = rj.get("completion_tokens", 0)
                 model = rj.get("model", "unknown")
                 cost_usd = compute_cost_usd(model, uncached_tokens, cached_tokens, output_tokens)
+                # Canonical DB format: input_tokens = uncached only; cache_read/cache_creation
+                # are the separate, mutually-exclusive cache portions. OpenAI has no cache
+                # creation concept, so cache_creation_tokens is 0.
                 cost = AgentCostData(
-                    input_tokens=input_tokens,
+                    input_tokens=uncached_tokens,
                     cache_creation_tokens=0,
                     cache_read_tokens=cached_tokens,
                     output_tokens=output_tokens,
@@ -342,17 +375,25 @@ class AutoCorrode_Base(Evaluator):
         if os.path.isfile(thy_path):
             with open(thy_path, "r", encoding="utf-8") as f:
                 final_thy = f.read()
+            jedit_extra = self._jedit_extra_imports()
+            if jedit_extra:
+                final_thy_for_repl = re.sub(
+                    rf'^\s*{re.escape(jedit_extra)}\s*\n',
+                    '', final_thy, count=1, flags=re.MULTILINE)
+            else:
+                final_thy_for_repl = final_thy
             sorry_present = Isar_Base.contains_sorry(final_thy, original_code=content)
         else:
             sorry_present = True
             final_thy = None
+            final_thy_for_repl = None
 
         status = Status.SUCCESS if not sorry_present else Status.FAIL
         errors = []
         if sorry_present:
             errors.append(f"Agent status: {agent_status}, sorry still present")
-        elif final_thy:
-            verified, verify_error = await self._verify_via_repl(final_thy)
+        elif final_thy_for_repl:
+            verified, verify_error = await self._verify_via_repl(final_thy_for_repl)
             if not verified:
                 status = Status.FAIL
                 errors.append(f"REPL verification failed: {verify_error}")
@@ -384,6 +425,12 @@ class AutoCorrode_MiniF2F_Mixin:
 
     def _import_dir(self) -> str | None:
         return MINIF2F_PROVER_DIR
+
+    def _include_sessions(self) -> list[str]:
+        return ["iq"]
+
+    def _jedit_extra_imports(self) -> str | None:
+        return "iq.Isar_Explore"
 
     def all_cases(self):
         return self._data.all_cases()
