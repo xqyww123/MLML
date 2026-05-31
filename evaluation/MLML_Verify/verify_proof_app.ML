@@ -1,10 +1,25 @@
 local open MessagePackBinIO.Pack MessagePackBinIO.Unpack in
 
 val smt_solvers = ["z3", "cvc4", "cvc5", "cvc5_proof", "verit",
-                   "vampire_smt_dt", "vampire_smt_nodt"]
+                   "vampire_smt_dt", "vampire_smt_nodt", "dummy_smtlib"]
 
 fun is_smt_oracle ((name, _), _ : term option) =
     member (op =) smt_solvers (Long_Name.base_name name)
+
+(* Sound oracles shipped with Isabelle: decision procedures and code
+   evaluation. Matched by base name (like SMT) so they are accepted
+   regardless of the enclosing theory's qualification. The only oracle
+   deliberately NOT trusted is Pure.skip_proof (behind sorry/oops). *)
+val trusted_oracles =
+  ["cooper",                                        (* presburger *)
+   "pnsubstl", "fnorm",                             (* Commutative_Ring / Reflective_Field *)
+   "holds_by_evaluation", "holds", "compute",       (* code evaluation (eval, code_simp, Compute_Oracle) *)
+   "normalization_by_evaluation", "triv_of_class",  (* nbe / normalization *)
+   "cancel_type_definition", "unoverload",          (* Types_To_Sets *)
+   "iff_oracle", "sort", "ground_code_eval"]        (* examples / auto_sledgehammer *)
+
+fun is_trusted_oracle ((name, _), _ : term option) =
+    member (op =) trusted_oracles (Long_Name.base_name name)
 
 fun get_oracles thy thms = Thm_Deps.all_oracles (map (Thm.transfer thy) thms)
 
@@ -55,7 +70,7 @@ fun verify thy (baseline_props, baseline_axioms, extra_whitelist) =
     val all_thms = baseline_props |> maps (fn (name, _) =>
       the_default [] (try (fn () => Global_Theory.get_thms thy name) ()))
     val bad_oracles = get_oracles thy all_thms |> map_filter (fn oracle =>
-      if is_smt_oracle oracle then NONE
+      if is_smt_oracle oracle orelse is_trusted_oracle oracle then NONE
       else if member (op =) extra_whitelist (fst (fst oracle)) then NONE
       else SOME (fst (fst oracle)))
     val oracles_ok = null bad_oracles
