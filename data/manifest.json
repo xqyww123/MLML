@@ -86,6 +86,12 @@
       "size": 1787550555,
       "description": "semantic and embedding database",
       "group": "optional"
+    },
+    {
+      "path": "contrib/Isabelle2025-2_and_afp-2026-05-13.tar.xz",
+      "size": 1574997798,
+      "description": "Isabelle 2025 and AFP 20260513",
+      "group": "tools"
     }
   ]
 }
