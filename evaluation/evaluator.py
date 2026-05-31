@@ -853,7 +853,7 @@ def report_evaluation(response_path : str, result_path : str):
                     err = result.error
                 csv_writer.writerow([key, result.status, len(result.errors), str(result.elapsed_time), err, responses[key]])
 
-async def evaluate_and_save(result_path : str | None, cases : list[Case], evaluator, retry_failure : bool = False, force_retry : frozenset = frozenset(), server_instances : list[str] | None = None): # -> Dict[Index, Result]
+async def evaluate_and_save(result_path : str | None, cases : list[Case], evaluator, retry_failure : bool = False, force_retry : frozenset = frozenset(), server_instances : list[str] | None = None, reverify_failures : bool = False): # -> Dict[Index, Result]
     # Setup shared variables with asyncio-safe access
     success = 0
     unavailable = 0
@@ -899,8 +899,24 @@ async def evaluate_and_save(result_path : str | None, cases : list[Case], evalua
                                 logger.info(f"Server {server_addr} evaluating {case.index}")
 
                                 # Check if result already exists in database
-                                if db is not None and case.index in db and case.index not in force_retry and ((s := db[case.index].status) == Status.SUCCESS or (s == Status.FAIL and not retry_failure)):
-                                    result = db[case.index]
+                                cached = db[case.index] if (db is not None and case.index in db) else None
+                                if reverify_failures and cached is not None and cached.status == Status.FAIL and hasattr(test, "revalidate"):
+                                    # Re-run ONLY the verification step on the proof a
+                                    # prior run produced; do not re-run the agent.
+                                    try:
+                                        result = await test.revalidate(case.index, cached)
+                                        if db is not None:
+                                            db[case.index] = result
+                                            db.commit()
+                                    except REPLFail as E:
+                                        logger.error(f"REPLFail error @ {case.index}: {E}")
+                                        result = Result(Status.CASE_NOT_AVAILABLE, [str(E)], [])
+                                        if db is not None:
+                                            db[case.index] = result
+                                            db.commit()
+                                        break
+                                elif cached is not None and case.index not in force_retry and (cached.status == Status.SUCCESS or (cached.status == Status.FAIL and not retry_failure)):
+                                    result = cached
                                 else:
                                     try:
                                         result = await test.validate(case.index, case.code)

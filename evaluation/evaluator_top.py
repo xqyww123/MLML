@@ -70,6 +70,12 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
         help="Cases to force re-evaluate")
     parser.add_argument("--force-retry-file",
         help="File of cases to force re-evaluate (one per line)")
+    parser.add_argument("--reverify-failures", action="store_true", default=False,
+        help="For each previously-FAILED case, re-run ONLY the REPL verification on the\n"
+             "proof the prior run already produced (read from --log-dir); do NOT launch\n"
+             "jEdit or re-run the agent. Useful after fixing the verifier (e.g. oracle\n"
+             "whitelist). SUCCESS cases are untouched; cases with no saved proof or with\n"
+             "sorry still present stay FAILED. Prior cost/response data is preserved.")
     parser.add_argument("--repl-addr", type=str, default="127.0.0.1:6666",
         help="REPL server address (host:port) for independent proof verification.\n"
              "Each proof that passes the sorry check is re-verified via Isa-REPL\n"
@@ -121,7 +127,8 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
             ),
             retry_failure=args.retry_failure,
             force_retry=force_retry_set,
-            server_instances=worker_ids)
+            server_instances=worker_ids,
+            reverify_failures=args.reverify_failures)
     asyncio.run(_run())
 
 def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil_format, epilog):

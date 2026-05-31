@@ -402,6 +402,73 @@ class AutoCorrode_Base(Evaluator):
 
         return Result(status, errors, [elapsed_s], data=_make_data())
 
+    async def revalidate(self, index, old_result):
+        """Re-run ONLY the REPL verification on the proof a prior run already
+        produced, reusing the saved final theory and the prior cost/response
+        data. Does NOT launch jEdit or re-run the agent. Used by
+        --reverify-failures to cheaply re-check failed cases against an updated
+        verifier (e.g. a fixed oracle whitelist)."""
+        old_data = old_result.data if isinstance(old_result, Result) else None
+        old_elapsed = old_result.elapsed_time if isinstance(old_result, Result) else []
+
+        try:
+            content = self._get_theory_content(index)
+        except (KeyError, CaseNotAvailable):
+            return Result(Status.CASE_NOT_AVAILABLE, ["Case not available"], [])
+
+        inject = self._inject_import()
+        if inject:
+            content = re.sub(
+                r'(imports)\s+',
+                rf'\1\n  {inject}\n  ',
+                content, count=1)
+
+        m = re.match(r'\s*theory\s+(\S+)', content)
+        if not m:
+            return Result(Status.FAIL, ["Cannot parse theory name from content"],
+                          old_elapsed, data=old_data)
+        theory_name = m.group(1)
+
+        if not self._log_dir:
+            return Result(Status.FAIL,
+                          ["Reverify needs --log-dir (no saved theory to re-check)"],
+                          old_elapsed, data=old_data)
+        safe_index = str(index).replace("/", "_").replace("\\", "_")
+        thy_path = os.path.join(self._log_dir, safe_index, f"{theory_name}.thy")
+        if not os.path.isfile(thy_path):
+            return Result(Status.FAIL,
+                          [f"Reverify: no saved theory at {thy_path}"],
+                          old_elapsed, data=old_data)
+
+        with open(thy_path, "r", encoding="utf-8") as f:
+            final_thy = f.read()
+        jedit_extra = self._jedit_extra_imports()
+        if jedit_extra:
+            final_thy_for_repl = re.sub(
+                rf'^\s*{re.escape(jedit_extra)}\s*\n',
+                '', final_thy, count=1, flags=re.MULTILINE)
+        else:
+            final_thy_for_repl = final_thy
+
+        if Isar_Base.contains_sorry(final_thy, original_code=content):
+            return Result(Status.FAIL,
+                          ["Reverify: sorry still present in saved theory"],
+                          old_elapsed, data=old_data)
+
+        original_with_sorry = content + "\n  sorry\nend\n"
+        snap_ok, snap_err = await self._snapshot_goals(original_with_sorry)
+        if not snap_ok:
+            return Result(Status.FAIL, [f"Reverify: snapshot failed: {snap_err}"],
+                          old_elapsed, data=old_data)
+
+        verified, verify_error = await self._verify_via_repl(final_thy_for_repl)
+        if verified:
+            logger.info(f"Worker {self._worker_id}: reverify PASSED for {index}")
+            return Result(Status.SUCCESS, [], old_elapsed, data=old_data)
+        logger.info(f"Worker {self._worker_id}: reverify still FAILS for {index}: {verify_error}")
+        return Result(Status.FAIL, [f"REPL verification failed: {verify_error}"],
+                      old_elapsed, data=old_data)
+
 
 MINIF2F_PROVER_DIR = os.path.join(PROJECT_ROOT, "tasks", "MiniF2F_Prover")
 
