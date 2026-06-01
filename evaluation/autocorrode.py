@@ -220,7 +220,7 @@ class AutoCorrode_Base(Evaluator):
             await self._repl.rollback("init")
             response = await self._repl.eval(
                 final_thy,
-                timeout=120000,
+                timeout=600000,
                 cmd_timeout=30000,
                 import_dir=self._import_dir(),
             )

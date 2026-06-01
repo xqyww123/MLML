@@ -46,8 +46,8 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
         help="Category of cases (e.g., valid, test)")
     parser.add_argument("--result", "-o", type=str, nargs="?",
         help="Path to save results (SQLite DB). Resumes if exists.")
-    parser.add_argument("--timeout-seconds", type=int, default=3600,
-        help="Timeout per case in seconds (default: 3600)")
+    parser.add_argument("--timeout-seconds", type=int, default=14400,
+        help="Timeout per case in seconds (default: 14400 = 4 hours)")
     parser.add_argument("--workers", "-w", type=int, default=1,
         help="Number of parallel workers (default: 1)")
     parser.add_argument("--display", type=str, default=":99",
