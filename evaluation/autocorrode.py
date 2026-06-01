@@ -15,6 +15,14 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# jEdit settings dir. Isabelle's bundled jedit/etc/settings hardcodes
+# JEDIT_SETTINGS to $ISABELLE_HOME_USER/jedit, so every headless worker shares
+# this one directory. Its `properties` file gets clobbered across runs, which
+# triggers a keymap-merge modal dialog at jEdit startup that blocks the prover
+# session forever. Restoring `properties` from a known-good `properties.bak`
+# before each launch keeps every jEdit starting from a clean baseline.
+JEDIT_SETTINGS_DIR = os.path.expanduser("~/.isabelle/Isabelle2025-2/jedit")
+
 # Per-million-token pricing: (input, cached_input, output)
 MODEL_PRICING: dict[str, tuple[float, float, float]] = {
     "gpt-5.5":       (2.0,  0.5,  8.0),
@@ -136,6 +144,25 @@ class AutoCorrode_Base(Evaluator):
 
     def _oracle_whitelist(self) -> list[str]:
         return []
+
+    def _restore_jedit_properties(self) -> None:
+        """Copy properties.bak over properties in the shared $JEDIT_SETTINGS
+        dir before launching jEdit, so a clobbered properties file can't
+        trigger the keymap-merge dialog that hangs the prover. Missing backup
+        or copy errors are logged but never abort the run."""
+        backup = os.path.join(JEDIT_SETTINGS_DIR, "properties.bak")
+        target = os.path.join(JEDIT_SETTINGS_DIR, "properties")
+        if not os.path.isfile(backup):
+            logger.warning(f"Worker {self._worker_id}: no jEdit properties "
+                           f"backup at {backup}; skipping restore")
+            return
+        try:
+            shutil.copyfile(backup, target)
+            logger.info(f"Worker {self._worker_id}: restored jEdit properties "
+                        f"from {backup}")
+        except Exception as e:
+            logger.warning(f"Worker {self._worker_id}: failed to restore jEdit "
+                           f"properties: {e}")
 
     async def _snapshot_goals(self, original_source: str) -> tuple[bool, str]:
         assert self._repl is not None
@@ -304,6 +331,8 @@ class AutoCorrode_Base(Evaluator):
         env["MASH_STATE_PATH"] = os.path.join(mash_dir, "mash_state")
         env["ASSISTANT_BATCH_PROMPT"] = f"Complete the proof of theorem {thm_name}"
         env["ASSISTANT_BATCH_RESULT_FILE"] = result_file
+
+        self._restore_jedit_properties()
 
         start_time = time.time()
         cmd = [self._isabelle_bin, "jedit"]
