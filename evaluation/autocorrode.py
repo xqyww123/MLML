@@ -178,6 +178,16 @@ class AutoCorrode_Base(Evaluator):
 
     async def _verify_via_repl(self, final_thy: str) -> tuple[bool, str]:
         assert self._repl is not None
+        # The agent sometimes drops the theory-closing `end` when it rewrites
+        # the proof (it replaces the `sorry\nend` tail but only restores the
+        # proof). An otherwise-complete proof then fails verification because
+        # `Toplevel.end_theory` reports "Malformed theory" on an unclosed
+        # theory. Re-append `end` when it is absent so a finished proof still
+        # counts as verified.
+        if not re.search(r'\bend\b\s*\Z', final_thy):
+            final_thy = final_thy.rstrip() + "\nend\n"
+            logger.info(f"Worker {self._worker_id}: appended missing 'end' "
+                        f"to theory before verification")
         try:
             await self._repl.set_register_thy(False)
             await self._repl.rollback("init")
