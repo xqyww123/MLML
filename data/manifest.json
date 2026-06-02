@@ -88,7 +88,7 @@
       "group": "optional"
     },
     {
-      "path": "contrib/Isabelle2025-2_and_afp-2026-05-13.tar.xz",
+      "path": "contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst",
       "size": 1574997798,
       "description": "Isabelle 2025 and AFP 20260513",
       "group": "tools"
