@@ -221,7 +221,14 @@ class AutoCorrode_Base(Evaluator):
             response = await self._repl.eval(
                 final_thy,
                 timeout=600000,
-                cmd_timeout=30000,
+                # Per-command (single statement) wall-clock cap, scoped to THIS
+                # validator eval only: it travels in the \x05eval request and the
+                # server applies it per-call without persisting, so it does not
+                # affect the agent's REPL, other evaluators, or other clients on
+                # the shared server. 180s is long enough for legitimately slow
+                # proof steps yet trips slow-burn memory bombs (e.g. presburger
+                # on large coefficients) before they exhaust the heap.
+                cmd_timeout=180000,
                 import_dir=self._import_dir(),
             )
             if response is None:

@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-@AGENTS.md
-
 ## Rules
 
 ### Never Act on Assumptions — ALWAYS Ask
@@ -11,6 +9,8 @@ CRITICAL: You MUST NEVER make autonomous decisions under ANY uncertainty. If any
 ### Shared Working Directory
 
 You operate in a shared working directory alongside other agents. Never use git stash, git checkout, git reset --hard, or any command that discards or hides uncommitted changes.
+
+CRITICAL — NEVER run `git clean` (in any form: `-f`, `-d`, `-x`, `-X`, etc.). It is extremely dangerous: it permanently deletes untracked and git-ignored files with no recovery.
 
 ### Always Reuse Code — Never Reinvent the Wheel
 
