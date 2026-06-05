@@ -14,6 +14,11 @@ source ./envir.sh
 source ./secret.sh
 set -e
 
+# Isabelle session to launch the REPL with. Propagated from the launching
+# environment (e.g. `SESSION=NTP4Verif python3 ...`) via srun's --export.
+# Falls back to the historical default when unset.
+session="${SESSION:-MathBench_Prover}"
+
 # Process each port/numproc pair
 while [ $# -gt 0 ]; do
   port=$1
@@ -34,7 +39,7 @@ while [ $# -gt 0 ]; do
   mkdir -p $mash_dir
   
   # Start the server instance
-  MASH_STATE_PATH=$mash_dir/mash_state ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:$port MathBench_Prover $dir -o threads=$numprocs > $dir/log.txt 2>&1 &
+  MASH_STATE_PATH=$mash_dir/mash_state ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:$port "$session" $dir -o threads=$numprocs > $dir/log.txt 2>&1 &
   
   #echo "Started server on port $port"
 done
