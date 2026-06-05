@@ -407,6 +407,11 @@ class Isar_Base(Evaluator):
         return False
 
 class MinilangAgent_Base(Isar_Base):
+    # Extra Isabelle libraries loaded into the REPL before evaluation.
+    # Subclasses may override to change the loaded libraries (e.g. NTP4VC must
+    # not load MathBench_Prover, whose huge math corpus pollutes the namespace).
+    _LIBS = ['MathBench_Prover.MathBench_Prover', 'Minilang_Agent.Minilang_Agent']
+
     _invocation_serial = 0
     _invocation_serial_lock = asyncio.Lock()
 
@@ -423,7 +428,7 @@ class MinilangAgent_Base(Isar_Base):
                 timeout_seconds=14400, max_tool_calls=10000, max_retries=8,
                 log_dir=None, retrieval_forking=None, interactive_retrieval=None,
                 auto_interpret_for_embedding=False):
-        super().__init__(addr, libs=['MathBench_Prover.MathBench_Prover', 'Minilang_Agent.Minilang_Agent'],
+        super().__init__(addr, libs=type(self)._LIBS,
                          timeout=max(60, timeout_seconds), connection_timeout=max(60, timeout_seconds))
         self._cfg = auto_interpret_for_embedding
         self._budget = (timeout_seconds, max_tool_calls, max_retries)
@@ -797,7 +802,10 @@ class Isar_NTPVC(NTPVC_Mixin, Isar_Base):
     pass
 
 class MinilangAgent_NTPVC(NTPVC_Mixin, MinilangAgent_Base):
-    pass
+    # NTP4VC theorems are why3-generated and use short bound-variable names
+    # (e.g. or, sl, sr) that collide with constants dragged in by
+    # MathBench_Prover's math corpus. Load only the agent language.
+    _LIBS = ['Minilang_Agent.Minilang_Agent']
 
 #if __name__ == "__main__":
 #    logger.info('self-testing MiniF2F')
