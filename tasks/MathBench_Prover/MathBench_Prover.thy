@@ -447,6 +447,14 @@ val _ = TextIO.closeOut out
 ›
 *)
 
+\<comment> \<open>Environment fingerprint dumps (const/type short-name resolution + concrete
+  syntax) live in \<^file>\<open>env_dump.ML\<close>; load \<^file>\<open>Env_Dump.thy\<close> in this session to
+  emit the MathBench_Prover reference, then run
+  \<^verbatim>\<open>python tools/check_putnam_divergence.py\<close> to compare against every
+  PutnamBench import combination. The two ML blocks below are the original
+  ad-hoc diagnostics, superseded by that tooling and kept commented for
+  reference.\<close>
+
 (*
 ML ‹
 val ctxt = @{context};
@@ -491,8 +499,8 @@ val _ = writeln (string_of_int (length conflicts) ^ " conflicting base names, " 
   string_of_int (List.foldl (fn ((_, acc), n) => n + length acc) 0 conflicts) ^
   " exposed constants total")
 ›
-*)
-(*
+
+
 ML \<open>
 val syn = Proof_Context.syntax_of @{context};
 val buf = Unsynchronized.ref ([] : string list);
@@ -507,4 +515,5 @@ val _ = TextIO.output (out, content);
 val _ = TextIO.closeOut out
 \<close>
 *)
+
 end
