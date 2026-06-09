@@ -40,3 +40,6 @@
 	path = contrib/my_better_isabelle_prover
 	url = git@github.com:xqyww123/my_better_isabelle_prover.git
 	branch = main
+[submodule "contrib/phi-system"]
+	path = contrib/phi-system
+	url = git@github.com:xqyww123/phi-system.git
