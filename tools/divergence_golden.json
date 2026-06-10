@@ -1177,84 +1177,96 @@
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = ($) \\<^bold>\\<Rightarrow> \"\\<^const>Formal_Power_Series.fps.fps_nth\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
+      "accepted": "2026-06-10",
+      "kind": "missing"
     },
     {
       "dim": "notation",
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = (*o) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_times\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
+      "accepted": "2026-06-10",
+      "kind": "missing"
     },
     {
       "dim": "notation",
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = (+o) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_plus\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
+      "accepted": "2026-06-10",
+      "kind": "missing"
     },
     {
       "dim": "notation",
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = (<o) \\<^bold>\\<Rightarrow> \"\\<^const>BNF_Wellorder_Constructions.ordLess2\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
+      "accepted": "2026-06-10",
+      "kind": "missing"
     },
     {
       "dim": "notation",
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = (=o) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_eq\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
+      "accepted": "2026-06-10",
+      "kind": "missing"
     },
     {
       "dim": "notation",
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = (v*) \\<^bold>\\<Rightarrow> \"\\<^const>Finite_Cartesian_Product.vector_matrix_mult\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
+      "accepted": "2026-06-10",
+      "kind": "missing"
     },
     {
       "dim": "notation",
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>5\\<^sup>0\\<^sup>) = any\\<^sup>(\\<^sup>5\\<^sup>1\\<^sup>) =o logic\\<^sup>(\\<^sup>5\\<^sup>1\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_eq\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
+      "accepted": "2026-06-10",
+      "kind": "missing"
     },
     {
       "dim": "notation",
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>5\\<^sup>0\\<^sup>) = logic\\<^sup>(\\<^sup>5\\<^sup>1\\<^sup>) <o logic\\<^sup>(\\<^sup>5\\<^sup>1\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>BNF_Wellorder_Constructions.ordLess2\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
+      "accepted": "2026-06-10",
+      "kind": "missing"
     },
     {
       "dim": "notation",
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>7\\<^sup>0\\<^sup>) = any\\<^sup>(\\<^sup>7\\<^sup>0\\<^sup>) +o logic\\<^sup>(\\<^sup>7\\<^sup>1\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_plus\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
+      "accepted": "2026-06-10",
+      "kind": "missing"
     },
     {
       "dim": "notation",
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>7\\<^sup>0\\<^sup>) = logic\\<^sup>(\\<^sup>7\\<^sup>0\\<^sup>) v* logic\\<^sup>(\\<^sup>7\\<^sup>1\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>Finite_Cartesian_Product.vector_matrix_mult\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
+      "accepted": "2026-06-10",
+      "kind": "missing"
     },
     {
       "dim": "notation",
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>7\\<^sup>5\\<^sup>) = logic\\<^sup>(\\<^sup>7\\<^sup>5\\<^sup>) $ logic\\<^sup>(\\<^sup>7\\<^sup>6\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>Formal_Power_Series.fps.fps_nth\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
+      "accepted": "2026-06-10",
+      "kind": "missing"
     },
     {
       "dim": "notation",
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>8\\<^sup>0\\<^sup>) = any\\<^sup>(\\<^sup>8\\<^sup>0\\<^sup>) *o logic\\<^sup>(\\<^sup>8\\<^sup>1\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_times\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
+      "accepted": "2026-06-10",
+      "kind": "missing"
     }
   ]
 }

@@ -35,13 +35,19 @@ REPL_SH = os.path.join(ROOT, 'contrib', 'Isa-REPL', 'repl_server.sh')
 
 
 def listener_pid(port=PORT):
-    """PID of the process listening on `port`, or None."""
+    """PID of the process LISTENING on `port`, or None.
+
+    Matches the local-address column exactly (field 4 of `ss -ltnpH`,
+    `State Recv-Q Send-Q Local:Port Peer:Port Process`) so we never match a
+    peer address or a superstring port like :17777 — and never kill the wrong
+    process (e.g. the 6666 server)."""
     try:
         out = subprocess.check_output(['ss', '-ltnpH'], text=True)
     except Exception:
         return None
     for line in out.splitlines():
-        if f':{port}' in line:
+        cols = line.split()
+        if len(cols) >= 4 and cols[3].endswith(f':{port}'):
             m = re.search(r'pid=(\d+)', line)
             if m:
                 return int(m.group(1))
@@ -56,7 +62,7 @@ async def wait_ready(timeout=600):
     while time.time() < deadline:
         try:
             async with Client(ADDR, 'HOL', timeout=60) as c:
-                await c.eval('theory _Ping imports Main begin end', timeout=60000)
+                await c.eval('theory MB_Ping imports Main begin end', timeout=60000)
             return True
         except Exception:
             await asyncio.sleep(3)
@@ -74,7 +80,9 @@ def stop():
         if listener_pid() is None:
             return
         time.sleep(1)
-    subprocess.run(['kill', '-9', str(pid)])
+    pid2 = listener_pid()          # re-resolve in case the pid was reused
+    if pid2:
+        subprocess.run(['kill', '-9', str(pid2)])
 
 
 def start():

@@ -26,11 +26,18 @@ in data/PutnamBench, this connects to a plain-HOL Isabelle REPL, loads a theory
 with those imports, and runs the *same* dump logic (tasks/MathBench_Prover/
 env_dump.ML, inlined) so both sides are byte-comparable.
 
+The MathBench reference dumps (/tmp/mathbench_{const,type,notation}.*) are, by
+default, regenerated at startup from the live REPL via a dedicated `add_lib`
+connection — so the address must be a MathBench_ProverBase-based server (the
+pipeline's 7777). The Putnam sweep then runs on a *separate, clean* connection
+(no add_lib) so the Putnam probes are not contaminated by MathBench. Pass
+--no-regen to reuse existing dumps (e.g. against a plain-HOL server).
+
 Usage
 -----
     python tools/check_putnam_divergence.py [REPL_ADDRESS] [--report FILE]
 
-    REPL_ADDRESS defaults to 127.0.0.1:6666 (must be a plain HOL session)
+    REPL_ADDRESS defaults to 127.0.0.1:7777 (the pipeline's dedicated MathBench REPL)
 """
 
 import argparse
@@ -169,6 +176,27 @@ def mathbench_removed_bases():
 #  The dump theory + reading back
 # --------------------------------------------------------------------------- #
 
+async def regenerate_reference(addr, env_dump_ml):
+    """Regenerate the MathBench reference dumps from the live REPL.
+
+    Uses a DEDICATED connection that does `add_lib(MathBench_Prover)` and dumps
+    the const/type/notation resolution to the REF_* paths. add_lib is per-client,
+    so the (separate) Putnam-sweep connection stays clean — its probes import only
+    the problem's own theories, never MathBench."""
+    call = ('Env_Dump.dump_all @{context}\n'
+            f'  {{const = "{REF_CONST}", typ = "{REF_TYPE}", notation = "{REF_NOTATION}"}}')
+    src = ('theory MB_RefGen imports Main\nbegin\n\n'
+           f'ML \\<open>\n{env_dump_ml}\n\\<close>\n\n'
+           f'ML \\<open>\n{call}\n\\<close>\n\nend')
+    async with Client(addr, 'HOL') as c:
+        await c.set_register_thy(False)
+        await c.add_lib(['MathBench_Prover.MathBench_Prover'])
+        outs = await c.eval(src, timeout=300_000)
+        errs = [e for cmd in (outs or []) for e in cmd.errors]
+        if errs:
+            raise RuntimeError("reference regeneration failed: " + '; '.join(errs)[:400])
+
+
 def build_probe_theory(env_dump_ml, imports, const_f, type_f, notation_f):
     imports_str = ' '.join(imports)
     call = (
@@ -236,7 +264,10 @@ def compare_syntax(mb_sections, pu_sections):
 async def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('addr', nargs='?', default='127.0.0.1:7777',
-                    help='REPL address (default 127.0.0.1:7777, the pipeline''s dedicated port)')
+                    help="REPL address (default 127.0.0.1:7777, the pipeline's dedicated MathBench port)")
+    ap.add_argument('--no-regen', action='store_true',
+                    help='reuse existing /tmp reference dumps instead of regenerating '
+                         'them from the REPL (for a plain-HOL server)')
     ap.add_argument('--report', default='/tmp/putnam_divergence_report.md',
                     help='write a detailed markdown report here')
     ap.add_argument('--limit', type=int, default=0,
@@ -249,6 +280,19 @@ async def main():
     ap.add_argument('--rationale', default='',
                     help='rationale recorded for entries added by --accept-new')
     args = ap.parse_args()
+
+    if args.accept_new and args.limit:
+        print("Refusing --accept-new together with --limit: a partial sweep would "
+              "accept an incomplete delta. Run a full sweep to accept.", file=sys.stderr)
+        sys.exit(2)
+
+    env_dump_ml = open(ENV_DUMP_ML).read()
+
+    # Regenerate the MathBench reference dumps from the live REPL (a dedicated
+    # add_lib connection), unless told to reuse existing ones.
+    if not args.no_regen:
+        print("Regenerating MathBench reference dumps from the REPL (add_lib)...")
+        await regenerate_reference(args.addr, env_dump_ml)
 
     # Each dimension is checked only if its reference dump is present; this lets
     # a syntax-only run proceed when the const/type references (which need a
@@ -271,8 +315,6 @@ async def main():
     mb_notation = split_syntax_sections(open(REF_NOTATION).read()) if do_notation else {}
     removed_bases = mathbench_removed_bases()
 
-    env_dump_ml = open(ENV_DUMP_ML).read()
-
     thy_files = sorted(glob.glob(os.path.join(PUTNAM_DIR, '*.thy')))
     import_to_files = defaultdict(list)
     for f in thy_files:
@@ -293,6 +335,7 @@ async def main():
     type_inacc = defaultdict(set)
     notation_div = defaultdict(set)      # (section, kind, item) -> labels
     label_files = {}
+    skipped = []
 
     tmp_c = _mktemp('pd_const_', '.tsv')
     tmp_t = _mktemp('pd_type_', '.tsv')
@@ -315,11 +358,14 @@ async def main():
             try:
                 outs = await client.eval(thy, timeout=600_000, import_dir=PUTNAM_DIR)
                 errs = [e for cmd in (outs or []) for e in cmd.errors]
-            except (REPLFail, Exception) as e:
+            except (REPLFail, TimeoutError, OSError) as e:
                 errs = [str(e)]
+            # Other exceptions are real bugs — let them propagate, not silently
+            # shrink coverage by turning into a SKIP.
 
             if errs:
                 print(f'  SKIP: {errs[0][:120]}')
+                skipped.append((label, errs[0][:200]))
                 await client.rollback('base')
                 continue
 
@@ -371,6 +417,11 @@ async def main():
     print(f"\n(Report written to {args.report})")
     print(f"Summary: {len(new)} new | {len(known)} known/golden-suppressed | "
           f"{len(resolved)} golden entries no longer present")
+    if skipped:
+        print(f"WARNING: {len(skipped)} import set(s) SKIPPED (coverage incomplete!) — "
+              f"results may understate divergences:")
+        for lbl, msg in skipped:
+            print(f"  - {lbl}: {msg[:100]}")
 
     if args.accept_new:
         if not new:
@@ -380,7 +431,7 @@ async def main():
             today = datetime.date.today().isoformat()
             for rec in new:
                 e = {k: rec[k] for k in ('dim', 'base', 'putnam', 'mathbench',
-                                         'section', 'item') if k in rec}
+                                         'section', 'kind', 'item') if k in rec}
                 e['rationale'] = args.rationale or '(no rationale given)'
                 e['accepted'] = today
                 by_key[golden.entry_key(rec)] = e

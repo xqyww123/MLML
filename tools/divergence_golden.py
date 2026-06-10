@@ -24,16 +24,21 @@ and rationale are NOT part of identity (they fluctuate run to run):
 
 import json
 import os
+import sys
 
 GOLDEN_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            'divergence_golden.json')
 
 
 def entry_key(rec: dict) -> str:
-    """Stable identity string for a divergence record."""
+    """Stable identity string for a divergence record.
+
+    `kind` is part of notation identity: a rule flipping from 'missing' to
+    'redefined' (same LHS, different RHS) is a semantically distinct, more
+    dangerous divergence and must not stay silently suppressed."""
     dim = rec['dim']
     if dim == 'notation':
-        return f"notation\t{rec.get('section', '')}\t{rec['item']}"
+        return f"notation\t{rec.get('section', '')}\t{rec.get('kind', '')}\t{rec['item']}"
     return f"{dim}\t{rec['base']}\t{rec.get('putnam', '')}\t{rec.get('mathbench', '')}"
 
 
@@ -44,7 +49,12 @@ def load_golden(path: str = GOLDEN_PATH):
     with open(path) as f:
         data = json.load(f)
     meta = data.get('meta', {})
-    by_key = {entry_key(e): e for e in data.get('entries', [])}
+    by_key = {}
+    for e in data.get('entries', []):
+        k = entry_key(e)
+        if k in by_key:
+            print(f"WARNING: duplicate golden entry for key {k!r}", file=sys.stderr)
+        by_key[k] = e
     return meta, by_key
 
 

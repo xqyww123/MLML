@@ -59,13 +59,21 @@ def strip_theory_suffix(goals, key: str, suffix: str):
 
 
 async def get_goals(repl: Client, src: str, timeout=120000):
-    """Eval theory source and return (status, goals) where goals is the sexpr list."""
+    """Eval theory source and return (status, goals) where goals is the sexpr list.
+
+    Theory-level errors (undefined constant, ambiguous/failed parse, ...) do NOT
+    raise — they come back in CommandOutput.errors. We must inspect them, else a
+    statement that fails to elaborate under the lib would be silently reported as
+    a clean goal state (a false pass for the authoritative gate)."""
     try:
-        await repl.eval(src, timeout=timeout)
+        outs = await repl.eval(src, timeout=timeout)
     except REPLFail as e:
         return ("eval_error", str(e))
     except TimeoutError as e:
         return ("timeout", str(e))
+    errs = [e for cmd in (outs or []) for e in cmd.errors]
+    if errs:
+        return ("eval_error", '; '.join(errs))
     try:
         raw = await repl.context('sexpr')
         parsed = Client.parse_ctxt(raw)
