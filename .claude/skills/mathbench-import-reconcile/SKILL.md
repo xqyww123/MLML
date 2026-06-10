@@ -10,6 +10,7 @@ no PutnamBench problem changes meaning or breaks. A new import can shadow a
 constant/type short name or a piece of notation that a problem relies on.
 
 **Prerequisites** (else the very first step hangs):
+- `source envir.sh` in every shell first (puts the correct Isabelle on PATH).
 - The `MathBench_ProverBase` heap must already be built — otherwise the REPL
   start in step 1 times out. Build it with the outer-loop command below.
 - Run every command from the project root (`/home/qiyuan/Current/MLML`):
@@ -60,6 +61,9 @@ Rebuild the heap (outer loop, only after promoting to MathBench_ProverBase.thy):
 ```
 RPC_Host=127.0.0.1:27180 isabelle build -b -o threads=10 -o system_heaps MathBench_ProverBase
 ```
+(`RPC_Host` points the Isabelle_RPC server that Auto_Sledgehammer depends on at
+this address; the server auto-launches if not already running, so just set the
+value — you do not need to start a service yourself.)
 
 ## The procedure
 

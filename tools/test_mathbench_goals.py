@@ -7,8 +7,10 @@ For each problem in putnamBench.json, compares the sexpr-serialized goal terms
 (fully qualified, structural) with and without
 add_lib(['MathBench_Prover.MathBench_Prover']).
 
-Requires: an Isa-REPL server on MathBench_Prover session.
-  ./contrib/Isa-REPL/repl_server.sh <addr> MathBench_Prover /tmp/repl_outputs
+Requires: an Isa-REPL server whose base session is MathBench_ProverBase; this
+script add_libs MathBench_Prover on top from source. The pipeline manages such a
+server on port 7777 (the default --addr):
+  python tools/mathbench_repl.py start
 
 Usage:
     python -m tools.test_mathbench_goals [--addr HOST:PORT] [--limit N] [--start KEY]
