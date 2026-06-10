@@ -22,9 +22,10 @@ MathBench-capable session to emit
   /tmp/mathbench_const.tsv   /tmp/mathbench_type.tsv   /tmp/mathbench_notation.txt
 
 The PutnamBench side is produced here: for every unique import combination found
-in data/PutnamBench, this connects to a plain-HOL Isabelle REPL, loads a theory
-with those imports, and runs the *same* dump logic (tasks/MathBench_Prover/
-env_dump.ML, inlined) so both sides are byte-comparable.
+in data/putnamBench.json (the same problem set the goal-term gate uses), this
+connects to a plain-HOL Isabelle REPL, loads a theory with those imports, and
+runs the *same* dump logic (tasks/MathBench_Prover/env_dump.ML, inlined) so both
+sides are byte-comparable.
 
 The MathBench reference dumps (/tmp/mathbench_{const,type,notation}.*) are, by
 default, regenerated at startup from the live REPL via a dedicated `add_lib`
@@ -42,10 +43,10 @@ Usage
 
 import argparse
 import asyncio
+import json
 import os
 import re
 import sys
-import glob
 import tempfile
 from collections import defaultdict
 
@@ -55,9 +56,16 @@ sys.path.insert(0, os.path.join(ROOT, 'contrib', 'Isa-REPL'))
 sys.path.insert(0, HERE)
 
 from IsaREPL import Client, REPLFail
-from detect_putnam_conflicts import parse_imports
+from detect_putnam_conflicts import parse_imports_str
 import divergence_golden as golden
 
+# Problem statements come from the same JSON the goal-term gate uses, so both
+# checks cover exactly the same set of problems. (The data/PutnamBench/isabelle
+# directory additionally contains MathBench-augmented .thy variants that import
+# MathBench_Prover themselves — those are NOT pristine Putnam problems and must
+# not pollute the baseline.) PUTNAM_DIR is kept only as secondary
+# submodule-version provenance and as an inert import_dir fallback.
+PUTNAM_JSON = os.path.join(ROOT, 'data', 'putnamBench.json')
 PUTNAM_DIR = os.path.join(ROOT, 'data', 'PutnamBench', 'isabelle')
 ENV_DUMP_ML = os.path.join(ROOT, 'tasks', 'MathBench_Prover', 'env_dump.ML')
 MATHBENCH_THY = os.path.join(ROOT, 'tasks', 'MathBench_Prover', 'MathBench_Prover.thy')
@@ -73,7 +81,24 @@ def _mktemp(prefix, suffix):
     return path
 
 
+def _putnam_data_sha():
+    """Content hash of the authoritative data source (data/putnamBench.json).
+
+    This is what the golden baseline is actually computed against, so it is the
+    honest version marker — unlike the submodule commit, it cannot drift out of
+    sync with the data the sweep read."""
+    import hashlib
+    try:
+        with open(PUTNAM_JSON, 'rb') as f:
+            return hashlib.sha256(f.read()).hexdigest()[:12]
+    except Exception:
+        return 'unknown'
+
+
 def _putnam_commit():
+    """Git HEAD of the PutnamBench submodule — recorded as secondary provenance
+    only (the JSON, not the submodule, is the sweep's data source; see
+    _putnam_data_sha)."""
     import subprocess
     try:
         return subprocess.check_output(
@@ -315,26 +340,27 @@ async def main():
     mb_notation = split_syntax_sections(open(REF_NOTATION).read()) if do_notation else {}
     removed_bases = mathbench_removed_bases()
 
-    thy_files = sorted(glob.glob(os.path.join(PUTNAM_DIR, '*.thy')))
-    import_to_files = defaultdict(list)
-    for f in thy_files:
-        imp = parse_imports(f)
+    with open(PUTNAM_JSON) as f:
+        problems = json.load(f)
+    import_to_problems = defaultdict(list)
+    for key, src in problems.items():
+        imp = parse_imports_str(src)
         if imp:
-            import_to_files[imp].append(os.path.basename(f))
-    unique_imports = sorted(import_to_files.items(), key=lambda x: -len(x[1]))
+            import_to_problems[imp].append(key)
+    unique_imports = sorted(import_to_problems.items(), key=lambda x: -len(x[1]))
     if args.limit:
         unique_imports = unique_imports[:args.limit]
     print(f"MathBench reference: {len(mb_const)} consts, {len(mb_type)} types, "
           f"notation sections {[ (k, len(v)) for k, v in mb_notation.items() ]}")
-    print(f"PutnamBench: {len(thy_files)} files, {len(unique_imports)} unique import sets\n")
+    print(f"PutnamBench: {len(problems)} problems, {len(unique_imports)} unique import sets\n")
 
-    # Aggregated divergences: key -> set(import label) and file totals
+    # Aggregated divergences: key -> set(import label) and per-label problem totals
     const_diff = defaultdict(set)      # (base, mb_win, pu_win) -> labels
     const_inacc = defaultdict(set)     # (base, pu_win) -> labels
     type_diff = defaultdict(set)
     type_inacc = defaultdict(set)
     notation_div = defaultdict(set)      # (section, kind, item) -> labels
-    label_files = {}
+    label_counts = {}                    # import label -> number of problems
     skipped = []
 
     tmp_c = _mktemp('pd_const_', '.tsv')
@@ -345,10 +371,10 @@ async def main():
         await client.set_register_thy(False)
         await client.record_state('base')
 
-        for i, (imports, files) in enumerate(unique_imports):
+        for i, (imports, pkeys) in enumerate(unique_imports):
             label = ' '.join(imports)
-            label_files[label] = len(files)
-            print(f'[{i+1}/{len(unique_imports)}] {label} ({len(files)} files)')
+            label_counts[label] = len(pkeys)
+            print(f'[{i+1}/{len(unique_imports)}] {label} ({len(pkeys)} problems)')
 
             for p in (tmp_c, tmp_t, tmp_s):
                 if os.path.exists(p):
@@ -356,6 +382,9 @@ async def main():
 
             thy = build_probe_theory(env_dump_ml, imports, tmp_c, tmp_t, tmp_s)
             try:
+                # import_dir is a fallback for resolving file-based imports; the
+                # current JSON problem set only uses library/session imports, so
+                # it is currently inert, kept for problems that may add local thys.
                 outs = await client.eval(thy, timeout=600_000, import_dir=PUTNAM_DIR)
                 errs = [e for cmd in (outs or []) for e in cmd.errors]
             except (REPLFail, TimeoutError, OSError) as e:
@@ -402,7 +431,7 @@ async def main():
             os.unlink(p)
 
     records = build_records(const_diff, const_inacc, type_diff, type_inacc,
-                            notation_div, removed_bases, label_files)
+                            notation_div, removed_bases, label_counts)
     meta, by_key = golden.load_golden()
     new, known, resolved = golden.diff_against_golden(records, by_key)
 
@@ -436,17 +465,18 @@ async def main():
                 e['accepted'] = today
                 by_key[golden.entry_key(rec)] = e
             meta['updated'] = today
-            meta.setdefault('putnam_version', _putnam_commit())
+            meta['putnam_data_sha'] = _putnam_data_sha()
+            meta['putnam_submodule_commit'] = _putnam_commit()
             golden.save_golden(meta, by_key)
             print(f"Accepted {len(new)} new entries into {golden.GOLDEN_PATH}")
 
 
-def _files_for(labels, label_files):
-    return sum(label_files.get(l, 0) for l in labels)
+def _problems_for(labels, label_counts):
+    return sum(label_counts.get(l, 0) for l in labels)
 
 
 def build_records(const_diff, const_inacc, type_diff, type_inacc,
-                  notation_div, removed_bases, label_files):
+                  notation_div, removed_bases, label_counts):
     """Flatten the aggregation dicts into stable divergence records."""
     recs = []
 
@@ -457,7 +487,7 @@ def build_records(const_diff, const_inacc, type_diff, type_inacc,
             else:
                 base, mw, pw = key            # const_diff key = (base, mathbench, putnam)
             recs.append({'dim': dim, 'base': base, 'putnam': pw, 'mathbench': mw,
-                         'nfiles': _files_for(labels, label_files), 'nsets': len(labels)})
+                         'nproblems': _problems_for(labels, label_counts), 'nsets': len(labels)})
 
     add_res(const_diff, 'const', False)
     add_res(const_inacc, 'const_hidden', True)
@@ -470,7 +500,7 @@ def build_records(const_diff, const_inacc, type_diff, type_inacc,
             'dim': 'notation', 'section': section, 'kind': kind, 'item': item,
             'names': ', '.join(sorted(c.split('.')[-1] for c in cs)) or '?',
             'intentional': any(c.split('.')[-1] in removed_bases for c in cs),
-            'nfiles': _files_for(labels, label_files), 'nsets': len(labels)})
+            'nproblems': _problems_for(labels, label_counts), 'nsets': len(labels)})
     return recs
 
 
@@ -486,10 +516,10 @@ def render_records(records, title, n_known, resolved):
         L.append(f"\n## {dim_title} ({len(rs)})\n")
         for r in sorted(rs, key=lambda r: r['base']):
             if dim.endswith('hidden'):
-                L.append(f"\n- **`{r['base']}`** -> `{r['putnam']}`  [{r['nfiles']}f/{r['nsets']}s]")
+                L.append(f"\n- **`{r['base']}`** -> `{r['putnam']}`  [{r['nproblems']}p/{r['nsets']}s]")
             else:
                 L.append(f"\n- **`{r['base']}`**  Putnam=`{r['putnam']}`  "
-                         f"MathBench=`{r['mathbench']}`  [{r['nfiles']}f/{r['nsets']}s]")
+                         f"MathBench=`{r['mathbench']}`  [{r['nproblems']}p/{r['nsets']}s]")
         L.append("\n")
 
     nrec = [r for r in records if r['dim'] == 'notation']
@@ -497,7 +527,7 @@ def render_records(records, title, n_known, resolved):
     for r in sorted(nrec, key=lambda r: r.get('item', '')):
         flag = "  _(likely intentional: no_notation)_" if r.get('intentional') else ""
         L.append(f"\n- [{r.get('kind')}] **{r.get('names', '?')}** "
-                 f"[{r['nfiles']}f/{r['nsets']}s]{flag}")
+                 f"[{r['nproblems']}p/{r['nsets']}s]{flag}")
         L.append(f"\n    `{r['item'][:200]}`")
 
     L.append(f"\n\n---\n{n_known} known divergence(s) suppressed by the golden ledger.\n")

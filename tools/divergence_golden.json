@@ -1,7 +1,8 @@
 {
   "meta": {
     "updated": "2026-06-10",
-    "putnam_version": "afe83317ba064f4e09dd022c3331cb8bf1e3927a"
+    "putnam_data_sha": "c2a895db5913",
+    "putnam_submodule_commit": "afe83317ba064f4e09dd022c3331cb8bf1e3927a"
   },
   "entries": [
     {
@@ -544,14 +545,6 @@
       "dim": "const_hidden",
       "base": "LT",
       "putnam": "Lazy_Eval.cmp_result.LT",
-      "mathbench": "(hidden)",
-      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10"
-    },
-    {
-      "dim": "const_hidden",
-      "base": "NO_SIMP",
-      "putnam": "Minilang.NO_SIMP",
       "mathbench": "(hidden)",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
       "accepted": "2026-06-10"
@@ -1199,14 +1192,6 @@
     {
       "dim": "notation",
       "section": "productions",
-      "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = (<o) \\<^bold>\\<Rightarrow> \"\\<^const>BNF_Wellorder_Constructions.ordLess2\"",
-      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10",
-      "kind": "missing"
-    },
-    {
-      "dim": "notation",
-      "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = (=o) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_eq\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
       "accepted": "2026-06-10",
@@ -1224,14 +1209,6 @@
       "dim": "notation",
       "section": "productions",
       "item": "logic\\<^sup>(\\<^sup>5\\<^sup>0\\<^sup>) = any\\<^sup>(\\<^sup>5\\<^sup>1\\<^sup>) =o logic\\<^sup>(\\<^sup>5\\<^sup>1\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_eq\"",
-      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
-      "accepted": "2026-06-10",
-      "kind": "missing"
-    },
-    {
-      "dim": "notation",
-      "section": "productions",
-      "item": "logic\\<^sup>(\\<^sup>5\\<^sup>0\\<^sup>) = logic\\<^sup>(\\<^sup>5\\<^sup>1\\<^sup>) <o logic\\<^sup>(\\<^sup>5\\<^sup>1\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>BNF_Wellorder_Constructions.ordLess2\"",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
       "accepted": "2026-06-10",
       "kind": "missing"

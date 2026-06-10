@@ -64,16 +64,20 @@ val _ = TextIO.closeOut out
 '''
 
 
-def parse_imports(thy_file):
-    """Extract the import list from a .thy file header."""
-    with open(thy_file) as f:
-        content = f.read()
+def parse_imports_str(content):
+    """Extract the import list from a theory's source text (a sorted tuple)."""
     m = re.search(r'theory\s+\S+\s+imports\s+(.*?)\s+begin', content, re.DOTALL)
     if not m:
         return None
     raw = m.group(1)
     raw = re.sub(r'\(\*.*?\*\)', '', raw, flags=re.DOTALL)
     return tuple(sorted(re.findall(r'"[^"]*"|\S+', raw)))
+
+
+def parse_imports(thy_file):
+    """Extract the import list from a .thy file header."""
+    with open(thy_file) as f:
+        return parse_imports_str(f.read())
 
 
 def read_conflicts(path):
