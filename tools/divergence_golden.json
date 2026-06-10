@@ -1,0 +1,1260 @@
+{
+  "meta": {
+    "updated": "2026-06-10",
+    "putnam_version": "afe83317ba064f4e09dd022c3331cb8bf1e3927a"
+  },
+  "entries": [
+    {
+      "dim": "const",
+      "base": "Abs_word",
+      "putnam": "Nitpick.word.Abs_word",
+      "mathbench": "Word.word.Abs_word",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "Fract",
+      "putnam": "Fraction_Field.Fract",
+      "mathbench": "Rat.Fract",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "Rep_word",
+      "putnam": "Nitpick.word.Rep_word",
+      "mathbench": "Word.word.Rep_word",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "abs_summable_on",
+      "putnam": "Infinite_Sum.abs_summable_on",
+      "mathbench": "Infinite_Set_Sum.abs_summable_on",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "additive",
+      "putnam": "Modules.additive",
+      "mathbench": "Measure_Space.additive",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "algebra",
+      "putnam": "Sigma_Algebra.algebra",
+      "mathbench": "Module.algebra",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "algebra_axioms",
+      "putnam": "Sigma_Algebra.algebra_axioms",
+      "mathbench": "Module.algebra_axioms",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "card_UNIV",
+      "putnam": "Cardinality.card_UNIV_class.card_UNIV",
+      "mathbench": "Enum.card_UNIV",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "coeff",
+      "putnam": "UnivPoly.up_ring.coeff",
+      "mathbench": "Polynomial.poly.coeff",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "comm_monoid",
+      "putnam": "Groups.comm_monoid",
+      "mathbench": "Group.comm_monoid",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "comm_monoid_axioms",
+      "putnam": "Groups.comm_monoid_axioms",
+      "mathbench": "Group.comm_monoid_axioms",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "cong",
+      "putnam": "BNF_Corec.cong",
+      "mathbench": "Cong.unique_euclidean_semiring_class.cong",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "content",
+      "putnam": "Henstock_Kurzweil_Integration.content",
+      "mathbench": "Polynomial.content",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "conv_dom",
+      "putnam": "Quickcheck_Narrowing.conv_dom",
+      "mathbench": "Continued_Fractions.conv_dom",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "conv_graph",
+      "putnam": "Quickcheck_Narrowing.conv_graph",
+      "mathbench": "Continued_Fractions.conv_graph",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "conv_rel",
+      "putnam": "Quickcheck_Narrowing.conv_rel",
+      "mathbench": "Continued_Fractions.conv_rel",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "conv_sumC",
+      "putnam": "Quickcheck_Narrowing.conv_sumC",
+      "mathbench": "Continued_Fractions.conv_sumC",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "cyclic_group",
+      "putnam": "Elementary_Groups.cyclic_group",
+      "mathbench": "Finite_And_Cyclic_Groups.cyclic_group",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "enumerate",
+      "putnam": "List.enumerate",
+      "mathbench": "Infinite_Set.wellorder_class.enumerate",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "equiv",
+      "putnam": "Equiv_Relations.equiv",
+      "mathbench": "Preorder.preorder_equiv_class.equiv",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "extend",
+      "putnam": "Group.monoid.extend",
+      "mathbench": "Order.gorder.extend",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "extend",
+      "putnam": "Ring.ring.extend",
+      "mathbench": "Order.gorder.extend",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "extend",
+      "putnam": "UnivPoly.up_ring.extend",
+      "mathbench": "Order.gorder.extend",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "fields",
+      "putnam": "Group.monoid.fields",
+      "mathbench": "Order.gorder.fields",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "fields",
+      "putnam": "Ring.ring.fields",
+      "mathbench": "Order.gorder.fields",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "fields",
+      "putnam": "UnivPoly.up_ring.fields",
+      "mathbench": "Order.gorder.fields",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "from_nat",
+      "putnam": "Countable.from_nat",
+      "mathbench": "Mod_Type.mod_type_class.from_nat",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "group",
+      "putnam": "Groups.group",
+      "mathbench": "Group.group",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "group_axioms",
+      "putnam": "Groups.group_axioms",
+      "mathbench": "Group.group_axioms",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "insort",
+      "putnam": "List.linorder_class.insort",
+      "mathbench": "Sorting_Algorithms.insort",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "iso",
+      "putnam": "BNF_Wellorder_Embedding.iso",
+      "mathbench": "Group.iso",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "join",
+      "putnam": "Lattice.join",
+      "mathbench": "Giry_Monad.join",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "make",
+      "putnam": "Group.monoid.make",
+      "mathbench": "Order.gorder.make",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "make",
+      "putnam": "Ring.ring.make",
+      "mathbench": "Order.gorder.make",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "make",
+      "putnam": "UnivPoly.up_ring.make",
+      "mathbench": "Order.gorder.make",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "measure",
+      "putnam": "Wellfounded.measure",
+      "mathbench": "Sigma_Algebra.measure",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "merge",
+      "putnam": "Finite_Product_Measure.merge",
+      "mathbench": "Omega_Words_Fun.merge",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "module",
+      "putnam": "Module.module",
+      "mathbench": "Modules.module",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "monoid",
+      "putnam": "Groups.monoid",
+      "mathbench": "Group.monoid",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "monom",
+      "putnam": "UnivPoly.up_ring.monom",
+      "mathbench": "Polynomial.monom",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "more",
+      "putnam": "Group.monoid.more",
+      "mathbench": "Order.gorder.more",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "more",
+      "putnam": "Ring.ring.more",
+      "mathbench": "Order.gorder.more",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "more",
+      "putnam": "UnivPoly.up_ring.more",
+      "mathbench": "Order.gorder.more",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "more_update",
+      "putnam": "Group.monoid.more_update",
+      "mathbench": "Order.gorder.more_update",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "more_update",
+      "putnam": "Ring.ring.more_update",
+      "mathbench": "Order.gorder.more_update",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "more_update",
+      "putnam": "UnivPoly.up_ring.more_update",
+      "mathbench": "Order.gorder.more_update",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "mult",
+      "putnam": "Group.monoid.mult",
+      "mathbench": "Multiset.mult",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "normal",
+      "putnam": "Coset.normal",
+      "mathbench": "Reachability_Analysis.sctn.normal",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "order",
+      "putnam": "Coset.order",
+      "mathbench": "Polynomial.order",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "partition",
+      "putnam": "Congruence.partition",
+      "mathbench": "List.partition",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "rows",
+      "putnam": "Finite_Cartesian_Product.rows",
+      "mathbench": "Matrix.rows",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "smult",
+      "putnam": "Module.module.smult",
+      "mathbench": "Polynomial.smult",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "top",
+      "putnam": "Orderings.top_class.top",
+      "mathbench": "Order.top",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "transpose",
+      "putnam": "List.transpose",
+      "mathbench": "Finite_Cartesian_Product.transpose",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "transpose",
+      "putnam": "Transposition.transpose",
+      "mathbench": "Finite_Cartesian_Product.transpose",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "truncate",
+      "putnam": "Group.monoid.truncate",
+      "mathbench": "Order.gorder.truncate",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "truncate",
+      "putnam": "Ring.ring.truncate",
+      "mathbench": "Order.gorder.truncate",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "truncate",
+      "putnam": "UnivPoly.up_ring.truncate",
+      "mathbench": "Order.gorder.truncate",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "vec",
+      "putnam": "Finite_Cartesian_Product.vec",
+      "mathbench": "Matrix.vec",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "ACeD",
+      "putnam": "FiniteProduct.ACeD",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "A_FactGroup",
+      "putnam": "AbelCoset.A_FactGroup",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "A_RCOSETS",
+      "putnam": "AbelCoset.A_RCOSETS",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "A_SET_INV",
+      "putnam": "AbelCoset.A_SET_INV",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "DirProd",
+      "putnam": "Group.DirProd",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "EQ",
+      "putnam": "Lazy_Eval.cmp_result.EQ",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "FactGroup",
+      "putnam": "Coset.FactGroup",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "GT",
+      "putnam": "Lazy_Eval.cmp_result.GT",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "LT",
+      "putnam": "Lazy_Eval.cmp_result.LT",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "NO_SIMP",
+      "putnam": "Minilang.NO_SIMP",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "Nat",
+      "putnam": "Nat.Nat",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "a_inv",
+      "putnam": "Ring.a_inv",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "a_kernel",
+      "putnam": "AbelCoset.a_kernel",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "a_l_coset",
+      "putnam": "AbelCoset.a_l_coset",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "a_minus",
+      "putnam": "Ring.a_minus",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "a_r_congruent",
+      "putnam": "AbelCoset.a_r_congruent",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "a_r_coset",
+      "putnam": "AbelCoset.a_r_coset",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "abelian_group_hom",
+      "putnam": "AbelCoset.abelian_group_hom",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "abelian_monoid",
+      "putnam": "Ring.abelian_monoid",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "abelian_subgroup",
+      "putnam": "AbelCoset.abelian_subgroup",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "add",
+      "putnam": "Ring.ring.add",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "add_monoid",
+      "putnam": "Ring.add_monoid",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "add_pow",
+      "putnam": "Ring.add_pow",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "additive_subgroup",
+      "putnam": "AbelCoset.additive_subgroup",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "at_least_at_most",
+      "putnam": "Order.at_least_at_most",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "commuting",
+      "putnam": "Order.commuting",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "cring",
+      "putnam": "Ring.cring",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "derived",
+      "putnam": "Generated_Groups.derived",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "derived_set",
+      "putnam": "Generated_Groups.derived_set",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "elem",
+      "putnam": "Congruence.elem",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "eq",
+      "putnam": "Congruence.eq_object.eq",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "eq_class_of",
+      "putnam": "Congruence.eq_class_of",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "eq_classes",
+      "putnam": "Congruence.eq_classes",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "eq_closure_of",
+      "putnam": "Congruence.eq_closure_of",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "eq_is_closed",
+      "putnam": "Congruence.eq_is_closed",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "equivalence",
+      "putnam": "Congruence.equivalence",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "finprod",
+      "putnam": "FiniteProduct.finprod",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "finsum",
+      "putnam": "Ring.finsum",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "foldD",
+      "putnam": "FiniteProduct.foldD",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "foldSetD",
+      "putnam": "FiniteProduct.foldSetD",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "foldSetDp",
+      "putnam": "FiniteProduct.foldSetDp",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "generatep",
+      "putnam": "Generated_Groups.generatep",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "greatest",
+      "putnam": "Order.greatest",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "group_hom",
+      "putnam": "Group.group_hom",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "group_isomorphisms",
+      "putnam": "Group.group_isomorphisms",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "ideal",
+      "putnam": "Ideal.ideal",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "idempotent",
+      "putnam": "Order.idempotent",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "inv_gorder",
+      "putnam": "Order.inv_gorder",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "is_glb",
+      "putnam": "Order.is_glb",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "is_lub",
+      "putnam": "Order.is_lub",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "isotone",
+      "putnam": "Order.isotone",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "l_coset",
+      "putnam": "Coset.l_coset",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "le",
+      "putnam": "Order.gorder.le",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "least",
+      "putnam": "Order.least",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "lower_semilattice",
+      "putnam": "Lattice.lower_semilattice",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "maximalideal",
+      "putnam": "Ideal.maximalideal",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "not_elem",
+      "putnam": "Congruence.not_elem",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "not_eq",
+      "putnam": "Congruence.not_eq",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "partial_order",
+      "putnam": "Order.partial_order",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "pow",
+      "putnam": "Group.pow",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "primeideal",
+      "putnam": "Ideal.primeideal",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "principalideal",
+      "putnam": "Ideal.principalideal",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "r_congruent",
+      "putnam": "Coset.r_congruent",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "r_coset",
+      "putnam": "Coset.r_coset",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "ring",
+      "putnam": "Ring.ring",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "ring_hom_cring",
+      "putnam": "Ring.ring_hom_cring",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "semiring",
+      "putnam": "Ring.semiring",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "set_add",
+      "putnam": "AbelCoset.set_add",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "set_eq",
+      "putnam": "Congruence.set_eq",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "set_not_eq",
+      "putnam": "Congruence.set_not_eq",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "subgroup_generated",
+      "putnam": "Generated_Groups.subgroup_generated",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "submonoid",
+      "putnam": "Group.submonoid",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "t0_space",
+      "putnam": "Abstract_Topological_Spaces.t0_space",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "t1_space",
+      "putnam": "T1_Spaces.t1_space",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "total_order",
+      "putnam": "Order.total_order",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "trivial_homomorphism",
+      "putnam": "Coset.trivial_homomorphism",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "units_of",
+      "putnam": "Group.units_of",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "upper_semilattice",
+      "putnam": "Lattice.upper_semilattice",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "weak_bounded_lattice",
+      "putnam": "Lattice.weak_bounded_lattice",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "weak_lattice",
+      "putnam": "Lattice.weak_lattice",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "weak_lower_semilattice",
+      "putnam": "Lattice.weak_lower_semilattice",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "weak_partial_order",
+      "putnam": "Order.weak_partial_order",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "weak_partial_order_bottom",
+      "putnam": "Order.weak_partial_order_bottom",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "weak_partial_order_top",
+      "putnam": "Order.weak_partial_order_top",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "weak_total_order",
+      "putnam": "Order.weak_total_order",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "weak_upper_semilattice",
+      "putnam": "Lattice.weak_upper_semilattice",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const_hidden",
+      "base": "zero",
+      "putnam": "Ring.ring.zero",
+      "mathbench": "(hidden)",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "notation",
+      "section": "productions",
+      "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = ($) \\<^bold>\\<Rightarrow> \"\\<^const>Formal_Power_Series.fps.fps_nth\"",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "notation",
+      "section": "productions",
+      "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = (*o) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_times\"",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "notation",
+      "section": "productions",
+      "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = (+o) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_plus\"",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "notation",
+      "section": "productions",
+      "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = (<o) \\<^bold>\\<Rightarrow> \"\\<^const>BNF_Wellorder_Constructions.ordLess2\"",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "notation",
+      "section": "productions",
+      "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = (=o) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_eq\"",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "notation",
+      "section": "productions",
+      "item": "logic\\<^sup>(\\<^sup>1\\<^sup>0\\<^sup>0\\<^sup>0\\<^sup>) = (v*) \\<^bold>\\<Rightarrow> \"\\<^const>Finite_Cartesian_Product.vector_matrix_mult\"",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "notation",
+      "section": "productions",
+      "item": "logic\\<^sup>(\\<^sup>5\\<^sup>0\\<^sup>) = any\\<^sup>(\\<^sup>5\\<^sup>1\\<^sup>) =o logic\\<^sup>(\\<^sup>5\\<^sup>1\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_eq\"",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "notation",
+      "section": "productions",
+      "item": "logic\\<^sup>(\\<^sup>5\\<^sup>0\\<^sup>) = logic\\<^sup>(\\<^sup>5\\<^sup>1\\<^sup>) <o logic\\<^sup>(\\<^sup>5\\<^sup>1\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>BNF_Wellorder_Constructions.ordLess2\"",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "notation",
+      "section": "productions",
+      "item": "logic\\<^sup>(\\<^sup>7\\<^sup>0\\<^sup>) = any\\<^sup>(\\<^sup>7\\<^sup>0\\<^sup>) +o logic\\<^sup>(\\<^sup>7\\<^sup>1\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_plus\"",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "notation",
+      "section": "productions",
+      "item": "logic\\<^sup>(\\<^sup>7\\<^sup>0\\<^sup>) = logic\\<^sup>(\\<^sup>7\\<^sup>0\\<^sup>) v* logic\\<^sup>(\\<^sup>7\\<^sup>1\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>Finite_Cartesian_Product.vector_matrix_mult\"",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "notation",
+      "section": "productions",
+      "item": "logic\\<^sup>(\\<^sup>7\\<^sup>5\\<^sup>) = logic\\<^sup>(\\<^sup>7\\<^sup>5\\<^sup>) $ logic\\<^sup>(\\<^sup>7\\<^sup>6\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>Formal_Power_Series.fps.fps_nth\"",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    },
+    {
+      "dim": "notation",
+      "section": "productions",
+      "item": "logic\\<^sup>(\\<^sup>8\\<^sup>0\\<^sup>) = any\\<^sup>(\\<^sup>8\\<^sup>0\\<^sup>) *o logic\\<^sup>(\\<^sup>8\\<^sup>1\\<^sup>) \\<^bold>\\<Rightarrow> \"\\<^const>Set_Algebras.elt_set_times\"",
+      "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
+      "accepted": "2026-06-10"
+    }
+  ]
+}

@@ -93,36 +93,29 @@ hide_const (open)
   Groups.group_axioms
   Group.group_hom Group.group_isomorphisms
   Group.DirProd Group.submonoid
-  Group.hom Group.is_iso Group.mon Group.epi
-  Group.Units Group.units_of Group.pow
-  Coset.kernel Coset.flatten
+  Group.units_of Group.pow
   Coset.l_coset Coset.r_coset Coset.r_congruent
-  Coset.RCOSETS Coset.SET_INV Coset.FactGroup Coset.trivial_homomorphism
+  Coset.FactGroup Coset.trivial_homomorphism
   Ring.ring Ring.cring Ring.semiring
   Ring.ring_hom_cring Ring.abelian_monoid
   Ring.finsum Ring.add_monoid Ring.add_pow Ring.a_inv Ring.a_minus
   Ring.ring.add Ring.ring.zero
   Ideal.ideal Ideal.primeideal Ideal.maximalideal Ideal.principalideal
-  Ideal.genideal Ideal.cgenideal
   Congruence.eq_object.eq
   Congruence.elem Congruence.not_elem Congruence.equivalence
   Congruence.eq_classes Congruence.eq_class_of Congruence.eq_closure_of
   Congruence.eq_is_closed Congruence.not_eq Congruence.set_eq Congruence.set_not_eq
-  Order.gorder.le Order.lless Order.bottom
+  Order.gorder.le
   Order.isotone Order.idempotent Order.least Order.greatest Order.commuting
   Order.at_least_at_most Order.inv_gorder Order.is_glb Order.is_lub
-  Order.Lower Order.Upper Order.Monotone Order.order_emb
   Order.partial_order Order.total_order
   Order.weak_partial_order Order.weak_partial_order_bottom
   Order.weak_partial_order_top Order.weak_total_order
-  Lattice.meet Lattice.supr Lattice.infi
-  Lattice.lattice Lattice.bounded_lattice Lattice.LEAST_FP Lattice.GREATEST_FP
-  Lattice.join_pres Lattice.meet_pres
   Lattice.lower_semilattice Lattice.upper_semilattice
   Lattice.weak_lattice Lattice.weak_lower_semilattice Lattice.weak_upper_semilattice
   Lattice.weak_bounded_lattice
   FiniteProduct.finprod FiniteProduct.foldD
-  FiniteProduct.foldSetD FiniteProduct.foldSetDp FiniteProduct.ACeD FiniteProduct.LCD
+  FiniteProduct.foldSetD FiniteProduct.foldSetDp FiniteProduct.ACeD
   AbelCoset.abelian_group_hom AbelCoset.abelian_subgroup AbelCoset.additive_subgroup
   AbelCoset.A_FactGroup AbelCoset.a_kernel AbelCoset.a_l_coset
   AbelCoset.a_r_congruent AbelCoset.a_r_coset AbelCoset.A_RCOSETS
@@ -171,6 +164,19 @@ hide_const (open)
   (* Topology class shadows from AFP *)
   Abstract_Topological_Spaces.t0_space
   T1_Spaces.t1_space
+  Transfer_Cayley_Hamilton.EQ
+  Lazy_Eval.EQ Lazy_Eval.LT Lazy_Eval.GT
+  Fraction_Field.Fract
+  Reflective_Field.Left Reflective_Field.Right
+  Code_Target_Nat.Nat Nat.Nat
+  card_UNIV_class.card_UNIV
+  Tree.complete Discrete_Topology.discrete.discrete
+  Missing_List.min_list Missing_List.min_list_dom Missing_List.min_list_graph Missing_List.min_list_rel
+  Missing_List.min_list_sumC Module.module
+  Linear_Temporal_Logic_on_Streams.not Uprod.not_equal
+  Congruence.partition BF_Misc.proots Ring_Hom.ring_hom ListVector.scale
+  Landau_Real_Products.set_mult Sorting_Algorithms.sort Sorting_Algorithms.sorted
+  Missing_List.span Mod_Type.mod_type_class.to_nat
 
 declare [[coercion_delete "enat :: nat \<Rightarrow> enat"]]
 declare [[coercion_delete "of_nat :: nat \<Rightarrow> ennreal"]]

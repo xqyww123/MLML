@@ -49,6 +49,7 @@ sys.path.insert(0, HERE)
 
 from IsaREPL import Client, REPLFail
 from detect_putnam_conflicts import parse_imports
+import divergence_golden as golden
 
 PUTNAM_DIR = os.path.join(ROOT, 'data', 'PutnamBench', 'isabelle')
 ENV_DUMP_ML = os.path.join(ROOT, 'tasks', 'MathBench_Prover', 'env_dump.ML')
@@ -63,6 +64,16 @@ def _mktemp(prefix, suffix):
     fd, path = tempfile.mkstemp(prefix=prefix, suffix=suffix)
     os.close(fd)
     return path
+
+
+def _putnam_commit():
+    import subprocess
+    try:
+        return subprocess.check_output(
+            ['git', '-C', PUTNAM_DIR, 'rev-parse', 'HEAD'],
+            text=True, stderr=subprocess.DEVNULL).strip()
+    except Exception:
+        return 'unknown'
 
 
 # --------------------------------------------------------------------------- #
@@ -224,12 +235,19 @@ def compare_syntax(mb_sections, pu_sections):
 
 async def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('addr', nargs='?', default='127.0.0.1:6666',
-                    help='plain-HOL REPL address (default 127.0.0.1:6666)')
+    ap.add_argument('addr', nargs='?', default='127.0.0.1:7777',
+                    help='REPL address (default 127.0.0.1:7777, the pipeline''s dedicated port)')
     ap.add_argument('--report', default='/tmp/putnam_divergence_report.md',
                     help='write a detailed markdown report here')
     ap.add_argument('--limit', type=int, default=0,
                     help='only check the first N import sets (0 = all)')
+    ap.add_argument('--full', action='store_true',
+                    help='report ALL divergences, not just the delta vs the golden ledger')
+    ap.add_argument('--accept-new', action='store_true',
+                    help='append the newly-found divergences to the golden ledger '
+                         '(use only after the goal-term check is green)')
+    ap.add_argument('--rationale', default='',
+                    help='rationale recorded for entries added by --accept-new')
     args = ap.parse_args()
 
     # Each dimension is checked only if its reference dump is present; this lets
@@ -337,78 +355,105 @@ async def main():
         if os.path.exists(p):
             os.unlink(p)
 
-    report = render_report(const_diff, const_inacc, type_diff, type_inacc,
-                           notation_div, removed_bases, label_files,
-                           {'const': do_const, 'type': do_type, 'notation': do_notation})
+    records = build_records(const_diff, const_inacc, type_diff, type_inacc,
+                            notation_div, removed_bases, label_files)
+    meta, by_key = golden.load_golden()
+    new, known, resolved = golden.diff_against_golden(records, by_key)
+
+    shown = records if args.full else new
+    title = "ALL divergences" if args.full else "NEW divergences (delta vs golden ledger)"
+    # "no longer present" is only meaningful on a full sweep; under --limit most
+    # golden entries simply weren't exercised.
+    report = render_records(shown, title, len(known), [] if args.limit else resolved)
     print('\n' + report)
     with open(args.report, 'w') as f:
         f.write(report)
-    print(f"\n(Detailed report written to {args.report})")
+    print(f"\n(Report written to {args.report})")
+    print(f"Summary: {len(new)} new | {len(known)} known/golden-suppressed | "
+          f"{len(resolved)} golden entries no longer present")
+
+    if args.accept_new:
+        if not new:
+            print("Nothing new to accept.")
+        else:
+            import datetime
+            today = datetime.date.today().isoformat()
+            for rec in new:
+                e = {k: rec[k] for k in ('dim', 'base', 'putnam', 'mathbench',
+                                         'section', 'item') if k in rec}
+                e['rationale'] = args.rationale or '(no rationale given)'
+                e['accepted'] = today
+                by_key[golden.entry_key(rec)] = e
+            meta['updated'] = today
+            meta.setdefault('putnam_version', _putnam_commit())
+            golden.save_golden(meta, by_key)
+            print(f"Accepted {len(new)} new entries into {golden.GOLDEN_PATH}")
 
 
 def _files_for(labels, label_files):
     return sum(label_files.get(l, 0) for l in labels)
 
 
-def render_report(const_diff, const_inacc, type_diff, type_inacc,
-                  notation_div, removed_bases, label_files, checked):
-    L = []
-    L.append("# MathBench_Prover vs PutnamBench environment divergences\n")
+def build_records(const_diff, const_inacc, type_diff, type_inacc,
+                  notation_div, removed_bases, label_files):
+    """Flatten the aggregation dicts into stable divergence records."""
+    recs = []
 
-    def section_resolution(title, diff, inacc, critical_note, was_checked):
-        L.append(f"\n## {title}\n")
-        if not was_checked:
-            L.append("\n_Not checked (reference dump missing)._\n")
-            return
-        if not diff and not inacc:
-            L.append("\nNone.\n")
-            return
-        if diff:
-            L.append(f"\n### Resolves differently ({len(diff)}) — {critical_note}\n")
-            for (base, mw, pw), labels in sorted(diff.items()):
-                nf = _files_for(labels, label_files)
-                L.append(f"\n- **`{base}`** [{nf} files, {len(labels)} import sets]")
-                L.append(f"\n    - Putnam:    `{pw}`")
-                L.append(f"\n    - MathBench: `{mw}`")
-            L.append("\n")
-        if inacc:
-            L.append(f"\n### Accessible in Putnam, unavailable in MathBench ({len(inacc)})\n")
-            for (base, pw), labels in sorted(inacc.items()):
-                nf = _files_for(labels, label_files)
-                L.append(f"\n- **`{base}`** -> `{pw}`  [{nf} files, {len(labels)} import sets]")
-            L.append("\n")
+    def add_res(d, dim, hidden):
+        for key, labels in d.items():
+            if hidden:
+                base, pw, mw = key[0], key[1], '(hidden)'
+            else:
+                base, mw, pw = key            # const_diff key = (base, mathbench, putnam)
+            recs.append({'dim': dim, 'base': base, 'putnam': pw, 'mathbench': mw,
+                         'nfiles': _files_for(labels, label_files), 'nsets': len(labels)})
 
-    section_resolution("1. Constant short-name resolution", const_diff, const_inacc,
-                       "a Putnam name silently means a different constant here",
-                       checked['const'])
-    section_resolution("2. Type short-name resolution", type_diff, type_inacc,
-                       "a Putnam name silently means a different type here",
-                       checked['type'])
+    add_res(const_diff, 'const', False)
+    add_res(const_inacc, 'const_hidden', True)
+    add_res(type_diff, 'type', False)
+    add_res(type_inacc, 'type_hidden', True)
 
-    L.append("\n## 3. Notation conflicts (符号)\n")
-    if not checked['notation']:
-        L.append("\n_Not checked (reference dump missing)._\n")
-    elif not notation_div:
-        L.append("\nNone.\n")
-    else:
-        by_section = defaultdict(list)
-        for (section, kind, item), labels in notation_div.items():
-            by_section[section].append((kind, item, labels))
-        for section in ('productions', 'parse_rules', 'print_rules'):
-            entries = by_section.get(section, [])
-            if not entries:
-                continue
-            L.append(f"\n### {section} ({len(entries)})\n")
-            for kind, item, labels in sorted(entries, key=lambda e: e[1]):
-                nf = _files_for(labels, label_files)
-                cs = consts_in(item)
-                intentional = any(c.split('.')[-1] in removed_bases for c in cs)
-                flag = "  _(likely intentional: no_notation in MathBench)_" if intentional else ""
-                names = ', '.join(sorted(c.split('.')[-1] for c in cs)) or '?'
-                L.append(f"\n- [{kind}] **{names}** [{nf} files, {len(labels)} import sets]{flag}")
-                L.append(f"\n    `{item[:240]}`")
-            L.append("\n")
+    for (section, kind, item), labels in notation_div.items():
+        cs = consts_in(item)
+        recs.append({
+            'dim': 'notation', 'section': section, 'kind': kind, 'item': item,
+            'names': ', '.join(sorted(c.split('.')[-1] for c in cs)) or '?',
+            'intentional': any(c.split('.')[-1] in removed_bases for c in cs),
+            'nfiles': _files_for(labels, label_files), 'nsets': len(labels)})
+    return recs
 
+
+def render_records(records, title, n_known, resolved):
+    L = ["# MathBench_Prover vs PutnamBench environment divergences\n",
+         f"\n_{title}_\n"]
+    groups = [('const', '1. Constant resolves differently'),
+              ('const_hidden', '1b. Constant exposed by Putnam, hidden in MathBench'),
+              ('type', '2. Type resolves differently'),
+              ('type_hidden', '2b. Type exposed by Putnam, hidden in MathBench')]
+    for dim, dim_title in groups:
+        rs = [r for r in records if r['dim'] == dim]
+        L.append(f"\n## {dim_title} ({len(rs)})\n")
+        for r in sorted(rs, key=lambda r: r['base']):
+            if dim.endswith('hidden'):
+                L.append(f"\n- **`{r['base']}`** -> `{r['putnam']}`  [{r['nfiles']}f/{r['nsets']}s]")
+            else:
+                L.append(f"\n- **`{r['base']}`**  Putnam=`{r['putnam']}`  "
+                         f"MathBench=`{r['mathbench']}`  [{r['nfiles']}f/{r['nsets']}s]")
+        L.append("\n")
+
+    nrec = [r for r in records if r['dim'] == 'notation']
+    L.append(f"\n## 3. Notation 符号 ({len(nrec)})\n")
+    for r in sorted(nrec, key=lambda r: r.get('item', '')):
+        flag = "  _(likely intentional: no_notation)_" if r.get('intentional') else ""
+        L.append(f"\n- [{r.get('kind')}] **{r.get('names', '?')}** "
+                 f"[{r['nfiles']}f/{r['nsets']}s]{flag}")
+        L.append(f"\n    `{r['item'][:200]}`")
+
+    L.append(f"\n\n---\n{n_known} known divergence(s) suppressed by the golden ledger.\n")
+    if resolved:
+        L.append(f"{len(resolved)} golden entr(ies) no longer produced (prunable):\n")
+        for e in resolved[:60]:
+            L.append(f"  - {golden.entry_key(e)}\n")
     return ''.join(L)
 
 
