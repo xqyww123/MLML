@@ -51,6 +51,8 @@ theory MathBench_ProverBase
     Continued_Fractions.Continued_Fractions
     (* Geometry of numbers: Minkowski's lattice point theorem *)
     Minkowskis_Theorem.Minkowskis_Theorem
+    Gauss_Sums.Polya_Vinogradov
+    Chord_Segments.Chord_Segments
 begin
 
 end

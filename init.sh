@@ -45,24 +45,24 @@ done
 
 if [[ "$reinstall_isabelle" == "y" ]]; then
     echo "Removing existing Isabelle and AFP installations..."
-    rm -rf ./contrib/Isabelle2024 ./contrib/afp-2025-02-12
-    rm -f ./cache/downloads/Isabelle2024_and_afp-2025-02-12.tar.gz
-    if [ -d "$USER/.isabelle/Isabelle2024/heaps" ]; then
-        mv $USER/.isabelle/Isabelle2024/heaps $USER/.isabelle/Isabelle2024/heaps.$(date +%Y%m%d%H%M%S)
+    rm -rf ./contrib/Isabelle2025-2 ./contrib/afp-2026-05-13
+    rm -f ./contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst
+    if [ -d "$HOME/.isabelle/Isabelle2025-2/heaps" ]; then
+        mv $HOME/.isabelle/Isabelle2025-2/heaps $HOME/.isabelle/Isabelle2025-2/heaps.$(date +%Y%m%d%H%M%S)
     fi
     echo "Isabelle and AFP will be reinstalled."
 fi
 
-if md5sum --status -c ./contrib/Isabelle2024.md5sum; then
-    echo "Isabelle2024 is up to date."
+if md5sum --status -c ./contrib/Isabelle2025-2.md5sum; then
+    echo "Isabelle2025-2 is up to date."
 else
-    echo "Isabelle2024 is out of date. Reinstalling..."
-    rm -rf ./contrib/Isabelle2024
-    rm -rf ./contrib/afp-2025-02-12
-    python3 manage_data.py get contrib/Isabelle2024_and_afp-2025-02-12.tar.zst -y
-    tar --zstd -xf ./contrib/Isabelle2024_and_afp-2025-02-12.tar.zst -C ./contrib
-    rm ./contrib/Isabelle2024_and_afp-2025-02-12.tar.zst
-    echo "Isabelle2024 and AFP reinstalled."
+    echo "Isabelle2025-2 is out of date. Reinstalling..."
+    rm -rf ./contrib/Isabelle2025-2
+    rm -rf ./contrib/afp-2026-05-13
+    python3 manage_data.py get contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst -y
+    tar --zstd -xf ./contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst -C ./contrib
+    rm ./contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst
+    echo "Isabelle2025-2 and AFP reinstalled."
 fi
 
 # Ask user for maximum memory allocation for Isabelle
@@ -80,7 +80,7 @@ printf "ML_OPTIONS='--minheap 4G --maxheap ${isabelle_memory}G'\nML_MAX_HEAP=${i
 echo "Setting Isabelle memory limit to ${isabelle_memory}GB"
 
 #rm -f  $(isabelle getenv -b ISABELLE_HOME_USER)/etc/components 2>/dev/null
-isabelle components -u ./contrib/afp-2025-02-12/thys || exit 1
+isabelle components -u ./contrib/afp-2026-05-13/thys || exit 1
 isabelle components -u . || exit 1
 
 isabelle ocaml_setup || echo "Fail to activate OCaml support for Isabelle. Some files may fail to be evaluated"

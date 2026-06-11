@@ -50,8 +50,17 @@ decomposes assumption `H` into `m` cases, where the i-th provides `Bᵢ₁, ...`
 
 **Why this form?** `R` is the goal to be proved. The rule says: given `H`, if we can show `R` from each set of decomposed cases, then `R` holds. This is how `H` is "eliminated" — replaced by simpler pieces that suffice to reach the goal.
 
+### Destruction Form — Also a Legitimate Elimination Rule
+
+A rule in `A ⟹ B` form is also a legitimate member of the elimination-rule category, read as: **decompose `B` out of the assumption `A`**. For example, `conjunct1: A ∧ B ⟹ A` extracts the left component from a conjunction.
+
+A connective/predicate may have **several** destruction rules, each extracting a different component: `conjunct1: A ∧ B ⟹ A` and `conjunct2: A ∧ B ⟹ B`. Another example: `singletonD: b ∈ {a} ⟹ b = a`.
+
+The two shapes are interconvertible: `A ⟹ B` corresponds to `A ⟹ (B ⟹ R) ⟹ R`. Rule collections (e.g. retrieved "elimination rules") therefore mix both shapes: continuation-style elimination rules and forward-style destruction rules, the latter kept in their original forward form.
+
 ## Reading Guide
 
 - **Intro rule:** "To prove [conclusion], it suffices to show [subgoals]."
 - **Elim rule:** "Given [hypothesis], one obtains [decomposed cases]."
+- **Dest (forward) rule:** "From [assumption], one decomposes out [component]." — same category as elim, just stated forward-style; one connective may have several, each extracting a different component.
 

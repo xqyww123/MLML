@@ -40,6 +40,7 @@ session MathBench_ProverBase in Base = "HOL-Complex_Analysis" +
     Continued_Fractions
     Minkowskis_Theorem
     Hermite_Lindemann
+    "Chord_Segments"
     (*Minilang_Agent
     Semantic_Embedding*)
     Auto_Sledgehammer

@@ -2,12 +2,11 @@ theory MathBench_Prover
   imports Auto_Sledgehammer.Auto_Sledgehammer MathBench_ProverBase.MathBench_ProverBase
 begin
 
-no_notation fds (binder "χ" 10)
+no_notation fds (binder "\<chi>" 10)
 no_notation fps_nth (infixl "$" 75)
 no_notation fds_nth (infixl "$" 75)
 no_notation Matrix.vec_index (infixl "$" 100)
 no_notation blinfun_apply (infixl "$" 999)
-no_notation fds (binder "\<chi>" 10)
 no_notation Matrix.scalar_prod (infix "\<bullet>" 70)
 no_notation BNF_Cardinal_Arithmetic.cprod (infixr "*c" 80)
 no_notation BNF_Cardinal_Arithmetic.csum (infixr "+c" 65)
@@ -21,17 +20,18 @@ no_notation matrix_vector_mult_iarray (infixl "*iv" 70)
 no_notation vector_matrix_mult_iarray (infixl "v*i" 70)
 no_notation vector_matrix_mult (infixl "v*" 70)
 no_notation word_sless ("'(<s')")
-no_notation word_sless ("(_/ <s _)"  [51, 51] 50)
-no_notation word_sle ("'(<=s')")
-no_notation word_sle ("(_/ <=s _)" [51, 51] 50)
+no_notation word_sless (\<open>(\<open>notation=\<open>infix <s\<close>\<close>_/ <s _)\<close>  [51, 51] 50)
+no_notation word_sle (\<open>'(\<le>s')\<close>)
+no_notation word_sle (\<open>(\<open>notation=\<open>infix \<le>s\<close>\<close>_/ \<le>s _)\<close>  [51, 51] 50)
+no_notation (input) word_sle (\<open>(\<open>notation=\<open>infix <=s\<close>\<close>_/ <=s _)\<close>  [51, 51] 50)
 no_notation Set_Algebras.elt_set_times (infixl "*o" 80)
 no_notation Set_Algebras.elt_set_plus (infixl "+o" 70)
 no_notation Set_Algebras.elt_set_eq (infix "=o" 50)
 
 no_syntax (ASCII)
-  "_Sum_any" :: "pttrn \<Rightarrow> 'a \<Rightarrow> 'a::comm_monoid_add" ("(3SUM _. _)" [0, 10] 10)
+  "_Sum_any" :: "pttrn \<Rightarrow> 'a \<Rightarrow> 'a::comm_monoid_add" (\<open>(\<open>indent=3 notation=\<open>binder SUM\<close>\<close>SUM _. _)\<close> [0, 10] 10)
 no_syntax
-  "_Sum_any" :: "pttrn \<Rightarrow> 'a \<Rightarrow> 'a::comm_monoid_add" ("(3\<Sum>_. _)" [0, 10] 10)
+  "_Sum_any" :: "pttrn \<Rightarrow> 'a \<Rightarrow> 'a::comm_monoid_add" (\<open>(\<open>indent=2 notation=\<open>binder \<Sum>\<close>\<close>\<Sum>_. _)\<close> [0, 10] 10)
 no_translations
   "\<Sum>a. b" \<rightleftharpoons> "CONST Sum_any (\<lambda>a. b)"
 
@@ -373,10 +373,10 @@ simproc_setup sturm_card (\<open>card {x::real. P x} = n\<close>) =
   \<open>K Sturm_Simproc.sturm_simproc\<close>
 
 setup \<open>
-  map_theory_simpset (fn ctxt =>
-    let val ctxt = ctxt addSolver
-          (Raw_Simplifier.mk_solver "algebra" Ring_Field_Algebra.algebra_solver)
-    in Simplifier.addloop (ctxt, ("field", Ring_Field_Algebra.field_looper)) end)
+  map_theory_simpset
+    (Simplifier.add_unsafe_solver
+        (Simplifier.mk_solver "algebra" Ring_Field_Algebra.algebra_solver)
+     #> Simplifier.add_loop ("field", Ring_Field_Algebra.field_looper))
 \<close>
 
 setup \<open>fn thy =>

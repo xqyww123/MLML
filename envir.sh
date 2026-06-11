@@ -11,11 +11,11 @@ if [[ ":$PYTHONPATH:" != *":$MLML_ROOT/contrib/Isa-Mini:"* ]]; then
 fi
 
 # Ensure Isabelle is the first entry in PATH
-if [[ "$PATH" != "$MLML_ROOT/contrib/Isabelle2024/bin"* ]]; then
+if [[ "$PATH" != "$MLML_ROOT/contrib/Isabelle2025-2/bin"* ]]; then
     # Remove Isabelle from current PATH if it exists
-    PATH=$(echo "$PATH" | sed "s|:$MLML_ROOT/contrib/Isabelle2024/bin||g")
+    PATH=$(echo "$PATH" | sed "s|:$MLML_ROOT/contrib/Isabelle2025-2/bin||g")
     # Add Isabelle as the first entry
-    export PATH="$MLML_ROOT/contrib/Isabelle2024/bin:$PATH"
+    export PATH="$MLML_ROOT/contrib/Isabelle2025-2/bin:$PATH"
 fi
 
 export CVC5_SOLVER=$MLML_ROOT/contrib/cvc5-Linux-x86_64-static-gpl/bin/cvc5
