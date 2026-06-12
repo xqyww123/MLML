@@ -1,8 +1,9 @@
 {
   "meta": {
     "updated": "2026-06-12",
-    "putnam_data_sha": "c2a895db5913",
-    "putnam_submodule_commit": "afe83317ba064f4e09dd022c3331cb8bf1e3927a"
+    "putnam_data_sha": "9dcc2276a9e7",
+    "putnam_submodule_commit": "afe83317ba064f4e09dd022c3331cb8bf1e3927a",
+    "note": "2026-06-12: 63 defective formalizations corrected (see putnam_audit/fix_report.en.md); full radar re-sweep on the corrected data: 0 new, 156 suppressed, 0 prunable; goal gate 639/639 green. Entries unchanged."
   },
   "entries": [
     {
