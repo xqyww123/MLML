@@ -53,6 +53,8 @@ theory MathBench_ProverBase
     Minkowskis_Theorem.Minkowskis_Theorem
     Gauss_Sums.Polya_Vinogradov
     Chord_Segments.Chord_Segments
+    (* Zeckendorf representation of naturals as sums of non-consecutive Fibonacci numbers *)
+    Zeckendorf.Zeckendorf
 begin
 
 end

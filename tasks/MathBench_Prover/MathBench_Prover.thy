@@ -1,6 +1,9 @@
 theory MathBench_Prover
   imports Auto_Sledgehammer.Auto_Sledgehammer MathBench_ProverBase.MathBench_ProverBase
+    DigitsInBase.DigitsInBase
 begin
+
+interpretation digits_in_base 10 by (standard, auto)
 
 no_notation fds (binder "\<chi>" 10)
 no_notation fps_nth (infixl "$" 75)
