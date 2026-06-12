@@ -45,6 +45,21 @@ _STATIC_DENY_BASH: list[tuple[re.Pattern, str]] = [
 # below cover the editing tools; these close the shell-redirection bypass).
 _BASH_WRITEISH = re.compile(r"(>|>>|\btee\b|\bcp\b|\bmv\b|\bsed\b[^|;&]*\s-i|\btruncate\b|\bdd\b)")
 
+# Write-ish constructs whose TARGET is the golden ledger specifically.
+# Reads (python -c json.load, cat, grep, git status …) must pass — denying
+# them blocked a legitimate drift diagnosis live on 2026-06-11. `2>&1`-style
+# fd duplication is excluded by (?!&) alone; a lookbehind on digits would
+# wrongly re-open `1>`/`2>`/`&>` write redirections (review 2026-06-12).
+_GOLDEN_WRITEISH = re.compile(
+    r"(\b(tee|cp|mv|dd|truncate|install|rsync|ln)\b[^|;&]*divergence_golden"
+    r"|\b(sed|perl)\b[^|;&]*\s-i[^|;&]*divergence_golden"
+    r"|>>?\|?(?!&)\s*\S*divergence_golden)")
+
+# The accept flow is exempt only when the command ACTUALLY invokes the tool —
+# a substring test let `echo x > golden # check_putnam_divergence` through.
+_GOLDEN_EXEMPT = re.compile(
+    r"(^|[;&|]\s*)(python3?\s+)?(tools/)?check_putnam_divergence(\.py)?\b")
+
 # Checked ONLY against the target path of Edit/Write/NotebookEdit: these files
 # must never be hand-edited. (ACCEPT goes through
 # `check_putnam_divergence.py --accept-new`, which the user authorized for
@@ -68,10 +83,10 @@ def _static_deny_reason(tool_name: str, tool_input: dict) -> str | None:
         for pat, reason in _STATIC_DENY_BASH:
             if pat.search(cmd):
                 return reason
-        if ("divergence_golden.json" in cmd
-                and "check_putnam_divergence" not in cmd):
-            return ("divergence_golden.json may only be touched via "
-                    "check_putnam_divergence.py --accept-new")
+        if _GOLDEN_WRITEISH.search(cmd) and not _GOLDEN_EXEMPT.search(cmd):
+            return ("divergence_golden.json may only be MODIFIED via "
+                    "check_putnam_divergence.py --accept-new (reading it "
+                    "is fine)")
         if re.search(r"Tests/[^\s]*\.ya?ml", cmd) and _BASH_WRITEISH.search(cmd):
             return "golden test YAMLs must not be modified"
         return None
@@ -105,6 +120,17 @@ def static_pretooluse_hook(log_path: Path):
     return _hook
 
 
+DEDUP_MISSION = """\
+Duplicate-screening agent of the MathBench missing-lemma loop. All the
+evidence it needs is in the prompt. It may:
+- submit its judgments via the `mcp__results__submit_dedup` tool;
+- run READ-ONLY Bash (grep, rg, find, ls, cat, head, tail, wc, sed -n) if it
+  genuinely needs extra context, sparingly.
+It must NOT: search the corpora exhaustively (that is the downstream search
+agent's job), modify any file, build anything, start/stop any process or
+server, or access the network.
+"""
+
 SEARCH_MISSION = """\
 Confirmation-search agent of the MathBench missing-lemma loop. It may:
 - read/grep/glob anywhere under the repository;
@@ -123,13 +149,12 @@ mathbench-import-reconcile skill. It may:
 - run `python tools/mathbench_repl.py …` (the dedicated port-7777 REPL),
   `python tools/check_putnam_divergence.py` (including `--accept-new`, which
   the user authorized for this loop provided every decision is recorded),
-  `python -m tools.test_mathbench_goals`;
-- run `isabelle build … MathBench_ProverBase` (with RPC_Host=127.0.0.1:27180),
-  and other read-only isabelle/bash commands;
+  `python -m tools.test_mathbench_goals`, and other read-only bash commands;
 - append to missing_lemma_loop_state/divergence_decisions.md and submit its
   result via the `mcp__results__submit_result` tool.
-It must NOT: touch the port-6666 REPL or kill any process directly, hand-edit
-golden YAMLs or tools/divergence_golden.json (golden changes go through
---accept-new only), run git state-changing commands, or edit anything outside
-the paths above.
+It must NOT: run `isabelle build` (the heap rebuild is the watcher's own
+deterministic step), touch the port-6666 REPL or kill any process directly,
+hand-edit golden YAMLs or tools/divergence_golden.json (golden changes go
+through --accept-new only), run git state-changing commands, or edit anything
+outside the paths above.
 """

@@ -38,6 +38,7 @@ import concurrent.futures
 import json
 import os
 import re
+import shutil
 import signal
 import subprocess
 import sys
@@ -64,9 +65,46 @@ REPL_START_CMD = ("./contrib/Isa-REPL/repl_server.sh 0.0.0.0:6666 "
 # 2026-06-11) so the lazy-spawn race ("whichever Isabelle process reconnects
 # first donates its env") can never decide the survey switch.
 RPC_HOST_ADDR = "127.0.0.1:27182"
+# The semantic collect runs against its OWN REPL + RPC pair (用户决定
+# 2026-06-12): the interpretation server lives inside the collect process
+# (semantics_manage starts one in-process when --rpc-addr is free) and the
+# dedicated REPL's ML callbacks go there via its RPC_Host env — fully
+# decoupled from the AoA pair (6666/27182), whose host died entangled with a
+# collect crash on 2026-06-12 11:55.
+COLLECT_REPL_ADDR = "127.0.0.1:6665"
+COLLECT_REPL_PORT = 6665
+COLLECT_RPC_ADDR = "127.0.0.1:27183"
+COLLECT_REPL_START_CMD = (f"./contrib/Isa-REPL/repl_server.sh {COLLECT_REPL_ADDR} "
+                          "MathBench_Prover /tmp/repl_outputs_collect "
+                          "-o threads=10 -o document=false")
 SEMANTIC_COLLECT_CMD = ("./contrib/Semantic_Embedding/semantics_manage.py collect "
                         "MathBench_Prover.MathBench_Prover "
-                        "--embed-models qwen3-embedding-8b --model claude-opus-4-8")
+                        f"--repl-addr {COLLECT_REPL_ADDR} "
+                        f"--rpc-addr {COLLECT_RPC_ADDR} "
+                        "--embed-models qwen3-embedding-8b --model 'claude-opus-4-8[1m]'")
+# Sledgehammer's external provers are launched by Isabelle's bash_process in
+# their OWN setsid process groups; its killpg cleanup runs only on a normal
+# JVM exit, so killing poly from outside strands them (two orphan veriT burned
+# 99.7% CPU x16h, 2026-06-12). kill_repl_and_host sweeps them — but ONLY
+# processes positively identified by comm whitelist AND a domain-precise env
+# marker (shared machine: other sessions run the same binaries).
+# Exact /proc/<pid>/comm values of the bundled binaries (cvc5 is a no-exec
+# bash wrapper around cvc5-bin — the -bin is the load-bearing kill; eprover-ho
+# is E's preferred exec name in future components; cvc4 ships with 2024).
+_PROVER_NAMES = ("veriT", "vampire", "cvc5", "cvc5-bin", "cvc4", "z3",
+                 "eprover", "eprover-ho", "SPASS", "zipperposition")
+# Domain markers: these RPC_Host values are pinned ONLY in the per-child env
+# dicts of the 6666 AoA REPL and the 6665 collect REPL — never exported into
+# the watcher's own os.environ — so carrying one proves descent from a REPL
+# this function just killed. AOA_MISSING_LEMMA_SURVEY is deliberately NOT a
+# marker (it sits in the watcher's environ and is inherited tree-wide, e.g.
+# by the phase-2 agent's 7777 REPL → would kill ITS working provers). 27180
+# (build/7777 domain) is deliberately excluded for the same reason; the Base
+# build itself spawns no provers (imports-only body, Auto_Sledgehammer lives
+# in the child session).
+_ORPHAN_ENV_MARKERS = (f"RPC_Host={RPC_HOST_ADDR}".encode(),
+                       f"RPC_Host={COLLECT_RPC_ADDR}".encode())
+
 # Dump MathBench_Prover (covers MathBench_ProverBase + the source-loaded
 # MathBench_Prover.thy layer) AND Minilang_Agent — facts living in the
 # source-loaded layers must not be misjudged as missing imports.
@@ -86,6 +124,35 @@ def bash(cmd: str, **kwargs):
     """Run *cmd* in a bash that sourced envir.sh, from the repo root."""
     return subprocess.run(["bash", "-c", f"source envir.sh && {cmd}"],
                           cwd=ROOT, **kwargs)
+
+
+def bash_timed(cmd: str, timeout: float) -> int:
+    """Run a LONG deterministic step with a real process-group kill on
+    timeout. `subprocess.run(timeout=)` only SIGKILLs the direct child; bash
+    exec-optimizes into e.g. the `isabelle` wrapper → java, whose poly
+    children would survive as orphans (and a timed-out orphan build can later
+    write an UNGATED heap). Returns the exit code; -1 on timeout."""
+    proc = subprocess.Popen(["bash", "-c", f"source envir.sh && {cmd}"],
+                            cwd=ROOT, start_new_session=True)
+    try:
+        return proc.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        kill_proc(proc)
+        return -1
+
+
+def emit_event(level: str, kind: str, **data) -> None:
+    """Append a structured event to events.jsonl — the interface the
+    top-level supervisory agent watches (用户提议 2026-06-12). Levels:
+    FATAL (needs the supervisor/user NOW), WARN (report, don't block),
+    INFO (periodic digest material)."""
+    evt = {"ts": datetime.now().isoformat(), "level": level, "kind": kind,
+           **data}
+    try:
+        with open(STATE_DIR / "events.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(evt, ensure_ascii=False) + "\n")
+    except OSError as e:
+        log(f"WARNING: cannot write events.jsonl: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -137,10 +204,12 @@ class Ledger:
         return "eng:" + re.sub(r"\s+", " ", eng)[:160]
 
     def add_claim(self, case: str, invocation: str, trigger: str, report: dict) -> dict:
-        # Collection records EVERYTHING as pending — duplicate detection is the
-        # SEARCH AGENT's job (用户决定 2026-06-11): it sees the adjudicated
-        # ledger digest in its prompt and returns verdict "duplicate" with a
-        # duplicate_of reference; apply_verdicts() then inherits the prior
+        # Collection records EVERYTHING as pending — duplicate detection is an
+        # AGENT's job, never a deterministic key match (用户决定 2026-06-11,
+        # 复议确认 2026-06-12: a name guess is not an identity). The dedup
+        # agent screens each batch (embedding candidates + slim digest) before
+        # the search agent; either may return verdict "duplicate" with a
+        # duplicate_of reference, and apply_verdicts() inherits the prior
         # adjudication (imported → provided_but_unfindable, etc.).
         entry = {
             "id": f"ml-{len(self.entries) + 1:04d}",
@@ -157,24 +226,36 @@ class Ledger:
         self.save()
         return entry
 
-    def adjudicated_digest(self, limit: int = 300) -> list[dict]:
-        """Compact view of previously adjudicated claims, handed to the search
-        agent so it can flag duplicates instead of re-searching. Deduplicated
-        by claim key (latest adjudication wins) so the cap packs distinct
-        facts, not repetitions."""
+    @staticmethod
+    def digest_entry(e: dict) -> dict:
+        """The ONE projection of a ledger entry that may reach an agent
+        prompt or the survey feedback file: never the raw resolution, which
+        carries circuit-breaker notes / evidence meant for humans (评审 M5)."""
+        r = e["report"]
+        return {
+            "id": e["id"],
+            "name": r.get("name_guess") or r.get("name") or "",
+            "english": (r.get("english") or "")[:200],
+            "status": e["status"],
+            "theory": e["resolution"].get("theory"),
+            "lemma_name": e["resolution"].get("lemma_name"),
+        }
+
+    def adjudicated_digest(self, limit: int = 300,
+                           only: tuple | None = None) -> list[dict]:
+        """Compact view of previously adjudicated claims, handed to the
+        dedup/search agents so they flag duplicates instead of re-searching.
+        Deduplicated by claim key (latest adjudication wins) so the cap packs
+        distinct facts, not repetitions. *only* restricts to those statuses —
+        used for the slim always-included digest of imported/already_in_heap
+        facts (正确性兜底, 评审 H2)."""
         by_key: dict[str, dict] = {}
         for e in self.entries:
             if e["status"] in ("pending", "searching", "duplicate"):
                 continue
-            r = e["report"]
-            by_key[e["key"]] = {
-                "id": e["id"],
-                "name": r.get("name_guess") or r.get("name") or "",
-                "english": (r.get("english") or "")[:200],
-                "status": e["status"],
-                "theory": e["resolution"].get("theory"),
-                "lemma_name": e["resolution"].get("lemma_name"),
-            }
+            if only is not None and e["status"] not in only:
+                continue
+            by_key[e["key"]] = self.digest_entry(e)
         return list(by_key.values())[-limit:]
 
     def pending(self) -> list[dict]:
@@ -182,6 +263,27 @@ class Ledger:
 
     def by_id(self, eid: str) -> dict:
         return next(e for e in self.entries if e["id"] == eid)
+
+
+SURVEY_FEEDBACK_PATH = STATE_DIR / "survey_feedback.json"
+_FEEDBACK_STATUSES = ("already_in_heap", "not_found", "import_failed",
+                      "provided_but_unfindable")
+
+
+def write_survey_feedback(ledger: 'Ledger', attempt_ids: set) -> None:
+    """Verdict feedback for the AoA survey prompt (第一重防重报). Attempt-
+    scoped (用户裁决 2026-06-12): only claims ingested during the CURRENT
+    attempt that already carry a final adjudication — cross-attempt repeats
+    are deliberately let through to the dedup stage, because a re-report of
+    an imported fact IS the provided_but_unfindable signal. digest_entry
+    projection only (never raw resolution). Atomic write (tmp in the same
+    dir + replace): the RPC-host process reads this file mid-survey."""
+    entries = [Ledger.digest_entry(e) for e in ledger.entries
+               if e["id"] in attempt_ids and e["status"] in _FEEDBACK_STATUSES]
+    tmp = SURVEY_FEEDBACK_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(entries, indent=2, ensure_ascii=False),
+                   encoding="utf-8")
+    tmp.replace(SURVEY_FEEDBACK_PATH)
 
 
 # ---------------------------------------------------------------------------
@@ -286,7 +388,8 @@ async def _claude_agent_async(prompt: str, *, model: str | None,
                               transcript_path: Path,
                               timeout: float | None = None,
                               mission: str,
-                              answer_tool=None) -> None:
+                              answer_tool=None,
+                              done=None) -> None:
     from claude_agent_sdk import (ClaudeAgentOptions, ClaudeSDKClient,
                                   HookMatcher, ResultMessage,
                                   create_sdk_mcp_server)
@@ -321,32 +424,138 @@ async def _claude_agent_async(prompt: str, *, model: str | None,
     # ClaudeSDKClient (not one-shot query()): permission/control answers
     # travel on the bidirectional control channel, which query() closes after
     # the prompt iterator is exhausted ("Stream closed").
+    #
+    # The session must NOT end at the first ResultMessage when a *done*
+    # predicate is given: an agent that backgrounds a long step (the phase-2
+    # heap rebuild, observed live 2026-06-11 23:32) ends its turn to await
+    # the task notification — closing the client there kills its background
+    # work and loses the answer-tool call. So with done!=None we keep
+    # receiving across turns (the CLI auto-reinvokes the agent on task
+    # completion); only when the stream goes idle BETWEEN turns do we nudge
+    # the agent (bounded), and we stop once done() holds.
+    # The CLI survives long idles fine (probed: 300s, full option combo) —
+    # the earlier "idle exit" was a misdiagnosed artifact of cancelling the
+    # message generator. The window need only catch "agent forgot to call
+    # the answer tool"; in-session steps are all short foreground calls now
+    # (the heap rebuild lives outside the session), so 120s is generous.
+    _NUDGE_IDLE_SECONDS = 120
+    _MAX_NUDGES = 8
+    _NUDGE_TEXT = (
+        "You ended your turn without completing the required answer-tool "
+        "call. That call is the only deliverable of this session. If your "
+        "work is done, call the answer tool NOW with the real outcome. If "
+        "some work is genuinely unfinished, bring the FILES back to a "
+        "consistent state first: a theory whose validation or promotion you "
+        "could not finish must be reported as failed AND have your edits for "
+        "it reverted. If you started a long background command, report it in "
+        "the `failed` reason so the watcher knows — do not wait for it.")
+
     async def _drive() -> None:
         with open(transcript_path, "a", encoding="utf-8") as t:
+            def _log_message(message) -> bool:
+                """Write *message* to the transcript; True iff turn ended."""
+                for block in getattr(message, "content", None) or []:
+                    text = getattr(block, "text", None)
+                    if isinstance(text, str):
+                        t.write(text + "\n")
+                    tool = getattr(block, "name", None)
+                    if tool is not None and hasattr(block, "input"):
+                        t.write(f"[tool_use] {tool} "
+                                f"{json.dumps(block.input, ensure_ascii=False)[:400]}\n")
+                    if getattr(block, "is_error", False):
+                        t.write(f"[tool_error] {str(getattr(block, 'content', ''))[:400]}\n")
+                if isinstance(message, ResultMessage):
+                    t.write(f"\n=== result: is_error={message.is_error} "
+                            f"cost=${message.total_cost_usd or 0:.4f} ===\n")
+                    if message.is_error:
+                        raise RuntimeError(
+                            f"claude agent failed: {message.result!r:.500}")
+                    t.flush()
+                    return True
+                t.flush()
+                return False
+
             async with ClaudeSDKClient(options=options) as client:
                 # Options-level "auto" silently degrades to default mode when
                 # unavailable (leaving headless permission requests
                 # unanswered) — set it explicitly so unavailability RAISES.
                 await client.set_permission_mode("auto")
                 await client.query(prompt)
-                async for message in client.receive_response():
-                    for block in getattr(message, "content", None) or []:
-                        text = getattr(block, "text", None)
-                        if isinstance(text, str):
-                            t.write(text + "\n")
-                        tool = getattr(block, "name", None)
-                        if tool is not None and hasattr(block, "input"):
-                            t.write(f"[tool_use] {tool} "
-                                    f"{json.dumps(block.input, ensure_ascii=False)[:400]}\n")
-                        if getattr(block, "is_error", False):
-                            t.write(f"[tool_error] {str(getattr(block, 'content', ''))[:400]}\n")
-                    if isinstance(message, ResultMessage):
-                        t.write(f"\n=== result: is_error={message.is_error} "
-                                f"cost=${message.total_cost_usd or 0:.4f} ===\n")
-                        if message.is_error:
-                            raise RuntimeError(
-                                f"claude agent failed: {message.result!r:.500}")
-                    t.flush()
+                if done is None:
+                    async for message in client.receive_response():
+                        _log_message(message)
+                    return
+                # Messages are pumped into a queue by a persistent task:
+                # waiting with a timeout directly on the generator's
+                # __anext__ would CANCEL it on timeout, which kills the
+                # async generator and tears down the transport reader
+                # (observed live: StopAsyncIteration + CLI "Stream closed"
+                # right after the first nudge). Cancelling queue.get() is
+                # harmless.
+                _SENTINEL = object()
+                queue: asyncio.Queue = asyncio.Queue()
+                pump_error: list[BaseException] = []
+
+                async def _pump() -> None:
+                    try:
+                        async for m in client.receive_messages():
+                            await queue.put(m)
+                    except asyncio.CancelledError:
+                        raise
+                    except BaseException as e:  # preserve the REAL root cause
+                        pump_error.append(e)
+                    finally:
+                        await queue.put(_SENTINEL)
+
+                pump_task = asyncio.create_task(_pump())
+                try:
+                    turn_open = True
+                    nudges = 0
+                    while True:
+                        try:
+                            message = await asyncio.wait_for(
+                                queue.get(),
+                                timeout=(None if turn_open
+                                         else _NUDGE_IDLE_SECONDS))
+                        except asyncio.TimeoutError:
+                            # idle between turns, deliverable still missing
+                            if done():
+                                return
+                            nudges += 1
+                            if nudges > _MAX_NUDGES:
+                                raise RuntimeError(
+                                    f"agent never called the answer tool "
+                                    f"after {_MAX_NUDGES} nudges")
+                            t.write(f"\n=== nudge {nudges}/{_MAX_NUDGES} ===\n")
+                            t.flush()
+                            await client.query(_NUDGE_TEXT)
+                            turn_open = True
+                            continue
+                        if message is _SENTINEL:
+                            if pump_error:
+                                raise RuntimeError(
+                                    "agent message stream died"
+                                ) from pump_error[0]
+                            if not done():
+                                raise RuntimeError(
+                                    "agent stream ended before the answer "
+                                    "tool was called")
+                            return
+                        # Messages flowing = a turn is open (covers the CLI's
+                        # automatic re-invocation after a background task —
+                        # without this, a >idle-window foreground step in such
+                        # a turn would be mid-turn nudged).
+                        turn_open = True
+                        if _log_message(message):   # a turn just ended
+                            if done():
+                                return
+                            turn_open = False   # await auto-continuation/nudge
+                finally:
+                    pump_task.cancel()
+                    try:
+                        await pump_task
+                    except (asyncio.CancelledError, Exception):
+                        pass
 
     if timeout is not None:
         await asyncio.wait_for(_drive(), timeout=timeout)
@@ -358,23 +567,141 @@ def run_claude_agent(prompt: str, *, model: str | None,
                      transcript_path: Path,
                      timeout: float | None = None,
                      mission: str = "",
-                     answer_tool=None) -> None:
+                     answer_tool=None,
+                     done=None) -> None:
     """Blocking wrapper (the watcher itself is synchronous)."""
     asyncio.run(_claude_agent_async(prompt, model=model,
                                     transcript_path=transcript_path,
                                     timeout=timeout, mission=mission,
-                                    answer_tool=answer_tool))
+                                    answer_tool=answer_tool, done=done))
+
+
+# ---------------------------------------------------------------------------
+# Embedding candidate retrieval (qwen3, reuses the Semantic_Embedding provider)
+#
+# 确定性归脚本：embeddings only RETRIEVE likely-duplicate candidates for the
+# dedup agent; every judgment stays with an agent (deterministic key-based
+# auto-dedup was rejected 2026-06-12 — a name guess is not an identity).
+# Correctness never depends on the similarity threshold: the slim digest of
+# imported/already_in_heap facts is always in the prompts (评审 H2).
+# ---------------------------------------------------------------------------
+
+_EMBED_TOP_K = 20      # 用户定 2026-06-12
+_EMBED_MIN_SIM = 0.5   # quality knob only — tune from production, not offline
+_embed_provider = None  # set by init_embedding(); None = candidates disabled
+
+
+def _claim_embed_text(report: dict) -> str:
+    """Deterministic embed text, v1. The provider's disk cache keys on the
+    EXACT string — any instability here re-embeds the whole ledger every
+    batch, and an overlong text makes the API 400 (which the provider's
+    retry loop treats as retryable, burning the whole time budget). So:
+    fixed field order, fixed separators, one normalizer, per-field caps.
+    Changing the field set or caps is a deliberate cache-flush event."""
+    parts = []
+    for label, keys, cap in (("name", ("name_guess", "name"), 120),
+                             ("statement", ("english",), 1500),
+                             ("isabelle", ("isabelle_statement",), 1500),
+                             ("why needed", ("why_needed",), 800),
+                             ("detail", ("detail",), 800)):
+        val = next((report.get(k) for k in keys if report.get(k)), "")
+        parts.append(f"{label}: {str(val or '')[:cap]}")
+    return "\n".join(parts)
+
+
+def init_embedding(ledger: 'Ledger') -> None:
+    """One-time probe + import + prewarm at watcher startup. The package
+    import is heavy (its __init__ drags rocksdict/claude_agent_sdk/faiss) —
+    pay it once here, never on the search hot path. The provider reads
+    QWEN3_EMBEDDING_API_KEY at class-definition time and a missing key does
+    NOT raise — it sends unauthenticated requests that 401 into ~17min of
+    doomed backoff — so probe BOTH the env var and provider.api_key up front.
+    The key lives in secret.sh (envir.sh does not source it): the watcher
+    must be launched from a shell that sourced secret.sh."""
+    global _embed_provider
+    if not os.getenv("QWEN3_EMBEDDING_API_KEY"):
+        log("WARNING: QWEN3_EMBEDDING_API_KEY not set (source secret.sh "
+            "before launching the watcher) — duplicate-candidate retrieval "
+            "disabled; agents fall back to the full digest")
+        return
+    try:
+        from Isabelle_Semantic_Embedding.semantic_embedding import (
+            embedding_provider)
+        provider = embedding_provider("qwen3-embedding-8b")
+    except Exception as e:
+        log(f"WARNING: embedding provider unavailable "
+            f"({type(e).__name__}: {e}) — candidate retrieval disabled")
+        return
+    if provider.api_key is None:
+        log("WARNING: embedding provider has no API key (set after import?) "
+            "— candidate retrieval disabled")
+        return
+    _embed_provider = provider
+    # Prewarm: the text→vector disk cache has a 3-day TTL; after a quiet
+    # spell a batch would face the whole ledger cold and blow the 60s budget.
+    texts = [_claim_embed_text(e["report"]) for e in ledger.entries
+             if e["status"] not in ("pending", "searching", "duplicate")]
+    if texts:
+        try:
+            asyncio.run(asyncio.wait_for(provider.embed(texts), 120))
+            log(f"embedding cache prewarmed ({len(texts)} adjudicated entries)")
+        except Exception as e:
+            log(f"WARNING: embedding prewarm failed ({type(e).__name__}: {e})"
+                f" — keeping candidates enabled; batches fail open per-call")
+
+
+def embedding_candidates(claims: list[dict], ledger: 'Ledger') \
+        -> tuple[dict[str, list[dict]], dict[str, list[str]]] | None:
+    """Per-claim likely-duplicate candidates (top _EMBED_TOP_K adjudicated
+    entries with cosine ≥ _EMBED_MIN_SIM) plus mutual same-batch twin marks.
+    Returns None when disabled or on ANY failure — callers fall back to the
+    full digest. Vectors are L2-normalized by the provider (cosine = dot;
+    do not normalize again)."""
+    if _embed_provider is None:
+        return None
+    adjud = [e for e in ledger.entries
+             if e["status"] not in ("pending", "searching", "duplicate")]
+    texts = ([_claim_embed_text(c["report"]) for c in claims]
+             + [_claim_embed_text(e["report"]) for e in adjud])
+    try:
+        result = asyncio.run(asyncio.wait_for(_embed_provider.embed(texts), 60))
+    except Exception as e:
+        log(f"WARNING: embedding retrieval failed ({type(e).__name__}: {e}) "
+            f"— falling back to the full digest")
+        return None
+    import numpy as np
+    vecs = result.vectors
+    cvecs, evecs = vecs[:len(claims)], vecs[len(claims):]
+    cands: dict[str, list[dict]] = {c["id"]: [] for c in claims}
+    if adjud:
+        sims = cvecs @ evecs.T
+        for i, c in enumerate(claims):
+            order = np.argsort(-sims[i])[:_EMBED_TOP_K]
+            cands[c["id"]] = [
+                dict(Ledger.digest_entry(adjud[j]),
+                     similarity=round(float(sims[i][j]), 3))
+                for j in order if sims[i][j] >= _EMBED_MIN_SIM]
+    twins: dict[str, list[str]] = {c["id"]: [] for c in claims}
+    if len(claims) > 1:
+        csims = cvecs @ cvecs.T
+        for i, c in enumerate(claims):
+            twins[c["id"]] = [claims[j]["id"] for j in range(len(claims))
+                              if j != i and csims[i][j] >= _EMBED_MIN_SIM]
+    return cands, twins
 
 
 _VERDICT_VALUES = ("missing_import", "already_in_heap", "not_found", "duplicate")
 
 
-def _make_verdict_tool(claim_ids: list[str]):
+def _make_verdict_tool(claim_ids: list[str], known_ids: set[str]):
     """In-process MCP tool the search agent MUST call to submit its verdicts
     (structured output as a forced tool call, not parsed from chat/file).
     Each item is validated; invalid items are rejected with an immediate error
-    message so the agent corrects and resubmits. Returns (tool, holder) —
-    accepted verdicts accumulate in *holder* keyed by claim_id."""
+    message so the agent corrects and resubmits. *known_ids* (batch ∪ ledger)
+    validates duplicate_of at submission time — a dangling reference would
+    otherwise silently re-pend the claim into a wasted re-search (评审 H1).
+    Returns (tool, holder) — accepted verdicts accumulate in *holder* keyed
+    by claim_id."""
     from claude_agent_sdk import tool
     holder: dict[str, dict] = {}
     expected = set(claim_ids)
@@ -423,6 +750,11 @@ def _make_verdict_tool(claim_ids: list[str]):
                 errors.append(f"{cid}: already_in_heap requires `lemma_name`")
             elif verdict == "duplicate" and not v.get("duplicate_of"):
                 errors.append(f"{cid}: duplicate requires `duplicate_of`")
+            elif verdict == "duplicate" and v["duplicate_of"] == cid:
+                errors.append(f"{cid}: duplicate_of must not be the claim itself")
+            elif verdict == "duplicate" and v["duplicate_of"] not in known_ids:
+                errors.append(f"{cid}: duplicate_of {v['duplicate_of']!r} is "
+                              f"not a known ledger/batch id")
             else:
                 holder[cid] = v
         remaining = sorted(expected - holder.keys())
@@ -437,6 +769,74 @@ def _make_verdict_tool(claim_ids: list[str]):
                 "is_error": bool(errors)}
 
     return submit_verdicts, holder
+
+
+def _make_dedup_tool(claim_ids: list[str], known_ids: set[str]):
+    """In-process MCP tool of the duplicate-screening agent (用户提案
+    2026-06-12: judgment split off so the search agent can focus on
+    exploration; ALL agents deliver via an answer tool — hard rule).
+    Same validate-and-resubmit contract as _make_verdict_tool."""
+    from claude_agent_sdk import tool
+    holder: dict[str, dict] = {}
+    expected = set(claim_ids)
+
+    @tool("submit_dedup",
+          "Submit your duplicate-screening judgments for one or more claims. "
+          "May be called several times; a later submission overwrites the "
+          "earlier one for the same claim_id. Finish only after every claim "
+          "has an accepted judgment.",
+          {"type": "object",
+           "properties": {
+               "judgments": {
+                   "type": "array",
+                   "items": {
+                       "type": "object",
+                       "properties": {
+                           "claim_id": {"type": "string"},
+                           "verdict": {"type": "string",
+                                       "enum": ["new", "duplicate"]},
+                           "duplicate_of": {"type": "string"},
+                           "notes": {"type": "string"},
+                       },
+                       "required": ["claim_id", "verdict"]}}},
+           "required": ["judgments"]})
+    async def submit_dedup(args: dict):
+        items = args.get("judgments")
+        if not isinstance(items, list):
+            return {"content": [{"type": "text",
+                                 "text": "`judgments` must be an array."}],
+                    "is_error": True}
+        errors = []
+        for i, v in enumerate(items):
+            if not isinstance(v, dict):
+                errors.append(f"item {i}: not an object")
+                continue
+            cid, verdict = v.get("claim_id"), v.get("verdict")
+            if cid not in expected:
+                errors.append(f"item {i}: unknown claim_id {cid!r}")
+            elif verdict not in ("new", "duplicate"):
+                errors.append(f"{cid}: invalid verdict {verdict!r}")
+            elif verdict == "duplicate" and not v.get("duplicate_of"):
+                errors.append(f"{cid}: duplicate requires `duplicate_of`")
+            elif verdict == "duplicate" and v["duplicate_of"] == cid:
+                errors.append(f"{cid}: duplicate_of must not be the claim itself")
+            elif verdict == "duplicate" and v["duplicate_of"] not in known_ids:
+                errors.append(f"{cid}: duplicate_of {v['duplicate_of']!r} is "
+                              f"not a known ledger/batch id")
+            else:
+                holder[cid] = v
+        remaining = sorted(expected - holder.keys())
+        msg = f"Recorded {len(holder)}/{len(expected)} judgments."
+        if errors:
+            msg += " REJECTED: " + "; ".join(errors) + "."
+        if remaining:
+            msg += f" Still unanswered: {', '.join(remaining)}."
+        else:
+            msg += " All claims answered — you may stop."
+        return {"content": [{"type": "text", "text": msg}],
+                "is_error": bool(errors)}
+
+    return submit_dedup, holder
 
 
 def _make_result_tool():
@@ -463,9 +863,9 @@ def _make_result_tool():
                "divergence_decisions": {"type": "object",
                                         "properties": {"fixed": {"type": "integer"},
                                                        "accepted": {"type": "integer"}}},
-               "heap_rebuilt": {"type": "boolean"},
+               "files_promoted": {"type": "boolean"},
            },
-           "required": ["imported", "failed", "heap_rebuilt"]})
+           "required": ["imported", "failed", "files_promoted"]})
     async def submit_result(args: dict):
         errors = []
         imported = args.get("imported")
@@ -474,9 +874,9 @@ def _make_result_tool():
             errors.append("`imported` must be an array of objects with `theory`")
         if not isinstance(args.get("failed"), list):
             errors.append("`failed` must be an array")
-        if not isinstance(args.get("heap_rebuilt"), bool):
-            errors.append("`heap_rebuilt` must be a boolean — report what "
-                          "`isabelle build` actually did")
+        if not isinstance(args.get("files_promoted"), bool):
+            errors.append("`files_promoted` must be a boolean — report what "
+                          "you actually edited")
         if errors:
             return {"content": [{"type": "text", "text": "; ".join(errors)}],
                     "is_error": True}
@@ -488,55 +888,215 @@ def _make_result_tool():
     return submit_result, holder
 
 
+def _json_block(title: str, data) -> str:
+    return (f"\n## {title}\n\n```json\n"
+            + json.dumps(data, indent=2, ensure_ascii=False) + "\n```\n")
+
+
+def _run_adjudication(cfg, *, dedup_prompt: str, dedup_tool, dedup_holder: dict,
+                      ids: list[str], known_ids: set[str],
+                      payload: list[dict], search_head: str,
+                      search_tail: str, out: Path) -> dict[str, dict]:
+    """Worker-thread body of the two-stage adjudication pipeline (用户提案
+    2026-06-12): the duplicate-screening agent first, then the search agent
+    on the 'new' subset only. An all-duplicates batch skips the search agent
+    entirely; a failed/partial screening fails OPEN (the whole batch goes to
+    the search agent, whose safety-valve duplicate verdict + slim digest
+    still protect the provided_but_unfindable link). Returns the search
+    agent's verdict holder."""
+    from permission_gate import DEDUP_MISSION, SEARCH_MISSION
+    new_ids = list(ids)
+    try:
+        run_claude_agent(dedup_prompt, model=cfg.search_model,
+                         transcript_path=out.with_suffix(".dedup.log"),
+                         timeout=cfg.search_timeout, mission=DEDUP_MISSION,
+                         answer_tool=dedup_tool,
+                         done=lambda: set(ids) <= dedup_holder.keys())
+        # Unanswered claims count as "new" — never silently dropped.
+        new_ids = [cid for cid in ids
+                   if dedup_holder.get(cid, {}).get("verdict") != "duplicate"]
+        log(f"dedup agent: {len(ids) - len(new_ids)}/{len(ids)} judged "
+            f"duplicate")
+    except Exception as e:
+        log(f"WARNING: dedup agent failed ({type(e).__name__}: {e}) — "
+            f"fail-open: whole batch goes to the search agent")
+        dedup_holder.clear()
+        new_ids = list(ids)
+    if not new_ids:
+        log("dedup agent: whole batch is duplicates — search agent skipped")
+        return {}
+    new_set = set(new_ids)
+    prompt = (search_head
+              + _json_block("Claims", [p for p in payload
+                                       if p["claim_id"] in new_set])
+              + search_tail)
+    search_tool, search_holder = _make_verdict_tool(new_ids, known_ids)
+    run_claude_agent(prompt, model=cfg.search_model,
+                     transcript_path=out.with_suffix(".log"),
+                     timeout=cfg.search_timeout, mission=SEARCH_MISSION,
+                     answer_tool=search_tool,
+                     done=lambda: new_set <= search_holder.keys())
+    return search_holder
+
+
 def start_search(cfg, ledger: 'Ledger', claims: list[dict]) \
         -> tuple[concurrent.futures.Future, Path, list[str], dict]:
-    """Launch the confirmation-search agent for *claims* (non-blocking: runs
-    in a worker thread so the evaluator keeps being polled meanwhile)."""
+    """Launch the adjudication pipeline for *claims* (non-blocking: runs in a
+    worker thread so the evaluator keeps being polled meanwhile). Prompt
+    composition: the slim digest of imported/already_in_heap facts goes into
+    BOTH stages unconditionally (correctness floor, 评审 H2); per-claim
+    embedding candidates go to the dedup agent when available, else both
+    prompts fall back to the full digest."""
     for c in claims:
         c["status"] = "searching"
     out = STATE_DIR / "verdicts" / f"verdict_{claims[0]['id']}_{int(time.time())}.json"
-    template = (PROMPT_DIR / "search_prompt.md").read_text(encoding="utf-8")
+    ids = [c["id"] for c in claims]
+    known_ids = set(ids) | {e["id"] for e in ledger.entries}
     payload = [{"claim_id": c["id"], **c["report"]} for c in claims]
-    prompt = (template
-              .replace("HEAP_THEORIES_FILE", str(STATE_DIR / "heap_theories.txt"))
-              + "\n## Claims\n\n```json\n"
-              + json.dumps(payload, indent=2, ensure_ascii=False) + "\n```\n")
-    digest = ledger.adjudicated_digest()
-    if digest:
-        prompt += ("\n## Previously adjudicated claims (duplicate check)\n\n"
-                   "```json\n"
-                   + json.dumps(digest, indent=2, ensure_ascii=False)
-                   + "\n```\n")
-    log(f"search agent → {len(claims)} claim(s), verdicts at {out.name}")
-    from permission_gate import SEARCH_MISSION
-    answer_tool, holder = _make_verdict_tool([c["id"] for c in claims])
+
+    slim = ledger.adjudicated_digest(only=("imported", "already_in_heap"))
+    slim_block = _json_block("Imported / in-heap facts", slim) if slim else ""
+    emb = embedding_candidates(claims, ledger)
+    if emb is not None:
+        cands, twins = emb
+        dedup_payload = [dict(p,
+                              likely_duplicates=cands.get(p["claim_id"], []),
+                              possible_batch_twins=twins.get(p["claim_id"], []))
+                         for p in payload]
+        full_digest_block = ""
+    else:
+        dedup_payload = payload
+        digest = ledger.adjudicated_digest()
+        full_digest_block = (_json_block(
+            "Previously adjudicated claims (duplicate check)", digest)
+            if digest else "")
+
+    dedup_prompt = ((PROMPT_DIR / "dedup_prompt.md").read_text(encoding="utf-8")
+                    + _json_block("Claims", dedup_payload)
+                    + slim_block + full_digest_block)
+    search_head = ((PROMPT_DIR / "search_prompt.md").read_text(encoding="utf-8")
+                   .replace("HEAP_THEORIES_FILE",
+                            str(STATE_DIR / "heap_theories.txt")))
+    search_tail = slim_block + full_digest_block
+
+    log(f"adjudication pipeline → {len(claims)} claim(s), "
+        f"candidates={'on' if emb is not None else 'off'}, "
+        f"verdicts at {out.name}")
+    dedup_tool, dedup_holder = _make_dedup_tool(ids, known_ids)
     fut = _AGENT_POOL.submit(
-        run_claude_agent, prompt, model=cfg.search_model,
-        transcript_path=out.with_suffix(".log"), timeout=cfg.search_timeout,
-        mission=SEARCH_MISSION, answer_tool=answer_tool)
-    return fut, out, [c["id"] for c in claims], holder
+        _run_adjudication, cfg, dedup_prompt=dedup_prompt,
+        dedup_tool=dedup_tool, dedup_holder=dedup_holder, ids=ids,
+        known_ids=known_ids, payload=payload, search_head=search_head,
+        search_tail=search_tail, out=out)
+    return fut, out, ids, dedup_holder
 
 
 def finish_search(ledger: Ledger,
                   search: tuple[concurrent.futures.Future, Path, list[str], dict],
                   wait_timeout: float | None = None) -> list[str]:
-    """Collect a finished (or awaited) search; returns confirmed theories."""
-    fut, out, ids, holder = search
+    """Collect a finished (or awaited) adjudication pipeline; returns
+    confirmed theories. Search verdicts and the dedup agent's duplicate
+    judgments merge into ONE verdict file (audit trail), adjudicated by the
+    same two-pass apply_verdicts."""
+    fut, out, ids, dedup_holder = search
+    search_holder: dict[str, dict] = {}
     try:
-        fut.result(timeout=wait_timeout)
+        search_holder = fut.result(timeout=wait_timeout) or {}
     except Exception as e:
-        log(f"WARNING: search agent failed: {type(e).__name__}: {e}")
-    # Persist whatever the answer tool accepted (audit trail), then adjudicate
-    # from that same file. Claims the agent never answered fall back to
-    # pending inside apply_verdicts.
-    out.write_text(json.dumps({"verdicts": list(holder.values())},
+        log(f"WARNING: adjudication pipeline failed: {type(e).__name__}: {e}")
+    dedup_dups = [dict(v, verdict="duplicate")
+                  for cid, v in dedup_holder.items()
+                  if v.get("verdict") == "duplicate"
+                  and cid not in search_holder]
+    verdicts = list(search_holder.values()) + dedup_dups
+    out.write_text(json.dumps({"verdicts": verdicts,
+                               "dedup": list(dedup_holder.values())},
                               indent=2, ensure_ascii=False), encoding="utf-8")
     return apply_verdicts(ledger, out, ids)
 
 
+def _resolve_dup_target(ledger: Ledger, verdicts: dict[str, dict],
+                        start_id: str) -> dict | None:
+    """Follow a duplicate_of chain to the entry carrying a REAL adjudication.
+    Chains arise when a same-batch twin points at a representative that is
+    itself a duplicate of an older entry. Chase through both this batch's
+    not-yet-applied duplicate verdicts and old `duplicate` ledger entries.
+    Returns None on a dangling id, an unanswered (`searching`) member, a
+    cycle, or depth overflow — the caller re-pends the claim."""
+    cur, seen = start_id, set()
+    while cur not in seen and len(seen) < 10:
+        seen.add(cur)
+        try:
+            ref = ledger.by_id(cur)
+        except StopIteration:
+            return None  # dangling id (tool-validated, but be safe)
+        v = verdicts.get(cur)
+        if v and v.get("verdict") == "duplicate" and v.get("duplicate_of"):
+            cur = v["duplicate_of"]
+            continue
+        if ref["status"] == "duplicate" and ref["resolution"].get("ref"):
+            cur = ref["resolution"]["ref"]
+            continue
+        if ref["status"] in ("searching", "pending"):
+            # An unanswered batch member (pass 1 already re-pended it) or a
+            # pre-existing pending entry: inheriting now would freeze the twin
+            # as a bare "duplicate" that never sees the ref's eventual verdict
+            # — re-pend instead so both go through the next round together.
+            return None
+        return ref
+    return None  # cycle or depth overflow
+
+
+def _emit_unfindable_warn(ledger: Ledger, e: dict, ref: dict,
+                          warned_refs: set) -> None:
+    """One WARN per imported ref (评审 M3): the supervisory stream gets one
+    event per underlying fact, not one per re-report. Coalesced against both
+    this pass (warned_refs) and the ledger (an earlier entry already carrying
+    provided_but_unfindable for the same ref) — never against events.jsonl."""
+    rid = ref["id"]
+    if rid in warned_refs or any(
+            x is not e and x["status"] == "provided_but_unfindable"
+            and x["resolution"].get("ref") == rid for x in ledger.entries):
+        return
+    warned_refs.add(rid)
+    r = e["report"]
+    emit_event("WARN", "provided_but_unfindable", id=e["id"], ref=rid,
+               name=r.get("name_guess") or r.get("name") or "",
+               lemma_name=ref["resolution"].get("lemma_name"),
+               theory=ref["resolution"].get("theory"))
+
+
+def _inherit_duplicate(ledger: Ledger, e: dict, ref: dict,
+                       warned_refs: set) -> None:
+    """Inherit *ref*'s adjudication into the duplicate claim *e*. A duplicate
+    of an IMPORTED entry means "provided yet still unfindable": a retrieval/
+    visibility problem to surface, not an import gap. Note duplicate-of-
+    missing_import stays a plain terminal "duplicate" even after the ref is
+    later imported — accepted (评审 M2): the in-flight window is tiny (a
+    confirmed missing_import kills the case immediately) and the NEXT
+    re-report after the import lands provided_but_unfindable normally."""
+    if ref["status"] == "imported":
+        e["status"] = "provided_but_unfindable"
+        e["resolution"] = dict(ref["resolution"], ref=ref["id"])
+        _emit_unfindable_warn(ledger, e, ref, warned_refs)
+    elif ref["status"] in ("already_in_heap", "not_found",
+                           "import_failed", "provided_but_unfindable"):
+        e["status"] = ref["status"]
+        e["resolution"] = dict(ref["resolution"], ref=ref["id"])
+    else:
+        e["status"] = "duplicate"
+        e["resolution"] = {"ref": ref["id"]}
+
+
 def apply_verdicts(ledger: Ledger, out: Path, claim_ids: list[str]) -> list[str]:
     """Read a verdict file; update the ledger. Returns confirmed-missing
-    theories (deduped) needing phase 2."""
+    theories (deduped) needing phase 2.
+
+    Two passes (评审 H1): non-duplicate verdicts land first, duplicates
+    second — a same-batch twin must read its representative's REAL
+    adjudication, not the transient `searching` every batched claim carries.
+    Duplicate refs are resolved transitively (_resolve_dup_target); an
+    unresolvable chain re-pends the claim instead of freezing it wrong."""
     theories: list[str] = []
     try:
         data = json.loads(out.read_text(encoding="utf-8"))
@@ -544,33 +1104,16 @@ def apply_verdicts(ledger: Ledger, out: Path, claim_ids: list[str]) -> list[str]
     except (OSError, json.JSONDecodeError, KeyError, TypeError) as e:
         log(f"WARNING: unreadable verdict file {out}: {e} — claims back to pending")
         verdicts = {}
+    dup_ids: list[str] = []
     for cid in claim_ids:
         e = ledger.by_id(cid)
         v = verdicts.get(cid)
         if v is None:
-            e["status"] = "pending"  # search agent skipped it — retry later
+            e["status"] = "pending"  # agent skipped it — retry later
             continue
         verdict = v.get("verdict")
         if verdict == "duplicate" and v.get("duplicate_of"):
-            # Same fact as a prior ledger entry (the search agent judged the
-            # duplicate) — inherit that entry's adjudication. A duplicate of an
-            # IMPORTED entry means "provided yet still unfindable": a
-            # retrieval/visibility problem to surface, not an import gap.
-            try:
-                ref = ledger.by_id(v["duplicate_of"])
-            except StopIteration:
-                e["status"] = "pending"
-                continue
-            if ref["status"] == "imported":
-                e["status"] = "provided_but_unfindable"
-                e["resolution"] = dict(ref["resolution"], ref=ref["id"])
-            elif ref["status"] in ("already_in_heap", "not_found",
-                                   "import_failed", "provided_but_unfindable"):
-                e["status"] = ref["status"]
-                e["resolution"] = dict(ref["resolution"], ref=ref["id"])
-            else:
-                e["status"] = "duplicate"
-                e["resolution"] = {"ref": ref["id"]}
+            dup_ids.append(cid)  # second pass
             continue
         e["resolution"] = {k: v.get(k) for k in
                            ("lemma_name", "theory", "evidence", "notes") if v.get(k)}
@@ -584,30 +1127,111 @@ def apply_verdicts(ledger: Ledger, out: Path, claim_ids: list[str]) -> list[str]
             e["status"] = "not_found"
         else:
             e["status"] = "pending"
+    warned_refs: set = set()
+    for cid in dup_ids:
+        e = ledger.by_id(cid)
+        ref = _resolve_dup_target(ledger, verdicts, verdicts[cid]["duplicate_of"])
+        if ref is None or ref["id"] == cid:
+            log(f"WARNING: {cid}: unresolvable duplicate_of chain "
+                f"(→ {verdicts[cid]['duplicate_of']}) — back to pending")
+            e["status"] = "pending"
+            continue
+        _inherit_duplicate(ledger, e, ref, warned_refs)
     ledger.save()
     return theories
 
 
+_BUILD_CMD = ("RPC_Host=127.0.0.1:27180 isabelle build -b -o threads=10 "
+              "-o system_heaps MathBench_ProverBase")
+# Judgment work goes to the agent, every deterministic step to the watcher
+# (用户决定 2026-06-12). The three files the agent may promote into:
+_MATHBENCH_FILES = ("tasks/MathBench_Prover/MathBench_Prover.thy",
+                    "tasks/MathBench_Prover/Base/MathBench_ProverBase.thy",
+                    "tasks/MathBench_Prover/ROOT")
+# D1 circuit breaker (用户: 兜底即可，重点在报错): a theory fed into this many
+# phase-2 rounds without EITHER getting imported OR being judged failed is
+# force-closed as import_failed and surfaced loudly.
+PHASE2_STUCK_LIMIT = 2
+
+
+def _note_phase2_no_progress(ledger: Ledger, theories: set, reason: str) -> None:
+    """Count a progress-less phase-2 round for each still-missing theory and
+    trip the circuit breaker at PHASE2_STUCK_LIMIT."""
+    for e in ledger.entries:
+        th = e["resolution"].get("theory")
+        if e["status"] != "missing_import" or th not in theories:
+            continue
+        n = e["resolution"].get("phase2_stuck_rounds", 0) + 1
+        e["resolution"]["phase2_stuck_rounds"] = n
+        if n >= PHASE2_STUCK_LIMIT:
+            e["status"] = "import_failed"
+            e["resolution"]["notes"] = (f"circuit breaker: {n} phase-2 rounds "
+                                        f"without progress ({reason}) — needs "
+                                        f"human/supervisor attention")
+            emit_event("WARN", "phase2_circuit_breaker", theory=th,
+                       rounds=n, reason=reason)
+    ledger.save()
+
+
 def run_phase2(cfg, ledger: Ledger, theories: list[str]) -> bool:
-    """Import *theories* into MathBench (claude agent following the
-    mathbench-import-reconcile skill), then restart the 6666 REPL and run the
-    semantic collect. Returns True iff the heap was rebuilt."""
+    """Import *theories* into MathBench. The AGENT does the judgment half
+    (inner-loop validation + promotion edits + submit_result); the watcher
+    then runs the deterministic spine itself: heap rebuild → goal-gate
+    re-check → ledger marking → isolated semantic collect → fresh AoA pair.
+    Returns True iff the rebuilt heap passed the gate."""
     stamp = int(time.time())
     out = STATE_DIR / "phase2" / f"phase2_{stamp}.json"
-    template = (PROMPT_DIR / "phase2_prompt.md").read_text(encoding="utf-8")
-    prompt = template.replace("THEORIES_PLACEHOLDER",
-                              "\n".join(f"- {t}" for t in theories))
+    blog = STATE_DIR / "phase2" / f"build_{stamp}.log"
     log(f"PHASE 2: importing {theories}")
     if cfg.dry_run:
         log("dry-run: skipping phase 2")
         return False
+
+    # D5①: ensure heap == source BEFORE the agent starts. A lingering re-entry
+    # (earlier round promoted files but never rebuilt) would otherwise make
+    # the agent's first `mathbench_repl.py restart` silently trigger a full
+    # rebuild it cannot wait for. No-op seconds when already fresh.
+    log("pre-agent heap freshness build (no-op when fresh)")
+    pre_rc = bash_timed(f"{_BUILD_CMD} >> {blog} 2>&1",
+                        timeout=cfg.build_timeout)
+    env_note = ""
+    if pre_rc != 0:
+        tail = ""
+        try:
+            tail = blog.read_text(encoding="utf-8", errors="replace")[-2000:]
+        except OSError:
+            pass
+        env_note = (
+            "\n## Environment note (pre-build failed)\n\n"
+            "The watcher's pre-agent heap freshness build of "
+            "MathBench_ProverBase FAILED — the promoted state left by an "
+            "earlier round is probably broken. Diagnosing and repairing the "
+            "three MathBench files so the session builds again is part of "
+            "your job this round. Build log tail:\n\n```\n" + tail + "\n```\n")
+        emit_event("WARN", "phase2_prebuild_failed", log=str(blog))
+        log(f"WARNING: pre-agent build failed (exit {pre_rc}) — the agent "
+            f"will be asked to repair the promoted state")
+
+    # P3: snapshot the three files (post-pre-build = last known-good when
+    # pre_rc==0) so a failed post-agent rebuild can restore a buildable state
+    # instead of leaving broken promoted source that every later REPL start
+    # would implicitly retry to build.
+    snapdir = STATE_DIR / "phase2" / f"snapshot_{stamp}"
+    snapdir.mkdir(parents=True, exist_ok=True)
+    for rel in _MATHBENCH_FILES:
+        shutil.copy2(ROOT / rel, snapdir / Path(rel).name)
+
+    template = (PROMPT_DIR / "phase2_prompt.md").read_text(encoding="utf-8")
+    prompt = template.replace("THEORIES_PLACEHOLDER",
+                              "\n".join(f"- {t}" for t in theories)) + env_note
     from permission_gate import PHASE2_MISSION
     answer_tool, holder = _make_result_tool()
     try:
         run_claude_agent(prompt, model=cfg.phase2_model,
                          transcript_path=out.with_suffix(".log"),
                          timeout=cfg.phase2_timeout,
-                         mission=PHASE2_MISSION, answer_tool=answer_tool)
+                         mission=PHASE2_MISSION, answer_tool=answer_tool,
+                         done=lambda: bool(holder))
     except Exception as e:
         log(f"WARNING: phase-2 agent raised {type(e).__name__}: {e} — "
             f"judging by its submitted result anyway")
@@ -616,43 +1240,108 @@ def run_phase2(cfg, ledger: Ledger, theories: list[str]) -> bool:
                    encoding="utf-8")
     if not holder:
         log("ERROR: phase-2 agent never called submit_result; aborting phase 2")
+        emit_event("WARN", "phase2_no_result", theories=theories,
+                   transcript=str(out.with_suffix(".log")))
+        _note_phase2_no_progress(ledger, set(theories), "no submit_result")
         return False
     result = holder
     imported = {i["theory"] for i in result.get("imported", []) if i.get("theory")}
     failed = {i["theory"]: i.get("reason", "?") for i in result.get("failed", [])}
-    if not result.get("heap_rebuilt") or not imported:
-        log(f"phase 2 did not rebuild the heap (imported={imported}, failed={failed})")
+    if not result.get("files_promoted") or not imported:
+        log(f"phase 2 promoted nothing (imported={imported}, failed={failed})")
         for e in ledger.entries:
             if e["status"] == "missing_import" and e["resolution"].get("theory") in failed:
                 e["status"] = "import_failed"
                 e["resolution"]["notes"] = failed[e["resolution"]["theory"]]
         ledger.save()
+        _note_phase2_no_progress(ledger, set(theories) - set(failed),
+                                 "submitted without promoting")
         return False
 
-    # Deterministic tail: restart host+REPL (fresh heap, survey env verified),
-    # then semantically collect the new theories so `query` can find them.
-    # A collect failure must NOT crash the watcher with half-updated state:
-    # the heap DID change, so the heap list is refreshed and entries are still
-    # marked imported — flagged so the report surfaces the degraded indexing.
-    restart_repl(cfg)
-    log("semantic collect (this can take a while)…")
-    collect_ok = True
-    try:
-        bash(SEMANTIC_COLLECT_CMD, check=True)
-    except subprocess.CalledProcessError as e:
-        collect_ok = False
-        log(f"ERROR: semantic collect failed ({e}) — new lemmas will be "
-            f"invisible to `query` until collected; flagged in the ledger")
-    refresh_heap_theories()
+    # Deterministic spine (用户决定 2026-06-12: 固定脚本流程，不进 agent 会话
+    # —— 长步骤在会话里曾连续两晚破坏交付): heap rebuild → 7777 restart →
+    # authoritative goal gate. The agent only judged and edited files.
+    log(f"rebuilding MathBench_ProverBase heap (deterministic; log: {blog})")
+    rc = bash_timed(f"{_BUILD_CMD} >> {blog} 2>&1", timeout=cfg.build_timeout)
+    if rc != 0:
+        log(f"ERROR: heap rebuild failed (exit {rc}, see {blog}) — restoring "
+            f"the pre-agent file snapshot; old heap remains valid")
+        # P3: without the restore, the broken promoted source would make every
+        # later REPL start implicitly retry this failed build forever.
+        for rel in _MATHBENCH_FILES:
+            shutil.copy2(snapdir / Path(rel).name, ROOT / rel)
+        for e in ledger.entries:
+            th = e["resolution"].get("theory")
+            if e["status"] == "missing_import" and th in (imported | set(failed)):
+                e["status"] = "import_failed"
+                e["resolution"]["notes"] = (
+                    failed.get(th) or f"heap rebuild failed, see {blog}")
+        ledger.save()
+        emit_event("WARN", "phase2_build_failed", theories=sorted(imported),
+                   log=str(blog), snapshot_restored=True)
+        _note_phase2_no_progress(
+            ledger, set(theories) - imported - set(failed), "build failed")
+        return False
+    log("heap rebuilt; re-running the authoritative goal gate")
+    rc = bash_timed(f"RPC_Host=127.0.0.1:27180 python tools/mathbench_repl.py "
+                    f"restart >> {blog} 2>&1", timeout=900)
+    if rc != 0:
+        raise RuntimeError(
+            f"post-rebuild 7777 REPL restart failed/timed out (see {blog}) — "
+            f"environment state is suspect; aborting the run")
+    rc = bash_timed(f"python -m tools.test_mathbench_goals >> {blog} 2>&1",
+                    timeout=3600)
+    if rc != 0:
+        # The heap on disk now CONTAINS the import but provably changes goal
+        # terms (or is unverified, on timeout) — running ANY case against it
+        # would corrupt results. D2 (用户决定): persist an explicit interlock
+        # that blocks every future run until the supervisory agent (or the
+        # user) repairs the environment and removes the marker after a green
+        # rebuild+gate. Entries stay missing_import on purpose.
+        marker = STATE_DIR / "HEAP_SUSPECT"
+        marker.write_text(
+            f"{datetime.now().isoformat()} post-rebuild goal gate "
+            f"{'TIMED OUT' if rc == -1 else 'FAILED'} for {sorted(imported)}\n"
+            f"build log: {blog}\n"
+            f"Recovery: diagnose (agent judgment required), make the gate "
+            f"green (`{_BUILD_CMD}` then `python -m tools.test_mathbench_goals`"
+            f" must exit 0), then delete this file.\n", encoding="utf-8")
+        emit_event("FATAL", "heap_suspect", theories=sorted(imported),
+                   log=str(blog), marker=str(marker))
+        raise RuntimeError(
+            f"post-rebuild goal gate FAILED (see {blog}) — the rebuilt heap "
+            f"is semantically suspect; HEAP_SUSPECT interlock written, no "
+            f"run will start until it is cleared")
+    log("post-rebuild goal gate green")
 
+    # D3 (用户拍板 B 方案): the gate-green heap IS the import — mark the
+    # ledger NOW with semantic_collect_failed preset (truthful: not yet in
+    # the semantic index), so a crash during the hours-long collect can never
+    # send the bookkeeping back to missing_import and re-burn the whole
+    # spine. The flag is cleared right after a successful collect.
+    refresh_heap_theories()
+    heap_lines = (STATE_DIR / "heap_theories.txt").read_text(
+        encoding="utf-8").splitlines()
+    imported_entries = []
     for e in ledger.entries:
         if e["status"] == "missing_import":
             th = e["resolution"].get("theory")
             if th in imported:
+                # P7: never trust the claim alone — the theory's source file
+                # must actually appear in the rebuilt heap's listing.
+                tname = th.rsplit(".", 1)[-1]
+                if not any(ln.endswith(f"/{tname}.thy") for ln in heap_lines):
+                    e["status"] = "import_failed"
+                    e["resolution"]["notes"] = (
+                        "agent reported imported but the theory is not "
+                        "present in the rebuilt heap listing")
+                    emit_event("WARN", "imported_not_in_heap", theory=th)
+                    continue
                 e["status"] = "imported"
                 e["resolution"]["imported_at"] = datetime.now().isoformat()
-                if not collect_ok:
-                    e["resolution"]["semantic_collect_failed"] = True
+                e["resolution"]["semantic_collect_failed"] = True  # until collected
+                e["resolution"].pop("phase2_stuck_rounds", None)
+                imported_entries.append(e)
             elif th in failed:
                 e["status"] = "import_failed"
                 e["resolution"]["notes"] = failed[th]
@@ -664,6 +1353,19 @@ def run_phase2(cfg, ledger: Ledger, theories: list[str]) -> bool:
                 e["resolution"]["notes"] = ("not covered by the phase-2 "
                                             "result (spelling drift?)")
     ledger.save()
+    emit_event("INFO", "phase2_imported",
+               theories=[e["resolution"].get("theory")
+                         for e in imported_entries])
+
+    # Isolated semantic collect (6665/27183), then a fresh AoA pair
+    # (6666/27182) for the re-run. A collect failure leaves the truthful
+    # semantic_collect_failed flag in place — the supervisory agent heals it
+    # later; the import itself stays valid.
+    if run_semantic_collect(cfg):
+        for e in imported_entries:
+            e["resolution"].pop("semantic_collect_failed", None)
+        ledger.save()
+    restart_repl(cfg)
     return True
 
 
@@ -676,17 +1378,114 @@ def port_listening(port: int) -> bool:
     return bool(re.search(rf":{port}\b", r.stdout))
 
 
+def _orphan_prover_marked(pid: int) -> bool:
+    """Positive domain identification: /proc/<pid>/environ carries the AoA
+    (27182) or collect (27183) RPC_Host token. Exact-token match on the
+    \\0-split environ (the _host_env_ok pattern) — never a substring scan."""
+    try:
+        environ = Path(f"/proc/{pid}/environ").read_bytes()
+    except OSError:
+        return False
+    return any(tok in _ORPHAN_ENV_MARKERS for tok in environ.split(b"\0"))
+
+
+def _comm(pid: int) -> str | None:
+    try:
+        return Path(f"/proc/{pid}/comm").read_text().strip()
+    except OSError:
+        return None
+
+
+def _sigterm_orphan_provers() -> list[tuple[int, str]]:
+    """Find and SIGTERM the sledgehammer provers stranded by the REPLs this
+    module just killed: comm in _PROVER_NAMES (pgrep -x — comm only, never -f)
+    AND environ marker (_orphan_prover_marked). One unified SIGTERM pass over
+    the whole confirmed set, so a dying cvc5 wrapper cannot shed its cvc5-bin
+    child before the child is signalled. Returns the confirmed set for the
+    post-grace SIGKILL step."""
+    confirmed = []
+    for name in _PROVER_NAMES:
+        r = subprocess.run(["pgrep", "-x", name], capture_output=True, text=True)
+        confirmed += [(int(tok), name) for tok in r.stdout.split()
+                      if _orphan_prover_marked(int(tok))]
+    for pid, _ in confirmed:
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+    if confirmed:
+        log(f"sweeping {len(confirmed)} orphan prover(s) of the AoA/collect "
+            f"domains: {confirmed}")
+    return confirmed
+
+
+def _sigkill_orphan_survivors(confirmed: list[tuple[int, str]]) -> None:
+    """SIGKILL whatever survived the SIGTERM grace — but re-verify identity
+    first (comm still whitelisted AND marker still present): between SIGTERM
+    and now the pid may have been recycled to an innocent process
+    (_host_identity_ok rationale). Emits the supervisory WARN event."""
+    if not confirmed:
+        return
+    time.sleep(2)   # rest of the grace; caller's sleep(3) was the first part
+    sigkilled = []
+    for pid, name in confirmed:
+        if _comm(pid) == name and _orphan_prover_marked(pid):
+            try:
+                os.kill(pid, signal.SIGKILL)
+                sigkilled.append(pid)
+            except ProcessLookupError:
+                pass
+    emit_event("WARN", "orphan_provers_swept",
+               procs=[{"pid": p, "name": n} for p, n in confirmed],
+               sigkilled=sigkilled)
+
+
 def kill_repl_and_host() -> None:
     """Stop the 6666 REPL server (LISTEN side only — not clients of the port)
-    and the shared Isabelle_RPC_Host. WARNING: terminates every session other
-    agents may have on them — by design the watcher owns both during a run."""
+    and the shared Isabelle_RPC_Host, then sweep the prover orphans they
+    strand (see _PROVER_NAMES). WARNING: terminates every session other
+    agents may have on them — by design the watcher owns both during a run.
+    Note: with --no-restart-repl and a live 6666 this is never reached at
+    startup — correct, since that REPL's provers may be legitimately working."""
     global _RPC_HOST_PID
     subprocess.run(["bash", "-c",
                     f"lsof -ti tcp:{REPL_PORT} -s TCP:LISTEN | xargs -r kill"],
                    cwd=ROOT)
     subprocess.run(["pkill", "-f", "fork_and_launch__"])
     _RPC_HOST_PID = None
+    orphans = _sigterm_orphan_provers()
     time.sleep(3)
+    _sigkill_orphan_survivors(orphans)
+
+
+def _host_env_ok(pid: int, survey_interval: int) -> bool:
+    """True iff /proc/<pid>/environ carries the survey variable with the
+    expected value."""
+    want = f"AOA_MISSING_LEMMA_SURVEY={survey_interval}".encode()
+    try:
+        environ = Path(f"/proc/{pid}/environ").read_bytes()
+    except OSError:
+        return False
+    return want in environ.split(b"\0")
+
+
+def _host_identity_ok(pid: int) -> bool:
+    """Guard against pid reuse: the process must still be OUR host — its
+    cmdline carries the RPC address."""
+    try:
+        return RPC_HOST_ADDR.encode() in Path(f"/proc/{pid}/cmdline").read_bytes()
+    except OSError:
+        return False
+
+
+def _find_listening_host_pid() -> int | None:
+    """Pid of the process LISTENING on the RPC host port, if any."""
+    port = RPC_HOST_ADDR.rsplit(":", 1)[1]
+    r = subprocess.run(["bash", "-c",
+                        f"lsof -ti tcp:{port} -s TCP:LISTEN"],
+                       capture_output=True, text=True)
+    pids = [int(x) for x in r.stdout.split() if x.strip()]
+    return pids[0] if pids else None
 
 
 def start_rpc_host(cfg) -> int:
@@ -695,7 +1494,8 @@ def start_rpc_host(cfg) -> int:
     /proc/<pid>/environ that the variable actually reached the daemon, which
     is the deterministic replacement for the lazy-spawn env race."""
     global _RPC_HOST_PID
-    env = dict(os.environ, AOA_MISSING_LEMMA_SURVEY=str(cfg.survey_interval))
+    env = dict(os.environ, AOA_MISSING_LEMMA_SURVEY=str(cfg.survey_interval),
+               AOA_MISSING_LEMMA_FEEDBACK=str(SURVEY_FEEDBACK_PATH))
     logp = STATE_DIR / "rpc_host.log"
     r = subprocess.run(
         [sys.executable, "-c",
@@ -721,9 +1521,7 @@ def start_rpc_host(cfg) -> int:
                 break
     if pid is None:
         raise RuntimeError(f"Isabelle_RPC_Host did not appear (see {logp})")
-    want = f"AOA_MISSING_LEMMA_SURVEY={cfg.survey_interval}".encode()
-    environ = Path(f"/proc/{pid}/environ").read_bytes()
-    if want not in environ.split(b"\0"):
+    if not _host_env_ok(pid, cfg.survey_interval):
         raise RuntimeError(
             f"Isabelle_RPC_Host pid {pid} is running WITHOUT "
             f"AOA_MISSING_LEMMA_SURVEY={cfg.survey_interval} in its environment "
@@ -734,13 +1532,93 @@ def start_rpc_host(cfg) -> int:
     return pid
 
 
-def check_rpc_host_alive() -> None:
-    """Fail loudly if the watcher-owned RPC host died (its env — and thus the
-    survey switch — would be decided by whoever respawns it)."""
-    if _RPC_HOST_PID is not None and not Path(f"/proc/{_RPC_HOST_PID}").exists():
+def check_rpc_host_alive(cfg) -> None:
+    """Keep the survey channel guaranteed when the watcher-owned RPC host
+    disappears. The host can be killed by concurrent agent sessions on this
+    shared machine (`pkill -f fork_and_launch__` is a documented dev step —
+    observed live 2026-06-11 18:14); the REPL then lazily respawns one,
+    inheriting the REPL's own env, which the watcher deliberately seeded with
+    the survey variable (the designed backstop). So instead of aborting the
+    night on a pid change, RE-VERIFY: adopt a replacement whose /proc environ
+    carries the variable; restart the host ourselves when nobody listens;
+    fail only when a listener provably lacks the variable."""
+    global _RPC_HOST_PID
+    if _RPC_HOST_PID is None:
+        return
+    if (Path(f"/proc/{_RPC_HOST_PID}").exists()
+            and _host_identity_ok(_RPC_HOST_PID)):
+        return
+    dead = _RPC_HOST_PID
+    _RPC_HOST_PID = None
+    repl = _find_listening_host_pid()
+    if repl is not None:
+        if _host_env_ok(repl, cfg.survey_interval):
+            _RPC_HOST_PID = repl
+            log(f"WARNING: watcher-owned Isabelle_RPC_Host (pid {dead}) died; "
+                f"adopted replacement pid {repl} (survey env verified via /proc). "
+                f"The AoA session that lived in the dead host is lost — its "
+                f"attempt will fail and be retried.")
+            emit_event("WARN", "host_adopted", dead_pid=dead, new_pid=repl)
+            return
         raise RuntimeError(
-            f"watcher-owned Isabelle_RPC_Host (pid {_RPC_HOST_PID}) died — "
-            f"aborting so a foreign respawn can't silently disable surveys")
+            f"watcher-owned Isabelle_RPC_Host (pid {dead}) died and the "
+            f"replacement pid {repl} lacks AOA_MISSING_LEMMA_SURVEY="
+            f"{cfg.survey_interval} — the survey channel is broken")
+    log(f"WARNING: watcher-owned Isabelle_RPC_Host (pid {dead}) died with no "
+        f"replacement listening — restarting it")
+    emit_event("WARN", "host_restarted", dead_pid=dead)
+    start_rpc_host(cfg)
+
+
+def run_semantic_collect(cfg) -> bool:
+    """Semantic collect against a DEDICATED REPL (6665) whose ML callbacks go
+    to a DEDICATED RPC address (27183) — semantics_manage serves that address
+    in-process when it is free, so the interpretation agent lives and dies
+    with the collect, never inside the watcher-owned AoA host. Returns True
+    iff the collect succeeded. Always leaves 6665 stopped."""
+    def _kill_6665_listener() -> None:
+        subprocess.run(["bash", "-c",
+                        f"lsof -ti tcp:{COLLECT_REPL_PORT} -s TCP:LISTEN "
+                        f"| xargs -r kill"], cwd=ROOT)
+
+    kill_repl_and_host()   # one big-heap REPL at a time (also idempotent)
+    # A STALE 6665 from a crashed earlier round would make port_listening
+    # true instantly and the collect would run against an OLD heap with
+    # collect_ok=True — silent index poisoning. Sweep first.
+    _kill_6665_listener()
+    time.sleep(2)
+    log(f"starting dedicated collect REPL on {COLLECT_REPL_ADDR}")
+    env = dict(os.environ, RPC_Host=COLLECT_RPC_ADDR)
+    logf = open(STATE_DIR / "collect_repl.log", "a", encoding="utf-8")
+    repl_proc = subprocess.Popen(
+        ["bash", "-c", f"source envir.sh && exec {COLLECT_REPL_START_CMD}"],
+        cwd=ROOT, env=env, stdout=logf, stderr=subprocess.STDOUT,
+        start_new_session=True)
+    logf.close()
+    collect_ok = False
+    try:
+        deadline = time.time() + cfg.repl_ready_timeout
+        while not port_listening(COLLECT_REPL_PORT):
+            if time.time() > deadline:
+                log(f"ERROR: collect REPL on {COLLECT_REPL_PORT} did not come "
+                    f"up (see {STATE_DIR/'collect_repl.log'}) — skipping collect")
+                return False
+            time.sleep(10)
+        time.sleep(15)
+        log("semantic collect (this can take a while)…")
+        rc = bash_timed(SEMANTIC_COLLECT_CMD, timeout=cfg.collect_timeout)
+        collect_ok = rc == 0
+        if not collect_ok:
+            log(f"ERROR: semantic collect failed (exit {rc}) — new lemmas "
+                f"will be invisible to `query` until collected; flagged in "
+                f"the ledger")
+        return collect_ok
+    finally:
+        kill_proc(repl_proc)        # whole process group, incl. mid-startup
+        _kill_6665_listener()       # the daemonized server it may have left
+        if not collect_ok:
+            emit_event("WARN", "semantic_collect_failed",
+                       log=str(STATE_DIR / "collect_repl.log"))
 
 
 def restart_repl(cfg) -> None:
@@ -751,7 +1629,12 @@ def restart_repl(cfg) -> None:
     start_rpc_host(cfg)
     # The REPL also gets the env var: if the host ever dies and the REPL's
     # Isabelle respawns it lazily, the respawn inherits a CORRECT environment.
-    env = dict(os.environ, AOA_MISSING_LEMMA_SURVEY=str(cfg.survey_interval))
+    # RPC_Host is pinned explicitly — an operator shell that happens to export
+    # a different RPC_Host must not silently re-route the REPL's callbacks
+    # away from the watcher-owned host.
+    env = dict(os.environ, AOA_MISSING_LEMMA_SURVEY=str(cfg.survey_interval),
+               AOA_MISSING_LEMMA_FEEDBACK=str(SURVEY_FEEDBACK_PATH),
+               RPC_Host=RPC_HOST_ADDR)
     logf = open(STATE_DIR / "repl_server.log", "a", encoding="utf-8")
     subprocess.Popen(["bash", "-c", f"source envir.sh && exec {REPL_START_CMD}"],
                      cwd=ROOT, env=env, stdout=logf, stderr=subprocess.STDOUT,
@@ -862,12 +1745,32 @@ def run_one_case(cfg, ledger: Ledger, offsets: dict, case: str,
     log_dir = Path(cfg.log_dir)
     st = cstate.of(case)
     while st["attempts"] < cfg.max_attempts:
+        # Lingering confirmed-but-unimported theories (an earlier phase 2
+        # aborted) are imported FIRST — running the attempt before they are
+        # in the heap would just re-prove without them for a whole budget.
+        lingering = {e["resolution"]["theory"] for e in ledger.entries
+                     if e["status"] == "missing_import"
+                     and e["resolution"].get("theory")}
+        if lingering and not cfg.dry_run:
+            log(f"lingering confirmed missing import(s) {sorted(lingering)} — "
+                f"running phase 2 before the next attempt")
+            ok = run_phase2(cfg, ledger, sorted(lingering))
+            st["outcomes"].append(
+                f"pre-attempt phase2({sorted(lingering)}) {'ok' if ok else 'FAILED'}")
+            cstate.save()
+            # run_phase2 already restarted REPL+host on success; on failure
+            # the running pair was never touched — either way proceed.
         st["attempts"] += 1
         attempt = st["attempts"]
         force = attempt > 1 or st["rerun_owed"] or case_status(cfg, case) is not None
         st["rerun_owed"] = False
         cstate.save()
         log(f"=== {case} attempt {attempt}/{cfg.max_attempts} ===")
+        # Survey feedback resets HERE, inside the attempt loop — not in the
+        # case preamble, which pre-attempt phase-2 and retry-continue skip
+        # (评审 M5). attempt_ids collects every claim ingested this attempt.
+        attempt_ids: set[str] = set()
+        write_survey_feedback(ledger, attempt_ids)
         proc = start_eval(cfg, case, force_retry=force)
         t_start = time.time()
         search: tuple[concurrent.futures.Future, Path, list[str], dict] | None = None
@@ -876,8 +1779,9 @@ def run_one_case(cfg, ledger: Ledger, offsets: dict, case: str,
         try:
             while True:
                 time.sleep(cfg.poll_interval)
-                check_rpc_host_alive()
-                scan_logs(log_dir, offsets, ledger, case)
+                check_rpc_host_alive(cfg)
+                attempt_ids.update(
+                    e["id"] for e in scan_logs(log_dir, offsets, ledger, case))
                 _save_json(STATE_DIR / "offsets.json", offsets)
 
                 # Survey-channel canary (last line of defense behind the
@@ -888,6 +1792,8 @@ def run_one_case(cfg, ledger: Ledger, offsets: dict, case: str,
                 if (canary_armed and attempt == 1
                         and SCAN_STATS["missing_lemmas_docs"] == 0
                         and time.time() - t_start > cfg.canary_seconds):
+                    emit_event("FATAL", "survey_canary",
+                               seconds=cfg.canary_seconds)
                     raise RuntimeError(
                         f"survey canary: {cfg.canary_seconds}s into the first "
                         f"case and no MISSING_LEMMAS doc ever appeared — the "
@@ -895,6 +1801,7 @@ def run_one_case(cfg, ledger: Ledger, offsets: dict, case: str,
 
                 if search is not None and search[0].done():
                     phase2_theories += finish_search(ledger, search)
+                    write_survey_feedback(ledger, attempt_ids)
                     search = None
                 if search is None and not cfg.dry_run:
                     batch = ledger.pending()
@@ -916,28 +1823,47 @@ def run_one_case(cfg, ledger: Ledger, offsets: dict, case: str,
                     break
 
             # Drain: final scan + finish any in-flight / leftover searches.
-            scan_logs(log_dir, offsets, ledger, case)
+            attempt_ids.update(
+                e["id"] for e in scan_logs(log_dir, offsets, ledger, case))
             _save_json(STATE_DIR / "offsets.json", offsets)
             if search is not None:
                 phase2_theories += finish_search(
                     ledger, search, wait_timeout=cfg.search_timeout)
+                write_survey_feedback(ledger, attempt_ids)
+            stale_rounds = 0
             while ledger.pending() and not cfg.dry_run:
+                before = len(ledger.pending())
                 s = start_search(cfg, ledger, ledger.pending())
                 phase2_theories += finish_search(
                     ledger, s, wait_timeout=cfg.search_timeout)
+                write_survey_feedback(ledger, attempt_ids)
+                if len(ledger.pending()) >= before:
+                    stale_rounds += 1
+                    if stale_rounds >= 2:
+                        log("WARNING: drain searches making no progress — "
+                            "leaving remaining claims pending for the next case")
+                        break
+                else:
+                    stale_rounds = 0
         finally:
             kill_proc(proc)
 
+        # Re-feed theories confirmed in earlier rounds but never imported —
+        # BEFORE the emptiness check: an aborted phase 2 (e.g. agent session
+        # lost mid-build, 2026-06-11 23:32) leaves them status=missing_import
+        # with no new confirmation coming, and they would otherwise linger
+        # forever.
+        lingering = {e["resolution"]["theory"] for e in ledger.entries
+                     if e["status"] == "missing_import"
+                     and e["resolution"].get("theory")}
+        phase2_theories = sorted(set(phase2_theories) | lingering)
         if phase2_theories:
-            # Re-feed theories confirmed in earlier rounds but never imported
-            # (e.g. a phase 2 that failed midway) so they don't linger.
-            lingering = {e["resolution"]["theory"] for e in ledger.entries
-                         if e["status"] == "missing_import"
-                         and e["resolution"].get("theory")}
-            phase2_theories = sorted(set(phase2_theories) | lingering)
             if st["attempts"] >= cfg.max_attempts:
-                # 用户拍板 16a: a phase 2 on the last attempt would never be
-                # followed by a re-run — record instead of spending hours.
+                # 用户拍板 16a + D4(a) 2026-06-12: no phase 2 inside the
+                # closing case — the import is DEFERRED: the entries stay
+                # missing_import, and the NEXT case's pre-attempt check
+                # imports them (followed by that case's own attempt). This
+                # case itself never re-runs.
                 st["outcomes"].append(
                     f"attempt {attempt}: confirmed {phase2_theories} but "
                     f"attempt budget exhausted — recorded only")
@@ -947,7 +1873,14 @@ def run_one_case(cfg, ledger: Ledger, offsets: dict, case: str,
                 if killed_for_phase2:
                     restart_repl(cfg)   # next case needs a live REPL
                 return
-            ok = run_phase2(cfg, ledger, phase2_theories)
+            try:
+                ok = run_phase2(cfg, ledger, phase2_theories)
+            except RuntimeError:
+                raise   # night-abort path; HEAP_SUSPECT/interlocks handle env
+            except Exception:
+                if killed_for_phase2:
+                    restart_repl(cfg)   # restore service even on surprises
+                raise
             st["outcomes"].append(
                 f"attempt {attempt}: phase2({phase2_theories}) "
                 f"{'ok' if ok else 'FAILED'}")
@@ -963,6 +1896,8 @@ def run_one_case(cfg, ledger: Ledger, offsets: dict, case: str,
         st["outcomes"].append(f"attempt {attempt}: {status}")
         cstate.save()
         log(f"{case} finished: {status}")
+        emit_event("INFO", "case_finished", case=case, attempt=attempt,
+                   status=status)
         return
     log(f"{case}: attempt limit reached")
 
@@ -971,6 +1906,14 @@ def cmd_run(cfg) -> None:
     for d in (STATE_DIR, STATE_DIR / "verdicts", STATE_DIR / "phase2"):
         d.mkdir(parents=True, exist_ok=True)
     Path(cfg.log_dir).mkdir(parents=True, exist_ok=True)
+    # D2 interlock (用户拍板: 解锁须 agent/人亲自判断修复，不机械自愈):
+    marker = STATE_DIR / "HEAP_SUSPECT"
+    if marker.exists():
+        emit_event("FATAL", "run_refused_heap_suspect", marker=str(marker))
+        raise RuntimeError(
+            f"HEAP_SUSPECT interlock present — the MathBench heap failed its "
+            f"post-rebuild goal gate and has not been repaired yet. See "
+            f"{marker} for the recovery procedure; refusing to run.")
     ledger = Ledger(STATE_DIR / "ledger.json")
     offsets = _load_json(STATE_DIR / "offsets.json", {})
     cstate = CaseState()
@@ -983,6 +1926,13 @@ def cmd_run(cfg) -> None:
             e["status"] = "pending"
         ledger.save()
         log(f"recovered {len(stuck)} claim(s) stuck in 'searching' → pending")
+
+    # Survey feedback: clear BEFORE the host comes up (评审 H2) — a crashed
+    # run's stale file would otherwise feed the first surveys cross-attempt
+    # adjudications, which the user explicitly scoped out.
+    write_survey_feedback(ledger, set())
+    # Embedding candidate retrieval: probe + prewarm once, off the hot path.
+    init_embedding(ledger)
 
     if not (STATE_DIR / "heap_theories.txt").exists():
         refresh_heap_theories()
@@ -1032,7 +1982,10 @@ def cmd_run(cfg) -> None:
                               f"{type(e).__name__}: {e}\n", encoding="utf-8")
             cmd_report(cfg)
             if isinstance(e, RuntimeError):
+                emit_event("FATAL", "night_aborted", case=case, error=str(e))
                 raise
+            emit_event("WARN", "case_crashed", case=case,
+                       error=f"{type(e).__name__}: {e}")
             log(f"ERROR: {case} crashed ({type(e).__name__}: {e}) — continuing")
         cmd_report(cfg)
 
@@ -1103,12 +2056,19 @@ def main() -> None:
                    help="AOA_MISSING_LEMMA_SURVEY value for the REPL env")
     # 用户要求 (2026-06-11): 所有 Claude agent 一律 Opus 4.8；权限只用 Claude Code
     # 内置 auto mode（不可用即崩溃，绝无自制裁决/回落）。
-    p.add_argument("--search-model", default="claude-opus-4-8",
+    p.add_argument("--search-model", default="claude-opus-4-8[1m]",
                    help="model for the confirmation-search agent")
-    p.add_argument("--phase2-model", default="claude-opus-4-8",
+    p.add_argument("--phase2-model", default="claude-opus-4-8[1m]",
                    help="model for the phase-2 import/reconcile agent")
     p.add_argument("--search-timeout", type=int, default=1800)
-    p.add_argument("--phase2-timeout", type=int, default=4 * 3600)
+    p.add_argument("--phase2-timeout", type=int, default=4 * 3600,
+                   help="phase-2 AGENT session cap (judgment + edits only; "
+                        "the heap rebuild is outside the session)")
+    p.add_argument("--build-timeout", type=int, default=2 * 3600,
+                   help="deterministic heap-rebuild step cap")
+    p.add_argument("--collect-timeout", type=int, default=6 * 3600,
+                   help="semantic-collect step cap (fresh AFP sessions can "
+                        "need hours of interpretation)")
     p.add_argument("--repl-ready-timeout", type=int, default=1800)
     p.add_argument("--canary-seconds", type=int, default=1200,
                    help="abort if the first case runs this long without ANY "

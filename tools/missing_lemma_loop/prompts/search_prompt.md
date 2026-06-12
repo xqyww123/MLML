@@ -25,13 +25,16 @@ absolute paths of that session's `.thy` files. A hit counts as **already in
 the heap** iff the `.thy` file where you found the lemma appears in that list
 (match by absolute path; grep the file).
 
-## Duplicate check (do this FIRST, per claim)
+## Duplicates (safety valve)
 
-If the prompt ends with a "Previously adjudicated claims" section: before
-searching, compare each claim against those entries. If a claim states the
-SAME mathematical fact as a previous entry (judge semantically — names may
-differ), give it verdict `duplicate` with `"duplicate_of": "<that entry's
-id>"` and do NOT re-search it. Only genuinely new facts get searched.
+Claims reaching you have already passed a duplicate-screening stage, so most
+are genuinely new. But if you discover during your search that a claim states
+the same fact as an entry in the "Imported / in-heap facts" section (or in a
+"Previously adjudicated claims" section, when present), give verdict
+`duplicate` with `"duplicate_of": "<that entry's id>"` instead of re-deriving
+the verdict. For entries whose status is `imported`, NEVER answer
+`already_in_heap`: the loop relies on the duplicate link to detect
+provided-but-unfindable lemmas.
 
 ## Verdicts
 
