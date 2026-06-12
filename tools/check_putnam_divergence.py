@@ -137,6 +137,11 @@ def normalize_syntax_line(line):
     s = re.sub(r'blockindent=\d+', '', s)
     s = re.sub(r'breakwidth=\d+', '', s)
     s = re.sub(r'"keyword1block([^"]*)"', r' \1 ', s)
+    # Isabelle 2025-2 renders keyword tokens as "keyword1$" where older
+    # versions printed the bare token ($). Strip the wrapper so production
+    # identities stay stable across toolchain upgrades (and keep matching the
+    # golden ledger keys recorded under the old rendering).
+    s = re.sub(r'"keyword1([^"]*)"', r'\1', s)
     s = re.sub(r'\s+', ' ', s).strip()
     return s
 
@@ -164,7 +169,11 @@ def split_syntax_sections(text):
             continue
         if current in ('productions', 'parse_rules', 'print_rules'):
             norm = normalize_syntax_line(raw)
-            if norm and not norm.startswith('consts:') and not norm.startswith('print modes:'):
+            # The consts:/print modes: inventory lines are NOT grammar rules
+            # and must be dropped. Isabelle 2025-2 glues a residual Pretty
+            # `block` marker onto them (→ "blockconsts:"), so match with the
+            # marker optional, not by bare prefix.
+            if norm and not re.match(r'(?:block)*(?:consts:|print modes:)', norm):
                 sections[current].append(norm)
     return sections
 

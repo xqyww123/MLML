@@ -99,6 +99,10 @@ hide_const (open)
   Group.units_of Group.pow
   Coset.l_coset Coset.r_coset Coset.r_congruent
   Coset.FactGroup Coset.trivial_homomorphism
+  (* Isabelle 2025-2 added Equiv_Relations.kernel (in Main's import chain);
+     PutnamBench-native `kernel` must resolve to it, not the group-hom
+     kernel that AbelCoset->Coset loads later (2026-06-12). *)
+  Coset.kernel
   Ring.ring Ring.cring Ring.semiring
   Ring.ring_hom_cring Ring.abelian_monoid
   Ring.finsum Ring.add_monoid Ring.add_pow Ring.a_inv Ring.a_minus

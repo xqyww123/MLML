@@ -1,6 +1,6 @@
 {
   "meta": {
-    "updated": "2026-06-10",
+    "updated": "2026-06-12",
     "putnam_data_sha": "c2a895db5913",
     "putnam_submodule_commit": "afe83317ba064f4e09dd022c3331cb8bf1e3927a"
   },
@@ -260,6 +260,14 @@
       "mathbench": "Giry_Monad.join",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
       "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "kernel",
+      "putnam": "Coset.kernel",
+      "mathbench": "Equiv_Relations.kernel",
+      "rationale": "2025-2 added Equiv_Relations.kernel to Main's import chain; MathBench hides Coset.kernel so the bare name matches the 633-problem majority (and bare-Main semantics). The 6 problems whose own imports load HOL-Algebra natively resolve kernel=Coset.kernel — a single environment cannot match both sides. No PutnamBench statement uses the name; goal gate green 639/639. A future algebra problem writing kernel would be caught by the gate.",
+      "accepted": "2026-06-12"
     },
     {
       "dim": "const",
