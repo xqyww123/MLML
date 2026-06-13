@@ -422,3 +422,79 @@ across the change.
 - **Fix**: Added the nonnegativity constraints a \<ge> 0 \<and> b \<ge> 0 to the entry-counting set in hS: card {(a,b). a \<ge> 0 \<and> b \<ge> 0 \<and> a*(i+1)+b*(j+1)=n}.
 - **Rationale**: The English defines s(i,j) as the number of pairs of NONNEGATIVE integers (a,b) with a*i+b*j=n. The original set ranged over all integers, so each linear Diophantine equation a*p+b*q=n (p,q\<ge>1) had an infinite solution set; Isabelle's card of an infinite set is 0, forcing every entry of S to 0, hence det S = 0 \<noteq> the nonzero RHS, making the theorem unprovable. Restricting to a\<ge>0, b\<ge>0 yields finitely many solutions and the genuine entries s(i,j) (with indices i+1,j+1 ranging over 1..n), restoring the intended matrix and determinant. The sign-exponent nat(\<lceil>n/2\<rceil>+1) vs English \<lceil>n/2\<rceil>-1 differs by 2 and is harmless mod 2, so it is left unchanged per minimal-change.
 - **Validation**: elaborates (ok); review: good
+
+
+## Supplementary corrections (2026-06-13): the 4 originally-missed problems
+
+The 2026-06-12 sweep left 4 problems unaudited
+(`putnam_1963_a3`, `putnam_1994_b5`, `putnam_1994_b6`, `putnam_2021_a2`).
+A follow-up audit (same desugared-term method, one independent agent per
+problem, each finding adversarially verified) found **3 of the 4
+defective** (1 major, 2 wrong); `putnam_1994_b5` is correct
+(k-fold composition `((f α)^^k)`, `f (α^k)`, and the `n²−k` nat
+subtraction — non-truncating since `k ≤ n ≤ n²` — all faithful). This
+raises the confirmed total to **66 defective formalizations
+(37 wrong, 29 major)**. The goal gate (639/639, 0 mismatch, 0 new
+errors) and the round-trip byte check were re-confirmed after applying
+the corrections below.
+
+### putnam_1963_a3  (major_issue · high confidence)
+- **Defect**: The ODE condition on the left of the biconditional is
+  quantified over `x \<ge> 0` instead of `x \<ge> 1`, inconsistent with
+  the rest of the problem: `f` is only hypothesized continuous on
+  `{1..}` (`hf : continuous_on {1..} f`), `y` is only assumed
+  differentiable on `{1..}` (`hy`), the operator `\<delta> = x\<cdot>d/dx`
+  degenerates at `x = 0`, and the integral-formula side only constrains
+  `y` on `{1..}`. The backward direction is then effectively
+  unprovable: knowing `y x = \<integral>...` for `x \<ge> 1` says nothing
+  about `y` on `[0,1)`, yet the left side demands the ODE hold there.
+- **Fix**: Changed the bound `\<forall> x :: real. x \<ge> 0 \<longrightarrow> (P n y) x = f x`
+  to `... x \<ge> 1 \<longrightarrow> (P n y) x = f x`.
+- **Rationale**: Aligns the ODE domain with `f`'s domain `{1..}` and the
+  integral-formula domain, so both directions of the biconditional are
+  about the same interval. The initial conditions, the recursive
+  \<delta>-operator `P`, the `n-1` nat subtractions (safe since `0 < n`),
+  the integrand and the integral bounds `[1,x]` were all confirmed
+  faithful and left unchanged.
+- **Validation**: gate 639/639; round-trip clean
+
+### putnam_1994_b6  (wrong · high confidence)
+- **Defect**: The body `101*a - 100 * 2^a` elaborates entirely in `nat`
+  with truncating natural subtraction, coerced to `int` only at the very
+  end: `n a = int (101 * a - 100 * 2^a)`. Because `100\<cdot>2^a \<ge> 101a`
+  for every `a \<in> {0..99}`, the nat subtraction truncates to `0` for
+  ALL `a`, forcing `n a = 0` everywhere. The hypothesis
+  `n a + n b \<equiv> n c + n d (mod 10100)` then degenerates to `0 \<equiv> 0`
+  (always true) while the conclusion `{a,b}={c,d}` does not — so the
+  formalized theorem is FALSE (verified: an independent agent
+  machine-proved the negation via a=b=0, c=1, d=2).
+- **Fix**: Coerce `a` to `int` inside the body so the whole arithmetic is
+  over the integers: `n a = 101 * int a - 100 * 2^a`.
+- **Rationale**: With `int a` the `-` is integer subtraction and `2^a`
+  is `int`-typed, so `n a` takes its genuine (negative) values
+  (`n 0 = -100`, `n 1 = -99`, `n 5 = -2695`, ...), matching
+  `n_a = 101a - 100\<cdot>2^a` over the integers. Everything else (the `+`
+  and congruence over `int`, `mod 10100`, the set equality over `nat`,
+  the `{0..99}` bounds, quantifier structure) was already correct.
+- **Validation**: gate 639/639; round-trip clean
+
+### putnam_2021_a2  (wrong · high confidence)
+- **Defect**: Two filter deviations. (1) The inner limit `lim_{r\<rightarrow>0}`
+  uses source filter `nhds 0` instead of the punctured `at 0`; `nhds 0`
+  includes `r = 0`, where `1/r = 1/0 = 0` in Isabelle and the expression
+  collapses to `(...) powr 0 = 1`, so convergence to `nhds (g x)` forces
+  `g x = 1` rather than the intended `e\<cdot>x` — making the hypothesis
+  `hg` inconsistent with the real object and the theorem vacuous.
+  (2) The conclusion uses target filter `at_right (exp 1)` instead of
+  `nhds (exp 1)`; the problem only asserts `g x / x \<rightarrow> e`, whereas
+  `at_right` additionally demands eventual strict approach from above,
+  an unjustified (and plausibly false) strengthening.
+- **Fix**: In `hg` replace `(nhds 0)` with `(at 0)`; in the conclusion
+  replace `(at_right putnam_2021_a2_solution)` with
+  `(nhds putnam_2021_a2_solution)`. The answer constant
+  (`putnam_2021_a2_solution = exp 1`) is retained.
+- **Rationale**: `at 0` is the standard punctured-neighbourhood limit, so
+  `g x` is pinned to the genuine value `e\<cdot>x`; `nhds (exp 1)` expresses
+  exactly `lim_{x\<rightarrow>\<infinity>} g x / x = e` with no spurious
+  one-sided strengthening.
+- **Validation**: gate 639/639; round-trip clean
