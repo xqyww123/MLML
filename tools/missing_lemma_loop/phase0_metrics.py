@@ -131,9 +131,21 @@ def analyze(state, since):
         max_backlog = max(max_backlog, backlog)
         last_t = t
 
+    # Extend the timeline to NOW so an idle tail dilutes the backlog stats and
+    # the production rate uses real elapsed wall-time — not the near-zero span
+    # of a single simultaneous survey burst (which otherwise yields an absurd
+    # claims/hr and a backlog that looks 100%-saturated).
+    now = datetime.now()
+    tail = (now - last_t).total_seconds()
+    if tail > 0:
+        span_secs += tail
+        busy_secs += backlog * tail
+        if backlog > 0:
+            pos_secs += tail
+
     first_t = claims[0][0]
     last_seen = claims[-1][0]
-    window_hr = max((last_seen - first_t).total_seconds() / 3600.0, 1e-9)
+    window_hr = max((now - first_t).total_seconds() / 3600.0, 1.0 / 60)
     n = len(claims)
 
     # --- precision (final ledger status over the window) ---
@@ -150,7 +162,15 @@ def analyze(state, since):
     lat_max = max(latencies) if latencies else None
     # Adjudication occupies one serial slot; if the queue is rarely non-empty
     # and backlog rarely exceeds the in-flight batch, the prover is the limiter.
-    if max_backlog <= 2 and frac_backlogged < 0.25:
+    # Guard against tiny samples: a single survey burst of K simultaneous claims
+    # trivially shows backlog=K / 100%, which is NOT evidence the whole run is
+    # adjudication-bound — require a real spread of cases first.
+    n_cases = len({e["case"] for _, e in claims})
+    if n < 15 or n_cases < 3:
+        verdict = (f"INSUFFICIENT SAMPLE (n={n} claim(s) over {n_cases} case(s); "
+                   f"readings still dominated by individual survey bursts — "
+                   f"accumulate >=3 cases / >=15 claims before gating)")
+    elif max_backlog <= 2 and frac_backlogged < 0.25:
         verdict = "PROVER-BOUND (single adjudicator keeps up; raising adjudication concurrency buys little — the production lever, C, dominates)"
     elif avg_backlog >= 2 or frac_backlogged >= 0.5:
         verdict = "ADJUDICATION-BOUND (claims queue behind the lone max_workers=1 slot; widen _AGENT_POOL first — A is the lever)"
@@ -166,7 +186,7 @@ def analyze(state, since):
         frac_backlogged=frac_backlogged,
         status_hist=status_hist, adjudicated=adjudicated, valuable=valuable,
         n_batches=len(batches), verdict=verdict,
-        cases=len({e["case"] for _, e in claims}),
+        cases=n_cases,
     )
 
 
