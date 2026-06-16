@@ -20,3 +20,30 @@
 | `contrib/auto_sledgehammer/` | Sledgehammer wrapper usable as a tactic (`by auto_sledgehammer`); caches results. |
 | `contrib/Performant_Isabelle_ML/` | High-performance Isabelle/ML data structures: mutable hash tables and an improved discrimination net (`iNet`). |
 | `contrib/Semantic_Embedding/` | Semantic DB management, deformalization (Isabelle entities → English via Claude), and vector-based semantic retrieval. |
+
+## Syncing the semantic embedding database from the published snapshot
+
+The semantic embedding database (deformalizations + vector stores, an ~3 GB
+LMDB collection) lives at `~/.cache/Isabelle_Semantic_Embedding`. To refresh a
+machine's copy from the snapshot published on the Hugging Face Hub
+(`contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst`):
+
+1. **Back up the current cache** — timestamped `.tar.zst`, so a bad sync is recoverable:
+   ```bash
+   ts=$(date +%Y%m%d_%H%M%S)
+   tar --zstd -cf ~/Isabelle_Semantic_Embedding.backup_${ts}.tar.zst \
+       -C ~/.cache Isabelle_Semantic_Embedding
+   ```
+2. **Make sure MLML is up to date** (the tarball pointer is tracked in the repo):
+   ```bash
+   git pull && git submodule update --init contrib/Semantic_Embedding
+   ```
+3. **Download the snapshot tarball** from the Hugging Face Hub (force-refresh):
+   ```bash
+   ./manage_data.py get contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst
+   ```
+4. **Extract it over the cache** — overwrites `~/.cache/Isabelle_Semantic_Embedding`
+   (the tarball's top-level dir is `Isabelle_Semantic_Embedding/`, so extract into `~/.cache`):
+   ```bash
+   tar --zstd -xf contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst -C ~/.cache
+   ```
