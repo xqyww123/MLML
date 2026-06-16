@@ -38,9 +38,12 @@ machine's copy from the snapshot published on the Hugging Face Hub
    ```bash
    git pull && git submodule update --init contrib/Semantic_Embedding
    ```
-3. **Download the snapshot tarball** from the Hugging Face Hub (force-refresh):
+3. **Download the snapshot tarball** from the Hugging Face Hub. Pass `-y` to
+   overwrite any existing tarball without prompting (required for
+   non-interactive / detached runs — `get` otherwise blocks on a `[y/N]` prompt
+   and dies with `EOFError` when a differently-sized tarball already exists):
    ```bash
-   ./manage_data.py get contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst
+   ./manage_data.py get -y contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst
    ```
 4. **Extract it over the cache** — overwrites `~/.cache/Isabelle_Semantic_Embedding`
    (the tarball's top-level dir is `Isabelle_Semantic_Embedding/`, so extract into `~/.cache`):
