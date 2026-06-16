@@ -55,6 +55,13 @@ theory MathBench_ProverBase
     Chord_Segments.Chord_Segments
     (* Zeckendorf representation of naturals as sums of non-consecutive Fibonacci numbers *)
     Zeckendorf.Zeckendorf
+    (* Tarski plane geometry: IsaGeoCoq's axiomatic development (circles, circumcenter,
+       concyclic, perpendicular bisector, two-circle intersection) together with
+       Tarskis_Geometry's real^2 model (real_euclid: tarski), whose axioms A1-A11
+       discharge IsaGeoCoq's Tarski_Euclidean_2D_Continuous locale on real^2. *)
+    Tarskis_Geometry.Euclid_Tarski
+    IsaGeoCoq.Tarski_Euclidean_2D_Continuous
+    IsaGeoCoq.Highschool_Euclidean_2D
 begin
 
 end

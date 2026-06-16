@@ -42,6 +42,11 @@ session MathBench_ProverBase in Base = "HOL-Complex_Analysis" +
     Hermite_Lindemann
     "Chord_Segments"
     Zeckendorf
+    (* Tarski plane geometry: IsaGeoCoq axiomatic development (circles, circumcenter,
+       concyclic, perpendicular bisector) + Tarskis_Geometry real^2 model that
+       discharges the Tarski axioms, enabling instantiation on real^2. *)
+    Tarskis_Geometry
+    IsaGeoCoq
     (*Minilang_Agent
     Semantic_Embedding*)
     Auto_Sledgehammer
@@ -50,4 +55,5 @@ session MathBench_ProverBase in Base = "HOL-Complex_Analysis" +
 
 session MathBench_Prover = MathBench_ProverBase +
   theories
+    Geo_Real2
     MathBench_Prover

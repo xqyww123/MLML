@@ -1,6 +1,7 @@
 theory MathBench_Prover
   imports Auto_Sledgehammer.Auto_Sledgehammer MathBench_ProverBase.MathBench_ProverBase
     DigitsInBase.DigitsInBase
+    Geo_Real2
 begin
 
 interpretation digits_in_base 10 by (standard, auto)
