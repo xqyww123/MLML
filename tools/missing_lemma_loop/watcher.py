@@ -2066,7 +2066,7 @@ def launch_fleet_eval(cfg, extra_args: list | None = None) -> subprocess.Popen:
                CLUSTER="slurmx",
                SESSION="MathBench_Prover",
                SBATCH_JOB_NAME=cfg.job_name,
-               RPC_Host=f"{cfg.rpc_host_ip}:{rpc_port}",
+               RPC_Host=f"{cfg.rpc_host}:{rpc_port}",
                AUTO_START_RPC_SERVER="0")
     for _k in ("AOA_MISSING_LEMMA_SURVEY", "AOA_MISSING_LEMMA_FEEDBACK",
                "AoA_LOG_DIR"):
@@ -2293,7 +2293,7 @@ def cmd_run_fleet(cfg) -> None:
 
     # One login-node RPC host for the WHOLE fleet (用户方案 2026-06-17): every
     # compute REPL connects here (launch_fleet_eval points them at
-    # cfg.rpc_host_ip + AUTO_START_RPC_SERVER=0), so the semantic retrieval DB
+    # cfg.rpc_host + AUTO_START_RPC_SERVER=0), so the semantic retrieval DB
     # on lustre is touched by a SINGLE process. Per-compute-node hosts each open
     # the shared SQLite/LMDB stores concurrently → "file is not a database".
     # Bind 0.0.0.0 so compute nodes can reach it; clear any leaked host first.
@@ -2301,7 +2301,7 @@ def cmd_run_fleet(cfg) -> None:
     time.sleep(1)
     rpc_port = RPC_HOST_ADDR.rsplit(":", 1)[1]
     log(f"starting login-node RPC host on 0.0.0.0:{rpc_port} "
-        f"(compute REPLs connect to {cfg.rpc_host_ip}:{rpc_port})")
+        f"(compute REPLs connect to {cfg.rpc_host}:{rpc_port})")
     start_rpc_host(cfg, addr=f"0.0.0.0:{rpc_port}",
                    extra_env={"AoA_LOG_DIR": str(Path(cfg.log_dir).resolve())})
 
@@ -2555,10 +2555,11 @@ def main() -> None:
     p.add_argument("--job-name", default="mlloop",
                    help="SBATCH_JOB_NAME for the fleet's slurmx jobs; scancel "
                         "is scoped to this name (default: mlloop)")
-    p.add_argument("--rpc-host-ip", default="10.148.0.42",
-                   help="login-node IP the compute REPLs connect to for the one "
-                        "shared RPC host (compute-facing / ib0 address; default "
-                        "10.148.0.42 = cscc-login-2 ib0)")
+    p.add_argument("--rpc-host", default="cscc-login-2.ib0.cscc-new.mbzuai.ac.ae",
+                   help="login-node host the compute REPLs connect to for the "
+                        "one shared RPC host — the compute-facing (ib0) name so "
+                        "the high-speed network is used (default: "
+                        "cscc-login-2.ib0.cscc-new.mbzuai.ac.ae)")
     p.add_argument("--max-rebuilds", type=int, default=30,
                    help="hard cap on total phase-2 rebuild rounds — aborts a "
                         "non-converging import loop (default: 30)")
