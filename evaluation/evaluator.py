@@ -473,6 +473,24 @@ class MinilangAgent_Base(Isar_Base):
                 await self.repl.run_app('Minilang.AoA')
                 invocation_id = await self._make_invocation_id()
                 log_ids.append(invocation_id)
+                # Record invocation_id -> case name at case START, so the
+                # missing-lemma watcher can attribute surveys (written DURING
+                # the proof, before this case finishes) to the right case. The
+                # fleet runs ~18 cases in ONE process via work-stealing, so a
+                # per-case env var is impossible — this side file is the
+                # mapping. One JSON line per case; O_APPEND on a single asyncio
+                # thread makes concurrent writers non-interleaving.
+                if self._log_dir:
+                    try:
+                        os.makedirs(self._log_dir, exist_ok=True)
+                        with open(os.path.join(self._log_dir, "case_info.jsonl"),
+                                  "a", encoding="utf-8") as _cf:
+                            _cf.write(json.dumps(
+                                {"invocation_id": invocation_id,
+                                 "case_name": str(index)},
+                                ensure_ascii=False) + "\n")
+                    except OSError as _e:
+                        logger.warning(f"case_info write failed for {index}: {_e}")
                 await self.repl._write((
                     invocation_id, driver,
                     (self._cfg, self._budget), self._log_dir,

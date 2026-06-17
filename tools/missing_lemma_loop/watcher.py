@@ -322,10 +322,32 @@ def scan_logs(log_dir: Path, offsets: dict, ledger: Ledger, case: str) -> list[d
     the offset into the middle of a document — a truncated chunk that happens
     to parse would poison every later poll of the file. Offsets are stored as
     ``{"offset": int, "size": int}`` per file (legacy int upgraded)."""
+    # invocation_id -> case-name map the evaluator writes at case start (B1).
+    # Lets the fleet attribute each claim to its real PutnamBench case instead
+    # of the single placeholder *case* passed in (which is "?" when 18 cases
+    # survey concurrently into one log dir). Re-read each scan so freshly
+    # started cases appear; a missing entry falls back to *case*.
+    case_info: dict[str, str] = {}
+    ci_path = log_dir / "case_info.jsonl"
+    if ci_path.exists():
+        try:
+            for ln in ci_path.read_text(encoding="utf-8").splitlines():
+                ln = ln.strip()
+                if not ln:
+                    continue
+                rec = json.loads(ln)
+                inv = rec.get("invocation_id")
+                if inv:
+                    case_info[inv] = rec.get("case_name", case)
+        except (OSError, json.JSONDecodeError) as e:
+            log(f"WARNING: failed to read case_info.jsonl: {e}")
+
     new_entries: list[dict] = []
     for f in sorted(log_dir.glob("*/missing_lemmas.yaml")):
-        if ".old_" in f.parent.name:
+        invocation_id = f.parent.name
+        if ".old_" in invocation_id:
             continue  # renamed stale invocation dirs — never re-ingest
+        actual_case = case_info.get(invocation_id, case)
         key = str(f)
         st = offsets.get(key, 0)
         if isinstance(st, int):  # legacy format upgrade
@@ -361,7 +383,7 @@ def scan_logs(log_dir: Path, offsets: dict, ledger: Ledger, case: str) -> list[d
                     break
                 log(f"WARNING: skipping unparsable doc in {f}: {e}")
                 continue
-            _ingest_doc(doc, ledger, case, f.parent.name, new_entries)
+            _ingest_doc(doc, ledger, actual_case, invocation_id, new_entries)
         offsets[key] = {"offset": off + consume_upto, "size": size}
     return new_entries
 
@@ -947,6 +969,15 @@ def start_search(cfg, ledger: 'Ledger', claims: list[dict]) \
     BOTH stages unconditionally (correctness floor, 评审 H2); per-claim
     embedding candidates go to the dedup agent when available, else both
     prompts fall back to the full digest."""
+    # M2: bound the batch so a backlog (e.g. an 18-prover survey burst) can't
+    # build one giant dedup/search prompt that times out. The remainder stays
+    # pending and is picked up by the next search round (the single in-flight
+    # search gate paginates it).
+    cap = getattr(cfg, "max_claims_per_batch", 0) or 0
+    if cap and len(claims) > cap:
+        log(f"adjudication batch capped at {cap}/{len(claims)} claims; "
+            f"remainder stays pending for the next round")
+        claims = claims[:cap]
     for c in claims:
         c["status"] = "searching"
     out = STATE_DIR / "verdicts" / f"verdict_{claims[0]['id']}_{int(time.time())}.json"
@@ -1154,26 +1185,93 @@ _MATHBENCH_FILES = ("tasks/MathBench_Prover/MathBench_Prover.thy",
 PHASE2_STUCK_LIMIT = 2
 
 
+def _theory_stuck_path() -> Path:
+    return STATE_DIR / "theory_stuck.json"
+
+
+def _load_theory_stuck() -> dict:
+    return _load_json(_theory_stuck_path(), {})
+
+
+def _save_theory_stuck(d: dict) -> None:
+    _save_json(_theory_stuck_path(), d)
+
+
+def _theory_dead(theory: str) -> bool:
+    """True once the circuit breaker has given up on *theory* (hit
+    PHASE2_STUCK_LIMIT). Tracked per-THEORY in a side file (M4) so a re-reported
+    claim that becomes a fresh ledger entry cannot reset the count."""
+    return bool(theory) and _load_theory_stuck().get(theory, 0) >= PHASE2_STUCK_LIMIT
+
+
 def _note_phase2_no_progress(ledger: Ledger, theories: set, reason: str) -> None:
-    """Count a progress-less phase-2 round for each still-missing theory and
-    trip the circuit breaker at PHASE2_STUCK_LIMIT."""
-    for e in ledger.entries:
-        th = e["resolution"].get("theory")
-        if e["status"] != "missing_import" or th not in theories:
-            continue
-        n = e["resolution"].get("phase2_stuck_rounds", 0) + 1
-        e["resolution"]["phase2_stuck_rounds"] = n
+    """Per-theory circuit breaker. Count a progress-less phase-2 round for each
+    theory in a side file — NOT per ledger entry: a re-report becomes a fresh
+    entry whose per-entry counter would reset (the A3 cycling bug). At
+    PHASE2_STUCK_LIMIT, mark every still-missing entry of that theory
+    import_failed so it stops re-triggering the barrier."""
+    theories = {t for t in theories if t}
+    if not theories:
+        return
+    stuck = _load_theory_stuck()
+    for th in theories:
+        n = stuck.get(th, 0) + 1
+        stuck[th] = n
         if n >= PHASE2_STUCK_LIMIT:
-            e["status"] = "import_failed"
-            e["resolution"]["notes"] = (f"circuit breaker: {n} phase-2 rounds "
-                                        f"without progress ({reason}) — needs "
-                                        f"human/supervisor attention")
+            for e in ledger.entries:
+                if (e["status"] == "missing_import"
+                        and e["resolution"].get("theory") == th):
+                    e["status"] = "import_failed"
+                    e["resolution"]["notes"] = (
+                        f"circuit breaker: {n} phase-2 rounds without progress "
+                        f"({reason}) — needs human/supervisor attention")
             emit_event("WARN", "phase2_circuit_breaker", theory=th,
                        rounds=n, reason=reason)
+    _save_theory_stuck(stuck)
     ledger.save()
 
 
-def run_phase2(cfg, ledger: Ledger, theories: list[str]) -> bool:
+def _clear_theory_stuck(theories: set) -> None:
+    """A theory that finally landed clears its no-progress count."""
+    theories = {t for t in theories if t}
+    if not theories:
+        return
+    stuck = _load_theory_stuck()
+    if any(th in stuck for th in theories):
+        for th in theories:
+            stuck.pop(th, None)
+        _save_theory_stuck(stuck)
+
+
+def _promotion_marker() -> Path:
+    return STATE_DIR / "phase2" / "PROMOTING.json"
+
+
+def _recover_crashed_promotion() -> None:
+    """m1: if a prior run_phase2 died AFTER promoting the MathBench source but
+    BEFORE its rebuild succeeded, the marker survives and points at the pre-edit
+    snapshot — restore it so the next build starts from a buildable state (a
+    half-promoted source would otherwise fail every later build)."""
+    m = _promotion_marker()
+    if not m.exists():
+        return
+    try:
+        snap = Path(json.loads(m.read_text(encoding="utf-8"))["snapshot"])
+        for rel in _MATHBENCH_FILES:
+            src = snap / Path(rel).name
+            if src.exists():
+                shutil.copy2(src, ROOT / rel)
+        log(f"m1: recovered a crashed phase-2 promotion — restored MathBench "
+            f"source from {snap}")
+        emit_event("WARN", "phase2_promotion_recovered", snapshot=str(snap))
+    except (OSError, json.JSONDecodeError, KeyError) as e:
+        log(f"WARNING: could not recover crashed promotion: {e}")
+    finally:
+        m.unlink(missing_ok=True)
+
+
+def run_phase2(cfg, ledger: Ledger, theories: list[str],
+               restart_proving: bool = True) -> bool:
     """Import *theories* into MathBench. The AGENT does the judgment half
     (inner-loop validation + promotion edits + submit_result); the watcher
     then runs the deterministic spine itself: heap rebuild → goal-gate
@@ -1186,6 +1284,10 @@ def run_phase2(cfg, ledger: Ledger, theories: list[str]) -> bool:
     if cfg.dry_run:
         log("dry-run: skipping phase 2")
         return False
+
+    # m1: recover a prior promotion that crashed before its rebuild succeeded
+    # (marker, if present, points at the pre-edit snapshot).
+    _recover_crashed_promotion()
 
     # D5①: ensure heap == source BEFORE the agent starts. A lingering re-entry
     # (earlier round promoted files but never rebuilt) would otherwise make
@@ -1220,6 +1322,10 @@ def run_phase2(cfg, ledger: Ledger, theories: list[str]) -> bool:
     snapdir.mkdir(parents=True, exist_ok=True)
     for rel in _MATHBENCH_FILES:
         shutil.copy2(ROOT / rel, snapdir / Path(rel).name)
+    # m1: mark the source as about-to-be-promoted; cleared once the rebuild
+    # succeeds. A crash in between leaves this marker → the next run restores.
+    _promotion_marker().write_text(
+        json.dumps({"snapshot": str(snapdir)}), encoding="utf-8")
 
     template = (PROMPT_DIR / "phase2_prompt.md").read_text(encoding="utf-8")
     prompt = template.replace("THEORIES_PLACEHOLDER",
@@ -1270,6 +1376,7 @@ def run_phase2(cfg, ledger: Ledger, theories: list[str]) -> bool:
         # later REPL start implicitly retry this failed build forever.
         for rel in _MATHBENCH_FILES:
             shutil.copy2(snapdir / Path(rel).name, ROOT / rel)
+        _promotion_marker().unlink(missing_ok=True)  # restored → buildable
         for e in ledger.entries:
             th = e["resolution"].get("theory")
             if e["status"] == "missing_import" and th in (imported | set(failed)):
@@ -1282,6 +1389,9 @@ def run_phase2(cfg, ledger: Ledger, theories: list[str]) -> bool:
         _note_phase2_no_progress(
             ledger, set(theories) - imported - set(failed), "build failed")
         return False
+    # m1: rebuild succeeded → source and heap are consistent; the snapshot is
+    # no longer needed to recover a crash.
+    _promotion_marker().unlink(missing_ok=True)
     log("heap rebuilt; re-running the authoritative goal gate")
     rc = bash_timed(f"RPC_Host=127.0.0.1:27180 python tools/mathbench_repl.py "
                     f"restart >> {blog} 2>&1", timeout=900)
@@ -1357,6 +1467,18 @@ def run_phase2(cfg, ledger: Ledger, theories: list[str]) -> bool:
                theories=[e["resolution"].get("theory")
                          for e in imported_entries])
 
+    # M4: per-theory circuit-breaker bookkeeping. Theories asked-for that did
+    # NOT end up `imported` this round (agent mis-promoted, or P7 found them
+    # absent from the heap listing) count as a no-progress round — tracked per
+    # theory so re-reports can't reset it; theories that landed clear their
+    # counter. This is the path the old per-entry counter missed (A3).
+    landed = {e["resolution"].get("theory") for e in imported_entries}
+    _clear_theory_stuck(landed)
+    not_landed = {t for t in theories if t} - landed
+    if not_landed:
+        _note_phase2_no_progress(ledger, not_landed,
+                                 "asked to import but did not land in the heap")
+
     # Isolated semantic collect (6665/27183), then a fresh AoA pair
     # (6666/27182) for the re-run. A collect failure leaves the truthful
     # semantic_collect_failed flag in place — the supervisory agent heals it
@@ -1365,7 +1487,11 @@ def run_phase2(cfg, ledger: Ledger, theories: list[str]) -> bool:
         for e in imported_entries:
             e["resolution"].pop("semantic_collect_failed", None)
         ledger.save()
-    restart_repl(cfg)
+    # The fleet driver restarts the whole compute fleet itself (scancel +
+    # relaunch with the rebuilt heap); only the single-host caller needs the
+    # local 6666/27182 pair back.
+    if restart_proving:
+        restart_repl(cfg)
     return True
 
 
@@ -1902,6 +2028,305 @@ def run_one_case(cfg, ledger: Ledger, offsets: dict, case: str,
     log(f"{case}: attempt limit reached")
 
 
+# ---------------------------------------------------------------------------
+# Multi-node fleet driver (--fleet)
+#
+# Proving runs as ONE long-lived slurmx distributed evaluator across the
+# compute nodes named in config/evaluation_servers.csv. This login-node loop
+# ingests surveys from the shared AoA log dir, runs the SAME serial batched
+# adjudication as the single-host path, and on a confirmed missing_import does
+# the barrier rebuild: kill the fleet → scancel (wait for the queue to clear)
+# → run_phase2 (import / rebuild / goal-gate / collect, login-local) →
+# relaunch a fresh fleet against the rebuilt heap (resume skips already-done
+# cases). Everything except the proving layer is reused unchanged.
+# ---------------------------------------------------------------------------
+
+def launch_fleet_eval(cfg, extra_args: list | None = None) -> subprocess.Popen:
+    """Spawn ONE `evaluator_top agent-putnam` over the whole test split as a
+    killpg-able child. Its own launch_servers() self-allocates the slurmx fleet
+    from the CSV. The survey switch + AoA log dir are exported here and reach
+    every compute node via the eval's `srun --export=ALL`. B3: no per-attempt
+    feedback file in the fleet — the AoA runtime memory + the dedup agent are
+    the anti-repeat; the loader fail-opens to [] when the env is unset."""
+    log_dir = str(Path(cfg.log_dir).resolve())
+    env = dict(os.environ,
+               CLUSTER="slurmx",
+               SESSION="MathBench_Prover",
+               SBATCH_JOB_NAME=cfg.job_name,
+               AOA_MISSING_LEMMA_SURVEY=str(cfg.survey_interval),
+               AoA_LOG_DIR=log_dir)
+    env.pop("AOA_MISSING_LEMMA_FEEDBACK", None)
+    cmd = [sys.executable, "evaluation/evaluator_top.py", "agent-putnam",
+           cfg.driver, "--case-category", "test",
+           "--result", cfg.result, "--log-dir", cfg.log_dir,
+           "--timeout-seconds", str(cfg.timeout_seconds)]
+    if extra_args:
+        cmd += extra_args
+    log(f"launching slurmx fleet eval (driver={cfg.driver}, job={cfg.job_name})")
+    logf = open(STATE_DIR / "fleet_eval.log", "a", encoding="utf-8")
+    proc = subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=logf,
+                            stderr=subprocess.STDOUT, start_new_session=True)
+    logf.close()
+    return proc
+
+
+def _squeue_named(job_name: str, states: str | None = None) -> str:
+    cmd = ["squeue", "-u", os.environ.get("USER", ""), "--name", job_name,
+           "--noheader"]
+    if states:
+        cmd.append(f"--states={states}")
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True,
+                              timeout=60).stdout.strip()
+    except (subprocess.SubprocessError, OSError) as e:
+        log(f"WARNING: squeue failed: {e}")
+        return ""
+
+
+def scancel_fleet(cfg) -> None:
+    """Cancel our slurmx jobs and WAIT until they leave the queue. scancel
+    returns before a job leaves CG (completing) state, and slurm.run_server's
+    check_node does a substring match on `squeue -u $USER` — a lingering job
+    would make the NEXT fleet skip its srun and silently reuse a stale-heap
+    REPL (B2 / F6 / F7). So poll until the queue is clear."""
+    subprocess.run(["scancel", "--name", cfg.job_name],
+                   capture_output=True, text=True)
+    deadline = time.time() + cfg.scancel_timeout
+    while time.time() < deadline:
+        if not _squeue_named(cfg.job_name):
+            return
+        time.sleep(2)
+    emit_event("WARN", "scancel_fleet_timeout", job=cfg.job_name,
+               seconds=cfg.scancel_timeout)
+    log(f"WARNING: jobs named {cfg.job_name} still in squeue after "
+        f"{cfg.scancel_timeout}s — a relaunch may reuse a stale-heap REPL")
+
+
+def _theory_imported(ledger: Ledger, theory: str) -> bool:
+    return any(e["status"] == "imported"
+               and e["resolution"].get("theory") == theory
+               for e in ledger.entries)
+
+
+def _filter_pending_theories(ledger: Ledger, theories: list[str]) -> list[str]:
+    """Drop theories already in the heap (re-importing is a no-op that would
+    just re-trigger the barrier) and theories the per-theory circuit breaker
+    has given up on (M4) — so a re-reported dead theory cannot keep rebuilding."""
+    return sorted({t for t in theories
+                   if not _theory_imported(ledger, t) and not _theory_dead(t)})
+
+
+def _lingering_theories(ledger: Ledger) -> list[str]:
+    return sorted({e["resolution"]["theory"] for e in ledger.entries
+                   if e["status"] == "missing_import"
+                   and e["resolution"].get("theory")})
+
+
+def _diagnose_no_survey(cfg) -> None:
+    pd = _squeue_named(cfg.job_name, states="PD")
+    if pd:
+        log(f"DIAGNOSTIC: fleet jobs still PENDING (PD) in slurm — waiting on "
+            f"allocation, not necessarily an env error:\n{pd}")
+    else:
+        log("DIAGNOSTIC: no PENDING fleet jobs; servers are up but produced no "
+            "survey — AOA_MISSING_LEMMA_SURVEY likely not reaching the compute "
+            "nodes' REPL env")
+
+
+def _poll_fleet(cfg, proc, ledger, offsets, t_run_start) -> list[str]:
+    """Poll a running fleet: ingest surveys from the shared log dir and run the
+    serial batched adjudication. Return confirmed-importable theories as soon
+    as a search confirms any (caller does the barrier rebuild); return [] when
+    the fleet exits on its own (caller then drains)."""
+    search = None
+    phase2_theories: list[str] = []
+    while True:
+        time.sleep(cfg.poll_interval)
+        scan_logs(Path(cfg.log_dir), offsets, ledger, case="?")
+        _save_json(STATE_DIR / "offsets.json", offsets)
+
+        if (SCAN_STATS["missing_lemmas_docs"] == 0
+                and time.time() - t_run_start > cfg.canary_seconds):
+            _diagnose_no_survey(cfg)
+            emit_event("FATAL", "survey_canary", seconds=cfg.canary_seconds)
+            raise RuntimeError(
+                f"survey canary: {cfg.canary_seconds}s into the fleet and no "
+                f"MISSING_LEMMAS doc ever appeared — the survey channel looks "
+                f"broken (env not propagated to the compute nodes?)")
+
+        if search is not None and search[0].done():
+            phase2_theories += finish_search(ledger, search)
+            search = None
+        if search is None and not cfg.dry_run:
+            batch = ledger.pending()
+            if batch:
+                search = start_search(cfg, ledger, batch)
+
+        ready = _filter_pending_theories(ledger, phase2_theories)
+        if ready:
+            return ready
+
+        if proc.poll() is not None:
+            # Fleet ended. Let an in-flight search finish so its verdicts are
+            # not dropped, then hand back whatever it confirmed (possibly []).
+            if search is not None:
+                phase2_theories += finish_search(
+                    ledger, search, wait_timeout=cfg.search_timeout)
+            return _filter_pending_theories(ledger, phase2_theories)
+
+
+def _drain_adjudication(cfg, ledger, offsets) -> list[str]:
+    """After the fleet exits: final scan + drain all remaining pending claims
+    through the serial adjudicator (mirrors run_one_case's drain). Returns any
+    newly confirmed importable theories."""
+    scan_logs(Path(cfg.log_dir), offsets, ledger, case="?")
+    _save_json(STATE_DIR / "offsets.json", offsets)
+    theories: list[str] = []
+    stale = 0
+    while ledger.pending() and not cfg.dry_run:
+        before = len(ledger.pending())
+        s = start_search(cfg, ledger, ledger.pending())
+        theories += finish_search(ledger, s, wait_timeout=cfg.search_timeout)
+        if len(ledger.pending()) >= before:
+            stale += 1
+            if stale >= 2:
+                log("WARNING: drain searches making no progress — leaving "
+                    "remaining claims pending")
+                break
+        else:
+            stale = 0
+    return _filter_pending_theories(ledger, theories)
+
+
+def _final_reverify(cfg) -> None:
+    """M3: re-prove every currently-SUCCESS case against the FINAL heap. A
+    phase-2 rebuild can break a passing proof WITHOUT changing its goal term —
+    the goal gate cannot see that, and resume skips SUCCESS rows, so the result
+    DB could carry a stale SUCCESS. Force-retrying the SUCCESSes once at the end
+    flips any now-broken case to FAIL in the same DB, keeping the audit honest."""
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from sqlitedict import SqliteDict
+    import evaluation.evaluator  # noqa: F401  (Result unpickling)
+    succ = []
+    with SqliteDict(cfg.result) as db:
+        for k in db:
+            try:
+                if db[k].status.value == "SUCCESS":
+                    succ.append(k)
+            except Exception:
+                continue
+    if not succ:
+        log("final re-verify: no SUCCESS cases to re-check")
+        return
+    frf = STATE_DIR / "final_reverify_cases.txt"
+    frf.write_text("\n".join(str(c) for c in succ), encoding="utf-8")
+    log(f"final re-verify: re-proving {len(succ)} SUCCESS case(s) against the "
+        f"final heap (force-retry)")
+    scancel_fleet(cfg)
+    proc = launch_fleet_eval(cfg, extra_args=["--force-retry-file", str(frf)])
+    try:
+        proc.wait()
+    finally:
+        kill_proc(proc)
+    scancel_fleet(cfg)
+    log(f"final re-verify done (exit {proc.returncode})")
+
+
+def cmd_run_fleet(cfg) -> None:
+    for d in (STATE_DIR, STATE_DIR / "verdicts", STATE_DIR / "phase2"):
+        d.mkdir(parents=True, exist_ok=True)
+    Path(cfg.log_dir).mkdir(parents=True, exist_ok=True)
+    marker = STATE_DIR / "HEAP_SUSPECT"
+    if marker.exists():
+        emit_event("FATAL", "run_refused_heap_suspect", marker=str(marker))
+        raise RuntimeError(
+            f"HEAP_SUSPECT interlock present — the MathBench heap failed its "
+            f"post-rebuild goal gate and has not been repaired. See {marker}; "
+            f"refusing to run.")
+    ledger = Ledger(STATE_DIR / "ledger.json")
+    offsets = _load_json(STATE_DIR / "offsets.json", {})
+
+    stuck = [e for e in ledger.entries if e["status"] == "searching"]
+    if stuck:
+        for e in stuck:
+            e["status"] = "pending"
+        ledger.save()
+        log(f"recovered {len(stuck)} claim(s) stuck in 'searching' → pending")
+
+    init_embedding(ledger)
+    if not (STATE_DIR / "heap_theories.txt").exists():
+        refresh_heap_theories()
+
+    # m2: import any lingering confirmed-but-unbuilt theories from a prior
+    # crashed run BEFORE launching, so the fleet proves against a heap that
+    # already has them.
+    lingering = _lingering_theories(ledger)
+    if lingering and not cfg.dry_run:
+        log(f"lingering confirmed missing import(s) {lingering} — phase 2 "
+            f"before launching the fleet")
+        run_phase2(cfg, ledger, lingering, restart_proving=False)
+
+    scancel_fleet(cfg)   # clear any stale fleet from a previous run (B2 / F7)
+
+    rebuild_rounds = 0
+    crash_relaunches = 0
+    while True:
+        proc = launch_fleet_eval(cfg)
+        t_run_start = time.time()
+        try:
+            theories = _poll_fleet(cfg, proc, ledger, offsets, t_run_start)
+        finally:
+            kill_proc(proc)   # idempotent; an already-ended fleet is a no-op
+
+        if not theories and proc.returncode not in (0, None):
+            # Fleet exited nonzero WITHOUT confirming an import → a crash, not a
+            # clean finish (M6). Bounded relaunch.
+            crash_relaunches += 1
+            if crash_relaunches > cfg.max_crash_relaunch:
+                emit_event("FATAL", "fleet_crash_giveup",
+                           rc=proc.returncode, relaunches=crash_relaunches)
+                raise RuntimeError(
+                    f"fleet eval crashed (rc={proc.returncode}) "
+                    f"{crash_relaunches}x in a row — aborting")
+            emit_event("WARN", "fleet_crashed_relaunch",
+                       rc=proc.returncode, attempt=crash_relaunches)
+            log(f"fleet eval exited rc={proc.returncode} with no confirmed "
+                f"import — treating as crash, relaunch {crash_relaunches}/"
+                f"{cfg.max_crash_relaunch}")
+            scancel_fleet(cfg)
+            continue
+        crash_relaunches = 0
+
+        if not theories:
+            # Fleet finished cleanly. Drain remaining adjudication.
+            theories = _drain_adjudication(cfg, ledger, offsets)
+            if not theories:
+                log("fleet complete and no confirmed imports pending — done")
+                break
+
+        # Barrier rebuild for the confirmed importable theories.
+        rebuild_rounds += 1
+        if rebuild_rounds > cfg.max_rebuilds:
+            emit_event("FATAL", "rebuild_cap_exceeded", rounds=rebuild_rounds)
+            raise RuntimeError(
+                f"phase-2 rebuild cap ({cfg.max_rebuilds}) exceeded — likely a "
+                f"non-converging import; aborting for inspection")
+        log(f"confirmed missing import(s) {theories} — barrier rebuild "
+            f"(round {rebuild_rounds}/{cfg.max_rebuilds})")
+        scancel_fleet(cfg)
+        run_phase2(cfg, ledger, theories, restart_proving=False)
+        cmd_report(cfg)
+        # loop: relaunch a fresh fleet against the rebuilt heap; resume skips
+        # already-done cases and re-runs the not-run + interrupted ones.
+
+    # M3: optional final re-verification of cached SUCCESSes against the final
+    # heap (only meaningful if a rebuild happened).
+    if cfg.final_reverify and rebuild_rounds > 0 and not cfg.dry_run:
+        _final_reverify(cfg)
+    cmd_report(cfg)
+
+
 def cmd_run(cfg) -> None:
     for d in (STATE_DIR, STATE_DIR / "verdicts", STATE_DIR / "phase2"):
         d.mkdir(parents=True, exist_ok=True)
@@ -2078,10 +2503,34 @@ def main() -> None:
                         "default kill+restart (env then NOT guaranteed)")
     p.add_argument("--dry-run", action="store_true",
                    help="no claude calls, no phase 2 — just run + scan")
+    # --- multi-node fleet driver ---
+    p.add_argument("--fleet", action="store_true",
+                   help="distributed slurmx fleet driver: one long eval across "
+                        "the CSV's compute nodes with login-node orchestration "
+                        "(instead of the single-host serial run)")
+    p.add_argument("--job-name", default="mlloop",
+                   help="SBATCH_JOB_NAME for the fleet's slurmx jobs; scancel "
+                        "is scoped to this name (default: mlloop)")
+    p.add_argument("--max-rebuilds", type=int, default=30,
+                   help="hard cap on total phase-2 rebuild rounds — aborts a "
+                        "non-converging import loop (default: 30)")
+    p.add_argument("--max-crash-relaunch", type=int, default=3,
+                   help="consecutive fleet-crash relaunches before aborting "
+                        "(default: 3)")
+    p.add_argument("--scancel-timeout", type=int, default=180,
+                   help="seconds to wait for scancel'd jobs to leave squeue "
+                        "before relaunch (default: 180)")
+    p.add_argument("--max-claims-per-batch", type=int, default=60,
+                   help="cap on claims sent to one adjudication batch; the rest "
+                        "stay pending for the next round (default: 60)")
+    p.add_argument("--no-final-reverify", dest="final_reverify",
+                   action="store_false", default=True,
+                   help="skip the end-of-run re-verification of cached "
+                        "SUCCESSes against the final heap (M3)")
     cfg = p.parse_args()
 
     if cfg.command == "run":
-        cmd_run(cfg)
+        (cmd_run_fleet if cfg.fleet else cmd_run)(cfg)
     elif cfg.command == "scan":
         cmd_scan(cfg)
     elif cfg.command == "report":
