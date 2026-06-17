@@ -52,6 +52,14 @@ ROOT = Path(__file__).resolve().parents[2]
 STATE_DIR = ROOT / "missing_lemma_loop_state"
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 
+# permission_gate.py sits beside this file; ensure `from permission_gate import`
+# resolves whether launched as `-m tools.missing_lemma_loop.watcher` (the loop
+# dir is NOT on sys.path then) or as a script. Without this, the adjudication
+# thread dies with ModuleNotFoundError and claims never get adjudicated.
+_LOOP_DIR = str(Path(__file__).resolve().parent)
+if _LOOP_DIR not in sys.path:
+    sys.path.insert(0, _LOOP_DIR)
+
 REPL_ADDR = "127.0.0.1:6666"
 REPL_PORT = 6666
 # Bind 0.0.0.0 so the evaluator reaches it via the configured hostname
