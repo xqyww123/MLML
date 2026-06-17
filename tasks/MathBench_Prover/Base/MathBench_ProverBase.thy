@@ -62,6 +62,17 @@ theory MathBench_ProverBase
     Tarskis_Geometry.Euclid_Tarski
     IsaGeoCoq.Tarski_Euclidean_2D_Continuous
     IsaGeoCoq.Highschool_Euclidean_2D
+    (* Sophomores' dream integral identities; promoted by the missing-lemma
+       loop (ml-0025/26/27 need sophomores_dream_aux_integral / _aux2 /
+       integrable_sophomores_dream). Placed last so its HOL-Analysis content
+       follows the geometry imports, matching the validated resolution. *)
+    Sophomores_Dream.Sophomores_Dream
 begin
+
+(* Sophomores_Dream brings Abstract_Metric_Spaces.metric.metric into scope;
+   for the short name `metric` Tarskis_Geometry.Metric.metric would shadow it,
+   but PutnamBench resolves `metric` to the metric-space one. Hide the geometry
+   constant (open) so the metric-space wins; qualified Metric.metric stays. *)
+hide_const (open) Metric.metric
 
 end

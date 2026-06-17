@@ -47,6 +47,7 @@ session MathBench_ProverBase in Base = "HOL-Complex_Analysis" +
        discharges the Tarski axioms, enabling instantiation on real^2. *)
     Tarskis_Geometry
     IsaGeoCoq
+    Sophomores_Dream
     (*Minilang_Agent
     Semantic_Embedding*)
     Auto_Sledgehammer
