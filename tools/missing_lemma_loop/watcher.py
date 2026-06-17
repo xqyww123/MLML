@@ -1614,19 +1614,28 @@ def _find_listening_host_pid() -> int | None:
     return pids[0] if pids else None
 
 
-def start_rpc_host(cfg) -> int:
+def start_rpc_host(cfg, addr: str = RPC_HOST_ADDR,
+                   extra_env: dict | None = None) -> int:
     """Pre-start the Isabelle_RPC_Host with AOA_MISSING_LEMMA_SURVEY in its
     environment (watcher owns the host — 用户方案 2026-06-11). Verifies via
     /proc/<pid>/environ that the variable actually reached the daemon, which
-    is the deterministic replacement for the lazy-spawn env race."""
+    is the deterministic replacement for the lazy-spawn env race.
+
+    *addr* is the bind address. The single-host path binds 127.0.0.1; the fleet
+    binds 0.0.0.0:PORT so EVERY compute REPL connects to this ONE login-node
+    host — that keeps the semantic retrieval DB (SQLite/LMDB on lustre) touched
+    by a SINGLE process, instead of N concurrent compute-node hosts corrupting
+    it ("file is not a database"). 用户方案 2026-06-17."""
     global _RPC_HOST_PID
     env = dict(os.environ, AOA_MISSING_LEMMA_SURVEY=str(cfg.survey_interval),
                AOA_MISSING_LEMMA_FEEDBACK=str(SURVEY_FEEDBACK_PATH))
+    if extra_env:
+        env.update(extra_env)
     logp = STATE_DIR / "rpc_host.log"
     r = subprocess.run(
         [sys.executable, "-c",
          "import Isabelle_RPC_Host\nIsabelle_RPC_Host.fork_and_launch__()",
-         RPC_HOST_ADDR, str(logp)],
+         addr, str(logp)],
         cwd=ROOT, env=env, capture_output=True, text=True)
     if r.returncode != 0:
         raise RuntimeError(f"failed to launch Isabelle_RPC_Host: {r.stderr[-1000:]}")
@@ -1642,7 +1651,7 @@ def start_rpc_host(cfg) -> int:
                 cmdline = Path(f"/proc/{cand}/cmdline").read_bytes()
             except OSError:
                 continue
-            if RPC_HOST_ADDR.encode() in cmdline:
+            if addr.encode() in cmdline:
                 pid = cand
                 break
     if pid is None:
@@ -2048,14 +2057,20 @@ def launch_fleet_eval(cfg, extra_args: list | None = None) -> subprocess.Popen:
     every compute node via the eval's `srun --export=ALL`. B3: no per-attempt
     feedback file in the fleet — the AoA runtime memory + the dedup agent are
     the anti-repeat; the loader fail-opens to [] when the env is unset."""
-    log_dir = str(Path(cfg.log_dir).resolve())
+    # The AoA Python (driver / retrieval / survey / logs) runs in the ONE
+    # login-node RPC host the watcher pre-started; compute REPLs only run the
+    # Isabelle ML and connect to it. Point them at it and forbid a local
+    # lazy-spawn. The survey/log/feedback env lives on the LOGIN host, not here.
+    rpc_port = RPC_HOST_ADDR.rsplit(":", 1)[1]
     env = dict(os.environ,
                CLUSTER="slurmx",
                SESSION="MathBench_Prover",
                SBATCH_JOB_NAME=cfg.job_name,
-               AOA_MISSING_LEMMA_SURVEY=str(cfg.survey_interval),
-               AoA_LOG_DIR=log_dir)
-    env.pop("AOA_MISSING_LEMMA_FEEDBACK", None)
+               RPC_Host=f"{cfg.rpc_host_ip}:{rpc_port}",
+               AUTO_START_RPC_SERVER="0")
+    for _k in ("AOA_MISSING_LEMMA_SURVEY", "AOA_MISSING_LEMMA_FEEDBACK",
+               "AoA_LOG_DIR"):
+        env.pop(_k, None)
     cmd = [sys.executable, "evaluation/evaluator_top.py", "agent-putnam",
            cfg.driver, "--result", cfg.result, "--log-dir", cfg.log_dir,
            "--timeout-seconds", str(cfg.timeout_seconds)]
@@ -2276,6 +2291,20 @@ def cmd_run_fleet(cfg) -> None:
 
     scancel_fleet(cfg)   # clear any stale fleet from a previous run (B2 / F7)
 
+    # One login-node RPC host for the WHOLE fleet (用户方案 2026-06-17): every
+    # compute REPL connects here (launch_fleet_eval points them at
+    # cfg.rpc_host_ip + AUTO_START_RPC_SERVER=0), so the semantic retrieval DB
+    # on lustre is touched by a SINGLE process. Per-compute-node hosts each open
+    # the shared SQLite/LMDB stores concurrently → "file is not a database".
+    # Bind 0.0.0.0 so compute nodes can reach it; clear any leaked host first.
+    subprocess.run(["pkill", "-9", "-f", "fork_and_launch__"], capture_output=True)
+    time.sleep(1)
+    rpc_port = RPC_HOST_ADDR.rsplit(":", 1)[1]
+    log(f"starting login-node RPC host on 0.0.0.0:{rpc_port} "
+        f"(compute REPLs connect to {cfg.rpc_host_ip}:{rpc_port})")
+    start_rpc_host(cfg, addr=f"0.0.0.0:{rpc_port}",
+                   extra_env={"AoA_LOG_DIR": str(Path(cfg.log_dir).resolve())})
+
     rebuild_rounds = 0
     crash_relaunches = 0
     while True:
@@ -2332,6 +2361,14 @@ def cmd_run_fleet(cfg) -> None:
     if cfg.final_reverify and rebuild_rounds > 0 and not cfg.dry_run:
         _final_reverify(cfg)
     cmd_report(cfg)
+    # tear down the login RPC host (a FATAL exit leaks it; the next run's
+    # pre-start pkill clears that).
+    if _RPC_HOST_PID:
+        try:
+            os.kill(_RPC_HOST_PID, signal.SIGTERM)
+            log(f"login RPC host {_RPC_HOST_PID} stopped")
+        except ProcessLookupError:
+            pass
 
 
 def cmd_run(cfg) -> None:
@@ -2518,6 +2555,10 @@ def main() -> None:
     p.add_argument("--job-name", default="mlloop",
                    help="SBATCH_JOB_NAME for the fleet's slurmx jobs; scancel "
                         "is scoped to this name (default: mlloop)")
+    p.add_argument("--rpc-host-ip", default="10.148.0.42",
+                   help="login-node IP the compute REPLs connect to for the one "
+                        "shared RPC host (compute-facing / ib0 address; default "
+                        "10.148.0.42 = cscc-login-2 ib0)")
     p.add_argument("--max-rebuilds", type=int, default=30,
                    help="hard cap on total phase-2 rebuild rounds — aborts a "
                         "non-converging import loop (default: 30)")
