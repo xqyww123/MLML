@@ -2057,9 +2057,16 @@ def launch_fleet_eval(cfg, extra_args: list | None = None) -> subprocess.Popen:
                AoA_LOG_DIR=log_dir)
     env.pop("AOA_MISSING_LEMMA_FEEDBACK", None)
     cmd = [sys.executable, "evaluation/evaluator_top.py", "agent-putnam",
-           cfg.driver, "--case-category", "test",
-           "--result", cfg.result, "--log-dir", cfg.log_dir,
+           cfg.driver, "--result", cfg.result, "--log-dir", cfg.log_dir,
            "--timeout-seconds", str(cfg.timeout_seconds)]
+    # Honour an explicit case subset (targeted run / smoke); else the full split.
+    if cfg.cases or cfg.case_file:
+        for c in (cfg.cases or []):
+            cmd += ["-c", c]
+        if cfg.case_file:
+            cmd += ["--case-file", cfg.case_file]
+    else:
+        cmd += ["--case-category", "test"]
     if extra_args:
         cmd += extra_args
     log(f"launching slurmx fleet eval (driver={cfg.driver}, job={cfg.job_name})")
