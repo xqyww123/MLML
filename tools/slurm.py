@@ -81,6 +81,8 @@ def run_server(node, numprocss):
             # launches with the requested Isabelle session, rather than relying
             # on the cluster's implicit srun --export policy.
             session = os.environ.get("SESSION", "MathBench_Prover")
-            cmd = f"srun --job-name={JOB_NAME} --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=128 --time=120:00:00 --export=ALL,SESSION={session} ./tools/slurm_run_server.sh {node} {args}"
+            # --time=720h (30d): a multi-round missing-lemma loop can run for many
+            # days; the old 120h (5d) cap would scancel all nodes mid-run.
+            cmd = f"srun --job-name={JOB_NAME} --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=128 --time=720:00:00 --export=ALL,SESSION={session} ./tools/slurm_run_server.sh {node} {args}"
             subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(10)

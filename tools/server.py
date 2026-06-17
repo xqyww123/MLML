@@ -307,9 +307,14 @@ async def launch_servers():
 
     # Final report
     logger.info(f"Server launch complete: {success_count}/{len(servers_to_launch)} servers running")
-    # Initialize and start the server supervisor
-    supervisor = ServerSupervisor(check_interval=10)  # Check every 10 seconds
-    supervisor.start()
+    # Initialize and start the server supervisor.
+    # Under slurmx, slurm.run_server already self-heals each node (its 10s loop
+    # re-issues srun when the node drops from squeue). Running BOTH restarters
+    # races — they can fire overlapping srun for the same node within one 10s
+    # window. So let run_server be the sole health loop under slurmx.
+    if CLUSTER != "slurmx":
+        supervisor = ServerSupervisor(check_interval=10)  # Check every 10 seconds
+        supervisor.start()
 
     _launch_servers_called = True
 
