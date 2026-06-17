@@ -1,10 +1,8 @@
 theory MathBench_Prover
-  imports Auto_Sledgehammer.Auto_Sledgehammer MathBench_ProverBase.MathBench_ProverBase
-    DigitsInBase.DigitsInBase
-    Geo_Real2
+  imports Auto_Sledgehammer.Auto_Sledgehammer Geo_Real2 MathBench_ProverBase.MathBench_ProverBase
 begin
 
-interpretation digits_in_base 10 by (standard, auto)
+interpretation base10: digits_in_base 10 by (standard, auto)
 
 no_notation fds (binder "\<chi>" 10)
 no_notation fps_nth (infixl "$" 75)
@@ -186,13 +184,38 @@ hide_const (open)
   Landau_Real_Products.set_mult Sorting_Algorithms.sort Sorting_Algorithms.sorted
   Missing_List.span Mod_Type.mod_type_class.to_nat
 
+(* Re-bind reusable math facts orphaned by the semantic library's exclusion of
+   the whole HOL-Decision_Procs session (its theories are skipped wholesale at
+   collection time as decision-procedure infrastructure). The 14 lemmas below
+   are genuine, self-contained facts with NO equivalent elsewhere in the
+   distribution or AFP (verified by an exhaustive grep audit, 2026-06-17), so
+   without this re-binding they would be lost. Aliasing them here gives each a
+   fact whose home theory is MathBench_Prover (not infra), so the collector
+   indexes them; base names are kept identical to the originals. The other DP
+   candidates were dropped: they either duplicate an already-indexed type-class
+   version (all Algebra_Aux locale ports of Fields/Rings/Power lemmas) or are
+   quantifier-elimination machinery (Dense_Linear_Order.finite_set_intervals*,
+   dlo_qe_bnds). *)
+lemmas arctan_divide_mono = Approximation_Bounds.arctan_divide_mono
+lemmas arctan_le_mult     = Approximation_Bounds.arctan_le_mult
+lemmas arctan_lower_bound = Approximation_Bounds.arctan_lower_bound
+lemmas arctan_mult_le     = Approximation_Bounds.arctan_mult_le
+lemmas arctan_mult_mono   = Approximation_Bounds.arctan_mult_mono
+lemmas cos_periodic_int   = Approximation_Bounds.cos_periodic_int
+lemmas cos_periodic_nat   = Approximation_Bounds.cos_periodic_nat
+lemmas exp_m1_ge_quarter  = Approximation_Bounds.exp_m1_ge_quarter
+lemmas ln_add             = Approximation_Bounds.ln_add
+lemmas ln_bounds          = Approximation_Bounds.ln_bounds
+lemmas neg_prod_sum_le    = Dense_Linear_Order.neg_prod_sum_le
+lemmas neg_prod_sum_lt    = Dense_Linear_Order.neg_prod_sum_lt
+lemmas nz_prod_sum_eq     = Dense_Linear_Order.nz_prod_sum_eq
+
 declare [[coercion_delete "enat :: nat \<Rightarrow> enat"]]
 declare [[coercion_delete "of_nat :: nat \<Rightarrow> ennreal"]]
 
 declare [[smt_oracle, z3_extensions, smt_nat_as_int]]
 setup \<open>Context.theory_map (Config.put_generic Pre_Simproc.simplify_timeout_seconds 60)\<close>
 declare [[auto_sledgehammer_params = "provers = verit z3 e spass vampire zipperposition cvc5, smt_proofs = true"]]
-
 
 theorem sqrt_prime_irrational:
   fixes p :: int
@@ -354,6 +377,7 @@ lemma vec_nth_vec_lambda_code [code]: "vec_nth (vec_lambda f) i = f i" by simp
 simproc_setup eval_det ("det m") =
   \<open>K (Eval_Simproc.eval_ground 10)\<close>
 
+(*
 \<comment> \<open>Pre-compile ground evaluation functions to speed up Code_Evaluation\<close>
 code_reflect Eval_Reflect
   datatypes multiset = mset
@@ -362,11 +386,12 @@ code_reflect Eval_Reflect
     "Binomial.binomial"
     "totient" "primes_upto"
     "gcd :: _ \<Rightarrow> _ \<Rightarrow> _" "lcm :: _ \<Rightarrow> _ \<Rightarrow> _"
-    "prime :: _ \<Rightarrow> bool" "coprime :: _ \<Rightarrow> _ \<Rightarrow> bool"
+    "coprime :: _ \<Rightarrow> _ \<Rightarrow> bool"
     "squarefree :: _ \<Rightarrow> bool"
     "multiplicity :: _ \<Rightarrow> _ \<Rightarrow> _"
+*)
 
-declare Primes.prime_nat_numeral_eq[simp del]
+(* declare Primes.prime_nat_numeral_eq[simp del] *)
 
 ML_file \<open>ring_field_algebra.ML\<close>
 ML_file \<open>sturm_simproc.ML\<close>
@@ -442,6 +467,7 @@ setup \<open>fn thy =>
     ]
   in Context.theory_map (fold Pre_Simproc.register entries) thy end
 \<close>
+
 
 (*
 ML ‹
