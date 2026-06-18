@@ -1,5 +1,25 @@
 # Project Index
 
+## Shared working tree — git rules (READ FIRST)
+
+This repository **and its submodules** are a **shared working tree** with many
+agents committing concurrently. Reckless git operations silently destroy other
+agents' uncommitted work.
+
+- **Always work on `main`. Do NOT create or switch branches.** `git checkout` /
+  `git switch` / `git checkout -b` change the HEAD of the *shared* working tree
+  for everyone and can wipe out other agents' uncommitted changes — never run
+  them. If HEAD is already parked on someone else's branch, leave it there and
+  commit to it; do not "fix" it by switching.
+- **Never** `git stash`, `git reset --hard`, `git checkout -- <path>`, or
+  `git clean` (any form). They discard uncommitted work irrecoverably.
+- **Commit only your own files, listed explicitly:** `git add <file> …` then
+  `git commit`. Never `git add -A` / `git add .` / `git commit -a` — they sweep
+  up other agents' in-progress changes.
+- **To advance `main` without touching the working tree** (e.g. when HEAD is
+  parked on another branch), push the commit ref directly as a fast-forward:
+  `git push origin <sha>:main` (no `--force`). This never touches files on disk.
+
 ## Isabelle distributions and AFP
 
 | Directory | Description |
