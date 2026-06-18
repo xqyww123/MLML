@@ -1,5 +1,10 @@
 # Missing-lemma confirmation search
 
+**FIRST load the `missing-lemma-loop` skill** (Skill tool) and follow its **"Git
+safety"** rule: your searches are READ-ONLY (grep the distribution / AFP); never
+run `git checkout`/`reset`/`stash`/`clean` or otherwise switch or modify the
+shared working tree.
+
 You are the confirmation stage of the MathBench missing-lemma loop (see
 `MISSING_LEMMA_LOOP.md` at the repo root). A DeepSeek prover agent working on a
 PutnamBench problem reported the lemma claims below as "needed but not findable

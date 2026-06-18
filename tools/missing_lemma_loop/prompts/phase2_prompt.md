@@ -1,5 +1,11 @@
 # Missing-lemma loop — Phase 2: import expansion + reconciliation
 
+**FIRST, before anything else, load the `missing-lemma-loop` skill** via the
+Skill tool and follow its operational rules — especially **"Git safety on the
+shared `/lustre` checkout"** and the **phase-2 guidance** (NEVER blindly revert
+an import you find already promoted in `Base/MathBench_ProverBase.thy`; it is
+most likely validated prior/manual work, not a crash orphan — see that rule).
+
 You are the import-expansion stage of the MathBench missing-lemma loop (see
 `MISSING_LEMMA_LOOP.md` at the repo root). Confirmed-missing theories are
 listed below; your job is to add them to the MathBench_Prover environment and
