@@ -30,3 +30,41 @@ snapshot (`contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst`):
    ```bash
    tar --zstd -xf contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst -C ~/.cache
    ```
+
+## Publishing the local cache as the new snapshot
+
+To package the current `~/.cache/Isabelle_Semantic_Embedding` and upload it as the
+published snapshot:
+
+1. **Make sure nothing is writing the cache** (a mid-write LMDB packages a corrupt
+   snapshot). Confirm no live collection/embedding process holds open data fds —
+   idle shells whose cwd is the dir are fine:
+   ```bash
+   lsof +D ~/.cache/Isabelle_Semantic_Embedding | grep -iv 'cwd\|zsh'
+   ```
+2. **Package** the whole cache dir (top-level dir must stay `Isabelle_Semantic_Embedding/`
+   so the download step extracts cleanly into `~/.cache`). **Exclude
+   `embed_cache/cache.db`** — it is a purely local embedding-request cache (a
+   transient ~22 MB LMDB keyed by API request), not part of the published DB, so
+   it should never ride along in the snapshot:
+   ```bash
+   tar --zstd -cf contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst \
+       --exclude='Isabelle_Semantic_Embedding/embed_cache/cache.db' \
+       -C ~/.cache Isabelle_Semantic_Embedding
+   ```
+3. **Upload** to the Hub and refresh the manifest size (`update` re-uploads an
+   existing manifest entry; `-y` skips the confirm prompt). Needs HF creds —
+   `source ~/secret.sh` first:
+   ```bash
+   ./manage_data.py update -y contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst
+   ```
+4. **Commit + push the updated `data/manifest.json`.** `update` rewrites the
+   tarball's `size` field in the manifest; this MUST be committed and pushed, or
+   other machines' `manage_data.py get` will verify against the stale size and
+   refuse/re-prompt. Commit ONLY this one file (the shared working tree usually
+   has unrelated dirty paths):
+   ```bash
+   git add data/manifest.json
+   git commit -m "Bump semantic DB tarball size after re-upload"
+   git pull --no-edit && git push
+   ```
