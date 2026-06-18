@@ -449,6 +449,14 @@ async def _claude_agent_async(prompt: str, *, model: str | None,
         hooks={"PreToolUse": [HookMatcher(
             matcher="*", hooks=[static_pretooluse_hook(perm_log)])]},
         mcp_servers=mcp_servers,
+        # Raise the Bash foreground timeout from the 2-min default to 5 min
+        # so slow cluster commands (git status on the 136M repo, isabelle
+        # build, divergence/gate runs) are not auto-backgrounded/SIGTERMed.
+        # That backgrounding wedged the phase-2 reconcile agent: it could not
+        # retrieve the backgrounded output and falsely concluded the shell was
+        # dead, then reverted a valid promotion. Merged onto inherited env by
+        # the SDK ({**inherited_env, **options.env}), so PATH/conda/keys stay.
+        env={"BASH_DEFAULT_TIMEOUT_MS": "300000"},
     )
 
     # ClaudeSDKClient (not one-shot query()): permission/control answers
