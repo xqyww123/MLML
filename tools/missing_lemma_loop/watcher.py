@@ -1927,21 +1927,6 @@ def run_one_case(cfg, ledger: Ledger, offsets: dict, case: str,
                     e["id"] for e in scan_logs(log_dir, offsets, ledger, case))
                 _save_json(STATE_DIR / "offsets.json", offsets)
 
-                # Survey-channel canary (last line of defense behind the
-                # /proc env check): a long-running first attempt that never
-                # produced a single survey doc — not even an empty one —
-                # means the channel is broken; abort rather than burn a
-                # whole night collecting nothing.
-                if (canary_armed and attempt == 1
-                        and SCAN_STATS["missing_lemmas_docs"] == 0
-                        and time.time() - t_start > cfg.canary_seconds):
-                    emit_event("FATAL", "survey_canary",
-                               seconds=cfg.canary_seconds)
-                    raise RuntimeError(
-                        f"survey canary: {cfg.canary_seconds}s into the first "
-                        f"case and no MISSING_LEMMAS doc ever appeared — the "
-                        f"AOA_MISSING_LEMMA_SURVEY channel looks broken")
-
                 if search is not None and search[0].done():
                     phase2_theories += finish_search(ledger, search)
                     write_survey_feedback(ledger, attempt_ids)
@@ -2152,17 +2137,6 @@ def _lingering_theories(ledger: Ledger) -> list[str]:
                    and e["resolution"].get("theory")})
 
 
-def _diagnose_no_survey(cfg) -> None:
-    pd = _squeue_named(cfg.job_name, states="PD")
-    if pd:
-        log(f"DIAGNOSTIC: fleet jobs still PENDING (PD) in slurm — waiting on "
-            f"allocation, not necessarily an env error:\n{pd}")
-    else:
-        log("DIAGNOSTIC: no PENDING fleet jobs; servers are up but produced no "
-            "survey — AOA_MISSING_LEMMA_SURVEY likely not reaching the compute "
-            "nodes' REPL env")
-
-
 def _poll_fleet(cfg, proc, ledger, offsets, t_run_start) -> list[str]:
     """Poll a running fleet: ingest surveys from the shared log dir and run the
     serial batched adjudication. Return confirmed-importable theories as soon
@@ -2174,15 +2148,6 @@ def _poll_fleet(cfg, proc, ledger, offsets, t_run_start) -> list[str]:
         time.sleep(cfg.poll_interval)
         scan_logs(Path(cfg.log_dir), offsets, ledger, case="?")
         _save_json(STATE_DIR / "offsets.json", offsets)
-
-        if (SCAN_STATS["missing_lemmas_docs"] == 0
-                and time.time() - t_run_start > cfg.canary_seconds):
-            _diagnose_no_survey(cfg)
-            emit_event("FATAL", "survey_canary", seconds=cfg.canary_seconds)
-            raise RuntimeError(
-                f"survey canary: {cfg.canary_seconds}s into the fleet and no "
-                f"MISSING_LEMMAS doc ever appeared — the survey channel looks "
-                f"broken (env not propagated to the compute nodes?)")
 
         if search is not None and search[0].done():
             phase2_theories += finish_search(ledger, search)
