@@ -61,8 +61,10 @@ The Isabelle distribution and its paired AFP snapshot are published together as
 ```bash
 cd contrib
 tar --zstd -cvf Isabelle2025-2_and_afp-2026-05-13.tar.zst Isabelle2025-2 afp-2026-05-13
-cd .. && ./manage_data.py update contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst
+cd .. && ./manage_data.py update -y contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst
 ```
+`-y` skips the `[y/N]` confirmation (required for non-interactive / detached
+runs — `update` otherwise blocks on the prompt and dies with `EOFError`).
 `update` re-uploads the tarball and refreshes its size in `data/manifest.json`
 (commit that change).
 
