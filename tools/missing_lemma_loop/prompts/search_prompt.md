@@ -12,6 +12,23 @@ in the loaded libraries". Your job: for EVERY claim, decide one verdict by
 actually searching the sources. Do not filter or judge importance — every claim
 gets a verdict.
 
+## Generalize before searching
+
+A claim often states a CASE-SPECIFIC instance of a general fact (e.g. a Riemann
+sum for one concrete function/interval). First **generalize** it to the reusable
+form it instantiates (over arbitrary variables / functions / intervals), then
+search HOL + AFP for **that general form** — that is what would actually be
+added to a library. Decide the verdict on the **general** form:
+
+- general form already in the heap → `already_in_heap` (the library has it; the
+  prover failed to instantiate it — say so in `notes`);
+- general form in a non-heap corpus theory → `missing_import`;
+- general form genuinely absent from both corpora → `not_found` (a real library
+  gap; give the general statement worth proving in `notes`).
+
+If the fact is irreducibly specific (no clean general form), adjudicate the
+specific instance as usual.
+
 ## Corpora to search (Isabelle2025-2 toolchain ONLY)
 
 - `contrib/Isabelle2025-2/src/HOL/` — the Isabelle distribution

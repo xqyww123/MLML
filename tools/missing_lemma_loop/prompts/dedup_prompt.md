@@ -33,6 +33,10 @@ proof — confirm the statements actually match. When uncertain, answer `new`:
 a wrong "duplicate" silently buries a possibly-missing lemma forever; a wrong
 "new" only costs one search.
 
+Dedup by the **general** fact: two claims that are different case-specific
+instances of the SAME general lemma are duplicates — mark all but one
+representative `duplicate` of it.
+
 For duplicates WITHIN this batch: pick one claim as the representative (it
 will be searched) and mark the others `duplicate` of it — `duplicate_of` may
 reference a claim_id from this same batch.
