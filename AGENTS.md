@@ -65,8 +65,7 @@ cd .. && ./manage_data.py update -y contrib/Isabelle2025-2_and_afp-2026-05-13.ta
 ```
 `-y` skips the `[y/N]` confirmation (required for non-interactive / detached
 runs — `update` otherwise blocks on the prompt and dies with `EOFError`).
-`update` regenerates `data/manifest.json`. You **must** commit and push it so
-other machines pull the matching pointer:
+`update` regenerates `data/manifest.json` — commit and push it:
 ```bash
 git add data/manifest.json
 git commit -m "data: bump Isabelle+AFP tarball size"
