@@ -1,5 +1,7 @@
 theory Geo_Real2
-  imports MathBench_ProverBase.MathBench_ProverBase
+  imports
+    Tarskis_Geometry.Euclid_Tarski
+    IsaGeoCoq.Tarski_Euclidean_2D_Continuous
 begin
 
 section \<open>Real Euclidean plane @{typ \<open>real^2\<close>} as a model of IsaGeoCoq's Tarski axioms\<close>

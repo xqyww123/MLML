@@ -59,8 +59,11 @@ theory MathBench_ProverBase
        concyclic, perpendicular bisector, two-circle intersection) together with
        Tarskis_Geometry's real^2 model (real_euclid: tarski), whose axioms A1-A11
        discharge IsaGeoCoq's Tarski_Euclidean_2D_Continuous locale on real^2. *)
-    Tarskis_Geometry.Euclid_Tarski
-    IsaGeoCoq.Tarski_Euclidean_2D_Continuous
+    (* Geo_Real2 transitively imports Tarskis_Geometry.Euclid_Tarski and
+       IsaGeoCoq.Tarski_Euclidean_2D_Continuous (its only deps), and adds the
+       real^2 model of the Tarski_Euclidean_2D_Continuous locale; precompiled
+       into the base heap here rather than loaded from source in the child. *)
+    Geo_Real2
     IsaGeoCoq.Highschool_Euclidean_2D
 begin
 

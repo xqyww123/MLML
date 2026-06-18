@@ -55,5 +55,4 @@ session MathBench_ProverBase in Base = "HOL-Complex_Analysis" +
 
 session MathBench_Prover = MathBench_ProverBase +
   theories
-    Geo_Real2
     MathBench_Prover

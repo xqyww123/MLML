@@ -1,5 +1,5 @@
 theory MathBench_Prover
-  imports Auto_Sledgehammer.Auto_Sledgehammer Geo_Real2 MathBench_ProverBase.MathBench_ProverBase
+  imports Auto_Sledgehammer.Auto_Sledgehammer MathBench_ProverBase.MathBench_ProverBase
 begin
 
 interpretation base10: digits_in_base 10 by (standard, auto)
