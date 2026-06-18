@@ -50,3 +50,25 @@ machine's copy from the snapshot published on the Hugging Face Hub
    ```bash
    tar --zstd -xf contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst -C ~/.cache
    ```
+
+## Packaging and syncing the Isabelle + AFP distribution
+
+The Isabelle distribution and its paired AFP snapshot are published together as
+`contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst` on the Hugging Face Hub.
+
+**Repackage and upload** (after rebuilding the shared jar with
+`isabelle scala_build`, applying patches, etc.):
+```bash
+cd contrib
+tar --zstd -cvf Isabelle2025-2_and_afp-2026-05-13.tar.zst Isabelle2025-2 afp-2026-05-13
+cd .. && ./manage_data.py update contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst
+```
+`update` re-uploads the tarball and refreshes its size in `data/manifest.json`
+(commit that change).
+
+**Download and unpack** on another machine — mirror image of the above:
+```bash
+./manage_data.py get -y contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst
+cd contrib
+tar --zstd -xf Isabelle2025-2_and_afp-2026-05-13.tar.zst   # overwrites Isabelle2025-2/ + afp-2026-05-13/
+```
