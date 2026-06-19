@@ -43,13 +43,14 @@ published snapshot:
    lsof +D ~/.cache/Isabelle_Semantic_Embedding | grep -iv 'cwd\|zsh'
    ```
 2. **Package** the whole cache dir (top-level dir must stay `Isabelle_Semantic_Embedding/`
-   so the download step extracts cleanly into `~/.cache`). **Exclude
-   `embed_cache/cache.db`** — it is a purely local embedding-request cache (a
-   transient ~22 MB LMDB keyed by API request), not part of the published DB, so
-   it should never ride along in the snapshot:
+   so the download step extracts cleanly into `~/.cache`). **Exclude the entire
+   `embed_cache/` directory** — it is a purely local embedding-request cache
+   (a diskcache LMDB keyed by API request, 3-day TTL, often >1 GB), not part of
+   the published DB, so it should never ride along in the snapshot. The published
+   snapshot is just `semantics.lmdb/` + the `vector_*.lmdb/` store(s):
    ```bash
    tar --zstd -cf contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst \
-       --exclude='Isabelle_Semantic_Embedding/embed_cache/cache.db' \
+       --exclude='Isabelle_Semantic_Embedding/embed_cache' \
        -C ~/.cache Isabelle_Semantic_Embedding
    ```
 3. **Upload** to the Hub and refresh the manifest size (`update` re-uploads an
