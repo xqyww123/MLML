@@ -83,7 +83,7 @@
     },
     {
       "path": "contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst",
-      "size": 2186314333,
+      "size": 1479133997,
       "description": "semantic and embedding database",
       "group": "optional"
     },
