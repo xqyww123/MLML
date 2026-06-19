@@ -6,6 +6,8 @@
 *.swo
 .~lock*
 *~
+*.proof-cache.lock
+*.proof-cache.tmp
 /cache
 /contrib
 /result.csv
