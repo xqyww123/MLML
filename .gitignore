@@ -7,7 +7,7 @@
 .~lock*
 *~
 *.proof-cache.lock
-*.proof-cache.tmp
+*.proof-cache.tmp*
 /cache
 /contrib
 /result.csv
