@@ -1,5 +1,6 @@
 theory MathBench_Prover
-  imports Auto_Sledgehammer.Auto_Sledgehammer MathBench_ProverBase.MathBench_ProverBase
+  imports Minilang_Agent.Minilang_Agent
+            MathBench_ProverBase.MathBench_ProverBase
 begin
 
 interpretation base10: digits_in_base 10 by (standard, auto)
@@ -183,7 +184,11 @@ hide_const (open)
   Congruence.partition BF_Misc.proots Ring_Hom.ring_hom ListVector.scale
   Landau_Real_Products.set_mult Sorting_Algorithms.sort Sorting_Algorithms.sorted
   Missing_List.span Mod_Type.mod_type_class.to_nat
-
+(* Sophomores_Dream brings Abstract_Metric_Spaces.metric.metric into scope;
+   for the short name `metric` Tarskis_Geometry.Metric.metric would shadow it,
+   but PutnamBench resolves `metric` to the metric-space one. Hide the geometry
+   constant (open) so the metric-space wins; qualified Metric.metric stays.
+hide_const (open) Metric.metric *)
 (* Re-bind reusable math facts orphaned by the semantic library's exclusion of
    the whole HOL-Decision_Procs session (its theories are skipped wholesale at
    collection time as decision-procedure infrastructure). The 14 lemmas below
@@ -374,6 +379,32 @@ code_datatype set List.coset \<comment> \<open>restore coset as code constructor
 code_datatype vec_lambda
 lemma vec_nth_vec_lambda_code [code]: "vec_nth (vec_lambda f) i = f i" by simp
 
+(* Vector numeral-coercion normalisation.  `('a,'b) vec` is a component-wise
+   `comm_ring_1`, so the standard `int_combine_numerals` simproc contracts a
+   vector sum `M + M` into the ring-times form `2 * M` (component-wise), an
+   alien shape that matches none of the HOL-Analysis vector/geometry lemmas
+   (all phrased with `+` / `*\<^sub>R`) and has no simp bridge back.  These rules
+   restore the library-standard scaleR form.
+
+   They are proved BEFORE being declared `[simp]`: the proof method uses
+   `scaleR_conv_of_real` (`r *\<^sub>R x = of_real r * x`), which together with
+   `of_real_numeral [simp]` would, if either rule were already `[simp]`, close
+   the cycle  numeral n *\<^sub>R M -> of_real (numeral n) * M -> numeral n * M
+   -> numeral n *\<^sub>R M  and overflow the stack.  Once declared, the global
+   simp set has no `numeral n *\<^sub>R M -> _` rule (`scaleR_conv_of_real` is not
+   `[simp]`), so the rewrite settles at the scaleR form with no loop. *)
+lemma numeral_vec_times_eq_scaleR:
+  fixes M :: "('a::real_algebra_1, 'b::finite) vec"
+  shows "numeral n * M = numeral n *\<^sub>R M"
+  by (simp add: vec_eq_iff scaleR_conv_of_real)
+
+lemma neg_numeral_vec_times_eq_scaleR:
+  fixes M :: "('a::real_algebra_1, 'b::finite) vec"
+  shows "- numeral n * M = - numeral n *\<^sub>R M"
+  by (simp add: vec_eq_iff scaleR_conv_of_real)
+
+declare numeral_vec_times_eq_scaleR [simp] neg_numeral_vec_times_eq_scaleR [simp]
+
 simproc_setup eval_det ("det m") =
   \<open>K (Eval_Simproc.eval_ground 10)\<close>
 
@@ -468,6 +499,7 @@ setup \<open>fn thy =>
   in Context.theory_map (fold Pre_Simproc.register entries) thy end
 \<close>
 
+declare [[infra_constant Rat.of_int]]
 
 (*
 ML ‹
@@ -555,5 +587,15 @@ val _ = TextIO.output (out, content);
 val _ = TextIO.closeOut out
 \<close>
 *)
+
+(* Agent Hint Registry seed. `Rat.of_int` is HOL's code-generation shadow
+   constant (hidden via `hide_const (open)`); the `of_int_*` lemmas key on the
+   coercion class operation, not on it, so an agent that writes the qualified
+   name `Rat.of_int` produces a goal `simp`/`auto` cannot touch and the proof
+   stalls. Reject its use and steer to the coercion `rat_of_int`. This is the
+   agent-output interceptor only — it does NOT touch the SemanticDB, which still
+   indexes `Rat.of_int_def` etc. *)
+declare [[agent_reject_constant Rat.of_int
+  "Rat.of_int is a code-generation shadow constant that the of_int_* lemmas do not apply to. Use rat_of_int instead."]]
 
 end
