@@ -32,6 +32,7 @@ fun is_sturm_candidate t =
 fun run_sturm ctxt ct =
   let
     val goal = Goal.init (Thm.apply \<^cterm>\<open>Trueprop\<close> ct)
+    val ctxt = ctxt delsimps [@{thm Primes.prime_nat_numeral_eq}]
   in
     (case SINGLE (Sturm.sturm_tac ctxt false 1) goal of
        SOME th =>
@@ -42,10 +43,11 @@ fun run_sturm ctxt ct =
   end
 
 fun sturm_simproc ctxt ct =
-  if not (is_sturm_candidate (Thm.term_of ct)) then NONE
-  else
-    Option.join (try (fn () =>
+  let val ctxt = ctxt delsimps [@{thm Primes.prime_nat_numeral_eq}]
+   in if not (is_sturm_candidate (Thm.term_of ct)) then NONE
+    else Option.join (try (fn () =>
       Timeout.apply (Time.fromSeconds 10) (run_sturm ctxt) ct
       handle Timeout.TIMEOUT _ => NONE) ())
+  end
 
 end

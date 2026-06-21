@@ -72,10 +72,4 @@ theory MathBench_ProverBase
     Sophomores_Dream.Sophomores_Dream
 begin
 
-(* Sophomores_Dream brings Abstract_Metric_Spaces.metric.metric into scope;
-   for the short name `metric` Tarskis_Geometry.Metric.metric would shadow it,
-   but PutnamBench resolves `metric` to the metric-space one. Hide the geometry
-   constant (open) so the metric-space wins; qualified Metric.metric stays. *)
-hide_const (open) Metric.metric
-
 end

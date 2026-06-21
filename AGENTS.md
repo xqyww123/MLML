@@ -1,5 +1,16 @@
 # Project Index
 
+## General working rules
+
+- Clarify before acting when a requirement is ambiguous, inconsistent, high-risk,
+  or cannot be verified from local context. Do not invent facts, paths, APIs, or
+  behavior.
+- Before writing new logic, search the codebase for existing implementations and
+  reuse local patterns where practical. Prefer refactoring or extending existing
+  helpers over copy-paste variants.
+- Verify behavior with focused commands or tests when the result matters. If a
+  check cannot be run, say that explicitly rather than implying it was observed.
+
 ## Shared working tree — git rules (READ FIRST)
 
 This repo **and its submodules** are a **shared working tree** with many agents

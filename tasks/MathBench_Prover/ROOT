@@ -50,7 +50,7 @@ session MathBench_ProverBase in Base = "HOL-Complex_Analysis" +
     Sophomores_Dream
     (*Minilang_Agent
     Semantic_Embedding*)
-    Auto_Sledgehammer
+    Minilang_Agent
   theories
     MathBench_ProverBase
 
