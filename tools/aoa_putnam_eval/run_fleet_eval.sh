@@ -27,7 +27,11 @@
 #   [PORTS_PER_NODE=6] [BASE_PORT=6666] [NUMPROCS=8] [WALLTIME=48:00:00] \
 #   [CASE_CATEGORY=test] [DRIVER=DeepSeekV4.pro] [JOB=aoaputnam-<uuid>] \
 #   [RESULT_DB=...] [LOG_DIR=...] \
+#   [AOA_AUDIT=1 [AUDIT_POLL_SECONDS=..] [AUDIT_MAX_BUDGET_USD=..]] \
 #   tools/aoa_putnam_eval/run_fleet_eval.sh [-- extra args to evaluator_top]
+#
+# AOA_AUDIT=1 turns on the in-process real-time per-case Opus auditor (findings
+# -> <LOG_DIR>/audit_findings.jsonl). Default off => unchanged eval path.
 #
 # Re-run as a periodic health probe only (no setup/launch):
 #   JOB=<job> NODES=... tools/aoa_putnam_eval/run_fleet_eval.sh --check
@@ -135,6 +139,7 @@ set -u
 export DEEPSEEK_API_KEY
 log "config: NODES=$NODES ports=$BASE_PORT..$((BASE_PORT+PORTS_PER_NODE-1)) numprocs=$NUMPROCS"
 log "config: RPC_PORT=$RPC_PORT LOGIN_IB0=$LOGIN_IB0 JOB=$JOB WALLTIME=$WALLTIME -> ${EXPECT_REPLS}-way"
+log "config: AOA_AUDIT=${AOA_AUDIT:-} (real-time per-case auditor: ON iff =1)"
 
 # ---- blocker (2): no missing-lemma loop on THIS login node -----------------
 # Its watcher does port-agnostic `pkill -9 -f fork_and_launch__`, which would
@@ -222,6 +227,11 @@ setsid bash -c "
   export SBATCH_JOB_NAME='$JOB'
   export SLURM_EVAL_WALLTIME='$WALLTIME'
   export RPC_Host='$LOGIN_IB0:$RPC_PORT' AUTO_START_RPC_SERVER=0
+  # opt-in real-time per-case auditor (pick_putnam_cls reads AOA_AUDIT==1).
+  # Default empty => off => default eval path unchanged. AUDIT_* tuning knobs
+  # (AUDIT_POLL_SECONDS / AUDIT_MODEL / AUDIT_MAX_BUDGET_USD / ...) are inherited
+  # from this launcher's environment.
+  export AOA_AUDIT='${AOA_AUDIT:-}'
   exec python3 evaluation/evaluator_top.py agent-putnam '$DRIVER' \
        --case-category '$CASE_CATEGORY' --result '$RESULT_DB' \
        --log-dir '$LOG_DIR' --timeout-seconds 14400 ${FWD[*]}

@@ -772,6 +772,60 @@ class Isar_PutnamBench(PutnamBench_Mixin, Isar_Base):
 class MinilangAgent_PutnamBench(PutnamBench_Mixin, MinilangAgent_Base):
     pass
 
+class MinilangAgent_PutnamBench_Audited(MinilangAgent_PutnamBench):
+    """PutnamBench agent with an in-process, real-time Opus auditor bound to each
+    case. Selected only when AOA_AUDIT=1 (see pick_putnam_cls); behaviour is
+    otherwise identical to MinilangAgent_PutnamBench.
+
+    The auditor follows the live interaction.yaml of the attempt currently being
+    proven. Two overrides bracket the work:
+      * validate() — start the auditor at the per-case boundary, stop it in
+        finally (so a crashing/raising case still tears the auditor down);
+      * _make_invocation_id() — hand the auditor each attempt's invocation_id
+        the instant it is minted, so the auditor never has to guess the log
+        directory from the case name. This is what makes it immune to pass@N's
+        multiple invids per case and to stale invid dirs left by resume/retry.
+    All auditor calls are best-effort: auditing must never break evaluation."""
+
+    async def validate(self, index, proofs):
+        if not self._log_dir:
+            return await super().validate(index, proofs)
+        auditor = None
+        try:
+            from tools.aoa_putnam_eval.fleet_audit_agents import CaseAuditor
+            auditor = CaseAuditor(case_name=str(index), log_dir=self._log_dir)
+            auditor.start()
+            self._auditor = auditor
+        except Exception as E:
+            logger.warning(f"audit start failed for {index}; proceeding unaudited: {E}")
+            self._auditor = None
+            return await super().validate(index, proofs)
+        try:
+            return await super().validate(index, proofs)
+        finally:
+            self._auditor = None
+            try:
+                await auditor.stop()
+            except Exception as E:
+                logger.warning(f"audit stop failed for {index}: {E}")
+
+    async def _make_invocation_id(self):
+        invocation_id = await super()._make_invocation_id()
+        auditor = getattr(self, "_auditor", None)
+        if auditor is not None:
+            auditor.switch_to(invocation_id)   # never-raise
+        return invocation_id
+
+def pick_putnam_cls(default_cls=MinilangAgent_PutnamBench):
+    """Choose the PutnamBench agent class to instantiate. With AOA_AUDIT=1, swap
+    in the audited subclass; otherwise return default_cls unchanged. Applied only
+    on the PutnamBench dispatch paths (evaluator_top agent-putnam, run_eval), so
+    other datasets are untouched. The audit deps (claude_agent_sdk) are imported
+    lazily inside the audited class, never on the default path."""
+    if os.environ.get("AOA_AUDIT") == "1":
+        return MinilangAgent_PutnamBench_Audited
+    return default_cls
+
 class SourceText_Mixin:
     if TYPE_CHECKING:
         async def reset_eval(self, src: str) -> None: ...

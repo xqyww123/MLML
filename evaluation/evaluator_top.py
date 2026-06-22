@@ -344,7 +344,7 @@ if __name__ == "__main__":
                 )
 
             case 'agent-putnam':
-                minilang_agent_handler(MinilangAgent_PutnamBench, "PutnamBench",
+                minilang_agent_handler(pick_putnam_cls(MinilangAgent_PutnamBench), "PutnamBench",
                     lambda category: PutnamBench_Data().cases_of(category),
                     lambda line: line,
                     "file of lines of cases,",
