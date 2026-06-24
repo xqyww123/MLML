@@ -242,9 +242,9 @@ simproc_setup ring_field_eq ("(x::'a::comm_ring_1) = y") =
 
 setup \<open>
   map_theory_simpset (fn ctxt =>
-    let val ctxt = ctxt addSolver
+    let val ctxt = ctxt |> Raw_Simplifier.add_unsafe_solver
           (Raw_Simplifier.mk_solver "algebra" Ring_Field_Algebra.algebra_solver)
-    in Simplifier.addloop (ctxt, ("field", Ring_Field_Algebra.field_looper)) end)
+    in Raw_Simplifier.add_loop ("field", Ring_Field_Algebra.field_looper) ctxt end)
 \<close>
 
 (*
