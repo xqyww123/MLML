@@ -23,30 +23,44 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # before each launch keeps every jEdit starting from a clean baseline.
 JEDIT_SETTINGS_DIR = os.path.expanduser("~/.isabelle/Isabelle2025-2/jedit")
 
-# Per-million-token pricing: (input, cached_input, output)
-MODEL_PRICING: dict[str, tuple[float, float, float]] = {
-    "gpt-5.5":       (2.0,  0.5,  8.0),
-    "gpt-4.1":       (2.0,  0.5,  8.0),
-    "gpt-4.1-mini":  (0.4,  0.1,  1.6),
-    "gpt-4.1-nano":  (0.1,  0.025, 0.4),
-    "gpt-4o":        (2.5,  1.25, 10.0),
-    "o3":            (2.0,  0.5,  8.0),
-    "o4-mini":       (1.1,  0.275, 4.4),
-    "claude-sonnet-4-5-20250514": (3.0, 0.3, 15.0),
-    "claude-opus-4-5-20250414":   (15.0, 1.5, 75.0),
-    "claude-opus-4-6":            (15.0, 1.5, 75.0),
-    "claude-opus-4-7":            (15.0, 1.5, 75.0),
-    "claude-opus-4-8":            (15.0, 1.5, 75.0),
-    "claude-sonnet-4-6":          (3.0,  0.3, 15.0),
+# Per-million-token pricing: (input, cached_read, output, cache_write)
+#   cached_read  = price of a cache HIT (cache_read_input_tokens).
+#   cache_write  = price of a cache CREATION (cache_creation_input_tokens), which is
+#                  per-provider, NOT a universal multiple of input:
+#                    * Anthropic charges 1.25x base input for the default 5-minute
+#                      ephemeral TTL this plugin uses (it never requests "ttl":"1h"
+#                      = 2x), e.g. Opus 6.25 = 1.25x5, Sonnet 3.75 = 1.25x3.
+#                    * OpenAI has no cache-write charge at all (caching is free to
+#                      create; only reads are discounted) -> 0.0.
+# NB: Opus 4.5/4.6/4.7/4.8 ALL price at input $5 / output $25 (verified against the
+# official pricing page 2026-06-23). Only the deprecated Opus 4.1 / Opus 4 are the
+# old $15 / $75 — do NOT copy that row onto a 4.5+ model (a prior table did, which
+# over-counted Opus 4.8 cost by 3x).
+MODEL_PRICING: dict[str, tuple[float, float, float, float]] = {
+    "gpt-5.5":       (2.0,  0.5,  8.0,  0.0),
+    "gpt-4.1":       (2.0,  0.5,  8.0,  0.0),
+    "gpt-4.1-mini":  (0.4,  0.1,  1.6,  0.0),
+    "gpt-4.1-nano":  (0.1,  0.025, 0.4, 0.0),
+    "gpt-4o":        (2.5,  1.25, 10.0, 0.0),
+    "o3":            (2.0,  0.5,  8.0,  0.0),
+    "o4-mini":       (1.1,  0.275, 4.4, 0.0),
+    "claude-sonnet-4-5-20250514": (3.0, 0.3, 15.0, 3.75),
+    "claude-opus-4-5-20250414":   (5.0, 0.5, 25.0, 6.25),
+    "claude-opus-4-6":            (5.0, 0.5, 25.0, 6.25),
+    "claude-opus-4-7":            (5.0, 0.5, 25.0, 6.25),
+    "claude-opus-4-8":            (5.0, 0.5, 25.0, 6.25),
+    "claude-sonnet-4-6":          (3.0,  0.3, 15.0, 3.75),
 }
 
-def compute_cost_usd(model: str, uncached: int, cached: int, output: int) -> float:
+def compute_cost_usd(model: str, uncached: int, cached: int, output: int,
+                     cache_creation: int = 0) -> float:
     key = model.removeprefix("openai/")
     if key not in MODEL_PRICING:
         logger.warning(f"Unknown model '{model}' for pricing, cost_usd will be 0")
         return 0.0
-    inp_price, cached_price, out_price = MODEL_PRICING[key]
-    return (uncached * inp_price + cached * cached_price + output * out_price) / 1_000_000
+    inp_price, cached_price, out_price, cache_write_price = MODEL_PRICING[key]
+    return (uncached * inp_price + cached * cached_price
+            + cache_creation * cache_write_price + output * out_price) / 1_000_000
 
 
 def _detect_isabelle_bin():
@@ -385,15 +399,19 @@ class AutoCorrode_Base(Evaluator):
                 response_text = rj.get("response", rj.get("error", ""))
                 uncached_tokens = rj.get("uncached_prompt_tokens", 0)
                 cached_tokens = rj.get("cached_tokens", 0)
+                cache_creation_tokens = rj.get("cache_creation_tokens", 0)
                 output_tokens = rj.get("completion_tokens", 0)
                 model = rj.get("model", "unknown")
-                cost_usd = compute_cost_usd(model, uncached_tokens, cached_tokens, output_tokens)
-                # Canonical DB format: input_tokens = uncached only; cache_read/cache_creation
-                # are the separate, mutually-exclusive cache portions. OpenAI has no cache
-                # creation concept, so cache_creation_tokens is 0.
+                cost_usd = compute_cost_usd(model, uncached_tokens, cached_tokens,
+                                            output_tokens, cache_creation_tokens)
+                # Canonical DB format: input_tokens = uncached only; cache_read and
+                # cache_creation are the separate cache portions the plugin reports
+                # (AssistantPlugin.usageJson emits "cache_creation_tokens"). It is
+                # nonzero only for Anthropic models that actually used prompt caching;
+                # OpenAI has no cache-creation concept and always reports 0.
                 cost = AgentCostData(
                     input_tokens=uncached_tokens,
-                    cache_creation_tokens=0,
+                    cache_creation_tokens=cache_creation_tokens,
                     cache_read_tokens=cached_tokens,
                     output_tokens=output_tokens,
                     cost_usd=cost_usd,

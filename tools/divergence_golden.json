@@ -1,8 +1,8 @@
 {
   "meta": {
-    "updated": "2026-06-12",
-    "putnam_data_sha": "9dcc2276a9e7",
-    "putnam_submodule_commit": "afe83317ba064f4e09dd022c3331cb8bf1e3927a",
+    "updated": "2026-06-17",
+    "putnam_data_sha": "5fa02889bc71",
+    "putnam_submodule_commit": "76992f1741030f222730e367137f02cd69557577",
     "note": "2026-06-12: 63 defective formalizations corrected (see putnam_audit/fix_report.en.md); full radar re-sweep on the corrected data: 0 new, 156 suppressed, 0 prunable; goal gate 639/639 green. Entries unchanged."
   },
   "entries": [
@@ -309,6 +309,14 @@
       "mathbench": "Omega_Words_Fun.merge",
       "rationale": "initial baseline snapshot; goal-term check green (639/639, 0 mismatch) at this MathBench state",
       "accepted": "2026-06-10"
+    },
+    {
+      "dim": "const",
+      "base": "metric",
+      "putnam": "Abstract_Metric_Spaces.metric.metric",
+      "mathbench": "Metric.metric",
+      "rationale": "metric: Tarskis_Geometry merge's Metric.metric shadows Abstract_Metric_Spaces.metric; NO PutnamBench goal references metric (putnamBench.json 0 hits, goal gate 639/639 green, elaborated goal-term sexpr dump 0 metric constants) -- latent forward-coverage name, no current goal affected",
+      "accepted": "2026-06-17"
     },
     {
       "dim": "const",
