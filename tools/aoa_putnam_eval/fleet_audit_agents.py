@@ -215,7 +215,10 @@ class CaseAuditor:
         attribute set is race-free w.r.t. the polling coroutine."""
         try:
             self._current_invid = invocation_id
-            self._offsets.setdefault(invocation_id, {"offset": 0, "size": -1})
+            # Reset (not setdefault) the cursor: a repeated invid means the dir
+            # was renamed to .old_<ts> and recreated fresh (pass@N / resume), so
+            # the prior offset is stale and must restart at 0.
+            self._offsets[invocation_id] = {"offset": 0, "size": -1}
             self._nogrowth = 0
         except Exception as e:  # pragma: no cover - defensive
             self._log(f"switch_to failed: {e}")

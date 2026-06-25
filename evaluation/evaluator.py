@@ -11,6 +11,7 @@ from data.isabelle import CaseNotAvailable, PISA_Data, get_MINIF2F_VALIDATION, g
 from sqlitedict import SqliteDict
 import asyncio
 import time
+import hashlib
 import traceback
 from tools.server import SERVERS
 from typing import Callable, Tuple, TYPE_CHECKING
@@ -406,23 +407,52 @@ class Isar_Base(Evaluator):
             return True
         return False
 
+def _safe_case_dirname(index, *, always_hash: bool = False) -> str:
+    """Turn a benchmark case index into a filesystem-safe leaf log-dir name.
+
+    Normal datasets (miniF2F / PutnamBench / NTP4VC / AFP / PISA) keep a clean,
+    human-readable name (the sanitized case name). A short hash suffix is
+    appended only when the name would otherwise be ambiguous or unsafe:
+      * ``always_hash`` — forced by source mode, whose index is arbitrary text
+        that can collide after sanitization (e.g. two goals differing only in
+        whitespace);
+      * the sanitized name exceeds 150 chars and must be truncated to stay
+        under the filesystem's 255-byte component limit (truncation alone could
+        collide, so the hash disambiguates);
+      * the sanitized name is the special ``.`` / ``..`` directory entry.
+    The returned value is used verbatim as the on-disk leaf directory AND as
+    the db ``log_id`` (the AoA side does not re-sanitize), so it must always be
+    a safe, non-empty component that is not ``.`` or ``..``.
+    """
+    s = str(index)
+    safe = re.sub(r'[^A-Za-z0-9._-]', '_', s)
+    need_hash = always_hash or len(safe) > 150 or safe in ('.', '..')
+    if len(safe) > 150:
+        safe = safe[:140]
+    if need_hash:
+        safe = safe + '_' + hashlib.sha1(s.encode()).hexdigest()[:8]
+    return safe or ('case_' + hashlib.sha1(s.encode()).hexdigest()[:8])
+
 class MinilangAgent_Base(Isar_Base):
     # Extra Isabelle libraries loaded into the REPL before evaluation.
     # Subclasses may override to change the loaded libraries (e.g. NTP4VC must
     # not load MathBench_Prover, whose huge math corpus pollutes the namespace).
     _LIBS = ['MathBench_Prover.MathBench_Prover', 'Minilang_Agent.Minilang_Agent']
 
+    # NOTE: _invocation_serial / _invocation_serial_lock are retained but no
+    # longer used. _make_invocation_id now derives a stable per-case directory
+    # name instead of a unique timestamp+serial id.
     _invocation_serial = 0
     _invocation_serial_lock = asyncio.Lock()
 
-    @classmethod
-    async def _make_invocation_id(cls):
-        async with cls._invocation_serial_lock:
-            cls._invocation_serial += 1
-            serial = cls._invocation_serial
-        ms = int(time.time() * 1000)
-        hex_ms = format(ms, 'x')
-        return f"{hex_ms[-9:]}_{format(serial, 'x')}"
+    async def _make_invocation_id(self, index):
+        """The per-case log leaf-dir name (also stored verbatim as the db
+        log_id). Returns the sanitized benchmark case name so each case's AoA
+        logs land in <log_dir>/<case-name>/. Overridden by
+        MinilangAgent_PutnamBench_Audited (to hand the live auditor this dir)
+        and by MinilangAgent_Source (to force a hash suffix for its
+        arbitrary-text indices)."""
+        return _safe_case_dirname(index)
 
     def __init__(self, addr, timeout=500, connection_timeout=1200,
                 timeout_seconds=14400, max_tool_calls=10000, max_retries=8,
@@ -471,7 +501,7 @@ class MinilangAgent_Base(Isar_Base):
                 await self.repl.rollback('EVAL')
             try:
                 await self.repl.run_app('Minilang.AoA')
-                invocation_id = await self._make_invocation_id()
+                invocation_id = await self._make_invocation_id(index)
                 log_ids.append(invocation_id)
                 # Record invocation_id -> case name at case START, so the
                 # missing-lemma watcher can attribute surveys (written DURING
@@ -781,10 +811,12 @@ class MinilangAgent_PutnamBench_Audited(MinilangAgent_PutnamBench):
     proven. Two overrides bracket the work:
       * validate() — start the auditor at the per-case boundary, stop it in
         finally (so a crashing/raising case still tears the auditor down);
-      * _make_invocation_id() — hand the auditor each attempt's invocation_id
-        the instant it is minted, so the auditor never has to guess the log
-        directory from the case name. This is what makes it immune to pass@N's
-        multiple invids per case and to stale invid dirs left by resume/retry.
+      * _make_invocation_id() — hand the auditor the per-case log directory the
+        instant it is derived, so the auditor never has to guess it. The
+        invocation id is now the (sanitized) case name, so under pass@N the
+        attempts of one case share that directory and overwrite each other (the
+        Isabelle side renames the prior attempt to <case>.old_<ts>); the auditor
+        re-reads whatever currently lives at the case's directory.
     All auditor calls are best-effort: auditing must never break evaluation."""
 
     async def validate(self, index, proofs):
@@ -809,8 +841,8 @@ class MinilangAgent_PutnamBench_Audited(MinilangAgent_PutnamBench):
             except Exception as E:
                 logger.warning(f"audit stop failed for {index}: {E}")
 
-    async def _make_invocation_id(self):
-        invocation_id = await super()._make_invocation_id()
+    async def _make_invocation_id(self, index):
+        invocation_id = await super()._make_invocation_id(index)
         auditor = getattr(self, "_auditor", None)
         if auditor is not None:
             auditor.switch_to(invocation_id)   # never-raise
@@ -847,7 +879,10 @@ class Isar_Source(SourceText_Mixin, Isar_Base):
     pass
 
 class MinilangAgent_Source(SourceText_Mixin, MinilangAgent_Base):
-    pass
+    async def _make_invocation_id(self, index):
+        # Source-mode index is arbitrary theory text; force a hash suffix so two
+        # goals that sanitize to the same name don't share a log directory.
+        return _safe_case_dirname(index, always_hash=True)
 
 class NTPVC_Mixin:
     if TYPE_CHECKING:

@@ -14,7 +14,9 @@ parser.add_argument("--connection-timeout", type=int, default=1200, help="Connec
 parser.add_argument("--step-limit", type=int, default=30, help="Step limit (default: 30)")
 parser.add_argument("--parallel-runs", type=int, default=1, help="Parallel runs (default: 1)")
 parser.add_argument("--query-ret-num", type=int, default=30, help="Query return number (default: 30)")
-parser.add_argument("--log-dir", type=str, default=None, help="Directory for agent invocation logs")
+parser.add_argument("--log-dir", type=str, default=None,
+    help="Base directory for per-case AoA logs; each case's logs go in a "
+         "subdirectory named after the case.")
 parser.add_argument("--retrieval-forking", type=str, default=None,
     choices=["with_ctxt", "without_ctxt", "cheaper_no_ctxt"],
     help="Retrieval forking mode (default: with_ctxt)")

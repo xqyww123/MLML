@@ -147,7 +147,10 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
     parser.add_argument("--max-tool-calls", type=int, default=10000, help="The maximum number of tool calls for each case (default: 10000)")
     parser.add_argument("--max-retries", type=int, default=8, help="The maximum number of retries for each case (default: 8)")
     parser.add_argument("--pass", type=int, dest="pass_num", default=1, help="pass@N, the number of attempts to try independently")
-    parser.add_argument("--log-dir", type=str, default=None, help="Directory for agent invocation logs (default: use Isabelle config)")
+    parser.add_argument("--log-dir", type=str, default=None,
+        help="Base directory for per-case AoA logs. Default: <result> with a "
+             ".log suffix appended (e.g. result-x.db -> result-x.db.log/); each "
+             "case's logs go in a subdirectory named after the case.")
     parser.add_argument("--retrieval-forking", type=str, default=None,
         choices=["with_ctxt", "without_ctxt", "cheaper_no_ctxt"],
         help="Retrieval forking mode (default: with_ctxt)")
@@ -186,6 +189,14 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
     force_retry_set = frozenset(force_retry_cases)
 
     result_db = args.result
+    log_dir = args.log_dir
+    if log_dir is None and result_db is not None:
+        # Append ".log" to the result-db path so the per-case log dir can never
+        # collide with the db file itself (a stripped name could equal the db
+        # path for a no-extension --result). Per-case subdirs named after the
+        # case live under <result>.log/.
+        log_dir = result_db + ".log"
+        logger.info(f"Auto AoA log dir: {log_dir}")
     clean_mash(result_db)
     async def _run():
         await launch_servers()
@@ -198,7 +209,7 @@ def minilang_agent_handler(cls, dataset, category_loader, index_parser, case_fil
             timeout_seconds=args.timeout_seconds,
             max_tool_calls=args.max_tool_calls,
             max_retries=args.max_retries,
-            log_dir=args.log_dir,
+            log_dir=log_dir,
             retrieval_forking=args.retrieval_forking,
             interactive_retrieval=args.interactive_retrieval,
         ),
