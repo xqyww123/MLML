@@ -768,7 +768,7 @@ class Isar_MiniF2F(MiniF2F_Mixin, Isar_Base):
     pass
 
 class MinilangAgent_MiniF2F(MiniF2F_Mixin, MinilangAgent_Base):
-    pass
+    _LIBS = ['MiniF2F_MyProver.MiniF2F_MyProver', 'Minilang_Agent.Minilang_Agent']
 
 class PutnamBench_Mixin:
     if TYPE_CHECKING:

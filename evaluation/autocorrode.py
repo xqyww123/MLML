@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import random
 import re
 import shutil
 import tempfile
@@ -352,6 +353,11 @@ class AutoCorrode_Base(Evaluator):
         env["MASH_STATE_PATH"] = os.path.join(mash_dir, "mash_state")
         env["ASSISTANT_BATCH_PROMPT"] = f"Complete the proof of theorem {thm_name}"
         env["ASSISTANT_BATCH_RESULT_FILE"] = result_file
+
+        # Temporary: stagger concurrent jEdit startups (random 1-10s) to ease
+        # contention on the shared $ISABELLE_HOME_USER state. Before start_time so
+        # it is not counted in elapsed.
+        await asyncio.sleep(random.uniform(1.0, 10.0))
 
         self._restore_jedit_properties()
 
