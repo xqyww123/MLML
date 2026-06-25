@@ -19,6 +19,12 @@ set -e
 # Falls back to the historical default when unset.
 session="${SESSION:-MathBench_Prover}"
 
+# RPC host (host:port) the REPL's ML callbacks dial back to. Propagated from the
+# launching environment via srun's --export (see tools/slurm.py), mirroring how
+# SESSION is forwarded; falls back to the localhost default (matches the
+# contrib/Isabelle_RPC default) when unset.
+RPC_Host="${RPC_Host:-127.0.0.1:27182}"
+
 # Process each port/numproc pair
 while [ $# -gt 0 ]; do
   port=$1
@@ -39,7 +45,7 @@ while [ $# -gt 0 ]; do
   mkdir -p $mash_dir
   
   # Start the server instance
-  RPC_Host=cscc-login-1:27182 MASH_STATE_PATH=$mash_dir/mash_state ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:$port "$session" $dir -o threads=$numprocs > $dir/log.txt 2>&1 &
+  RPC_Host="$RPC_Host" MASH_STATE_PATH=$mash_dir/mash_state ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:$port "$session" $dir -o threads=$numprocs > $dir/log.txt 2>&1 &
   
   #echo "Started server on port $port"
 done

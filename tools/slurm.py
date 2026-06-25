@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import sys
 import time
 import subprocess
@@ -67,6 +68,12 @@ def free_servers():
 # new interfaces
 
 def run_servers (nodes):
+    # Validate RPC_Host ONCE, up front, in the main thread: a malformed value must
+    # fail the whole launch loudly rather than silently killing a per-node
+    # self-healing thread (run_server runs in a bare, never-joined threading.Thread).
+    rpc_host = os.environ.get("RPC_Host", "127.0.0.1:27182")
+    if not re.fullmatch(r"[A-Za-z0-9._-]+:[0-9]+", rpc_host):
+        raise ValueError(f"Invalid RPC_Host {rpc_host!r}; expected host:port")
     for node, numprocss in nodes.items():
         thread = threading.Thread(target=run_server, args=(node, numprocss))
         thread.start()
@@ -81,12 +88,17 @@ def run_server(node, numprocss):
             # launches with the requested Isabelle session, rather than relying
             # on the cluster's implicit srun --export policy.
             session = os.environ.get("SESSION", "MathBench_Prover")
+            # RPC host (host:port) the compute-node REPL's ML callbacks dial back
+            # to. Forwarded explicitly like SESSION rather than trusting implicit
+            # --export=ALL; defaults to the contrib/Isabelle_RPC localhost default.
+            # Validated once up front in run_servers (fail-fast in the main thread).
+            rpc_host = os.environ.get("RPC_Host", "127.0.0.1:27182")
             # --time default 720h (30d): a multi-round missing-lemma loop can run
             # for many days; the old 120h (5d) cap would scancel all nodes mid-run.
             # Overridable via SLURM_EVAL_WALLTIME so a bounded job (e.g. a one-shot
             # PutnamBench fleet eval) can export a shorter cap; default is unchanged
             # so the missing-lemma loop behaves exactly as before.
             walltime = os.environ.get("SLURM_EVAL_WALLTIME", "720:00:00")
-            cmd = f"srun --job-name={JOB_NAME} --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=128 --time={walltime} --export=ALL,SESSION={session} ./tools/slurm_run_server.sh {node} {args}"
+            cmd = f"srun --job-name={JOB_NAME} --partition=standard --nodes=1 --nodelist={node} --ntasks-per-node=1 --cpus-per-task=128 --time={walltime} --export=ALL,SESSION={session},RPC_Host={rpc_host} ./tools/slurm_run_server.sh {node} {args}"
             subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(10)
