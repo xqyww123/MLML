@@ -19,9 +19,17 @@ log_level = getattr(logging, log_level_name, logging.INFO)
 configure_logging(level=log_level)
 logger = logging.getLogger(__name__)
 
+# Path to the evaluation-servers CSV. Overridable from the command line, e.g.
+# `EVAL_SERVERS_CONFIG=/path/to/servers.csv python3 evaluation/evaluator_top.py ...`;
+# defaults to the in-repo config/evaluation_servers.csv. Read once at import time
+# (same getenv idiom as CLUSTER/SESSION below); a login-side setting, not forwarded
+# to compute nodes.
+EVAL_SERVERS_CONFIG_EXPLICIT = "EVAL_SERVERS_CONFIG" in os.environ
+EVAL_SERVERS_CONFIG = os.getenv("EVAL_SERVERS_CONFIG", f"{MLML_BASE}/config/evaluation_servers.csv")
+
 CFG_SERVERS = {}
 try:
-    with open(f'{MLML_BASE}/config/evaluation_servers.csv', 'r') as f:
+    with open(EVAL_SERVERS_CONFIG, 'r') as f:
         csv_reader = csv.reader(f)
         # Read the first row as headers
         headers = next(csv_reader, None)
@@ -44,9 +52,15 @@ try:
 
             CFG_SERVERS[row_data["server"]] = row_data
 
-        logger.info(f"Loaded {len(CFG_SERVERS)} servers from ./config/evaluation_servers.csv")
+        logger.info(f"Loaded {len(CFG_SERVERS)} servers from {EVAL_SERVERS_CONFIG}")
 except FileNotFoundError:
-    logger.warning("No server configuration found. Using default server.")
+    if EVAL_SERVERS_CONFIG_EXPLICIT:
+        # An explicitly-set path that is missing must fail loudly rather than
+        # silently degrading an N-node fleet to a single localhost REPL.
+        raise FileNotFoundError(
+            f"EVAL_SERVERS_CONFIG={EVAL_SERVERS_CONFIG} not found"
+        ) from None
+    logger.warning(f"No server configuration found at {EVAL_SERVERS_CONFIG}. Using default server.")
     CFG_SERVERS["127.0.0.1:6666"] = {
         "server": "127.0.0.1:6666",
         "numprocs": 8,
