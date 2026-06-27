@@ -175,6 +175,12 @@ class AutoCorrode_Base(Evaluator):
     def _import_dir(self) -> str | None:
         return None
 
+    def _extra_read_roots(self, index: str) -> list[str]:
+        """Extra directories the agent may READ (not write) for this case, on
+        top of work_dir. Default none; overridden by datasets whose case
+        theories import sibling theories from their source directory by path."""
+        return []
+
     def _include_sessions(self) -> list[str]:
         return []
 
@@ -381,7 +387,17 @@ class AutoCorrode_Base(Evaluator):
 
         env = os.environ.copy()
         env["DISPLAY"] = self._display
+        # Mutation root stays sandboxed to work_dir: the agent may only WRITE
+        # the copied case theory, never the original dataset sources.
         env["IQ_MCP_ALLOWED_ROOTS"] = work_dir
+        # Read roots may additionally include the case's source directory so the
+        # agent can READ sibling theories it depends on (NTP4VC cases import
+        # per-problem impl/spec theories by path -- see _extra_read_roots). Once
+        # IQ_MCP_ALLOWED_READ_ROOTS is set it no longer falls back to the
+        # mutation root, so work_dir must be listed explicitly. Datasets without
+        # path-imports add nothing, leaving read == mutation == work_dir.
+        read_roots = [work_dir] + self._extra_read_roots(index)
+        env["IQ_MCP_ALLOWED_READ_ROOTS"] = os.pathsep.join(read_roots)
         # Give each worker a distinct I/Q MCP base port so concurrent jEdit
         # instances don't all contend for the default 8765. Spacing of 100
         # matches the plugin's MAX_PORT_SCAN so per-worker scan ranges (each
@@ -635,21 +651,25 @@ MLML_VERIFY_DIR = os.path.join(PROJECT_ROOT, "evaluation", "MLML_Verify")
 
 
 class AutoCorrode_NTP4VC_Mixin:
-    # NTP4VC cases are self-contained .thy files (one `theorem ...: ... sorry
-    # end`) reached BY PATH via NTPVC_Data.file_of(). Each case imports its OWN
-    # per-problem lib session plus the shared NTP4Verif / Why3STD -- all
-    # session-qualified imports.
-    #
-    # IMPORTANT: these imports are resolved by the verify REPL server from the
-    # session base it was LAUNCHED with (`-l Why3STD`, whose prebuilt heap holds
-    # the whole NTP4Verif->Why3STD chain) plus the `-d data/NTP4VC` registered at
-    # launch (for the per-problem lib sessions). The eval-time `import_dir`
-    # argument is a no-op for session-qualified names (Resources.import_name only
-    # consults it for unqualified relative-path imports), so this mixin does NOT
-    # override `_import_dir`. The required launch is declared in VERIFY_SESSION /
-    # VERIFY_SESSION_DIRS below and printed by autocorrode_handler -- the same
-    # arrangement miniF2F relies on (its verify server is launched with the
-    # MiniF2F_Prover base), not an import_dir trick.
+    # NTP4VC cases are .thy files (one `theorem ...: ... sorry end`) reached BY
+    # PATH via NTPVC_Data.file_of(). Their imports are of TWO kinds:
+    #   (1) session-qualified -- the shared NTP4Verif / Why3STD chain, resolved
+    #       by the verify REPL server from the session base it was LAUNCHED with
+    #       (`-l Why3STD`, whose prebuilt heap holds the whole NTP4Verif->Why3STD
+    #       chain) plus `-d data/NTP4VC` (see VERIFY_SESSION / VERIFY_SESSION_DIRS
+    #       below, printed by autocorrode_handler -- same as miniF2F's launch).
+    #   (2) relative-path sibling imports -- e.g. `"./cursor_examples_ListCursorImpl"`
+    #       pointing at a per-problem impl/spec theory in the SAME source dir.
+    #       571/600 cases (14/50 of the pearl_50 subset) have these. They do NOT
+    #       resolve once the case .thy is copied into a fresh work_dir (the
+    #       siblings are not copied), which broke BOTH the agent's jEdit load
+    #       (theory never processed -> no goal) AND the verify snapshot
+    #       (baseline unavailable -> guaranteed FAIL). _get_theory_content below
+    #       rewrites them to ABSOLUTE paths anchored at the case's real source
+    #       dir, so they resolve dynamically in both jEdit and the verify REPL
+    #       (Isabelle resolves a sibling loaded by absolute path against its own
+    #       real dir, so the siblings' own `./` imports chain correctly too).
+    #       _extra_read_roots additionally lets the agent READ those siblings.
     VERIFY_SESSION = "Why3STD"
     VERIFY_SESSION_DIRS = [MLML_VERIFY_DIR, NTP4VC_DIR]
 
@@ -661,6 +681,21 @@ class AutoCorrode_NTP4VC_Mixin:
         path = self._data.file_of(index)
         with open(path, "r", encoding="utf-8") as f:
             text = f.read()
+        # Rewrite relative-path sibling imports ("./X", "../Y/Z") in the imports
+        # header to ABSOLUTE paths anchored at the case file's real directory, so
+        # they resolve when the case is evaluated from a fresh work_dir (the
+        # siblings are NOT copied there). Scoped to the `imports ... begin` header
+        # so string literals in the proof body are untouched; session-qualified
+        # ("NTP4Verif.NTP4Verif") and already-absolute imports do not match.
+        case_dir = os.path.dirname(path)
+        hdr = re.search(r'\bimports\b(.*?)\bbegin\b', text, re.DOTALL)
+        if hdr:
+            fixed = re.sub(
+                r'"(\.\.?/[^"]*)"',
+                lambda m: '"' + os.path.normpath(
+                    os.path.join(case_dir, m.group(1))) + '"',
+                hdr.group(1))
+            text = text[:hdr.start(1)] + fixed + text[hdr.end(1):]
         # Each file ends with a single `sorry` + closing `end` (verified across
         # all 600 cases). validate() re-appends `\n  sorry\nend\n`, so strip the
         # trailing proof: return the text up to (not including) the sole `sorry`.
@@ -686,9 +721,15 @@ class AutoCorrode_NTP4VC_Mixin:
     def _inject_import(self) -> str | None:
         return None
 
-    # NB: no `_import_dir` override. It is a no-op for NTP4VC's session-qualified
-    # imports (see class comment); the verify server resolves them via its launch
-    # `-l`/`-d` instead. `_import_dir` therefore inherits the base default (None).
+    # NB: no `_import_dir` override. Session-qualified imports resolve via the
+    # verify server's launch `-l`/`-d`; relative-path sibling imports are
+    # rewritten to absolute paths in _get_theory_content, so they too are
+    # import_dir-independent. `_import_dir` inherits the base default (None).
+
+    # Let the agent READ the case's source directory (its sibling impl/spec
+    # theories live there). Mutation stays sandboxed to work_dir.
+    def _extra_read_roots(self, index: str) -> list[str]:
+        return [os.path.dirname(self._data.file_of(index))]
 
     def _include_sessions(self) -> list[str]:
         return ["iq"]
