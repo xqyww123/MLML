@@ -117,12 +117,15 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
     if verify_session:
         port = args.repl_addr.partition(":")[2]
         dirs = " ".join(f"-d {d}" for d in getattr(cls, "VERIFY_SESSION_DIRS", []))
+        opts = " ".join(f"-o {o}" for o in getattr(cls, "VERIFY_SESSION_OPTS", []))
         logger.info(
             f"[{dataset}] The verify server at {args.repl_addr} MUST be launched with "
-            f"base session '{verify_session}' and these dirs, e.g.:\n"
+            f"base session '{verify_session}', these dirs, AND these options, e.g.:\n"
             f"    ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port or '6666'} "
-            f"{verify_session} /tmp/repl_outputs {dirs} -o threads=<N>\n"
-            f"    (the case imports resolve only if this server's -l/-d match the above)")
+            f"{verify_session} /tmp/repl_outputs {dirs} {opts} -o threads=<N>\n"
+            f"    (imports resolve only if -l/-d match; and quick_and_dirty=false is REQUIRED "
+            f"-- it overrides repl_server.sh's hard-coded quick_and_dirty=true, which would "
+            f"otherwise make verify reject genuine proofs as 'Untrusted oracles: Pure.skip_proof')")
 
     log_dir = args.log_dir
     if log_dir is None and result_db is not None:

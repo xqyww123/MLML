@@ -100,6 +100,22 @@ class AutoCorrode_Base(Evaluator):
     # confirmed). Subclasses that need a specific server override both.
     VERIFY_SESSION: "str | None" = None
     VERIFY_SESSION_DIRS: "list[str]" = []
+    # Isabelle options the verify server MUST be launched with. repl_server.sh
+    # HARD-CODES `-o quick_and_dirty=true`; a later `-o quick_and_dirty=false`
+    # (last-wins) overrides it -- and THIS is the fix:
+    #   Under quick_and_dirty=true, a structured `proof .. qed` forks its subgoal
+    #   `by` steps as proof futures that capture the server-level quick_and_dirty
+    #   option and close themselves with the Pure.skip_proof oracle. The genuine
+    #   proof is still actually checked (a bogus one errors), but it nonetheless
+    #   carries skip_proof, so verify_proof rejects EVEN CORRECT proofs as
+    #   "Untrusted oracles: Pure.skip_proof". A per-theory `declare
+    #   [[quick_and_dirty=false]]` does NOT undo this for structured proofs (the
+    #   futures already captured the option), so the server itself must run with
+    #   quick_and_dirty=false. The baseline snapshot still needs `sorry`, so
+    #   _snapshot_goals re-enables quick_and_dirty just for that one theory via a
+    #   declare (see there). (skip_proofs is unrelated -- it defaults false and
+    #   was never the cause.)
+    VERIFY_SESSION_OPTS: "list[str]" = ["quick_and_dirty=false"]
 
     def __init__(self, worker_id: str, *,
                  isabelle_bin: str | None = None,
@@ -200,8 +216,17 @@ class AutoCorrode_Base(Evaluator):
         try:
             await self._repl.set_register_thy(False)
             await self._repl.rollback("init")
+            # The verify server runs with quick_and_dirty=false (so the genuine
+            # proof re-check in _verify_via_repl is not closed by skip_proof
+            # futures). The baseline theory here ends in `sorry`, which is only
+            # accepted under quick_and_dirty -- re-enable it for THIS snapshot
+            # theory only via a declare right after `begin`. (A declare is enough
+            # for the trivial `sorry`; structured proofs are never snapshotted.)
+            snap_source = re.sub(
+                r'\bbegin\b', 'begin\ndeclare [[quick_and_dirty]]',
+                original_source, count=1)
             response = await self._repl.eval(
-                original_source,
+                snap_source,
                 timeout=120000,
                 cmd_timeout=30000,
                 import_dir=self._import_dir(),
