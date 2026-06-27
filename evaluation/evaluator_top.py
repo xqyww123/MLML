@@ -107,6 +107,23 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
     worker_ids = [f"w{i}" for i in range(args.workers)]
     result_db = args.result
 
+    # The verify REPL server resolves a case's session-qualified imports from the
+    # session base + `-d` dirs it was LAUNCHED with (the client cannot register
+    # sessions at runtime). Each dataset declares that requirement on its
+    # evaluator class; print the exact repl_server.sh command so --repl-addr is
+    # pointed at a correctly-configured server. If unspecified, the server is
+    # assumed pre-configured (prior behaviour).
+    verify_session = getattr(cls, "VERIFY_SESSION", None)
+    if verify_session:
+        port = args.repl_addr.partition(":")[2]
+        dirs = " ".join(f"-d {d}" for d in getattr(cls, "VERIFY_SESSION_DIRS", []))
+        logger.info(
+            f"[{dataset}] The verify server at {args.repl_addr} MUST be launched with "
+            f"base session '{verify_session}' and these dirs, e.g.:\n"
+            f"    ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port or '6666'} "
+            f"{verify_session} /tmp/repl_outputs {dirs} -o threads=<N>\n"
+            f"    (the case imports resolve only if this server's -l/-d match the above)")
+
     log_dir = args.log_dir
     if log_dir is None and result_db is not None:
         log_dir = os.path.splitext(result_db)[0] + "-logs"
@@ -382,6 +399,12 @@ if __name__ == "__main__":
                 from evaluation.autocorrode import AutoCorrode_PutnamBench
                 autocorrode_handler(AutoCorrode_PutnamBench, "PutnamBench",
                     lambda category: PutnamBench_Data().cases_of(category),
+                    lambda line: line)
+
+            case 'autocorrode-ntp4vc':
+                from evaluation.autocorrode import AutoCorrode_NTP4VC
+                autocorrode_handler(AutoCorrode_NTP4VC, "NTP4VC",
+                    lambda category: NTPVC_Data().cases_of(category),
                     lambda line: line)
 
             case 'agent-source':

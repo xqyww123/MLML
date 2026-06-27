@@ -9,7 +9,7 @@ import tempfile
 import time
 
 from IsaREPL import Client as REPLClient, REPLFail
-from data.isabelle import CaseNotAvailable, MiniF2F_Data, PutnamBench_Data
+from data.isabelle import CaseNotAvailable, MiniF2F_Data, PutnamBench_Data, NTPVC_Data
 from .evaluator import Evaluator, Result, Status, AgentCostData, Isar_Base
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ JEDIT_SETTINGS_DIR = os.path.expanduser("~/.isabelle/Isabelle2025-2/jedit")
 # old $15 / $75 — do NOT copy that row onto a 4.5+ model (a prior table did, which
 # over-counted Opus 4.8 cost by 3x).
 MODEL_PRICING: dict[str, tuple[float, float, float, float]] = {
-    "gpt-5.5":       (2.0,  0.5,  8.0,  0.0),
+    "gpt-5.5":       (5.0,  0.5,  30.0, 0.0),
     "gpt-4.1":       (2.0,  0.5,  8.0,  0.0),
     "gpt-4.1-mini":  (0.4,  0.1,  1.6,  0.0),
     "gpt-4.1-nano":  (0.1,  0.025, 0.4, 0.0),
@@ -86,6 +86,20 @@ def _detect_iq_session_dir():
 
 
 class AutoCorrode_Base(Evaluator):
+
+    # --- Verify-server launch configuration (single source of truth) ---
+    # The verify REPL server (--repl-addr) resolves a case's session-qualified
+    # imports purely from the session base it was LAUNCHED with (`-l`) plus the
+    # `-d` session dirs registered at launch; the client cannot register session
+    # dirs at runtime (load_theory/add_lib only load already-registered
+    # sessions). So each dataset declares here what its verify server must be
+    # launched with, and autocorrode_handler prints the exact repl_server.sh
+    # command. VERIFY_SESSION is None by default, meaning "unspecified -- the
+    # operator is assumed to have pre-configured the server" (the prior
+    # behaviour for miniF2F/Putnam, left unchanged until their launch is
+    # confirmed). Subclasses that need a specific server override both.
+    VERIFY_SESSION: "str | None" = None
+    VERIFY_SESSION_DIRS: "list[str]" = []
 
     def __init__(self, worker_id: str, *,
                  isabelle_bin: str | None = None,
@@ -591,9 +605,86 @@ class AutoCorrode_PutnamBench_Mixin:
         return self._data.cases_of(category)
 
 
+NTP4VC_DIR = os.path.join(PROJECT_ROOT, "data", "NTP4VC")
+MLML_VERIFY_DIR = os.path.join(PROJECT_ROOT, "evaluation", "MLML_Verify")
+
+
+class AutoCorrode_NTP4VC_Mixin:
+    # NTP4VC cases are self-contained .thy files (one `theorem ...: ... sorry
+    # end`) reached BY PATH via NTPVC_Data.file_of(). Each case imports its OWN
+    # per-problem lib session plus the shared NTP4Verif / Why3STD -- all
+    # session-qualified imports.
+    #
+    # IMPORTANT: these imports are resolved by the verify REPL server from the
+    # session base it was LAUNCHED with (`-l Why3STD`, whose prebuilt heap holds
+    # the whole NTP4Verif->Why3STD chain) plus the `-d data/NTP4VC` registered at
+    # launch (for the per-problem lib sessions). The eval-time `import_dir`
+    # argument is a no-op for session-qualified names (Resources.import_name only
+    # consults it for unqualified relative-path imports), so this mixin does NOT
+    # override `_import_dir`. The required launch is declared in VERIFY_SESSION /
+    # VERIFY_SESSION_DIRS below and printed by autocorrode_handler -- the same
+    # arrangement miniF2F relies on (its verify server is launched with the
+    # MiniF2F_Prover base), not an import_dir trick.
+    VERIFY_SESSION = "Why3STD"
+    VERIFY_SESSION_DIRS = [MLML_VERIFY_DIR, NTP4VC_DIR]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._data = NTPVC_Data()
+
+    def _get_theory_content(self, index: str) -> str:
+        path = self._data.file_of(index)
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+        # Each file ends with a single `sorry` + closing `end` (verified across
+        # all 600 cases). validate() re-appends `\n  sorry\nend\n`, so strip the
+        # trailing proof: return the text up to (not including) the sole `sorry`.
+        # The theorem statement (and any pre-theorem fun/inductive blocks) is
+        # preserved.
+        sorries = list(re.finditer(r'\bsorry\b', text))
+        if len(sorries) != 1:
+            raise CaseNotAvailable(
+                index,
+                f"NTP4VC: expected exactly one sorry in {path}, found {len(sorries)}")
+        return text[:sorries[0].start()].rstrip()
+
+    # jEdit base: Why3STD's prebuilt heap already contains the full
+    # NTP4Verif -> Why3STD chain (59 theories), so `-l Why3STD` avoids reloading
+    # them from source every case (which `-l NTP4Verif` would force).
+    def _session_name(self) -> str:
+        return "Why3STD"
+
+    def _session_dirs(self) -> list[str]:
+        return [self._iq_session_dir, NTP4VC_DIR]
+
+    # Imports are already present in the case file -- nothing to inject.
+    def _inject_import(self) -> str | None:
+        return None
+
+    # NB: no `_import_dir` override. It is a no-op for NTP4VC's session-qualified
+    # imports (see class comment); the verify server resolves them via its launch
+    # `-l`/`-d` instead. `_import_dir` therefore inherits the base default (None).
+
+    def _include_sessions(self) -> list[str]:
+        return ["iq"]
+
+    def _jedit_extra_imports(self) -> str | None:
+        return "iq.Isar_Explore"
+
+    def all_cases(self):
+        return self._data.all_cases()
+
+    def cases_of(self, category: str):
+        return self._data.cases_of(category)
+
+
 class AutoCorrode_MiniF2F(AutoCorrode_MiniF2F_Mixin, AutoCorrode_Base):
     pass
 
 
 class AutoCorrode_PutnamBench(AutoCorrode_PutnamBench_Mixin, AutoCorrode_Base):
+    pass
+
+
+class AutoCorrode_NTP4VC(AutoCorrode_NTP4VC_Mixin, AutoCorrode_Base):
     pass
