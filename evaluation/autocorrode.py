@@ -381,6 +381,14 @@ class AutoCorrode_Base(Evaluator):
             logger.warning(f"Worker {self._worker_id}: snapshot failed for {index}: {snap_err}")
 
         result_file = os.path.join(work_dir, f"result_{theory_name}.json")
+        # Full LLM-interaction transcript: the plugin appends one JSONL line per
+        # model round (complete request payload + complete raw response). Removed
+        # up front so a stale file from a prior run can't leak into this result.
+        transcript_file = os.path.join(work_dir, f"transcript_{theory_name}.jsonl")
+        try:
+            os.remove(transcript_file)
+        except FileNotFoundError:
+            pass
 
         mash_dir = os.path.join(PROJECT_ROOT, "cache", "repl_tmps", f"autocorrode_{self._worker_id}")
         os.makedirs(mash_dir, exist_ok=True)
@@ -408,6 +416,7 @@ class AutoCorrode_Base(Evaluator):
         env["MASH_STATE_PATH"] = os.path.join(mash_dir, "mash_state")
         env["ASSISTANT_BATCH_PROMPT"] = f"Complete the proof of theorem {thm_name}"
         env["ASSISTANT_BATCH_RESULT_FILE"] = result_file
+        env["ASSISTANT_BATCH_TRANSCRIPT_FILE"] = transcript_file
 
         # Temporary: stagger concurrent jEdit startups (random 1-10s) to ease
         # contention on the shared $ISABELLE_HOME_USER state. Before start_time so
@@ -489,9 +498,21 @@ class AutoCorrode_Base(Evaluator):
                 log_tail = f.read()[-2000:]
             logger.error(f"Worker {self._worker_id}: Isabelle log tail for {index}:\n{log_tail}")
 
+        # Slurp the full LLM-interaction transcript (one JSONL line per round)
+        # written by the plugin and carry it in the DB result. Best-effort: a
+        # missing/unreadable file just yields an empty transcript.
+        llm_transcript = ""
+        if os.path.isfile(transcript_file):
+            try:
+                with open(transcript_file, "r", encoding="utf-8") as f:
+                    llm_transcript = f.read()
+            except Exception as e:
+                logger.error(f"Worker {self._worker_id}: failed to read transcript: {e}")
+
         def _make_data():
             return {"costs": [cost], "response": response_text,
-                    "agent_status": agent_status}
+                    "agent_status": agent_status,
+                    "llm_transcript": llm_transcript}
 
         if timed_out:
             return Result(Status.FAIL, [f"Evaluator timeout ({self._timeout_seconds}s)"],
