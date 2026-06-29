@@ -501,18 +501,20 @@ class AutoCorrode_Base(Evaluator):
         # Slurp the full LLM-interaction transcript (one JSONL line per round)
         # written by the plugin and carry it in the DB result. Best-effort: a
         # missing/unreadable file just yields an empty transcript.
-        llm_transcript = ""
-        if os.path.isfile(transcript_file):
-            try:
-                with open(transcript_file, "r", encoding="utf-8") as f:
-                    llm_transcript = f.read()
-            except Exception as e:
-                logger.error(f"Worker {self._worker_id}: failed to read transcript: {e}")
+        # The full LLM transcript stays ONLY on disk in the per-case log dir
+        # (the plugin writes it live). Do NOT slurp it into the DB: a single
+        # case's transcript can be hundreds of MB, which bloats the SQLite DB to
+        # GBs and makes every load/resume/query crawl. Record only the relative
+        # path so the transcript is still locatable per case.
+        transcript_rel = (
+            os.path.relpath(transcript_file, PROJECT_ROOT)
+            if os.path.isfile(transcript_file) else None
+        )
 
         def _make_data():
             return {"costs": [cost], "response": response_text,
                     "agent_status": agent_status,
-                    "llm_transcript": llm_transcript}
+                    "llm_transcript_path": transcript_rel}
 
         if timed_out:
             return Result(Status.FAIL, [f"Evaluator timeout ({self._timeout_seconds}s)"],
