@@ -20,15 +20,28 @@ from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 from evaluation.evaluator import Status
 
 
-def load_entries(db_path: str) -> list[tuple[int, bool]]:
+def load_case_filter(path: str) -> set[str]:
+    """Read a benchmark case list (one case name per line) into a set.
+
+    Blank lines and leading/trailing whitespace are ignored.
+    """
+    with open(path) as fh:
+        return {line.strip() for line in fh if line.strip()}
+
+
+def load_entries(db_path: str,
+                 keep: set[str] | None = None) -> list[tuple[int, bool]]:
     """Load a result DB and return [(tool_call_count, is_success), ...].
 
+    When ``keep`` is given, only cases whose key is in that set are considered.
     CASE_NOT_AVAILABLE entries are excluded.
     Cases without cost data are treated as zero tool calls.
     """
     entries = []
     with SqliteDict(db_path, flag='r') as db:
-        for _key, result in db.items():
+        for key, result in db.items():
+            if keep is not None and key not in keep:
+                continue
             if result.status == Status.CASE_NOT_AVAILABLE:
                 continue
             tc = 0
@@ -78,17 +91,24 @@ def main():
                         help="Path to result SQLite DB, optionally with :label suffix")
     parser.add_argument("-o", "--output", default=None,
                         help="Save figure to file instead of showing interactively")
+    parser.add_argument("-f", "--filter-file", default=None, metavar="FILE",
+                        help="Only consider benchmark cases listed in FILE "
+                             "(one case name per line)")
     parser.add_argument("--title", default=None, help="Figure title")
     parser.add_argument("--dpi", type=int, default=150, help="Output DPI (default 150)")
     parser.add_argument("--log", action="store_true", help="Use logarithmic X-axis")
     args = parser.parse_args()
+
+    keep = load_case_filter(args.filter_file) if args.filter_file else None
+    if keep is not None:
+        print(f"Filtering to {len(keep)} cases listed in {args.filter_file}")
 
     fig, ax = plt.subplots(figsize=(8, 5))
     show_legend = len(args.dbs) > 1
 
     for db_arg in args.dbs:
         path, label = parse_db_arg(db_arg)
-        entries = load_entries(path)
+        entries = load_entries(path, keep)
         if not entries:
             print(f"Warning: no plottable entries in {path}", file=sys.stderr)
             continue

@@ -19,16 +19,29 @@ import matplotlib.pyplot as plt
 from evaluation.evaluator import Status
 
 
-def load_entries(db_path: str) -> list[tuple[float, float, bool]]:
+def load_case_filter(path: str) -> set[str]:
+    """Read a benchmark case list (one case name per line) into a set.
+
+    Blank lines and leading/trailing whitespace are ignored.
+    """
+    with open(path) as fh:
+        return {line.strip() for line in fh if line.strip()}
+
+
+def load_entries(db_path: str,
+                 keep: set[str] | None = None) -> list[tuple[float, float, bool]]:
     """Load a result DB and return [(elapsed_seconds, model_time_seconds, is_success), ...].
 
+    When ``keep`` is given, only cases whose key is in that set are considered.
     CASE_NOT_AVAILABLE entries are excluded.
     elapsed_time is stored as milliseconds in Result; converted to seconds here.
     model_time comes from cost data (already in seconds).
     """
     entries = []
     with SqliteDict(db_path, flag='r') as db:
-        for _key, result in db.items():
+        for key, result in db.items():
+            if keep is not None and key not in keep:
+                continue
             if result.status == Status.CASE_NOT_AVAILABLE:
                 continue
             elapsed_s = sum(result.elapsed_time) / 1000.0 if result.elapsed_time else 0.0
@@ -80,6 +93,9 @@ def main():
                         help="Path to result SQLite DB, optionally with :label suffix")
     parser.add_argument("-o", "--output", default=None,
                         help="Save figure to file instead of showing interactively")
+    parser.add_argument("-f", "--filter-file", default=None, metavar="FILE",
+                        help="Only consider benchmark cases listed in FILE "
+                             "(one case name per line)")
     parser.add_argument("--title", default=None, help="Figure title")
     parser.add_argument("--dpi", type=int, default=150, help="Output DPI (default 150)")
     parser.add_argument("--model-time", action="store_true",
@@ -87,12 +103,16 @@ def main():
     parser.add_argument("--log", action="store_true", help="Use logarithmic X-axis")
     args = parser.parse_args()
 
+    keep = load_case_filter(args.filter_file) if args.filter_file else None
+    if keep is not None:
+        print(f"Filtering to {len(keep)} cases listed in {args.filter_file}")
+
     fig, ax = plt.subplots(figsize=(8, 5))
     show_legend = len(args.dbs) > 1 or args.model_time
 
     for db_arg in args.dbs:
         path, label = parse_db_arg(db_arg)
-        entries = load_entries(path)
+        entries = load_entries(path, keep)
         if not entries:
             print(f"Warning: no plottable entries in {path}", file=sys.stderr)
             continue

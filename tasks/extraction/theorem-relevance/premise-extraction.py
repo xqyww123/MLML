@@ -121,7 +121,7 @@ async def extract():
         logger.info(f"theories: {finished_theories/total_theories*100:.2f}%, goals: {finished_goals}/{total_goals} = {finished_goals/total_goals*100:.2f}%")
 
     all_tasks = []
-    with open('translation/targets', "r", encoding="utf-8") as f:
+    with open('tasks/extraction/theorem-relevance/targets', "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:

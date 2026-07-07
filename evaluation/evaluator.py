@@ -455,7 +455,7 @@ class MinilangAgent_Base(Isar_Base):
         return _safe_case_dirname(index)
 
     def __init__(self, addr, timeout=500, connection_timeout=1200,
-                timeout_seconds=14400, max_tool_calls=10000, max_retries=8,
+                timeout_seconds=14400, max_tool_calls=10000, max_retries=3,
                 log_dir=None, retrieval_forking=None, interactive_retrieval=None,
                 auto_interpret_for_embedding=False):
         super().__init__(addr, libs=type(self)._LIBS,

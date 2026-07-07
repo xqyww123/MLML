@@ -12,23 +12,71 @@ Usage:
 """
 
 import argparse
+import io
+import pickle
 import sys
+from enum import Enum
+
 from sqlitedict import SqliteDict
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 
-from evaluation.evaluator import Status
+
+# Result DBs are SqliteDict stores of pickled ``evaluation.evaluator.Result``
+# objects whose ``status`` is an ``evaluation.evaluator.Status`` enum.  To read
+# them standalone -- without importing the (heavy) MLML evaluation stack -- we
+# unpickle through a custom Unpickler that maps just those two classes to the
+# local stand-ins below.  Nothing else from MLML is ever imported.
+
+class Status(Enum):
+    SUCCESS = "SUCCESS"
+    FAIL = "FAIL"
+    CASE_NOT_AVAILABLE = "CASE_NOT_AVAILABLE"
 
 
-def load_entries(db_path: str) -> list[tuple[float, float, bool]]:
+class Result:
+    """Plain stand-in for evaluation.evaluator.Result (the fields we read)."""
+    status = None
+    data = None
+
+
+class _ResultUnpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        if module == "evaluation.evaluator":
+            if name == "Status":
+                return Status
+            if name == "Result":
+                return Result
+        return super().find_class(module, name)
+
+
+def _decode(raw) -> object:
+    """SqliteDict value decoder: unpickle MLML Result objects standalone."""
+    return _ResultUnpickler(io.BytesIO(bytes(raw))).load()
+
+
+def load_case_filter(path: str) -> set[str]:
+    """Read a benchmark case list (one case name per line) into a set.
+
+    Blank lines and leading/trailing whitespace are ignored.
+    """
+    with open(path) as fh:
+        return {line.strip() for line in fh if line.strip()}
+
+
+def load_entries(db_path: str,
+                 keep: set[str] | None = None) -> list[tuple[float, float, bool]]:
     """Load a result DB and return [(cost, quota_wait_time, is_success), ...].
 
+    When ``keep`` is given, only cases whose key is in that set are considered.
     CASE_NOT_AVAILABLE entries are excluded.
     Cases without cost data are treated as zero-cost.
     """
     entries = []
-    with SqliteDict(db_path, flag='r') as db:
-        for _key, result in db.items():
+    with SqliteDict(db_path, flag='r', decode=_decode) as db:
+        for key, result in db.items():
+            if keep is not None and key not in keep:
+                continue
             if result.status == Status.CASE_NOT_AVAILABLE:
                 continue
             cost = 0.0
@@ -84,17 +132,24 @@ def main():
                         help="Path to result SQLite DB, optionally with :label suffix")
     parser.add_argument("-o", "--output", default=None,
                         help="Save figure to file instead of showing interactively")
+    parser.add_argument("-f", "--filter-file", default=None, metavar="FILE",
+                        help="Only consider benchmark cases listed in FILE "
+                             "(one case name per line)")
     parser.add_argument("--title", default=None, help="Figure title")
     parser.add_argument("--dpi", type=int, default=150, help="Output DPI (default 150)")
     parser.add_argument("--log", action="store_true", help="Use logarithmic X-axis")
     args = parser.parse_args()
+
+    keep = load_case_filter(args.filter_file) if args.filter_file else None
+    if keep is not None:
+        print(f"Filtering to {len(keep)} cases listed in {args.filter_file}")
 
     fig, ax = plt.subplots(figsize=(8, 5))
     show_legend = len(args.dbs) > 1
 
     for db_arg in args.dbs:
         path, label = parse_db_arg(db_arg)
-        entries = load_entries(path)
+        entries = load_entries(path, keep)
         if not entries:
             print(f"Warning: no plottable entries in {path}", file=sys.stderr)
             continue
