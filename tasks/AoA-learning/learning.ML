@@ -50,29 +50,36 @@ fun extract_proof remaining =
   let datatype frame = FWD | BWD
       fun pop _ [] = error "extract_proof: malformed proof"
         | pop k (k' :: rest) = if k = k' then rest else error "extract_proof: malformed proof"
+      (* Faithful to extraction.ML's `extract_proof` (theorem-relevance, which has
+         run over the whole AFP): the final `| go _ _ = error ...` catch-all is
+         ESSENTIAL. When the bracket stack cannot close before `remaining` is
+         exhausted — e.g. the original proof is `sorry`/`oops` (not a recognised
+         terminal), or any structure outside the recognised command set — it raises
+         a *catchable* Isabelle ERROR instead of an SML `Match` that would crash the
+         whole replay. The caller wraps the call in `\<^try>` (mirroring
+         extraction.ML's call site) so that one goal is skipped and the replay
+         continues. Do NOT special-case `sorry`: the catch-all handles it uniformly
+         with every other unclosable form. *)
       fun go [] _ = []
-        | go stack ((tr, sp) :: L) =
-            let val name = case sp of Command_Span.Span (Command_Span.Command_Span (n, _), _) => n | _ => ""
-                val stack' =
-                  case name
-                    of "proof"     => FWD :: stack
-                     | "qed"       => stack |> pop FWD |> pop BWD
-                     | "have"      => BWD :: stack
-                     | "show"      => BWD :: stack
-                     | "hence"     => BWD :: stack
-                     | "thus"      => BWD :: stack
-                     | "consider"  => BWD :: stack
-                     | "obtain"    => BWD :: stack
-                     | "interpret" => BWD :: stack
-                     | "subgoal"   => BWD :: stack
-                     | "by"        => pop BWD stack
-                     | "done"      => pop BWD stack
-                     | "apply_end" => pop BWD stack
-                     | "."         => pop BWD stack
-                     | ".."        => pop BWD stack
-                     | _           => stack
-             in (tr, sp) :: go stack' L
-            end
+        | go stack ((tr, sp as Command_Span.Span (Command_Span.Command_Span (name, _), _)) :: L)
+            = (case name
+                 of "proof"     => (tr, sp) :: go (FWD :: stack) L
+                  | "qed"       => (tr, sp) :: go (stack |> pop FWD |> pop BWD) L
+                  | "have"      => (tr, sp) :: go (BWD :: stack) L
+                  | "show"      => (tr, sp) :: go (BWD :: stack) L
+                  | "hence"     => (tr, sp) :: go (BWD :: stack) L
+                  | "thus"      => (tr, sp) :: go (BWD :: stack) L
+                  | "consider"  => (tr, sp) :: go (BWD :: stack) L
+                  | "obtain"    => (tr, sp) :: go (BWD :: stack) L
+                  | "interpret" => (tr, sp) :: go (BWD :: stack) L
+                  | "subgoal"   => (tr, sp) :: go (BWD :: stack) L
+                  | "by"        => (tr, sp) :: go (pop BWD stack) L
+                  | "done"      => (tr, sp) :: go (pop BWD stack) L
+                  | "apply_end" => (tr, sp) :: go (pop BWD stack) L
+                  | "."         => (tr, sp) :: go (pop BWD stack) L
+                  | ".."        => (tr, sp) :: go (pop BWD stack) L
+                  | _           => (tr, sp) :: go stack L)
+        | go _ _ = error "extract_proof: malformed proof"
    in go [BWD] remaining
   end
 
@@ -102,7 +109,17 @@ fun learning_plugin (driver, log_dir, budget : MiniLang_Agent.budget, send, recv
             val _ = send (fn cout => doPack (packPair (packInt, packString)) (0, pos_str pos) cout)
             val run = recv unpackBool
           in if not run then (NONE, NONE)
-             else let
+             (* extract_proof raises a catchable ERROR when the original proof has no
+                recognised terminal (e.g. `sorry`/`oops`). Mirror extraction.ML's call
+                site: run it under `\<^try>`, and on failure report the goal and skip it
+                so the replay continues — never let it escape as an uncaught exception. *)
+             else (case Exn.capture (fn () => isar_of_spans (extract_proof remaining)) ()
+                     of Exn.Exn e =>
+                          (send (fn cout => doPack (packPair (packInt, packList packString))
+                                   (2, [pos_str pos ^ " : proof extraction skipped: "
+                                        ^ (Runtime.exn_message e |> REPL.trim_makrup)]) cout);
+                           (NONE, NONE))
+                      | Exn.Res isar => let
                (* Cache is bypassed for BOTH read and write on the learning path
                   (C8): a cache hit would replace the proof before the agent ever
                   runs (zero learning), and a store would pollute the shared
@@ -112,7 +129,6 @@ fun learning_plugin (driver, log_dir, budget : MiniLang_Agent.budget, send, recv
                      |> Config.put AoA_store_proof_cache false
                      |> Config.put AoA_log_dir log_dir
                val sequent = #goal (Proof.raw_goal (Toplevel.proof_of state))
-               val isar = isar_of_spans (extract_proof remaining)
                val iid = "learn_" ^ string_of_int (serial ())
                (* Disable on-demand deformalization during retrieval/embedding
                   (auto_interpret_for_embedding = SOME false) — same as the agent
@@ -136,7 +152,7 @@ fun learning_plugin (driver, log_dir, budget : MiniLang_Agent.budget, send, recv
                val _ = send (fn cout => doPack (packTuple3 (packInt, packString, packBool))
                                 (1, pos_str pos, finished) cout)
              in (NONE, NONE)   (* let the theory's original proof run *)
-             end
+             end)
           end
         else (NONE, NONE)
     end
