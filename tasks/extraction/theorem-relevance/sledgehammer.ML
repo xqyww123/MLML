@@ -54,17 +54,23 @@ val full_keywords = Thy_Header.get_keywords \<^theory>
 
 fun dirty_hack debug ctxt relevant_facts_store s =
   let val _ = debug ["SH", s]
-      fun find c s = CharVector.foldri (fn (i, c', ret) => if c' = c then i :: ret else ret) [] s
-      val inds = find #"\^E" s
-   in if length inds < 4
-      then () (* tracing s *)
-      else let
-        val _ = debug ["Enter dirty hack"]
-        val i2 = List.nth (inds, 1)
-        val i3 = List.nth (inds, 2)
-     (* val i4 = List.nth (inds, 3) *)
-        val s_prf = String.substring (s, i2+1, i3 - 1 -i2)
-                 |> REPL.trim_makrup
+      (* Isabelle2025-2: the found-proof callback string is YXML. The proof
+         command lives inside a `sendback` markup element (produced by
+         Active.sendback_markup_command). The old approach of slicing between the
+         2nd and 3rd ENQ (\^E) control chars now lands on an inserted
+         `Markup.break " "` (a single space), so we extract the sendback element's
+         text content instead. Non-suggestion messages (e.g. "e found a proof…",
+         "Duplicate proof") carry no sendback element and are skipped. *)
+      fun tree_text (XML.Elem (_, ts)) = String.concat (map tree_text ts)
+        | tree_text (XML.Text t) = t
+      fun find_sendback (XML.Elem ((name, _), ts)) =
+            if name = Markup.sendbackN then SOME (String.concat (map tree_text ts))
+            else get_first find_sendback ts
+        | find_sendback (XML.Text _) = NONE
+   in case get_first find_sendback (YXML.parse_body s)
+        of NONE => () (* tracing s *)
+         | SOME s_prf => let
+        val _ = debug ["Enter dirty hack", s_prf]
         val ast  = Symbol_Pos.explode (s_prf, Position.none)
                 |> Token.tokenize full_keywords {strict = false}
                 |> Outer_Syntax.parse_spans
@@ -83,7 +89,7 @@ fun dirty_hack debug ctxt relevant_facts_store s =
   end
 
 val silence_state = Proof.map_contexts (
-        Try0.silence_methods false
+        Try0_HOL.silence_methods
      #> Config.put SMT_Config.verbose false
      #> Config.put Printer.show_markup false)
 

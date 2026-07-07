@@ -47,8 +47,6 @@ val defctxt_string_of : Proof.context -> term -> string
 
 end
 
-val _ = Pretty.margin_default := 100000
-
 structure Context_Info : CONTEXT_INFO = struct
 
 type buffer = string list Unsynchronized.ref
@@ -125,8 +123,8 @@ fun string_of_term ctxt =
               |> Config.put Printer.show_markup false
               |> Config.put Printer.show_structs false
               |> Config.put Printer.show_question_marks false
-              |> Config.put Printer.show_brackets false
-     in Syntax.string_of_term ctxt'
+     in Syntax.pretty_term ctxt'
+     #> Pretty.string_of_ops (Pretty.output_ops (SOME 100000))
      #> REPL.trim_makrup
     end
 fun put_term ctxt =
@@ -164,58 +162,88 @@ fun string_of_typ ctxt =
               |> Config.put Printer.show_markup false
               |> Config.put Printer.show_structs false
               |> Config.put Printer.show_question_marks false
-              |> Config.put Printer.show_brackets false
-     in Syntax.string_of_typ ctxt'
+     in Syntax.pretty_typ ctxt'
+     #> Pretty.string_of_ops (Pretty.output_ops (SOME 100000))
      #> REPL.trim_makrup
     end
 fun put_type ctxt buf typ = put buf (string_of_typ ctxt typ)
 
-fun has_syntax ctxt =
-  let val syn = Proof_Context.syntax_of ctxt
-      val prtabs = Syntax.prtabs syn
-      val tab = the_default Symtab.empty (AList.lookup (op =) prtabs "")
+(* Isabelle2025-2: Printer.prtabs is abstract, so general/outfix mixfix can no
+   longer be enumerated from it. We recover a constant's notation by combining the
+   three still-precise queries (get_infix/prefix/binder) with a print-and-compare
+   probe: render `c` applied to i dummy args; a pure prefix application always
+   renders as "head _ _ ... _", so any deviation reveals a real mixfix at arity i.
+   Arity 0 is judged by whether the bare render is still the plain (possibly
+   qualified) const name. This reproduces every notation class the old concrete
+   `Syntax.prtabs` enumeration produced (its remaining blind spot, type-conditional
+   glyphs like bot's {}, was invisible to the old approach too). *)
+fun analyse_syntax ctxt =
+  let val prtabs = Syntax.prtabs (Proof_Context.syntax_of ctxt)
+      val thy = Proof_Context.theory_of ctxt
+      val sot = string_of_term ctxt
+      fun app_shape i s =
+            (case String.tokens Char.isSpace s
+               of t :: args => t <> "" andalso length args = i
+                               andalso forall (fn a => a = "_") args
+                | [] => false)
+      fun is_plain_ident s =
+            s <> "" andalso
+            List.all (fn c => Char.isAlphaNum c orelse c = #"_" orelse c = #"'" orelse c = #".")
+                     (String.explode s)
    in fn name =>
-    let val name' = const_prefix ^ name
-     in is_some (Printer.get_infix prtabs name') orelse
-        is_some (Printer.get_prefix prtabs name') orelse
-        is_some (Printer.get_binder prtabs name') orelse
-        not (null (Symtab.lookup_list tab name'))
-    end
+      let val key = const_prefix ^ name
+          val infx  = Printer.get_infix  prtabs key
+          val prefx = Printer.get_prefix prtabs key
+          val bindr = Printer.get_binder prtabs key
+          val (arity, templates) =
+            case try (Sign.the_const_type thy) name
+              of NONE => (0, [])
+               | SOME T =>
+                  let val N = length (fst (Term.strip_type T))
+                      val positive = map_filter (fn i =>
+                            let val s = sot (Term.list_comb (Const (name, T), replicate i Term.dummy))
+                             in if app_shape i s then NONE else SOME (i, s) end)
+                          (1 upto N)
+                      (* arity-0: only for genuinely nullary consts -- an infix/prefix/binder
+                         renders unapplied as its operator-section form ((+), (!), ...), which is
+                         already emitted precisely below; also drop schematic type-var leaks such
+                         as "'a0" for numerals. *)
+                      val nullary =
+                        if is_some infx orelse is_some prefx orelse is_some bindr then []
+                        else let val s0 = sot (Const (name, T))
+                              in if (is_plain_ident s0 andalso
+                                     Long_Name.base_name s0 = Long_Name.base_name name)
+                                    orelse String.isPrefix "'" s0
+                                 then [] else [(0, s0)] end
+                   in (N, nullary @ positive) end
+       in {infx = infx, prefx = prefx, bindr = bindr, arity = arity, templates = templates,
+           has = is_some infx orelse is_some prefx orelse is_some bindr
+                 orelse not (null templates)}
+      end
   end
 
-fun put_syntax ctxt =
-  let val syn = Proof_Context.syntax_of ctxt
-      val prtabs = Syntax.prtabs syn
-      val tab = the_default Symtab.empty (AList.lookup (op =) prtabs "")
-      val extern = extern_name ctxt
+fun has_syntax ctxt = #has o analyse_syntax ctxt
 
-      fun pp buf name' =
-        let val name = const_prefix ^ name'
-         in case Printer.get_infix prtabs name
-              of SOME {assoc, delim, pri} => (
-                  put buf "notation ";
-                  put buf (extern name');
-                  put buf (case assoc of Printer.Left_Assoc  => " infixl "
+fun put_syntax ctxt =
+  let val analyse = analyse_syntax ctxt
+      val extern = extern_name ctxt
+      fun pp buf name =
+        let val {infx, prefx, arity, templates, ...} = analyse name
+            val xname = extern name
+            fun emit body = (put buf ("notation " ^ xname ^ body ^ "\n\n\n"))
+         in (case infx
+               of SOME {assoc, delim, pri} =>
+                    emit ((case assoc of Printer.Left_Assoc  => " infixl "
                                        | Printer.Right_Assoc => " infixr "
-                                       | Printer.No_Assoc    => " infix " );
-                  put buf (string_of_int pri);
-                  put buf " \<open>";
-                  put buf delim;
-                  put buf "\<close>\n\n\n")
-               | NONE =>
-               let val arities = Symtab.lookup_list tab name
-                              |> map #2 |> distinct (op =)
-                   val head = Const(name', dummyT)
-                in List.app (fn i =>
-                    let fun mk_term n =
-                            if n <= 0 then head else (mk_term (n-1) $ Term.dummy)
-                     in put buf "notation "
-                      ; put buf (extern name')
-                      ; put buf " \<open>"
-                      ; put buf (string_of_term ctxt (mk_term i))
-                      ; put buf "\<close>\n\n\n"
-                    end ) arities
-               end
+                                       | Printer.No_Assoc    => " infix ")
+                          ^ string_of_int pri ^ " \<open>" ^ delim ^ "\<close>")
+                | NONE => ())
+          ; List.app (fn (i, s) =>
+              if is_some infx andalso i = 2 then ()   (* infix already emitted precisely *)
+              else emit (" \<open>" ^ s ^ "\<close>")) templates
+          ; (case (prefx, templates)
+               of (SOME d, []) => emit (" \<open>" ^ d ^ (if arity >= 1 then " _" else "") ^ "\<close>")
+                | _ => ())
         end
    in pp
   end
@@ -390,7 +418,7 @@ fun put_class ctxt00 buf locale_name =
           |> (fn L => fold (parse o Thm.prop_of) L [])
           |> distinct (op aconv)
       val (vars, typs) = Variable.constraints_of ctxt
-      val xname = Locale.extern thy locale_name
+      val xname = Locale.extern ctxt0 locale_name
    in put buf "class "
     ; put buf xname
     ; (if Vartab.is_empty typs then () else (

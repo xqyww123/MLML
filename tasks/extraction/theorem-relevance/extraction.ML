@@ -75,8 +75,8 @@ fun print_term_full_typ ctxt =
               |> Config.put Printer.show_markup false
               |> Config.put Printer.show_structs false
               |> Config.put Printer.show_question_marks true
-              |> Config.put Printer.show_brackets false
-     in Syntax.string_of_term ctxt'
+     in Syntax.pretty_term ctxt'
+     #> Pretty.string_of_ops (Pretty.output_ops (SOME 100000))
      #> REPL.trim_makrup
     end
 
@@ -87,8 +87,8 @@ fun print_typ_full_sort ctxt =
               |> Config.put Printer.show_markup false
               |> Config.put Printer.show_structs false
               |> Config.put Printer.show_question_marks true
-              |> Config.put Printer.show_brackets false
-     in Syntax.string_of_typ ctxt'
+     in Syntax.pretty_typ ctxt'
+     #> Pretty.string_of_ops (Pretty.output_ops (SOME 100000))
      #> REPL.trim_makrup
     end
 
@@ -99,8 +99,8 @@ fun print_term_ ctxt =
               |> Config.put Printer.show_markup false
               |> Config.put Printer.show_structs false
               |> Config.put Printer.show_question_marks false
-              |> Config.put Printer.show_brackets false
-     in Syntax.string_of_term ctxt'
+     in Syntax.pretty_term ctxt'
+     #> Pretty.string_of_ops (Pretty.output_ops (SOME 100000))
      #> REPL.trim_makrup
     end
 
@@ -675,14 +675,13 @@ fun raw_collect (report_err, debug, can_start, notify) first_goal_or_all stat co
                                               handle Timeout.TIMEOUT _ => ret
                                          else ret
                               fun move_next state ((tr, Command_Span.Span (kind, _)) :: cmds) asts =
-                                    let val (stat', err) =
-                                            case try (Timeout.apply single_cmd_timeout (Toplevel.transition false tr)) state
-                                              of SOME ret => ret   
-                                               | NONE => raise Partial_Ret ret'
-                                        val _ = case err of NONE => ()
-                                                  | SOME (E, _) => (
-                                                      report_err (Runtime.exn_message_list E)
+                                    let val stat' =
+                                            case try (Timeout.apply single_cmd_timeout (Toplevel.command_errors false tr)) state
+                                              of SOME ([], SOME st) => st
+                                               | SOME (errs as _ :: _, _) => (
+                                                      report_err (map (snd o fst) errs)
                                                     ; raise Partial_Ret ret')
+                                               | _ => raise Partial_Ret ret'
                                         val asts' = Option.map (fn _ :: L => L | [] => []) asts
                                      in case kind
                                           of Command_Span.Command_Span ("using", _) =>
@@ -738,14 +737,10 @@ fun parse_cmds thy src =
       val keywords = Thy_Header.get_keywords thy
                   |> Keyword.add_major_keywords ["mqed", "mproof"]
       fun fix_cmds (_, cmd as Command_Span.Span (Command_Span.Command_Span ("mproof", pos), _))
-            = ( MinLang_Translator.mproof_transition Toplevel.empty
-                  |> Toplevel.position pos
-                  |> Toplevel.name "mproof"
+            = ( MinLang_Translator.mproof_transition (Toplevel.make "mproof" pos)
               , cmd)
         | fix_cmds (_, cmd as Command_Span.Span (Command_Span.Command_Span ("mqed", pos), _))
-            = ( MinLang_Translator.mqed_transition Toplevel.empty
-                  |> Toplevel.position pos
-                  |> Toplevel.name "mqed"
+            = ( MinLang_Translator.mqed_transition (Toplevel.make "mqed" pos)
               , cmd)
         | fix_cmds x = x
       val cmds = Token.tokenize keywords {strict = false} symbs

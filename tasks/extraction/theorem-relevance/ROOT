@@ -1,3 +1,6 @@
 session Premise_Extraction = Minilang_Translator +
+  sessions
+    "HOL-Library"
+    Category3
   theories
     "Premise_Extraction"
