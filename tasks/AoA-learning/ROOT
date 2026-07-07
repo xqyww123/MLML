@@ -1,0 +1,14 @@
+(* The App theory (registers the REPL app "Minilang.AoA_Learning") plus a tiny toy
+   target theory, on a Minilang_Agent base — cheap to build and enough to smoke-test
+   the whole harness end-to-end without the MathBench corpus.
+
+   For the real learning run the REPL boots on the MathBench_Prover heap and loads
+   AoA_Learning_App FROM SOURCE at runtime (by its qualified name
+   "AoA_Learning_Base.AoA_Learning_App", the same way premise-extraction loads its
+   app) — the App theory only imports Minilang_Agent, which the MathBench_Prover
+   heap already provides transitively, so it needs no separate MathBench-based
+   session. *)
+session AoA_Learning_Base = Minilang_Agent +
+  theories
+    AoA_Learning_App
+    AoA_Learning_Toy

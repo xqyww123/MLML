@@ -1,0 +1,4 @@
+# AoA-learning targets: one theory source path per line (blank / #-comment lines
+# ignored). Paths are resolved to absolute. Pilot = the toy theory only; expand to
+# the MathBench_Prover session theories (minus Main) once the harness is validated.
+tasks/AoA-learning/AoA_Learning_Toy.thy

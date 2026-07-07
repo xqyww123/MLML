@@ -1,0 +1,4 @@
+# Pilot targets (decision 1: small subset first). MathBench_Prover.thy holds 5
+# goals — theorem sqrt_prime_irrational (substantial) + 4 smaller lemmas — enough
+# to exercise real learning on the MathBench_Prover heap before the full corpus.
+tasks/MathBench_Prover/MathBench_Prover.thy
