@@ -1,5 +1,6 @@
 session "AFP-DEP1-18" = "AFP-DEP1-17" +
 sessions
+  "Elementary_Ultrametric_Spaces"
   "Complex_Bounded_Operators"
   "Neural_Networks"
   "CRYSTALS-Kyber_Security"

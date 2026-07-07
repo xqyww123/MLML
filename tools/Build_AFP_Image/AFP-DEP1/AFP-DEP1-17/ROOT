@@ -1,5 +1,6 @@
 session "AFP-DEP1-17" = "AFP-DEP1-16" +
 sessions
+  "HOL-CSP_PTick"
   "Balog_Szemeredi_Gowers"
   "Van_Emde_Boas_Trees"
   "Safe_OCL"

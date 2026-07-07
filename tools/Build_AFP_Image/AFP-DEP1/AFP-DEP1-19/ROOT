@@ -1,5 +1,6 @@
 session "AFP-DEP1-19" = "AFP-DEP1-18" +
 sessions
+  "HOL-CSP_Proc-Omata"
   "Kolmogorov_Chentsov"
   "S_Finite_Measure_Monad"
   "Complex_Bounded_Operators"

@@ -1,5 +1,7 @@
 session "AFP-DEP1-13" = "AFP-DEP1-12" +
 sessions
+  "HOLCF"
+  "Restriction_Spaces-HOLCF"
   "Monad_Memo_DP"
   "Farkas"
   "WorkerWrapper"
