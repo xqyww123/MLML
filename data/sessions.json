@@ -19,7 +19,6 @@
   },
   "SM": {
     "deps": [
-      "SM_Base",
       "Stuttering_Equivalence"
     ],
     "theories": [
@@ -347,7 +346,7 @@
   },
   "XML": {
     "deps": [
-      "HOL-Library",
+      "HOL",
       "Certification_Monads",
       "Show"
     ],
@@ -577,6 +576,7 @@
   },
   "Trie": {
     "deps": [
+      "HOL",
       "HOL-Library"
     ],
     "theories": [
@@ -585,7 +585,7 @@
   },
   "Wlog": {
     "deps": [
-      "Main",
+      "HOL",
       "HOL-Types_To_Sets",
       "HOL-Eisbach",
       "HOL-Computational_Algebra",
@@ -816,7 +816,6 @@
   },
   "ROBDD": {
     "deps": [
-      "Sepref_Prereq",
       "HOL-Imperative_HOL",
       "HOL-Library",
       "HOL-ex",
@@ -905,6 +904,23 @@
       "Tycon.Monad_Zero",
       "Tycon.Monad_Zero_Plus",
       "Tycon.Lazy_List_Monad"
+    ]
+  },
+  "Zippy": {
+    "deps": [
+      "HOL",
+      "ML_Unification",
+      "SpecCheck"
+    ],
+    "theories": [
+      "Zippy.Zippy_Paper",
+      "Zippy.Extended_Metis_Data",
+      "Zippy.Zip_Metis",
+      "Zippy.Zip_Try0",
+      "Zippy.Zip_Examples",
+      "Zippy.ML_ITypeclasses",
+      "Zippy.ML_Bi_Typeclasses",
+      "Zippy.ML_Typeclasses"
     ]
   },
   "BNF_CC": {
@@ -1085,12 +1101,14 @@
   },
   "HOL-ex": {
     "deps": [
+      "HOL-Library",
       "HOL-Number_Theory"
     ],
     "theories": [
       "HOL-ex.Meson_Test",
       "HOL-ex.SAT_Examples",
       "HOL-ex.veriT_Preprocessing",
+      "HOL-ex.Word_Msb",
       "HOL-ex.While_Combinator_Example",
       "HOL-ex.Unification",
       "HOL-ex.Triangular_Numbers",
@@ -1158,6 +1176,7 @@
       "HOL-ex.Cartouche_Examples",
       "HOL-ex.CTL",
       "HOL-ex.Bubblesort",
+      "HOL-ex.Bit_Operation_Computations",
       "HOL-ex.Birthday_Paradox",
       "HOL-ex.BinEx",
       "HOL-ex.BigO",
@@ -1288,6 +1307,19 @@
       "Optics.Lens_Laws",
       "Optics.Two",
       "Optics.Interp"
+    ]
+  },
+  "Parikh": {
+    "deps": [
+      "Context_Free_Grammar",
+      "HOL-Library",
+      "Regular-Sets"
+    ],
+    "theories": [
+      "Parikh.Reg_Lang_Exp",
+      "Parikh.Parikh_Img",
+      "Parikh.Reg_Lang_Exp_Eqns",
+      "Parikh.Pilling"
     ]
   },
   "RSAPSS": {
@@ -1465,11 +1497,6 @@
       "HOL-Real_Asymp"
     ],
     "theories": [
-      "Fourier.Fourier_Aux2",
-      "Fourier.Confine",
-      "Fourier.Lspace",
-      "Fourier.Square_Integrable",
-      "Fourier.Periodic",
       "Fourier.Fourier"
     ]
   },
@@ -1479,31 +1506,43 @@
       "HOL-Eisbach"
     ],
     "theories": [
+      "HOL-CSP.MergeAnomaly",
       "HOL-CSP.CopyBuffer",
       "HOL-CSP.Conclusion",
-      "HOL-CSP.Assertions",
-      "HOL-CSP.CSP",
-      "HOL-CSP.CSP_Induct",
-      "HOL-CSP.Mprefix",
-      "HOL-CSP.Mndetprefix",
-      "HOL-CSP.Sync",
+      "HOL-CSP",
+      "HOL-CSP.Induct_CSP_Rules",
+      "HOL-CSP.CSP_Assertions",
+      "HOL-CSP.Events_Ticks_CSP_Laws",
+      "HOL-CSP.CSP_Laws",
+      "HOL-CSP.Read_Write_CSP_Laws",
+      "HOL-CSP.Step_CSP_Laws_Extended",
+      "HOL-CSP.Step_CSP_Laws",
+      "HOL-CSP.Basic_CSP_Laws",
+      "HOL-CSP.Non_Deterministic_CSP_Distributivity",
+      "HOL-CSP.CSP_Monotonies",
+      "HOL-CSP.CSP_Refinements",
       "HOL-CSP.Hiding",
       "HOL-CSP.Renaming",
-      "HOL-CSP.Seq",
-      "HOL-CSP.Ndet",
-      "HOL-CSP.Det",
-      "HOL-CSP.Stop",
-      "HOL-CSP.Skip",
-      "HOL-CSP.Bot",
+      "HOL-CSP.Synchronization_Product",
+      "HOL-CSP.Sequential_Composition",
+      "HOL-CSP.Global_Non_Deterministic_Choice",
+      "HOL-CSP.Multi_Non_Deterministic_Prefix_Choice",
+      "HOL-CSP.Multi_Deterministic_Prefix_Choice",
+      "HOL-CSP.Sliding_Choice",
+      "HOL-CSP.Non_Deterministic_Choice",
+      "HOL-CSP.Deterministic_Choice",
+      "HOL-CSP.Constant_Processes",
       "HOL-CSP.Process",
       "HOL-CSP.Introduction"
     ]
   },
   "HOL-IMP": {
     "deps": [
+      "HOL",
       "HOL-Library"
     ],
     "theories": [
+      "HOL-IMP.Halting",
       "HOL-IMP.OO",
       "HOL-IMP.C_like",
       "HOL-IMP.Procs_Stat_Vars_Stat",
@@ -1651,7 +1690,6 @@
   },
   "Kruskal": {
     "deps": [
-      "Sepref_IICF",
       "Refine_Monadic",
       "Matroids",
       "Collections",
@@ -1743,14 +1781,6 @@
       "Routing.Linux_Router",
       "Routing.Routing_Table"
     ]
-  },
-  "SM_Base": {
-    "deps": [
-      "CAVA_Automata",
-      "Partial_Order_Reduction",
-      "DFS_Framework"
-    ],
-    "theories": []
   },
   "SPARCv8": {
     "deps": [
@@ -1962,6 +1992,14 @@
       "Deriving.Derive_Manager"
     ]
   },
+  "Dilworth": {
+    "deps": [
+      "Min_Max_Least_Greatest"
+    ],
+    "theories": [
+      "Dilworth.Dilworth"
+    ]
+  },
   "GenClock": {
     "deps": [
       "HOL"
@@ -2064,18 +2102,23 @@
     ],
     "theories": [
       "HOL-CSPM.Conclusion",
-      "HOL-CSPM.DeadlockResults",
-      "HOL-CSPM.EventsProperties",
       "HOL-CSPM.POTS",
       "HOL-CSPM.DiningPhilosophers",
-      "HOL-CSPM.CSPM",
-      "HOL-CSPM.GlobalNdet",
-      "HOL-CSPM.MultiSeq",
-      "HOL-CSPM.MultiSync",
-      "HOL-CSPM.MultiNdet",
-      "HOL-CSPM.MultiDet",
-      "HOL-CSPM.Patch",
-      "HOL-CSPM.PreliminaryWork",
+      "HOL-CSPM",
+      "HOL-CSPM.CSPM_Deadlock_Results",
+      "HOL-CSPM.Events_Ticks_CSPM_Laws",
+      "HOL-CSPM.CSPM_Laws",
+      "HOL-CSPM.Read_Write_CSPM_Laws",
+      "HOL-CSPM.Step_CSPM_Laws_Extended",
+      "HOL-CSPM.Step_CSPM_Laws",
+      "HOL-CSPM.Non_Deterministic_CSPM_Distributivity",
+      "HOL-CSPM.CSPM_Monotonies",
+      "HOL-CSPM.Interrupt",
+      "HOL-CSPM.Throw",
+      "HOL-CSPM.Multi_Sequential_Composition",
+      "HOL-CSPM.Multi_Synchronization_Product",
+      "HOL-CSPM.Global_Deterministic_Choice",
+      "HOL-CSPM.Induction_Rules_CSPM",
       "HOL-CSPM.Introduction"
     ]
   },
@@ -2170,14 +2213,6 @@
       "HyperCTL.Noninterference",
       "HyperCTL.Finite_Noninterference",
       "HyperCTL.HyperCTL"
-    ]
-  },
-  "Isa_REPL": {
-    "deps": [
-      "Auto_Sledgehammer"
-    ],
-    "theories": [
-      "Isa_REPL.Isa_REPL"
     ]
   },
   "JinjaDCI": {
@@ -2304,15 +2339,6 @@
       "MiniSail.MiniSail"
     ]
   },
-  "Minilang": {
-    "deps": [
-      "Auto_Sledgehammer"
-    ],
-    "theories": [
-      "Minilang.Minilang",
-      "Minilang.Minilang_Base"
-    ]
-  },
   "Naproche": {
     "deps": [
       "HOL",
@@ -2333,6 +2359,35 @@
       "Nominal2.Eqvt",
       "Nominal2.Atoms",
       "Nominal2.Nominal2"
+    ]
+  },
+  "RG_Locks": {
+    "deps": [
+      "HOL",
+      "HOL-Library",
+      "HOL-Hoare",
+      "HOL-Hoare_Parallel",
+      "HOL-Eisbach"
+    ],
+    "theories": [
+      "RG_Locks.Lock_Circular_Buffer",
+      "RG_Locks.Function_Supplementary",
+      "RG_Locks.Lock_Ticket",
+      "RG_Locks.Lock_Abstract_Queue",
+      "RG_Locks.RG_Examples_Reworked",
+      "RG_Locks.RG_Annotated_Commands",
+      "RG_Locks.RG_Syntax_Extensions"
+    ]
+  },
+  "Rankings": {
+    "deps": [
+      "HOL",
+      "List-Index",
+      "Randomised_Social_Choice"
+    ],
+    "theories": [
+      "Rankings.Topological_Sortings_Rankings",
+      "Rankings.Rankings"
     ]
   },
   "Safe_OCL": {
@@ -2427,6 +2482,7 @@
       "Word_Lib.Examples",
       "Word_Lib.Guide",
       "Word_Lib.Bitwise",
+      "Word_Lib.Bin_sign",
       "Word_Lib.Typedef_Morphisms",
       "Word_Lib.Singleton_Bit_Shifts",
       "Word_Lib.Many_More",
@@ -2434,9 +2490,8 @@
       "Word_Lib.Next_and_Prev",
       "Word_Lib.Bit_Shifts_Infix_Syntax",
       "Word_Lib.More_Word",
+      "Word_Lib.More_Int",
       "Word_Lib.Bit_Comprehension",
-      "Word_Lib.Bits_Int",
-      "Word_Lib.Strict_part_mono",
       "Word_Lib.More_Sublist",
       "Word_Lib.More_Misc",
       "Word_Lib.More_Divides",
@@ -2581,7 +2636,8 @@
       "Category3.CategoryWithFiniteLimits",
       "Category3.HF_SetCat",
       "Category3.HF_SetCat_Interp",
-      "Category3.EquivalenceOfCategories"
+      "Category3.EquivalenceOfCategories",
+      "Category3.Colimit"
     ]
   },
   "CofGroups": {
@@ -2819,6 +2875,46 @@
       "HOL"
     ],
     "theories": [
+      "IsaGeoCoq.Tarski_Euclidean_Model_Hilbert_Euclidean",
+      "IsaGeoCoq.Tarski_Neutral_3D_Model_Hilbert_Neutral_3D",
+      "IsaGeoCoq.Tarski_Neutral_2D_Model_Hilbert_Neutral_2D",
+      "IsaGeoCoq.Tarski_Neutral_Model_Hilbert_Neutral",
+      "IsaGeoCoq.Hilbert_Euclidean_Model_Tarski_Euclidean",
+      "IsaGeoCoq.Hilbert_Neutral_3D_Model_Tarski_Neutral_3D",
+      "IsaGeoCoq.Hilbert_Neutral_2D_Model_Tarski_Neutral_2D",
+      "IsaGeoCoq.Hilbert_Neutral_Model_Tarski_Neutral",
+      "IsaGeoCoq.Gupta_Euclidean_Model_Tarski_Euclidean",
+      "IsaGeoCoq.Gupta_Neutral_2D_Model_Tarski_Neutral_2D",
+      "IsaGeoCoq.Gupta_Neutral_Model_Tarski_Neutral",
+      "IsaGeoCoq.Tarski_Euclidean_Model_Gupta_Euclidean",
+      "IsaGeoCoq.Tarski_Neutral_2D_Model_Gupta_Neutral_2D",
+      "IsaGeoCoq.Tarski_Neutral_Model_Gupta_Neutral",
+      "IsaGeoCoq.Hilbert_Euclidean",
+      "IsaGeoCoq.Hilbert_Neutral_3D",
+      "IsaGeoCoq.Hilbert_Neutral_2D",
+      "IsaGeoCoq.Gupta_Euclidean",
+      "IsaGeoCoq.Gupta_Neutral_2D",
+      "IsaGeoCoq.Gupta_Neutral",
+      "IsaGeoCoq.Tarski_Non_Euclidean_Archimedean",
+      "IsaGeoCoq.Tarski_Non_Euclidean_Aristotle",
+      "IsaGeoCoq.Tarski_Non_Euclidean",
+      "IsaGeoCoq.Highschool_Euclidean_2D",
+      "IsaGeoCoq.Highschool_Euclidean",
+      "IsaGeoCoq.Highschool_Neutral",
+      "IsaGeoCoq.Tarski_Euclidean_2D_Continuous",
+      "IsaGeoCoq.Tarski_Euclidean_2D",
+      "IsaGeoCoq.Tarski_Euclidean",
+      "IsaGeoCoq.Tarski_Neutral_3D_Hilbert",
+      "IsaGeoCoq.Tarski_Neutral_3D",
+      "IsaGeoCoq.Tarski_Neutral_Continuity_2D",
+      "IsaGeoCoq.Tarski_Neutral_2D",
+      "IsaGeoCoq.Hilbert_Neutral",
+      "IsaGeoCoq.Tarski_Neutral_Hilbert",
+      "IsaGeoCoq.Tarski_Neutral_Archimedes_Continuity",
+      "IsaGeoCoq.Tarski_Neutral_Continuous",
+      "IsaGeoCoq.Tarski_Neutral_Continuity",
+      "IsaGeoCoq.Tarski_Postulate_Parallels",
+      "IsaGeoCoq.Tarski_Neutral_Archimedes",
       "IsaGeoCoq.Tarski_Neutral"
     ]
   },
@@ -2974,23 +3070,15 @@
   },
   "Registers": {
     "deps": [
-      "Complex_Bounded_Operators"
+      "Hilbert_Space_Tensor_Product",
+      "With_Type"
     ],
     "theories": [
       "Registers.Check_Autogenerated_Files",
-      "Registers.Quantum_Extra2",
       "Registers.Pure_States",
-      "Registers.Axioms_Complement_Quantum",
       "Registers.Laws_Complement_Quantum",
-      "Registers.Finite_Tensor_Product_Matrices",
-      "Registers.Quantum",
-      "Registers.Finite_Tensor_Product",
-      "Registers.Axioms_Quantum",
-      "Registers.Laws_Quantum",
-      "Registers.Quantum_Extra",
       "Registers.QHoare",
       "Registers.Teleport",
-      "Registers.Misc",
       "Registers.Axioms_Classical",
       "Registers.Laws_Classical",
       "Registers.Classical_Extra",
@@ -3052,21 +3140,28 @@
       "ML_Unification"
     ],
     "theories": [
-      "Transport.Transport_Via_Partial_Galois_Connections_Equivalences_Paper",
-      "Transport.Transport_Typedef_Base",
-      "Transport.Transport_Typedef",
-      "Transport.Transport_Partial_Quotient_Types",
-      "Transport.Transport_Lists_Sets_Examples",
-      "Transport.Transport_Syntax",
-      "Transport.Transport_Rel_If",
-      "Transport.Transport_Prototype",
-      "Transport.Transport_Dep_Fun_Rel_Examples",
       "Transport.Transport_Natural_Functors_Order_Equivalence",
       "Transport.Transport_Natural_Functors_Order_Base",
       "Transport.Transport_Natural_Functors_Galois_Relator",
       "Transport.Transport_Natural_Functors_Base",
       "Transport.Transport_Natural_Functors_Galois",
       "Transport.Transport_Natural_Functors",
+      "Transport.Transport_Via_Partial_Galois_Connections_Equivalences_Paper",
+      "Transport.Transport_Typedef_Base",
+      "Transport.Transport_Typedef",
+      "Transport.Transport_Partial_Quotient_Types",
+      "Transport.Transport_Lists_Sets_Examples",
+      "Transport.Galois_Relator_Syntax",
+      "Transport.Transport_Rel_If",
+      "Transport.Transport_Prototype",
+      "Transport.Transport_Dep_Fun_Rel_Examples",
+      "Transport.Transport",
+      "Transport.Transport_Implies",
+      "Transport.Transport_Galois_Relator_Properties",
+      "Transport.Transport_Universal_Quantifier",
+      "Transport.Transport_Existential_Quantifier",
+      "Transport.Transport_Equality",
+      "Transport.Transport_White_Box",
       "Transport.Transport_Identity",
       "Transport.Transport_Functions_Order_Equivalence",
       "Transport.Transport_Functions_Relation_Simplifications",
@@ -3091,16 +3186,9 @@
       "Transport.Transport_Compositions_Generic",
       "Transport.Transport_Compositions_Agree_Order_Equivalence",
       "Transport.Transport_Compositions_Agree_Galois_Relator",
-      "Transport.Transport_Compositions_Agree_Galois_Property",
-      "Transport.Transport_Compositions_Agree_Base",
-      "Transport.Transport_Compositions_Agree_Monotone",
-      "Transport.Transport_Compositions_Agree_Galois_Connection",
-      "Transport.Transport_Compositions_Agree_Galois_Equivalence",
       "Transport.Transport_Compositions_Agree",
       "Transport.Transport_Compositions",
-      "Transport.Transport_Base",
-      "Transport.Transport_Bijections",
-      "Transport.Transport",
+      "Transport.Transport_Black_Box",
       "Transport.HOL_Syntax_Bundles_Groups",
       "Transport.HOL_Syntax_Bundles_Base",
       "Transport.HOL_Syntax_Bundles",
@@ -3112,18 +3200,28 @@
       "Transport.HOL_Alignment_Orders",
       "Transport.HOL_Syntax_Bundles_Functions",
       "Transport.HOL_Alignment_Functions",
-      "Transport.HOL_Syntax_Bundles_Relations",
       "Transport.HOL_Mem_Of",
       "Transport.HOL_Alignment_Binary_Relations",
       "Transport.HOL_Alignments",
-      "Transport.Bounded_Definite_Description",
       "Transport.Predicates",
+      "Transport.Wellorders",
+      "Transport.Strict_Partial_Orders",
+      "Transport.Strict_Linear_Orders",
+      "Transport.Transport_Bijections",
+      "Transport.Order_Isomorphisms",
       "Transport.Order_Functors",
       "Transport.Closure_Operators",
       "Transport.Order_Functions",
       "Transport.Linear_Orders",
       "Transport.Orders",
+      "Transport.Transport_Compositions_Agree_Galois_Property",
       "Transport.Galois_Relator",
+      "Transport.Transport_Base",
+      "Transport.Transport_Compositions_Agree_Base",
+      "Transport.Transport_Compositions_Agree_Monotone",
+      "Transport.Transport_Compositions_Agree_Galois_Connection",
+      "Transport.Transport_Compositions_Agree_Galois_Equivalence",
+      "Transport.Galois_Equivalent",
       "Transport.Order_Equivalences",
       "Transport.Order_Functions_Base",
       "Transport.Order_Functors_Base",
@@ -3134,19 +3232,28 @@
       "Transport.Galois_Connections",
       "Transport.Galois_Equivalences",
       "Transport.Galois",
-      "Transport.Functions_Restrict",
       "Transport.Functions_Surjective",
-      "Transport.Functions_Injective",
       "Transport.Functions_Inverse",
       "Transport.Functions_Bijection",
       "Transport.Function_Properties",
       "Transport.LFunctions",
+      "Transport.Binary_Relations_Reflexive_Closure",
       "Transport.Binary_Relations_Lattice",
-      "Transport.Binary_Relations_Irreflexive",
+      "Transport.Binary_Relations_Graph",
+      "Transport.Functions_Restrict",
+      "Transport.Wellfounded_Transitive_Recursion",
+      "Transport.Bounded_Definite_Description",
+      "Transport.Binary_Relations_Least",
+      "Transport.Binary_Relations_Transitive_Closure",
+      "Transport.Wellfounded_Recursion",
+      "Transport.Binary_Relations_Wellfounded",
+      "Transport.Functions_Injective",
       "Transport.Binary_Relations_Connected",
       "Transport.Binary_Relations_Bi_Unique",
       "Transport.Binary_Relations_Surjective",
       "Transport.Binary_Relations_Bi_Total",
+      "Transport.Binary_Relations_Irreflexive",
+      "Transport.Binary_Relations_Asymmetric",
       "Transport.Binary_Relation_Properties",
       "Transport.Binary_Relations_Order",
       "Transport.Binary_Relations_Function_Lambda",
@@ -3172,7 +3279,6 @@
       "Transport.Function_Relators",
       "Transport.HOL_Syntax_Bundles_Lattices",
       "Transport.Predicates_Lattice",
-      "Transport.Adhoc_Overloading",
       "Transport.HOL_Basics_Base",
       "Transport.Bounded_Quantifiers",
       "Transport.Binary_Relation_Functions",
@@ -3182,8 +3288,8 @@
       "Transport.Binary_Relations_Right_Unique",
       "Transport.Binary_Relations_Function_Evaluation",
       "Transport.Binary_Relations_Function_Base",
-      "Transport.Binary_Relations_Clean_Function",
-      "Transport.Binary_Relations_Function",
+      "Transport.Binary_Relations_Clean_Functions",
+      "Transport.Binary_Relations_Functions",
       "Transport.LBinary_Relations",
       "Transport.HOL_Basics"
     ]
@@ -3232,6 +3338,42 @@
       "With_Type.With_Type"
     ]
   },
+  "Z_Toolkit": {
+    "deps": [
+      "Optics"
+    ],
+    "theories": [
+      "Z_Toolkit.Partial_Function_Command",
+      "Z_Toolkit.Z_Toolkit_Pretty",
+      "Z_Toolkit.Sequence_Toolkit",
+      "Z_Toolkit.Number_Toolkit",
+      "Z_Toolkit.Function_Toolkit",
+      "Z_Toolkit.Relation_Toolkit",
+      "Z_Toolkit.Set_Toolkit",
+      "Z_Toolkit.Z_Toolkit",
+      "Z_Toolkit.Tabulate_Command",
+      "Z_Toolkit.Bounded_List",
+      "Z_Toolkit.Total_Fun",
+      "Z_Toolkit.Finite_Inj",
+      "Z_Toolkit.Finite_Fun",
+      "Z_Toolkit.Partial_Inj",
+      "Z_Toolkit.Map_Extra",
+      "Z_Toolkit.Partial_Fun",
+      "Z_Toolkit.Overriding",
+      "Z_Toolkit.Relation_Extra",
+      "Z_Toolkit.Def_Const",
+      "Z_Toolkit.Record_Default_Instance",
+      "Z_Toolkit.Haskell_Show",
+      "Z_Toolkit.Enum_Type",
+      "Z_Toolkit.Infinity",
+      "Z_Toolkit.Positive",
+      "Z_Toolkit.List_Extra",
+      "Z_Toolkit.Infinite_Sequence",
+      "Z_Toolkit.Countable_Set_Extra",
+      "Z_Toolkit.Relation_Lib",
+      "Z_Toolkit.Z_Toolkit_Overview"
+    ]
+  },
   "Akra_Bazzi": {
     "deps": [
       "HOL-Analysis",
@@ -3275,16 +3417,6 @@
       "Bicategory.IsomorphismClass",
       "Bicategory.BicategoryOfSpans"
     ]
-  },
-  "CAVA_Setup": {
-    "deps": [
-      "CAVA_Automata",
-      "LTL_to_GBA",
-      "Gabow_SCC",
-      "Promela",
-      "SM"
-    ],
-    "theories": []
   },
   "Call_Arity": {
     "deps": [
@@ -3441,12 +3573,6 @@
       "Dirichlet_L"
     ],
     "theories": [
-      "Gauss_Sums.Periodic_Arithmetic",
-      "Gauss_Sums.Complex_Roots_Of_Unity",
-      "Gauss_Sums.Finite_Fourier_Series",
-      "Gauss_Sums.Gauss_Sums_Auxiliary",
-      "Gauss_Sums.Ramanujan_Sums",
-      "Gauss_Sums.Gauss_Sums",
       "Gauss_Sums.Polya_Vinogradov"
     ]
   },
@@ -3458,6 +3584,26 @@
       "Gray_Codes.Encoding_Nat",
       "Gray_Codes.Code_Word_Dist",
       "Gray_Codes.Non_Boolean_Gray"
+    ]
+  },
+  "HOL-CSP_RS": {
+    "deps": [
+      "HOL-CSP_OpSem",
+      "Restriction_Spaces-HOLCF"
+    ],
+    "theories": [
+      "HOL-CSP_RS",
+      "HOL-CSP_RS.CSP_Restriction_Adm",
+      "HOL-CSP_RS.Hiding_Destructive",
+      "HOL-CSP_RS.After_Operator_Non_Too_Destructive",
+      "HOL-CSP_RS.Interrupt_Non_Destructive",
+      "HOL-CSP_RS.Throw_Non_Destructive",
+      "HOL-CSP_RS.Synchronization_Product_Non_Destructive",
+      "HOL-CSP_RS.Sequential_Composition_Non_Destructive",
+      "HOL-CSP_RS.Renaming_Non_Destructive",
+      "HOL-CSP_RS.Choices_Non_Destructive",
+      "HOL-CSP_RS.Prefixes_Constructive",
+      "HOL-CSP_RS.Process_Restriction_Space"
     ]
   },
   "HOL-Import": {
@@ -3502,13 +3648,6 @@
       "HOL-Prolog.HOHH",
       "HOL-Prolog.Test"
     ]
-  },
-  "HOL-Proofs": {
-    "deps": [
-      "Pure",
-      "HOL-Library"
-    ],
-    "theories": []
   },
   "Hoare_Time": {
     "deps": [
@@ -3560,6 +3699,8 @@
       "Isabelle_C.README",
       "Isabelle_C.C_Appendices",
       "Isabelle_C.C_paper",
+      "Isabelle_C.C4",
+      "Isabelle_C.C3",
       "Isabelle_C.C2",
       "Isabelle_C.C1",
       "Isabelle_C.C_Lexer_Annotation",
@@ -3573,6 +3714,19 @@
       "Isabelle_C.C_Document",
       "Isabelle_C.C_Main",
       "Isabelle_C.C0"
+    ]
+  },
+  "Kraus_Maps": {
+    "deps": [
+      "Hilbert_Space_Tensor_Product",
+      "Ordinary_Differential_Equations",
+      "With_Type",
+      "Wlog"
+    ],
+    "theories": [
+      "Kraus_Maps.Misc_Kraus_Maps",
+      "Kraus_Maps.Kraus_Families",
+      "Kraus_Maps.Kraus_Maps"
     ]
   },
   "LL1_Parser": {
@@ -3709,6 +3863,43 @@
     ],
     "theories": [
       "List-Index.List_Index"
+    ]
+  },
+  "List_Power": {
+    "deps": [
+      "HOL"
+    ],
+    "theories": [
+      "List_Power.List_Power"
+    ]
+  },
+  "Munta_Base": {
+    "deps": [
+      "Timed_Automata",
+      "Show",
+      "Worklist_Algorithms",
+      "Transition_Systems_and_Automata",
+      "LTL_Master_Theorem",
+      "Certification_Monads",
+      "Gabow_SCC",
+      "AutoCorres2",
+      "FinFun"
+    ],
+    "theories": [
+      "Munta_Base.Normalized_Zone_Semantics_Impl_Extra",
+      "Munta_Base.Normalized_Zone_Semantics_Impl_Refine",
+      "Munta_Base.Subsumption_Graphs",
+      "Munta_Base.Temporal_Logics",
+      "Munta_Base.Error_List_Monad",
+      "Munta_Base.Trace_Timing",
+      "Munta_Base.Printing",
+      "Munta_Base.Tracing",
+      "Munta_Base.Bijective_Embedding",
+      "Munta_Base.Reordering_Quantifiers",
+      "Munta_Base.Abstract_Term",
+      "Munta_Base.More_Methods",
+      "Munta_Base.ML_Util",
+      "Munta_Base.TA_Syntax_Bundles"
     ]
   },
   "NormByEval": {
@@ -3931,7 +4122,6 @@
       "Coinductive.CCPO_Topology",
       "Coinductive.LList_CCPO_Topology",
       "Coinductive.Coinductive_Examples",
-      "Coinductive.Lazy_LList",
       "Coinductive.Lazy_TLList",
       "Coinductive.Quotient_TLList",
       "Coinductive.Quotient_Coinductive_List",
@@ -4026,13 +4216,13 @@
       "Collections.Assoc_List",
       "Collections.Dlist_add",
       "Collections.RBT_add",
-      "Collections.Code_Target_ICF",
       "Collections.HashCode",
       "Collections.Sorted_List_Operations"
     ]
   },
   "Core_SC_DOM": {
     "deps": [
+      "HOL",
       "HOL-Library"
     ],
     "theories": [
@@ -4083,9 +4273,6 @@
       "Finitely_Generated_Abelian_Groups"
     ],
     "theories": [
-      "Dirichlet_L.Multiplicative_Characters",
-      "Dirichlet_L.Dirichlet_Characters",
-      "Dirichlet_L.Dirichlet_L_Functions",
       "Dirichlet_L.Dirichlet_Theorem"
     ]
   },
@@ -4110,8 +4297,6 @@
       "Free-Groups.C2",
       "Free-Groups.UnitGroup",
       "Free-Groups.Isomorphisms",
-      "Free-Groups.Generators",
-      "Free-Groups.Cancelation",
       "Free-Groups.FreeGroups"
     ]
   },
@@ -4139,7 +4324,6 @@
   "HOL-Eisbach": {
     "deps": [
       "HOL",
-      "FOL",
       "HOL-Analysis"
     ],
     "theories": [
@@ -4169,7 +4353,9 @@
       "HOL-Library.Old_Recdef",
       "HOL-Library.Old_Datatype",
       "HOL-Library.Predicate_Compile_Quickcheck",
+      "HOL-Library.Suc_Notation",
       "HOL-Library.OptionalSugar",
+      "HOL-Library.Time_Manual",
       "HOL-Library.RBT_Set",
       "HOL-Library.RBT_Mapping",
       "HOL-Library.DAList_Multiset",
@@ -4471,7 +4657,6 @@
   },
   "PAC_Checker": {
     "deps": [
-      "Sepref_IICF",
       "HOL-Library",
       "HOL-Algebra",
       "Polynomials",
@@ -4702,13 +4887,6 @@
       "Rewriting_Z.Z"
     ]
   },
-  "Sepref_IICF": {
-    "deps": [
-      "Sepref_Basic",
-      "Refine_Imperative_HOL"
-    ],
-    "theories": []
-  },
   "Shivers-CFA": {
     "deps": [
       "HOLCF"
@@ -4732,7 +4910,8 @@
   },
   "Statecharts": {
     "deps": [
-      "HOL"
+      "HOL",
+      "HOL-Library"
     ],
     "theories": [
       "Statecharts.HAOps",
@@ -4751,7 +4930,7 @@
   },
   "SuffixArray": {
     "deps": [
-      "Main",
+      "HOL",
       "HOL-Combinatorics",
       "HOL-Library"
     ],
@@ -4825,7 +5004,7 @@
   },
   "WebAssembly": {
     "deps": [
-      "HOL-Library",
+      "HOL",
       "Native_Word"
     ],
     "theories": [
@@ -4847,6 +5026,14 @@
       "WebAssembly.Wasm_Properties_Aux",
       "WebAssembly.Wasm_Properties",
       "WebAssembly.Wasm_Soundness"
+    ]
+  },
+  "Aho_Corasick": {
+    "deps": [
+      "HOL-Library"
+    ],
+    "theories": [
+      "Aho_Corasick.Aho_Corasick"
     ]
   },
   "Attack_Trees": {
@@ -5013,12 +5200,21 @@
       "DigitsInBase.DigitsInBase"
     ]
   },
+  "Discrete-UCB": {
+    "deps": [
+      "HOL-Probability"
+    ],
+    "theories": [
+      "Discrete-UCB.Discrete_UCB_Step3",
+      "Discrete-UCB.Discrete_UCB_Step2",
+      "Discrete-UCB.MSc_Project_Discrete_Prop15_1",
+      "Discrete-UCB.Discrete_UCB_Step1"
+    ]
+  },
   "Echelon_Form": {
     "deps": [
-      "HOL-Analysis",
-      "Cayley_Hamilton",
       "Gauss_Jordan",
-      "Rank_Nullity_Theorem"
+      "Cayley_Hamilton"
     ],
     "theories": [
       "Echelon_Form.Echelon_Form_IArrays",
@@ -5076,13 +5272,11 @@
   },
   "Gauss_Jordan": {
     "deps": [
-      "HOL-Analysis",
       "Rank_Nullity_Theorem"
     ],
     "theories": [
       "Gauss_Jordan.Code_Rational",
       "Gauss_Jordan.Code_Generation_IArrays_Haskell",
-      "Gauss_Jordan.Determinants_IArrays",
       "Gauss_Jordan.Bases_Of_Fundamental_Subspaces_IArrays",
       "Gauss_Jordan.System_Of_Equations_IArrays",
       "Gauss_Jordan.Examples_Gauss_Jordan_IArrays",
@@ -5118,7 +5312,6 @@
   },
   "Graph_Theory": {
     "deps": [
-      "HOL-Library",
       "HOL-Combinatorics"
     ],
     "theories": [
@@ -5142,6 +5335,7 @@
       "HOL-Real_Asymp"
     ],
     "theories": [
+      "HOL-Analysis.Finite_Function_Topology",
       "HOL-Analysis.Analysis"
     ]
   },
@@ -5168,7 +5362,7 @@
       "HOL-Examples.Coherent",
       "HOL-Examples.Cantor",
       "HOL-Examples.Ackermann",
-      "HOL-Examples.Adhoc_Overloading_Examples"
+      "HOL-Examples.Adhoc_Overloading"
     ]
   },
   "HOL-Homology": {
@@ -5533,6 +5727,21 @@
       "Posix-Lexing.Lexer"
     ]
   },
+  "Pre_Star_CFG": {
+    "deps": [
+      "Context_Free_Grammar"
+    ],
+    "theories": [
+      "Pre_Star_CFG.Pre_Star_CNF",
+      "Pre_Star_CFG.Finiteness",
+      "Pre_Star_CFG.Applications_Example",
+      "Pre_Star_CFG.Applications",
+      "Pre_Star_CFG.Pre_Star_Example",
+      "Pre_Star_CFG.Labeled_Transition_System",
+      "Pre_Star_CFG.LTS_Automata",
+      "Pre_Star_CFG.Pre_Star"
+    ]
+  },
   "Prpu_Maxflow": {
     "deps": [
       "Flow_Networks"
@@ -5563,6 +5772,7 @@
   },
   "Regular-Sets": {
     "deps": [
+      "HOL",
       "HOL-Library"
     ],
     "theories": [
@@ -5572,15 +5782,6 @@
       "Regular-Sets.Regexp_Constructions",
       "Regular-Sets.Regexp_Method"
     ]
-  },
-  "Sepref_Basic": {
-    "deps": [
-      "Sepref_Prereq",
-      "HOL-Eisbach",
-      "List-Index",
-      "Refine_Imperative_HOL"
-    ],
-    "theories": []
   },
   "Serializable": {
     "deps": [
@@ -5602,9 +5803,13 @@
   "Sorted_Terms": {
     "deps": [
       "First_Order_Terms",
-      "Complete_Non_Orders"
+      "Complete_Non_Orders",
+      "LP_Duality",
+      "FinFun"
     ],
     "theories": [
+      "Sorted_Terms.Compute_Nonempty_Infinite_Sorts",
+      "Sorted_Terms.Basic_Terms",
       "Sorted_Terms.Sorted_Contexts"
     ]
   },
@@ -5730,6 +5935,24 @@
       "Algebraic_VCs.VC_KAT_scratch"
     ]
   },
+  "Banach_Tarski": {
+    "deps": [
+      "HOL-Analysis",
+      "Free-Groups"
+    ],
+    "theories": [
+      "Banach_Tarski.Banach_Tarski_Theorem",
+      "Banach_Tarski.Ball_Decomposition",
+      "Banach_Tarski.Sphere_Decomposition",
+      "Banach_Tarski.Hausdorff_Paradox",
+      "Banach_Tarski.Free_Rotations_SO3",
+      "Banach_Tarski.F2_Paradox",
+      "Banach_Tarski.Free_Group_F2",
+      "Banach_Tarski.Free_Action_Paradox",
+      "Banach_Tarski.Paradoxical_Decomposition",
+      "Banach_Tarski.BT_Prelim"
+    ]
+  },
   "Broadcast_Psi": {
     "deps": [
       "HOL-Nominal",
@@ -5757,7 +5980,6 @@
     "theories": [
       "Budan_Fourier.Descartes_Roots_Test",
       "Budan_Fourier.Sturm_Multiple_Roots",
-      "Budan_Fourier.BF_Misc",
       "Budan_Fourier.Budan_Fourier"
     ]
   },
@@ -5879,6 +6101,16 @@
       "Dedekind_Real.Dedekind_Real"
     ]
   },
+  "Dedekind_Sums": {
+    "deps": [
+      "HOL-Number_Theory",
+      "HOL-Library",
+      "Bernoulli"
+    ],
+    "theories": [
+      "Dedekind_Sums.Dedekind_Sums"
+    ]
+  },
   "Deep_Learning": {
     "deps": [
       "HOL-Probability",
@@ -5912,9 +6144,8 @@
   },
   "Design_Theory": {
     "deps": [
-      "HOL-Library",
-      "Card_Partitions",
       "Nested_Multisets_Ordinals",
+      "Card_Partitions",
       "Graph_Theory"
     ],
     "theories": [
@@ -5952,6 +6183,14 @@
       "Dominance_CHK.Sorted_List_Operations2",
       "Dominance_CHK.Dom_Semi_List",
       "Dominance_CHK.Cfg"
+    ]
+  },
+  "Dyck_Language": {
+    "deps": [
+      "HOL"
+    ],
+    "theories": [
+      "Dyck_Language.Dyck_Language"
     ]
   },
   "Earley_Parser": {
@@ -6045,7 +6284,7 @@
   },
   "Finite_Fields": {
     "deps": [
-      "HOL-Algebra",
+      "HOL-Probability",
       "Digit_Expansions",
       "Dirichlet_Series",
       "Executable_Randomized_Algorithms",
@@ -6053,6 +6292,7 @@
     ],
     "theories": [
       "Finite_Fields.Find_Irreducible_Poly",
+      "Finite_Fields.Finite_Fields_Nth_Root_Code",
       "Finite_Fields.Finite_Fields_Poly_Ring_Code",
       "Finite_Fields.Finite_Fields_Poly_Factor_Ring_Code",
       "Finite_Fields.Finite_Fields_Mod_Ring_Code",
@@ -6073,7 +6313,6 @@
   },
   "Flow_Networks": {
     "deps": [
-      "Sepref_IICF",
       "Program-Conflict-Analysis",
       "CAVA_Automata",
       "DFS_Framework",
@@ -6134,26 +6373,52 @@
     ],
     "theories": [
       "HOL-CSP_OpSem.Conclusion",
-      "HOL-CSP_OpSem.NewLaws",
-      "HOL-CSP_OpSem.OpSemTBis",
-      "HOL-CSP_OpSem.OpSemFBis",
-      "HOL-CSP_OpSem.OpSemDTBis",
-      "HOL-CSP_OpSem.OpSemFDBis",
-      "HOL-CSP_OpSem.OpSemGenericBis",
-      "HOL-CSP_OpSem.AfterTraceBis",
-      "HOL-CSP_OpSem.AfterExtBis",
-      "HOL-CSP_OpSem.OpSemDT",
-      "HOL-CSP_OpSem.OpSemFD",
-      "HOL-CSP_OpSem.OpSemGeneric",
+      "HOL-CSP_OpSem",
+      "HOL-CSP_OpSem.CSP_New_Laws",
+      "HOL-CSP_OpSem.OpSem_Deadlock_Results",
+      "HOL-CSP_OpSem.Comparison_He_Hoare",
+      "HOL-CSP_OpSem.Recovered_Laws",
+      "HOL-CSP_OpSem.Operational_Semantics_Laws",
       "HOL-CSP_OpSem.Motivations",
-      "HOL-CSP_OpSem.AfterTrace",
-      "HOL-CSP_OpSem.AfterExt",
-      "HOL-CSP_OpSem.After",
-      "HOL-CSP_OpSem.ReadySet",
-      "HOL-CSP_OpSem.Interrupt",
-      "HOL-CSP_OpSem.Throw",
-      "HOL-CSP_OpSem.Sliding",
+      "HOL-CSP_OpSem.After_Trace_Operator",
+      "HOL-CSP_OpSem.After_Ext_Operator",
+      "HOL-CSP_OpSem.After_Operator",
+      "HOL-CSP_OpSem.Initials",
       "HOL-CSP_OpSem.Introduction"
+    ]
+  },
+  "HOL-CSP_PTick": {
+    "deps": [
+      "HOL-CSP_RS"
+    ],
+    "theories": [
+      "HOL-CSP_PTick.CSP_PTick_Conclusion",
+      "HOL-CSP_PTick",
+      "HOL-CSP_PTick.CSP_PTick_Deadlock_Results",
+      "HOL-CSP_PTick.CSP_PTick_Laws",
+      "HOL-CSP_PTick.Synchronization_Product_Generalized_Non_Destructive",
+      "HOL-CSP_PTick.Sequential_Composition_Generalized_Non_Destructive",
+      "HOL-CSP_PTick.CSP_PTick_Monotonicities",
+      "HOL-CSP_PTick.Synchronization_Product_Generalized_Cont",
+      "HOL-CSP_PTick.Sequential_Composition_Generalized_Cont",
+      "HOL-CSP_PTick.Events_Ticks_CSP_PTick_Laws",
+      "HOL-CSP_PTick.Multi_Synchronization_Product_Generalized",
+      "HOL-CSP_PTick.Multi_Sequential_Composition_Generalized",
+      "HOL-CSP_PTick.Synchronization_Product_Generalized_Interpretations",
+      "HOL-CSP_PTick.Operational_Semantics_CSP_PTick_Laws",
+      "HOL-CSP_PTick.After_CSP_PTick_Laws",
+      "HOL-CSP_PTick.Read_Write_CSP_PTick_Laws",
+      "HOL-CSP_PTick.Step_CSP_PTick_Laws_Extended",
+      "HOL-CSP_PTick.Step_CSP_PTick_Laws",
+      "HOL-CSP_PTick.Non_Deterministic_CSP_PTick_Distributivity",
+      "HOL-CSP_PTick.Basic_CSP_PTick_Laws",
+      "HOL-CSP_PTick.Synchronization_Product_Generalized_Associativity",
+      "HOL-CSP_PTick.Synchronization_Product_Generalized_Commutativity",
+      "HOL-CSP_PTick.CSP_PTick_Renaming",
+      "HOL-CSP_PTick.Synchronization_Product_Generalized",
+      "HOL-CSP_PTick.Sequential_Composition_Generalized",
+      "HOL-CSP_PTick.Finite_Ticks",
+      "HOL-CSP_PTick.CSP_PTick_Introduction"
     ]
   },
   "HOL-Cardinals": {
@@ -6261,7 +6526,6 @@
   },
   "HOL-Proofs-ex": {
     "deps": [
-      "HOL-Proofs",
       "HOL-Examples"
     ],
     "theories": [
@@ -6376,11 +6640,15 @@
       "MFOTL_Checker.Checker_Code",
       "MFOTL_Checker.Event_Data",
       "MFOTL_Checker.Checker",
+      "MFOTL_Checker.Regex_Checker",
       "MFOTL_Checker.Prelim",
       "MFOTL_Checker.Proof_Object",
+      "MFOTL_Checker.Regex_Proof_Object",
       "MFOTL_Checker.Proof_System",
+      "MFOTL_Checker.Regex_Proof_System",
       "MFOTL_Checker.Partition",
       "MFOTL_Checker.Formula",
+      "MFOTL_Checker.Regex",
       "MFOTL_Checker.Trace"
     ]
   },
@@ -6451,15 +6719,6 @@
       "Median_Method.Median"
     ]
   },
-  "Minilang_REPL": {
-    "deps": [
-      "Minilang",
-      "Isa_REPL"
-    ],
-    "theories": [
-      "Minilang_REPL.Minilang_Top"
-    ]
-  },
   "Monad_Memo_DP": {
     "deps": [
       "HOL",
@@ -6526,6 +6785,30 @@
       "Nash_Williams.Nash_Williams"
     ]
   },
+  "Oneway2Hiding": {
+    "deps": [
+      "Registers",
+      "Berlekamp_Zassenhaus",
+      "Kraus_Maps"
+    ],
+    "theories": [
+      "Oneway2Hiding.Purification",
+      "Oneway2Hiding.Limit_Process",
+      "Oneway2Hiding.Estimation",
+      "Oneway2Hiding.Run_Pure_B_count",
+      "Oneway2Hiding.Unitary_S_prime",
+      "Oneway2Hiding.Unitary_S",
+      "Oneway2Hiding.More_Kraus_Maps",
+      "Oneway2Hiding.Run_Adversary",
+      "Oneway2Hiding.O2H_Additional_Lemmas",
+      "Oneway2Hiding.Definition_O2H",
+      "Oneway2Hiding.Definition_Pure_O2H",
+      "Oneway2Hiding.Run_Pure_B",
+      "Oneway2Hiding.Pure_O2H",
+      "Oneway2Hiding.Mixed_O2H",
+      "Oneway2Hiding.O2H_Theorem"
+    ]
+  },
   "Package_logic": {
     "deps": [
       "HOL"
@@ -6546,7 +6829,6 @@
   },
   "Picks_Theorem": {
     "deps": [
-      "HOL-Analysis",
       "Poincare_Bendixson"
     ],
     "theories": [
@@ -6662,15 +6944,6 @@
       "Safe_Range_RC.Preliminaries"
     ]
   },
-  "Sepref_Prereq": {
-    "deps": [
-      "Collections",
-      "HOL-Library",
-      "HOL-Imperative_HOL",
-      "Separation_Logic_Imperative_HOL"
-    ],
-    "theories": []
-  },
   "Shadow_SC_DOM": {
     "deps": [
       "Core_SC_DOM"
@@ -6705,6 +6978,17 @@
     ],
     "theories": [
       "Subresultants.Subresultant_Gcd"
+    ]
+  },
+  "Swap_Distance": {
+    "deps": [
+      "HOL-Combinatorics",
+      "List-Index",
+      "List_Inversions",
+      "Rankings"
+    ],
+    "theories": [
+      "Swap_Distance.Swap_Distance"
     ]
   },
   "TESL_Language": {
@@ -7244,6 +7528,7 @@
       "Nominal2"
     ],
     "theories": [
+      "Incompleteness.Loebs_Theorem",
       "Incompleteness.Goedel_II",
       "Incompleteness.Goedel_I"
     ]
@@ -7278,7 +7563,6 @@
     ],
     "theories": [
       "Karatsuba_Sqrt.Karatsuba_Sqrt_Library",
-      "Karatsuba_Sqrt.Ceil_Log2",
       "Karatsuba_Sqrt.Karatsuba_Sqrt",
       "Karatsuba_Sqrt.Karatsuba_Sqrt_Float",
       "Karatsuba_Sqrt.Karatsuba_Sqrt_Test"
@@ -7328,9 +7612,6 @@
       "Polylog"
     ],
     "theories": [
-      "Lambert_Series.Summation_Tests_More",
-      "Lambert_Series.Number_Theoretic_Functions_Extras",
-      "Lambert_Series.Lambert_Series_Library",
       "Lambert_Series.Lambert_Series"
     ]
   },
@@ -7398,9 +7679,32 @@
       "MFMC_Countable.Max_Flow_Min_Cut_Countable"
     ]
   },
+  "MLSSmf_to_MLSS": {
+    "deps": [
+      "MLSS_Decision_Proc"
+    ],
+    "theories": [
+      "MLSSmf_to_MLSS.MLSSmf_to_MLSS_Correctness",
+      "MLSSmf_to_MLSS.MLSSmf_to_MLSS_Completeness",
+      "MLSSmf_to_MLSS.Reduced_MLSS_Formula_Singleton_Model_Property",
+      "MLSSmf_to_MLSS.MLSSmf_to_MLSS_Soundness",
+      "MLSSmf_to_MLSS.MLSSmf_to_MLSS_Complexity",
+      "MLSSmf_to_MLSS.Syntactic_Description",
+      "MLSSmf_to_MLSS.MLSSmf_to_MLSS",
+      "MLSSmf_to_MLSS.MLSSmf_Defs",
+      "MLSSmf_to_MLSS.MLSSmf_Semantics",
+      "MLSSmf_to_MLSS.Proper_Venn_Regions",
+      "MLSSmf_to_MLSS.Place_Framework",
+      "MLSSmf_to_MLSS.Place_Realisation",
+      "MLSSmf_to_MLSS.MLSS_Decidable",
+      "MLSSmf_to_MLSS.Var_Fun_Composite",
+      "MLSSmf_to_MLSS.MLSS_Extras",
+      "MLSSmf_to_MLSS.MLSSmf_to_MLSS_Auxiliary",
+      "MLSSmf_to_MLSS.MLSSmf_HF_Extras"
+    ]
+  },
   "ML_Unification": {
     "deps": [
-      "Pure",
       "HOL",
       "SpecCheck"
     ],
@@ -7431,17 +7735,17 @@
       "ML_Unification.ML_Unifiers",
       "ML_Unification.ML_Theorem_Utils",
       "ML_Unification.ML_Unification_Base",
-      "ML_Unification.ML_Normalisations",
-      "ML_Unification.ML_Binders",
-      "ML_Unification.ML_Term_Utils",
       "ML_Unification.ML_Tactic_Utils",
-      "ML_Unification.ML_Priorities",
       "ML_Unification.ML_Method_Utils",
       "ML_Unification.ML_Generic_Data_Utils",
-      "ML_Unification.ML_General_Utils",
-      "ML_Unification.ML_Parsing_Utils",
       "ML_Unification.ML_Functor_Instances",
+      "ML_Unification.ML_Parsing_Utils",
+      "ML_Unification.ML_Costs_Priorities",
       "ML_Unification.ML_Conversion_Utils",
+      "ML_Unification.ML_Normalisations",
+      "ML_Unification.ML_General_Utils",
+      "ML_Unification.ML_Binders",
+      "ML_Unification.ML_Term_Utils",
       "ML_Unification.ML_Attribute_Utils",
       "ML_Unification.ML_Utils",
       "ML_Unification.Setup_Result_Commands",
@@ -7467,6 +7771,21 @@
       "More_LazyLists.LazyList_Filtermap",
       "More_LazyLists.LazyList_Operations",
       "More_LazyLists.List_Filtermap"
+    ]
+  },
+  "Morley_Theorem": {
+    "deps": [
+      "HOL-Algebra",
+      "Complex_Geometry"
+    ],
+    "theories": [
+      "Morley_Theorem.Morley",
+      "Morley_Theorem.Complex_Axial_Symmetry",
+      "Morley_Theorem.Third_Unity_Root",
+      "Morley_Theorem.Complex_Triangles",
+      "Morley_Theorem.Complex_Triangles_Definitions",
+      "Morley_Theorem.Complex_Trigonometry",
+      "Morley_Theorem.Complex_Angles"
     ]
   },
   "Multirelations": {
@@ -7544,6 +7863,31 @@
       "Resolution_FOL.TermsAndLiterals"
     ]
   },
+  "Sets_Revisited": {
+    "deps": [
+      "Category3"
+    ],
+    "theories": [
+      "Sets_Revisited.Universe_Interps",
+      "Sets_Revisited.Smallness",
+      "Sets_Revisited.Universe",
+      "Sets_Revisited.SetsCat",
+      "Sets_Revisited.SetsCat_Interps"
+    ]
+  },
+  "Sophie_Germain": {
+    "deps": [
+      "Fermat3_4",
+      "Wlog"
+    ],
+    "theories": [
+      "Sophie_Germain.SG_Generalization",
+      "Sophie_Germain.SG_Theorem",
+      "Sophie_Germain.SG_Preliminaries",
+      "Sophie_Germain.FLT_Sufficient_Conditions",
+      "Sophie_Germain.SG_Introduction"
+    ]
+  },
   "Sort_Encodings": {
     "deps": [
       "HOL-Cardinals",
@@ -7593,10 +7937,17 @@
   },
   "Timed_Automata": {
     "deps": [
-      "HOL"
+      "Difference_Bound_Matrices",
+      "Transition_Systems_and_Automata"
     ],
     "theories": [
-      "Timed_Automata.Normalized_Zone_Semantics"
+      "Timed_Automata.Normalized_Zone_Semantics",
+      "Timed_Automata.CTL",
+      "Timed_Automata.Graphs",
+      "Timed_Automata.TA_Misc",
+      "Timed_Automata.Stream_More",
+      "Timed_Automata.More_List1",
+      "Timed_Automata.Instantiate_Existentials"
     ]
   },
   "TsirelsonBound": {
@@ -7612,24 +7963,28 @@
   },
   "Twelvefold_Way": {
     "deps": [
-      "HOL-Library",
+      "Bell_Numbers_Spivey",
       "HOL-ex",
       "HOL-Eisbach",
       "HOL-Combinatorics",
-      "Bell_Numbers_Spivey",
       "Card_Multisets",
-      "Card_Number_Partitions",
-      "Card_Partitions"
+      "Card_Number_Partitions"
     ],
     "theories": [
       "Twelvefold_Way.Card_Bijections_Direct",
       "Twelvefold_Way.Twelvefold_Way"
     ]
   },
-  "VerifyThis2018": {
+  "Two_Way_DFA_HF": {
     "deps": [
-      "Sepref_IICF"
+      "Finite_Automata_HF"
     ],
+    "theories": [
+      "Two_Way_DFA_HF.Two_Way_DFA_HF"
+    ]
+  },
+  "VerifyThis2018": {
+    "deps": [],
     "theories": [
       "VerifyThis2018.Challenge3",
       "VerifyThis2018.Challenge2",
@@ -7646,9 +8001,7 @@
     ]
   },
   "VerifyThis2019": {
-    "deps": [
-      "Sepref_IICF"
-    ],
+    "deps": [],
     "theories": [
       "VerifyThis2019.Challenge3",
       "VerifyThis2019.Parallel_Multiset_Fold",
@@ -7658,6 +8011,26 @@
       "VerifyThis2019.Challenge1A",
       "VerifyThis2019.Exc_Nres_Monad",
       "VerifyThis2019.VTcomp"
+    ]
+  },
+  "Zip_Benchmarks": {
+    "deps": [
+      "HOL-Data_Structures",
+      "HOL-Library",
+      "Zippy"
+    ],
+    "theories": [
+      "Zip_Benchmarks.Word",
+      "Zip_Benchmarks.Tree234_Set",
+      "Zip_Benchmarks.Set",
+      "Zip_Benchmarks.List",
+      "Zip_Benchmarks.Limits",
+      "Zip_Benchmarks.GCD",
+      "Zip_Benchmarks.Finite_Set",
+      "Zip_Benchmarks.Filter",
+      "Zip_Benchmarks.Deriv",
+      "Zip_Benchmarks.Zip_Benchmarks_Setup",
+      "Zip_Benchmarks.Binomial"
     ]
   },
   "Abs_Int_ITP2012": {
@@ -7740,7 +8113,6 @@
       "HOL-Real_Asymp"
     ],
     "theories": [
-      "Catalan_Numbers.Catalan_Auxiliary_Integral",
       "Catalan_Numbers.Catalan_Numbers"
     ]
   },
@@ -7749,7 +8121,6 @@
       "HOL-Analysis"
     ],
     "theories": [
-      "Cayley_Hamilton.Square_Matrix",
       "Cayley_Hamilton.Cayley_Hamilton"
     ]
   },
@@ -7812,7 +8183,6 @@
       "Stirling_Formula"
     ],
     "theories": [
-      "Diagonal_Ramsey.General_Extras",
       "Diagonal_Ramsey.Neighbours",
       "Diagonal_Ramsey.Book",
       "Diagonal_Ramsey.Big_Blue_Steps",
@@ -7879,7 +8249,8 @@
       "Perron_Frobenius",
       "Commuting_Hermitian",
       "Weighted_Arithmetic_Geometric_Mean",
-      "Universal_Hash_Families"
+      "Universal_Hash_Families",
+      "Negative_Association"
     ],
     "theories": [
       "Expander_Graphs.Pseudorandom_Objects_Expander_Walks",
@@ -7895,6 +8266,31 @@
       "Expander_Graphs.Expander_Graphs_Cheeger_Inequality",
       "Expander_Graphs.Expander_Graphs_Algebra",
       "Expander_Graphs.Constructive_Chernoff_Bound"
+    ]
+  },
+  "FOL_Compactness": {
+    "deps": [
+      "Propositional_Proof_Systems",
+      "First_Order_Terms"
+    ],
+    "theories": [
+      "FOL_Compactness.Bumping",
+      "FOL_Compactness.FOL_Syntax",
+      "FOL_Compactness.FOL_Semantics",
+      "FOL_Compactness.Ground_FOL_Compactness",
+      "FOL_Compactness.Prenex_Normal_Form",
+      "FOL_Compactness.Skolem_Normal_Form",
+      "FOL_Compactness.Canonical_Models"
+    ]
+  },
+  "Farey_Sequences": {
+    "deps": [
+      "HOL-Analysis",
+      "HOL-Library",
+      "HOL-Number_Theory"
+    ],
+    "theories": [
+      "Farey_Sequences.Farey_Ford"
     ]
   },
   "GewirthPGCProof": {
@@ -8115,6 +8511,42 @@
       "MuchAdoAboutTwo.MuchAdoAboutTwo"
     ]
   },
+  "Neural_Networks": {
+    "deps": [
+      "Interval_Analysis",
+      "Graph_Theory",
+      "Nano_JSON",
+      "HOL-Decision_Procs",
+      "HOL-Eisbach",
+      "Jordan_Normal_Form"
+    ],
+    "theories": [
+      "Neural_Networks.Grid_Layers_Matrix",
+      "Neural_Networks.Grid_Layers",
+      "Neural_Networks.Grid_Layers_List",
+      "Neural_Networks.Compass_Layers_List",
+      "Neural_Networks.Compass_Layers_Matrix",
+      "Neural_Networks.Compass_Digraph",
+      "Neural_Networks.NN_Manual",
+      "Neural_Networks.NN_Main",
+      "Neural_Networks.Prediction_Utils_Matrix",
+      "Neural_Networks.Properties_Matrix",
+      "Neural_Networks.Matrix_Utils",
+      "Neural_Networks.NN_Lipschitz_Continuous",
+      "Neural_Networks.NN_Layers_Matrix_Main",
+      "Neural_Networks.NN_Layers_Main",
+      "Neural_Networks.NN_Layers_List_Main",
+      "Neural_Networks.NN_Layers",
+      "Neural_Networks.Prediction_Utils",
+      "Neural_Networks.Properties",
+      "Neural_Networks.Activation_Functions",
+      "Neural_Networks.NN_Digraph_Main",
+      "Neural_Networks.NN_Digraph_Layers",
+      "Neural_Networks.NN_Digraph",
+      "Neural_Networks.TensorFlow_Import",
+      "Neural_Networks.NN_Common"
+    ]
+  },
   "Nullstellensatz": {
     "deps": [
       "Groebner_Bases",
@@ -8135,6 +8567,17 @@
     "theories": [
       "Paraconsistency.Paraconsistency_Validity_Infinite",
       "Paraconsistency.Paraconsistency"
+    ]
+  },
+  "Path_Automation": {
+    "deps": [
+      "HOL-Complex_Analysis",
+      "HOL-Library"
+    ],
+    "theories": [
+      "Path_Automation.Path_Automation_Library",
+      "Path_Automation.Path_Equivalence",
+      "Path_Automation.Path_Automation"
     ]
   },
   "Quick_Sort_Cost": {
@@ -8444,7 +8887,13 @@
       "AutoCorres2_Test.AC_Rename",
       "AutoCorres2_Test.underscore_funs",
       "AutoCorres2_Test.fnptr_large_array",
+      "AutoCorres2_Test.fnptr_skip_heap_abs_skip_word_abs",
       "AutoCorres2_Test.fnptr_skip_heap_abs",
+      "AutoCorres2_Test.fnptr_proto",
+      "AutoCorres2_Test.fnptr_no_heap_abs",
+      "AutoCorres2_Test.fnptr_nested",
+      "AutoCorres2_Test.fnptr_io",
+      "AutoCorres2_Test.fnptr_groups",
       "AutoCorres2_Test.fnptr_enum0",
       "AutoCorres2_Test.bit_shuffle",
       "AutoCorres2_Test.unfold_bind_options",
@@ -8460,8 +8909,10 @@
       "AutoCorres2_Test.struct3",
       "AutoCorres2_Test.struct2",
       "AutoCorres2_Test.struct",
+      "AutoCorres2_Test.statement_expression",
       "AutoCorres2_Test.skip_in_out_parameters",
       "AutoCorres2_Test.skip_heap_abs",
+      "AutoCorres2_Test.side_effect_assignment",
       "AutoCorres2_Test.prototyped_functions",
       "AutoCorres2_Test.pointers_to_locals_skip_hl_wa",
       "AutoCorres2_Test.pointers_to_locals_skip_hl",
@@ -8470,15 +8921,22 @@
       "AutoCorres2_Test.open_nested_array",
       "AutoCorres2_Test.open_nested",
       "AutoCorres2_Test.nested_struct",
+      "AutoCorres2_Test.Nested_Field_Update",
       "AutoCorres2_Test.nested_array",
+      "AutoCorres2_Test.init_globals",
       "AutoCorres2_Test.int128",
+      "AutoCorres2_Test.io_for_break",
       "AutoCorres2_Test.In_Out_Parameters_Slow",
       "AutoCorres2_Test.heap_lift_force_prevent",
       "AutoCorres2_Test.Guard_Simp",
       "AutoCorres2_Test.Global_Structs",
       "AutoCorres2_Test.global_array_update",
       "AutoCorres2_Test.globals",
+      "AutoCorres2_Test.function_pointer_array_decay",
+      "AutoCorres2_Test.function_decay",
+      "AutoCorres2_Test.flexible_array_member",
       "AutoCorres2_Test.buffer",
+      "AutoCorres2_Test.bitint",
       "AutoCorres2_Test.badnames",
       "AutoCorres2_Test.array_indirect_update",
       "AutoCorres2_Test.WordAbsFnCall",
@@ -8487,6 +8945,7 @@
       "AutoCorres2_Test.SignedWordAbsHeap",
       "AutoCorres2_Test.CustomWordAbs",
       "AutoCorres2_Test.Asm_Labels",
+      "AutoCorres2_Test.anonymous_nested_struct",
       "AutoCorres2_Test.write_to_global_array",
       "AutoCorres2_Test.word_abs_exn",
       "AutoCorres2_Test.while_loop_no_vars",
@@ -8535,6 +8994,7 @@
       "AutoCorres2_Test.simple_annotated_fn",
       "AutoCorres2_Test.signedoverflow",
       "AutoCorres2_Test.signed_div",
+      "AutoCorres2_Test.sideeffects_reject",
       "AutoCorres2_Test.shortcircuit",
       "AutoCorres2_Test.selection_sort",
       "AutoCorres2_Test.retprefix",
@@ -8566,6 +9026,7 @@
       "AutoCorres2_Test.parse_complit",
       "AutoCorres2_Test.parse_c99block",
       "AutoCorres2_Test.parse_addr",
+      "AutoCorres2_Test.padding_free",
       "AutoCorres2_Test.nested",
       "AutoCorres2_Test.mutrec_modifies",
       "AutoCorres2_Test.multidim_arrays",
@@ -8621,6 +9082,7 @@
       "AutoCorres2_Test.initialised_decls",
       "AutoCorres2_Test.init_static",
       "AutoCorres2_Test.hexliteral",
+      "AutoCorres2_Test.guardedsignedoverflow",
       "AutoCorres2_Test.guard_while",
       "AutoCorres2_Test.globinits",
       "AutoCorres2_Test.globals_in_record",
@@ -8659,7 +9121,7 @@
       "AutoCorres2_Test.arrays",
       "AutoCorres2_Test.array_of_ptr",
       "AutoCorres2_Test.asm_stmt",
-      "AutoCorres2_Test.analsignedoverflow",
+      "AutoCorres2_Test.arithmetic_right_shift",
       "AutoCorres2_Test.aligned",
       "AutoCorres2_Test.CParserTest"
     ]
@@ -8698,7 +9160,6 @@
       "BenOr_Kozen_Reif.Renegar_Decision",
       "BenOr_Kozen_Reif.Matrix_Equation_Construction",
       "BenOr_Kozen_Reif.BKR_Proofs",
-      "BenOr_Kozen_Reif.More_Matrix",
       "BenOr_Kozen_Reif.BKR_Algorithm",
       "BenOr_Kozen_Reif.BKR_Decision"
     ]
@@ -8726,7 +9187,6 @@
   },
   "Complex_Geometry": {
     "deps": [
-      "HOL",
       "HOL-Analysis",
       "HOL-Library"
     ],
@@ -8852,6 +9312,33 @@
       "E_Transcendental.E_Transcendental"
     ]
   },
+  "FaithfulPMLinHOL": {
+    "deps": [
+      "HOL"
+    ],
+    "theories": [
+      "FaithfulPMLinHOL.PMLinHOL_shallow_minimal_further_tests_2",
+      "FaithfulPMLinHOL.PMLinHOL_shallow_minimal_further_tests_1",
+      "FaithfulPMLinHOL.PMLinHOL_shallow_further_tests_2",
+      "FaithfulPMLinHOL.PMLinHOL_shallow_further_tests_1",
+      "FaithfulPMLinHOL.PMLinHOL_deep_further_tests_2",
+      "FaithfulPMLinHOL.PMLinHOL_deep_further_tests_1",
+      "FaithfulPMLinHOL.PMLinHOL_shallow_minimal_Loeb_tests",
+      "FaithfulPMLinHOL.PMLinHOL_shallow_minimal_further_tests",
+      "FaithfulPMLinHOL.PMLinHOL_shallow_minimal_tests",
+      "FaithfulPMLinHOL.PMLinHOL_shallow_Loeb_tests",
+      "FaithfulPMLinHOL.PMLinHOL_shallow_further_tests",
+      "FaithfulPMLinHOL.PMLinHOL_shallow_tests",
+      "FaithfulPMLinHOL.PMLinHOL_deep_Loeb_tests",
+      "FaithfulPMLinHOL.PMLinHOL_deep_further_tests",
+      "FaithfulPMLinHOL.PMLinHOL_deep_tests",
+      "FaithfulPMLinHOL.PMLinHOL_faithfulness",
+      "FaithfulPMLinHOL.PMLinHOL_shallow_minimal",
+      "FaithfulPMLinHOL.PMLinHOL_shallow",
+      "FaithfulPMLinHOL.PMLinHOL_deep",
+      "FaithfulPMLinHOL.PMLinHOL_preliminaries"
+    ]
+  },
   "FunWithFunctions": {
     "deps": [
       "HOL"
@@ -8892,6 +9379,26 @@
       "Goodstein_Lambda.Goodstein_Lambda"
     ]
   },
+  "Graph_Algorithms": {
+    "deps": [
+      "HOL",
+      "Graph_Theory",
+      "HOL-Data_Structures"
+    ],
+    "theories": [
+      "Graph_Algorithms.BFS_2",
+      "Graph_Algorithms.DFS",
+      "Graph_Algorithms.Pair_Graph_Specs",
+      "Graph_Algorithms.Set2_Addons",
+      "Graph_Algorithms.Map_Addons",
+      "Graph_Algorithms.Set_Addons",
+      "Graph_Algorithms.Dist",
+      "Graph_Algorithms.Enat_Misc",
+      "Graph_Algorithms.Vwalk",
+      "Graph_Algorithms.Pair_Graph",
+      "Graph_Algorithms.More_Lists"
+    ]
+  },
   "Graph_Saturation": {
     "deps": [
       "HOL-Library"
@@ -8908,12 +9415,35 @@
       "Graph_Saturation.MissingRelation"
     ]
   },
-  "HOL-Mirabelle-ex": {
+  "GyrovectorSpaces": {
     "deps": [
-      "HOL",
-      "HOL-Analysis"
+      "Poincare_Disc",
+      "HOL-Types_To_Sets"
     ],
-    "theories": []
+    "theories": [
+      "GyrovectorSpaces.Poincare",
+      "GyrovectorSpaces.MobiusGyrotrigonometry",
+      "GyrovectorSpaces.TarskiIsomorphism",
+      "GyrovectorSpaces.MobiusGyroTarski",
+      "GyrovectorSpaces.MobiusGeometry",
+      "GyrovectorSpaces.MobiusCollinear",
+      "GyrovectorSpaces.hDistance",
+      "GyrovectorSpaces.GyroVectorSpaceTrivial",
+      "GyrovectorSpaces.HyperbolicFunctions",
+      "GyrovectorSpaces.Gyrotrigonometry",
+      "GyrovectorSpaces.MobiusGyroVectorSpace",
+      "GyrovectorSpaces.PoincareDisc",
+      "GyrovectorSpaces.MobiusGyroGroup",
+      "GyrovectorSpaces.MoreComplex",
+      "GyrovectorSpaces.GammaFactor",
+      "GyrovectorSpaces.GyroVectorSpaceIsomorphism",
+      "GyrovectorSpaces.Einstein",
+      "GyrovectorSpaces.VectorSpace",
+      "GyrovectorSpaces.Abe",
+      "GyrovectorSpaces.More_Real_Vector",
+      "GyrovectorSpaces.GyroGroup",
+      "GyrovectorSpaces.GyroVectorSpace"
+    ]
   },
   "HOL-ODE-Examples": {
     "deps": [
@@ -9049,6 +9579,16 @@
       "MonoidalCategory.FreeMonoidalCategory"
     ]
   },
+  "Nash_Equilibrium": {
+    "deps": [
+      "HOL-Analysis"
+    ],
+    "theories": [
+      "Nash_Equilibrium.Nash_Equilibrium_Examples",
+      "Nash_Equilibrium.Mixed_Nash_Equilibrium",
+      "Nash_Equilibrium.Nash_Equilibrium"
+    ]
+  },
   "No_FTL_observers": {
     "deps": [
       "HOL"
@@ -9058,6 +9598,14 @@
       "No_FTL_observers.SpaceTime",
       "No_FTL_observers.Axioms",
       "No_FTL_observers.SpecRel"
+    ]
+  },
+  "No_Free_Lunch_ML": {
+    "deps": [
+      "HOL-Probability"
+    ],
+    "theories": [
+      "No_Free_Lunch_ML.No_Free_Lunch_ML"
     ]
   },
   "Orbit_Stabiliser": {
@@ -9095,14 +9643,15 @@
   },
   "Prop_Compactness": {
     "deps": [
+      "HOL",
       "HOL-Library",
       "Marriage"
     ],
     "theories": [
       "Prop_Compactness.KoenigLemma",
       "Prop_Compactness.k_coloring",
-      "Prop_Compactness.UniformNotation",
       "Prop_Compactness.SyntaxAndSemantics",
+      "Prop_Compactness.UniformNotation",
       "Prop_Compactness.Closedness",
       "Prop_Compactness.FinitenessClosedCharProp",
       "Prop_Compactness.MaximalSet",
@@ -9264,6 +9813,33 @@
       "Sophomores_Dream.Sophomores_Dream"
     ]
   },
+  "Sorted_Rewriting": {
+    "deps": [
+      "Sorted_Terms"
+    ],
+    "theories": [
+      "Sorted_Rewriting.Test_Sorted_Rewriting",
+      "Sorted_Rewriting.Sorted_Injections",
+      "Sorted_Rewriting.Algebra_Extensions",
+      "Sorted_Rewriting.Logic_Extensions",
+      "Sorted_Rewriting.Core_Logic",
+      "Sorted_Rewriting.Nats_Logic",
+      "Sorted_Rewriting.Ints_Logic",
+      "Sorted_Rewriting.Variadic_Signature",
+      "Sorted_Rewriting.Logic",
+      "Sorted_Rewriting.Constrained_Rewriting",
+      "Sorted_Rewriting.Conditional_Rewriting",
+      "Sorted_Rewriting.Sorted_Rules",
+      "Sorted_Rewriting.Models",
+      "Sorted_Rewriting.Sorted_Relations",
+      "Sorted_Rewriting.Ordered_Algebras",
+      "Sorted_Rewriting.Monotone_Algebras",
+      "Sorted_Rewriting.Sorted_Rewrite_Relations",
+      "Sorted_Rewriting.Sorted_Rewriting",
+      "Sorted_Rewriting.Sorted_Terms_More",
+      "Sorted_Rewriting.Binary_Relations_More"
+    ]
+  },
   "Stirling_Formula": {
     "deps": [
       "Bernoulli",
@@ -9293,10 +9869,6 @@
       "Tarskis_Geometry.Action",
       "Tarskis_Geometry.Linear_Algebra2",
       "Tarskis_Geometry.Projective",
-      "Tarskis_Geometry.Metric",
-      "Tarskis_Geometry.Miscellany",
-      "Tarskis_Geometry.Tarski",
-      "Tarskis_Geometry.Euclid_Tarski",
       "Tarskis_Geometry.Hyperbolic_Tarski"
     ]
   },
@@ -9346,8 +9918,6 @@
       "Affine_Arithmetic.Floatarith_Expression",
       "Affine_Arithmetic.Straight_Line_Program",
       "Affine_Arithmetic.Affine_Form",
-      "Affine_Arithmetic.Affine_Arithmetic_Auxiliarities",
-      "Affine_Arithmetic.Executable_Euclidean_Space",
       "Affine_Arithmetic.Affine_Approximation",
       "Affine_Arithmetic.Affine_Code",
       "Affine_Arithmetic.Affine_Arithmetic"
@@ -9368,25 +9938,23 @@
       "Algebraic_Numbers.Compare_Complex",
       "Algebraic_Numbers.Complex_Roots_Real_Poly",
       "Algebraic_Numbers.Real_Algebraic_Numbers",
-      "Algebraic_Numbers.Min_Int_Poly",
       "Algebraic_Numbers.Factors_of_Int_Poly",
       "Algebraic_Numbers.Sturm_Rat",
-      "Algebraic_Numbers.Bivariate_Polynomials",
-      "Algebraic_Numbers.Resultant",
-      "Algebraic_Numbers.Algebraic_Numbers_Prelim",
-      "Algebraic_Numbers.Algebraic_Numbers",
       "Algebraic_Numbers.Algebraic_Numbers_Pre_Impl",
       "Algebraic_Numbers.Cauchy_Root_Bound",
       "Algebraic_Numbers.Real_Roots",
       "Algebraic_Numbers.Complex_Algebraic_Numbers"
     ]
   },
-  "Auto_Sledgehammer": {
+  "Archimedes_Cattle": {
     "deps": [
-      "HOL"
+      "HOL-Number_Theory",
+      "HOL-Library",
+      "Continued_Fractions",
+      "Pratt_Certificate"
     ],
     "theories": [
-      "Auto_Sledgehammer.Auto_Sledgehammer"
+      "Archimedes_Cattle.Archimedes_Cattle"
     ]
   },
   "Consensus_Refined": {
@@ -9513,6 +10081,7 @@
       "Featherweight_OCL.UML_Real",
       "Featherweight_OCL.UML_Integer",
       "Featherweight_OCL.UML_Void",
+      "Featherweight_OCL.Featherweight_OCL_Assert",
       "Featherweight_OCL.UML_Types",
       "Featherweight_OCL.UML_Logic",
       "Featherweight_OCL.UML_PropertyProfiles",
@@ -9536,20 +10105,22 @@
     "deps": [
       "Abstract-Rewriting",
       "HOL-Library",
+      "Certification_Monads",
       "Polynomial_Factorization",
       "Show",
       "Fresh_Identifiers"
     ],
     "theories": [
+      "First_Order_Terms.Unification_More",
+      "First_Order_Terms.Term_Impl",
       "First_Order_Terms.Term_More",
       "First_Order_Terms.Position",
-      "First_Order_Terms.Subterm_and_Context",
       "First_Order_Terms.Subsumption",
       "First_Order_Terms.Unification_String",
-      "First_Order_Terms.Abstract_Matching",
+      "First_Order_Terms.Subterm_and_Context",
       "First_Order_Terms.Matching",
       "First_Order_Terms.Option_Monad",
-      "First_Order_Terms.Fun_More",
+      "First_Order_Terms.Fun_More2",
       "First_Order_Terms.Seq_More",
       "First_Order_Terms.Lists_are_Infinite",
       "First_Order_Terms.Renaming2_String",
@@ -9571,10 +10142,10 @@
     ],
     "theories": [
       "Frequency_Moments.Tutorial_Pseudorandom_Objects",
-      "Frequency_Moments.Probability_Ext",
       "Frequency_Moments.Landau_Ext",
       "Frequency_Moments.Frequency_Moment_k",
       "Frequency_Moments.Frequency_Moment_2",
+      "Frequency_Moments.Probability_Ext",
       "Frequency_Moments.K_Smallest",
       "Frequency_Moments.Frequency_Moment_0",
       "Frequency_Moments.Frequency_Moments",
@@ -9588,6 +10159,7 @@
     "theories": [
       "Fresh_Identifiers.Fresh_Infinite",
       "Fresh_Identifiers.Fresh_String",
+      "Fresh_Identifiers.Fresh_Int",
       "Fresh_Identifiers.Fresh_Nat",
       "Fresh_Identifiers.Fresh"
     ]
@@ -9641,10 +10213,6 @@
       "Polynomial_Factorization"
     ],
     "theories": [
-      "Gaussian_Integers.Gaussian_Integers_Pythagorean_Triples",
-      "Gaussian_Integers.Gaussian_Integers_Sums_Of_Two_Squares",
-      "Gaussian_Integers.Gaussian_Integers_Test",
-      "Gaussian_Integers.Gaussian_Integers",
       "Gaussian_Integers.Gaussian_Integers_Everything"
     ]
   },
@@ -9730,7 +10298,6 @@
   },
   "HOL-Proofs-Lambda": {
     "deps": [
-      "HOL-Proofs",
       "HOL-Library"
     ],
     "theories": [
@@ -9768,12 +10335,6 @@
       "Power_Sum_Polynomials"
     ],
     "theories": [
-      "Hermite_Lindemann.Misc_HLW",
-      "Hermite_Lindemann.More_Algebraic_Numbers_HLW",
-      "Hermite_Lindemann.Complex_Lexorder",
-      "Hermite_Lindemann.More_Polynomial_HLW",
-      "Hermite_Lindemann.More_Min_Int_Poly",
-      "Hermite_Lindemann.Algebraic_Integer_Divisibility",
       "Hermite_Lindemann.Hermite_Lindemann"
     ]
   },
@@ -9816,6 +10377,39 @@
       "Interval_Analysis.Interval_Division_Non_Zero",
       "Interval_Analysis.Interval_Division_Real",
       "Interval_Analysis.Interval_Analysis"
+    ]
+  },
+  "Isabelle-Solidity": {
+    "deps": [
+      "HOL",
+      "HOL-Library",
+      "HOL-Eisbach",
+      "Finite-Map-Extras"
+    ],
+    "theories": [
+      "Isabelle-Solidity.SimpleAuction",
+      "Isabelle-Solidity.Voting",
+      "Isabelle-Solidity.Casino",
+      "Isabelle-Solidity.Token",
+      "Isabelle-Solidity.Bank",
+      "Isabelle-Solidity.Unit_Tests",
+      "Isabelle-Solidity.Solidity_Main",
+      "Isabelle-Solidity.WP",
+      "Isabelle-Solidity.Contract",
+      "Isabelle-Solidity.Solidity",
+      "Isabelle-Solidity.Memory",
+      "Isabelle-Solidity.Stores",
+      "Isabelle-Solidity.State",
+      "Isabelle-Solidity.State_Monad",
+      "Isabelle-Solidity.Utils"
+    ]
+  },
+  "Iteration_Algebra": {
+    "deps": [
+      "HOL"
+    ],
+    "theories": [
+      "Iteration_Algebra.Iteration"
     ]
   },
   "Kummer_Congruence": {
@@ -9987,6 +10581,19 @@
       "Progress_Tracking.Exchange_Abadi"
     ]
   },
+  "Pushdown_Automata": {
+    "deps": [
+      "Context_Free_Grammar",
+      "Context_Free_Grammar"
+    ],
+    "theories": [
+      "Pushdown_Automata.PDA_To_CFG",
+      "Pushdown_Automata.CFG_To_PDA",
+      "Pushdown_Automata.Final_To_Stack_PDA",
+      "Pushdown_Automata.Pushdown_Automata",
+      "Pushdown_Automata.Stack_To_Final_PDA"
+    ]
+  },
   "Regex_Equivalence": {
     "deps": [
       "HOL",
@@ -10024,6 +10631,8 @@
       "More_LazyLists"
     ],
     "theories": [
+      "Relative_Security.Incomplete",
+      "Relative_Security.Incomplete_fin",
       "Relative_Security.Unwinding",
       "Relative_Security.Unwinding_fin",
       "Relative_Security.Relative_Security",
@@ -10057,6 +10666,24 @@
     ],
     "theories": [
       "SDS_Impossibility.SDS_Impossibility"
+    ]
+  },
+  "SWF_Impossibility": {
+    "deps": [
+      "Swap_Distance",
+      "PAPP_Impossibility",
+      "Swap_Distance",
+      "Randomised_Social_Choice"
+    ],
+    "theories": [
+      "SWF_Impossibility.Majcons_Stratproof_Impossibility",
+      "SWF_Impossibility.SWF_Impossibility_Automation",
+      "SWF_Impossibility.Anon_Unan_Stratproof_Impossibility",
+      "SWF_Impossibility.SWF_Explicit",
+      "SWF_Impossibility.SWF_Lowering",
+      "SWF_Impossibility.SWF_Anonymous",
+      "SWF_Impossibility.SWF_Impossibility_Library",
+      "SWF_Impossibility.Social_Welfare_Functions"
     ]
   },
   "Smith_Normal_Form": {
@@ -10114,9 +10741,28 @@
       "Transitive_Models.Renaming_Auto"
     ]
   },
+  "Weak_Spectroscopy": {
+    "deps": [
+      "HOL-Library"
+    ],
+    "theories": [
+      "Weak_Spectroscopy.Eta_Bisimilarity",
+      "Weak_Spectroscopy.Branching_Bisimilarity",
+      "Weak_Spectroscopy.Weak_Traces",
+      "Weak_Spectroscopy.Strategy_Formulas",
+      "Weak_Spectroscopy.Expressiveness_Price",
+      "Weak_Spectroscopy.Energy",
+      "Weak_Spectroscopy.Energy_Games",
+      "Weak_Spectroscopy.Spectroscopy_Game",
+      "Weak_Spectroscopy.Distinction_Implies_Winning_Budgets",
+      "Weak_Spectroscopy.Silent_Step_Spectroscopy",
+      "Weak_Spectroscopy.Labeled_Transition_Systems",
+      "Weak_Spectroscopy.LTS_Semantics",
+      "Weak_Spectroscopy.HML_SRBB"
+    ]
+  },
   "Well_Quasi_Orders": {
     "deps": [
-      "HOL-Library",
       "Abstract-Rewriting",
       "Open_Induction"
     ],
@@ -10164,15 +10810,27 @@
       "Zeta_3_Irrational.Zeta_3_Irrational"
     ]
   },
+  "Abel_Limit_Theorem": {
+    "deps": [
+      "Catalan_Numbers",
+      "HOL-Real_Asymp",
+      "Catalan_Numbers"
+    ],
+    "theories": [
+      "Abel_Limit_Theorem.Binomial_Sqrt_Series_Boundary",
+      "Abel_Limit_Theorem.Abel_Limit_Theorem"
+    ]
+  },
   "Abstract-Rewriting": {
     "deps": [
-      "HOL-Library",
       "Regular-Sets"
     ],
     "theories": [
       "Abstract-Rewriting.SN_Order_Carrier",
       "Abstract-Rewriting.SN_Orders",
+      "Abstract-Rewriting.Relation_Closure",
       "Abstract-Rewriting.Relative_Rewriting",
+      "Abstract-Rewriting.Abstract_Rewriting_Impl",
       "Abstract-Rewriting.Abstract_Rewriting",
       "Abstract-Rewriting.Seq"
     ]
@@ -10193,10 +10851,38 @@
       "HOL-Library"
     ],
     "theories": [
+      "Alpha_Beta_Pruning.TicTacToe",
       "Alpha_Beta_Pruning.LaTeXsugar2",
       "Alpha_Beta_Pruning.Alpha_Beta_Linear",
       "Alpha_Beta_Pruning.Alpha_Beta_Lattice",
       "Alpha_Beta_Pruning.Alpha_Beta_Overview"
+    ]
+  },
+  "Bisimulation_Logic": {
+    "deps": [
+      "HOL",
+      "Synthetic_Completeness"
+    ],
+    "theories": [
+      "Bisimulation_Logic.Bisimulation_Logic"
+    ]
+  },
+  "Compressed_Oracles": {
+    "deps": [
+      "Registers",
+      "Sturm_Sequences"
+    ],
+    "theories": [
+      "Compressed_Oracles.Aux_Sturm_Calculation",
+      "Compressed_Oracles.Collision",
+      "Compressed_Oracles.Compressed_Oracle_Is_RO",
+      "Compressed_Oracles.Oracle_Programs",
+      "Compressed_Oracles.CO_Operations",
+      "Compressed_Oracles.Misc_Compressed_Oracle",
+      "Compressed_Oracles.Function_At",
+      "Compressed_Oracles.Invariant_Preservation",
+      "Compressed_Oracles.CO_Invariants",
+      "Compressed_Oracles.Find_Zero"
     ]
   },
   "Concurrent_Ref_Alg": {
@@ -10265,6 +10951,35 @@
       "Discrete_Summation.Examples"
     ]
   },
+  "Elliptic_Functions": {
+    "deps": [
+      "Zeta_Function",
+      "HOL-Number_Theory",
+      "Algebraic_Numbers",
+      "Polynomial_Factorization",
+      "Lambert_Series",
+      "Cotangent_PFD_Formula",
+      "Polylog",
+      "Dedekind_Sums",
+      "Theta_Functions",
+      "Pentagonal_Number_Theorem"
+    ],
+    "theories": [
+      "Elliptic_Functions.Eisenstein_G2",
+      "Elliptic_Functions.Theta_Inversion",
+      "Elliptic_Functions.Dedekind_Eta",
+      "Elliptic_Functions.Basic_Modular_Forms",
+      "Elliptic_Functions.Weierstrass_Addition",
+      "Elliptic_Functions.Eisenstein_Series",
+      "Elliptic_Functions.Weierstrass_Elliptic",
+      "Elliptic_Functions.Elliptic_Functions",
+      "Elliptic_Functions.Modular_Fundamental_Region",
+      "Elliptic_Functions.Complex_Lattices",
+      "Elliptic_Functions.Modular_Group",
+      "Elliptic_Functions.Parallelogram_Paths",
+      "Elliptic_Functions.Z_Plane_Q_Disc"
+    ]
+  },
   "Example-Submission": {
     "deps": [
       "HOL"
@@ -10282,6 +10997,101 @@
     ],
     "theories": [
       "Finite_Automata_HF.Finite_Automata_HF"
+    ]
+  },
+  "First_Order_Clause": {
+    "deps": [
+      "Abstract_Substitution",
+      "Abstract_Substitution",
+      "First_Order_Terms",
+      "Fresh_Identifiers",
+      "HOL-Cardinals",
+      "HOL-Library",
+      "Min_Max_Least_Greatest",
+      "Nested_Multisets_Ordinals",
+      "Regular-Sets",
+      "Regular_Tree_Relations",
+      "Saturation_Framework_Extensions",
+      "Sorted_Terms",
+      "VeriComp"
+    ],
+    "theories": [
+      "First_Order_Clause.Untyped_Calculus",
+      "First_Order_Clause.Tiebreakers",
+      "First_Order_Clause.Typed_Tiebreakers",
+      "First_Order_Clause.Typed_Substitution_Lifting_Example",
+      "First_Order_Clause.Typed_Substitution_Example",
+      "First_Order_Clause.Clause_Typing_With_Equality",
+      "First_Order_Clause.Nonground_Typing_With_Equality",
+      "First_Order_Clause.Clause_Typing",
+      "First_Order_Clause.Typed_Substitution_Lifting",
+      "First_Order_Clause.Natural_Magma_Typing_Lifting",
+      "First_Order_Clause.Multiset_Typing_Lifting",
+      "First_Order_Clause.Clause_Typing_Generic",
+      "First_Order_Clause.Nonground_Typing_Generic",
+      "First_Order_Clause.Nonground_Typing",
+      "First_Order_Clause.Ground_Order",
+      "First_Order_Clause.Nonground_Order",
+      "First_Order_Clause.Inference_Functor",
+      "First_Order_Clause.Nonground_Inference",
+      "First_Order_Clause.Fold_Extra",
+      "First_Order_Clause.Entailment_Lifting",
+      "First_Order_Clause.Nonground_Entailment",
+      "First_Order_Clause.Typed_IMGU",
+      "First_Order_Clause.Collect_Extra",
+      "First_Order_Clause.Infinite_Variables_Per_Type",
+      "First_Order_Clause.Typed_Substitution",
+      "First_Order_Clause.Nonground_Term_Typing",
+      "First_Order_Clause.Monomorphic_Typing",
+      "First_Order_Clause.Ground_Term_Rewrite_System",
+      "First_Order_Clause.Ground_Critical_Pairs",
+      "First_Order_Clause.Ground_Critical_Peaks",
+      "First_Order_Clause.IsaFoR_Ground_Critical_Pairs",
+      "First_Order_Clause.Nonground_Clause",
+      "First_Order_Clause.IsaFoR_Nonground_Clause",
+      "First_Order_Clause.Selection_Function_Select_Max",
+      "First_Order_Clause.Ground_Order_With_Equality",
+      "First_Order_Clause.Ground_Order_Generic",
+      "First_Order_Clause.Maximal_Literal",
+      "First_Order_Clause.Natural_Functor_To_Multiset",
+      "First_Order_Clause.Multiset_Extension",
+      "First_Order_Clause.Grounded_Multiset_Extension",
+      "First_Order_Clause.Term_Order_Lifting",
+      "First_Order_Clause.Grounded_Order",
+      "First_Order_Clause.Transitive_Closure_Extra",
+      "First_Order_Clause.Term_Order_Notation",
+      "First_Order_Clause.Restricted_Order",
+      "First_Order_Clause.Context_Compatible_Order",
+      "First_Order_Clause.Ground_Term_Order",
+      "First_Order_Clause.Nonground_Term_Order",
+      "First_Order_Clause.Nonground_Order_Generic",
+      "First_Order_Clause.Nonground_Order_With_Equality",
+      "First_Order_Clause.Context_Functor",
+      "First_Order_Clause.Nonground_Context",
+      "First_Order_Clause.IsaFoR_Nonground_Context",
+      "First_Order_Clause.Uprod_Extra",
+      "First_Order_Clause.Literal_Functor",
+      "First_Order_Clause.Uprod_Literal_Functor",
+      "First_Order_Clause.Nonground_Clause_With_Equality",
+      "First_Order_Clause.IsaFoR_Nonground_Term",
+      "First_Order_Clause.IsaFoR_Nonground_Clause_With_Equality",
+      "First_Order_Clause.IsaFoR_KBO",
+      "First_Order_Clause.HOL_Extra",
+      "First_Order_Clause.Selection_Function",
+      "First_Order_Clause.Multiset_Grounding_Lifting",
+      "First_Order_Clause.Multiset_Extra",
+      "First_Order_Clause.Nonground_Term",
+      "First_Order_Clause.Nonground_Clause_Generic",
+      "First_Order_Clause.Nonground_Selection_Function",
+      "First_Order_Clause.Grounded_Selection_Function",
+      "First_Order_Clause.Parallel_Induct",
+      "First_Order_Clause.IsaFoR_Ground_Term",
+      "First_Order_Clause.Generic_Context",
+      "First_Order_Clause.IsaFoR_Ground_Context",
+      "First_Order_Clause.Typing",
+      "First_Order_Clause.Context_Notation",
+      "First_Order_Clause.Term_Typing",
+      "First_Order_Clause.Ground_Term_Typing"
     ]
   },
   "Fishers_Inequality": {
@@ -10332,6 +11142,27 @@
       "Given_Clause_Loops.Given_Clause_Loops"
     ]
   },
+  "HOL-CSP_Proc-Omata": {
+    "deps": [
+      "HOL-CSP_PTick"
+    ],
+    "theories": [
+      "HOL-CSP_Proc-Omata.Conclusion",
+      "HOL-CSP_Proc-Omata",
+      "HOL-CSP_Proc-Omata.Almost_Compactification",
+      "HOL-CSP_Proc-Omata.Compactification_DiningPhilosophers",
+      "HOL-CSP_Proc-Omata.Compactification_Sequential_Composition_Generalized",
+      "HOL-CSP_Proc-Omata.Combining_Sequential_Composition_Generalized",
+      "HOL-CSP_Proc-Omata.Compactification_Synchronization_Product_Generalized",
+      "HOL-CSP_Proc-Omata.Combining_Synchronization_Product_Generalized",
+      "HOL-CSP_Proc-Omata.Compactification_Synchronization_Product",
+      "HOL-CSP_Proc-Omata.Combining_Synchronization_Product",
+      "HOL-CSP_Proc-Omata.Process_Normalization_Properties",
+      "HOL-CSP_Proc-Omata.Process_Normalization",
+      "HOL-CSP_Proc-Omata.Deterministic_Processes",
+      "HOL-CSP_Proc-Omata.Introduction"
+    ]
+  },
   "HOL-Corec_Examples": {
     "deps": [
       "HOL-Library"
@@ -10380,15 +11211,10 @@
       "HOL"
     ],
     "theories": [
-      "HOL-Hoare_Parallel.RG_Com",
-      "HOL-Hoare_Parallel.RG_Tran",
-      "HOL-Hoare_Parallel.RG_Hoare",
-      "HOL-Hoare_Parallel.RG_Syntax",
       "HOL-Hoare_Parallel.RG_Examples",
       "HOL-Hoare_Parallel.Mul_Gar_Coll",
       "HOL-Hoare_Parallel.Graph",
       "HOL-Hoare_Parallel.Gar_Coll",
-      "HOL-Hoare_Parallel.Quote_Antiquote",
       "HOL-Hoare_Parallel.OG_Com",
       "HOL-Hoare_Parallel.OG_Tran",
       "HOL-Hoare_Parallel.OG_Hoare",
@@ -10404,6 +11230,7 @@
       "HOL-Library"
     ],
     "theories": [
+      "HOL-Imperative_HOL.Congproc_Ex",
       "HOL-Imperative_HOL.Sorted_List",
       "HOL-Imperative_HOL.SatChecker",
       "HOL-Imperative_HOL.Linked_Lists",
@@ -10417,6 +11244,7 @@
   },
   "HOL-Metis_Examples": {
     "deps": [
+      "HOL",
       "HOL-Library",
       "HOL-Decision_Procs"
     ],
@@ -10465,6 +11293,7 @@
   },
   "HereditarilyFinite": {
     "deps": [
+      "HOL",
       "HOL-Library"
     ],
     "theories": [
@@ -10646,6 +11475,7 @@
       "Jordan_Normal_Form.Matrix_Complexity",
       "Jordan_Normal_Form.Strassen_Algorithm",
       "Jordan_Normal_Form.Strassen_Algorithm_Code",
+      "Jordan_Normal_Form.Matrix_Carrier_Impl",
       "Jordan_Normal_Form.Matrix_Impl",
       "Jordan_Normal_Form.Missing_Ring",
       "Jordan_Normal_Form.Missing_Misc"
@@ -10675,9 +11505,7 @@
     ]
   },
   "Knuth_Morris_Pratt": {
-    "deps": [
-      "Sepref_IICF"
-    ],
+    "deps": [],
     "theories": [
       "Knuth_Morris_Pratt.KMP"
     ]
@@ -10744,17 +11572,17 @@
       "List-Index"
     ],
     "theories": [
-      "MLSS_Decision_Proc.MLSS_Suc_Theory",
-      "MLSS_Decision_Proc.MLSS_Typing_Urelems",
+      "MLSS_Decision_Proc.MLSS_Proc_All",
       "MLSS_Decision_Proc.MLSS_Proc_Code",
-      "MLSS_Decision_Proc.MLSS_Typing_Defs",
-      "MLSS_Decision_Proc.MLSS_Calculus",
-      "MLSS_Decision_Proc.MLSS_Typing",
-      "MLSS_Decision_Proc.MLSS_Semantics",
+      "MLSS_Decision_Proc.MLSS_HF_Extras",
       "MLSS_Decision_Proc.MLSS_Realisation",
       "MLSS_Decision_Proc.MLSS_Proc",
-      "MLSS_Decision_Proc.MLSS_Proc_All",
-      "MLSS_Decision_Proc.MLSS_HF_Extras",
+      "MLSS_Decision_Proc.MLSS_Typing_Urelems",
+      "MLSS_Decision_Proc.MLSS_Typing",
+      "MLSS_Decision_Proc.MLSS_Suc_Theory",
+      "MLSS_Decision_Proc.MLSS_Calculus",
+      "MLSS_Decision_Proc.MLSS_Typing_Defs",
+      "MLSS_Decision_Proc.MLSS_Semantics",
       "MLSS_Decision_Proc.MLSS_Logic"
     ]
   },
@@ -10764,6 +11592,14 @@
     ],
     "theories": [
       "Minkowskis_Theorem.Minkowskis_Theorem"
+    ]
+  },
+  "Mostowski_Collapse": {
+    "deps": [
+      "ZF"
+    ],
+    "theories": [
+      "Mostowski_Collapse.Mostowski_Collapse"
     ]
   },
   "Nat-Interval-Logic": {
@@ -10778,10 +11614,8 @@
   },
   "Ordinal_Partitions": {
     "deps": [
-      "HOL",
-      "HOL-Library",
-      "ZFC_in_HOL",
-      "Nash_Williams"
+      "Nash_Williams",
+      "ZFC_in_HOL"
     ],
     "theories": [
       "Ordinal_Partitions.Library_Additions",
@@ -10951,6 +11785,20 @@
       "Relational_Forests.Forests"
     ]
   },
+  "Restriction_Spaces": {
+    "deps": [
+      "HOL-Library"
+    ],
+    "theories": [
+      "Restriction_Spaces",
+      "Restriction_Spaces.Restriction_Spaces_Induction",
+      "Restriction_Spaces.Restriction_Spaces_Topology",
+      "Restriction_Spaces.Restriction_Spaces_Fun",
+      "Restriction_Spaces.Restriction_Spaces_Prod",
+      "Restriction_Spaces.Restriction_Spaces_Classes",
+      "Restriction_Spaces.Restriction_Spaces_Locales"
+    ]
+  },
   "Robbins-Conjecture": {
     "deps": [
       "HOL"
@@ -10976,6 +11824,14 @@
     ],
     "theories": [
       "Roy_Floyd_Warshall.Roy_Floyd_Warshall"
+    ]
+  },
+  "SAT_Not_Const_Time": {
+    "deps": [
+      "Cook_Levin"
+    ],
+    "theories": [
+      "SAT_Not_Const_Time.SAT_Not_Const_Time"
     ]
   },
   "SIFUM_Type_Systems": {
@@ -11022,6 +11878,22 @@
       "Separation_Algebra.Simple_Separation_Example"
     ]
   },
+  "Set_Reconciliation": {
+    "deps": [
+      "HOL-Computational_Algebra",
+      "HOL-Computational_Algebra",
+      "HOL-Library",
+      "Gauss_Jordan",
+      "Berlekamp_Zassenhaus",
+      "Elimination_Of_Repeated_Factors"
+    ],
+    "theories": [
+      "Set_Reconciliation.Set_Reconciliation",
+      "Set_Reconciliation.Factorisation",
+      "Set_Reconciliation.Poly_Lemmas",
+      "Set_Reconciliation.Rational_Function_Interpolation"
+    ]
+  },
   "Signature_Groebner": {
     "deps": [
       "Groebner_Bases"
@@ -11040,6 +11912,21 @@
     ],
     "theories": [
       "Stewart_Apollonius.Stewart_Apollonius"
+    ]
+  },
+  "Stratified_Datalog": {
+    "deps": [
+      "Labeled_Transition_Systems"
+    ],
+    "theories": [
+      "Stratified_Datalog.Reachable_Nodes",
+      "Stratified_Datalog.Very_Busy_Expressions",
+      "Stratified_Datalog.Available_Expressions",
+      "Stratified_Datalog.Live_Variables",
+      "Stratified_Datalog.Reaching_Definitions",
+      "Stratified_Datalog.Program_Graph",
+      "Stratified_Datalog.Bit_Vector_Framework",
+      "Stratified_Datalog.Datalog"
     ]
   },
   "Stream_Fusion_Code": {
@@ -11069,7 +11956,7 @@
   },
   "Transitive-Closure": {
     "deps": [
-      "Collections",
+      "HOL-Library",
       "Matrix"
     ],
     "theories": [
@@ -11128,16 +12015,16 @@
   },
   "Babai_Nearest_Plane": {
     "deps": [
-      "LLL_Factorization"
+      "LLL_Factorization",
+      "BenOr_Kozen_Reif"
     ],
     "theories": [
-      "Babai_Nearest_Plane.Babai",
+      "Babai_Nearest_Plane.Babai_Correct",
       "Babai_Nearest_Plane.Babai_Algorithm"
     ]
   },
   "Bell_Numbers_Spivey": {
     "deps": [
-      "HOL-Library",
       "Card_Partitions"
     ],
     "theories": [
@@ -11167,7 +12054,8 @@
   },
   "Combinatorics_Words": {
     "deps": [
-      "HOL-Eisbach"
+      "HOL-Eisbach",
+      "List_Power"
     ],
     "theories": [
       "Combinatorics_Words.Lyndon_Schutzenberger",
@@ -11238,12 +12126,6 @@
     ],
     "theories": [
       "Count_Complex_Roots.Count_Complex_Roots_Examples",
-      "Count_Complex_Roots.Count_Rectangle",
-      "Count_Complex_Roots.Count_Circle",
-      "Count_Complex_Roots.Extended_Sturm",
-      "Count_Complex_Roots.CC_Polynomials_Extra",
-      "Count_Complex_Roots.Count_Line",
-      "Count_Complex_Roots.Count_Half_Plane",
       "Count_Complex_Roots.Count_Complex_Roots"
     ]
   },
@@ -11291,9 +12173,9 @@
   },
   "FO_Theory_Rewriting": {
     "deps": [
-      "HOL-Library",
+      "FOL-Fitting",
       "Regular_Tree_Relations",
-      "FOL-Fitting"
+      "First_Order_Rewriting"
     ],
     "theories": [
       "FO_Theory_Rewriting.FOR_Check_Impl",
@@ -11316,7 +12198,7 @@
       "FO_Theory_Rewriting.Bot_Terms",
       "FO_Theory_Rewriting.Ground_MCtxt",
       "FO_Theory_Rewriting.Utils",
-      "FO_Theory_Rewriting.Multihole_Context"
+      "FO_Theory_Rewriting.Multihole_Context_More"
     ]
   },
   "Fixed_Length_Vector": {
@@ -11367,21 +12249,38 @@
       "Functional-Automata.Functional_Automata"
     ]
   },
+  "Galois_Energy_Games": {
+    "deps": [
+      "Parity_Game",
+      "HOL-Library",
+      "Well_Quasi_Orders",
+      "Complete_Non_Orders"
+    ],
+    "theories": [
+      "Galois_Energy_Games.Natural_Galois_Energy_Game",
+      "Galois_Energy_Games.Update",
+      "Galois_Energy_Games.Decidability",
+      "Galois_Energy_Games.Galois_Energy_Game",
+      "Galois_Energy_Games.List_Lemmas",
+      "Galois_Energy_Games.Energy_Order",
+      "Galois_Energy_Games.Energy_Game"
+    ]
+  },
   "HOL-Data_Structures": {
     "deps": [
       "HOL",
       "HOL-Number_Theory"
     ],
     "theories": [
+      "HOL-Data_Structures.Time_Locale_Example",
       "HOL-Data_Structures.Selection",
       "HOL-Data_Structures.Binomial_Heap",
       "HOL-Data_Structures.Leftist_Heap_List",
       "HOL-Data_Structures.Leftist_Heap",
       "HOL-Data_Structures.Heaps",
-      "HOL-Data_Structures.Reverse",
       "HOL-Data_Structures.Queue_2Lists",
+      "HOL-Data_Structures.Trie_Ternary",
       "HOL-Data_Structures.Tries_Binary",
-      "HOL-Data_Structures.Trie_Map",
       "HOL-Data_Structures.Trie_Fun",
       "HOL-Data_Structures.Array_Braun",
       "HOL-Data_Structures.Set2_Join_RBT",
@@ -11389,7 +12288,6 @@
       "HOL-Data_Structures.AA_Map",
       "HOL-Data_Structures.Brother12_Set",
       "HOL-Data_Structures.Brother12_Map",
-      "HOL-Data_Structures.Tree234",
       "HOL-Data_Structures.Tree234_Set",
       "HOL-Data_Structures.Tree234_Map",
       "HOL-Data_Structures.Tree23_of_List",
@@ -11453,6 +12351,8 @@
       "HOL"
     ],
     "theories": [
+      "Implicational_Logic.Implicational_Logic_New",
+      "Implicational_Logic.Implicational_Logic_Natural_Deduction",
       "Implicational_Logic.Implicational_Logic_Sequent_Calculus",
       "Implicational_Logic.Implicational_Logic_Appendix",
       "Implicational_Logic.Implicational_Logic"
@@ -11545,6 +12445,19 @@
       "Isabelle_Meta_Model.Antiquote_Setup"
     ]
   },
+  "Kolmogorov_Chentsov": {
+    "deps": [
+      "HOL-Probability"
+    ],
+    "theories": [
+      "Kolmogorov_Chentsov.Kolmogorov_Chentsov",
+      "Kolmogorov_Chentsov.Stochastic_Processes",
+      "Kolmogorov_Chentsov.Measure_Convergence",
+      "Kolmogorov_Chentsov.Holder_Continuous",
+      "Kolmogorov_Chentsov.Dyadic_Interval",
+      "Kolmogorov_Chentsov.Kolmogorov_Chentsov_Extras"
+    ]
+  },
   "LLL_Basis_Reduction": {
     "deps": [
       "Berlekamp_Zassenhaus",
@@ -11591,16 +12504,6 @@
       "Maximum_Segment_Sum.Maximum_Segment_Sum"
     ]
   },
-  "Minilang_Translator": {
-    "deps": [
-      "Minilang",
-      "Isa_REPL"
-    ],
-    "theories": [
-      "Minilang_Translator.MS_Translator_Top",
-      "Minilang_Translator.MS_Translator"
-    ]
-  },
   "Monad_Normalisation": {
     "deps": [
       "HOL-Probability"
@@ -11617,6 +12520,58 @@
     ],
     "theories": [
       "MonoBoolTranAlgebra.Statements"
+    ]
+  },
+  "Munta_Model_Checker": {
+    "deps": [
+      "Munta_Base",
+      "HOL-Library",
+      "Show"
+    ],
+    "theories": [
+      "Munta_Model_Checker.Munta_Compile_MLton",
+      "Munta_Model_Checker.Simple_Network_Language_Export_Code",
+      "Munta_Model_Checker.Deadlock_Checking",
+      "Munta_Model_Checker.Deadlock_Impl",
+      "Munta_Model_Checker.Simple_Network_Language_Model_Checking",
+      "Munta_Model_Checker.UPPAAL_Model_Checking",
+      "Munta_Model_Checker.State_Networks",
+      "Munta_Model_Checker.Networks",
+      "Munta_Model_Checker.JSON_Parsing",
+      "Munta_Model_Checker.Munta_Tagging"
+    ]
+  },
+  "Nagata-Factoriality": {
+    "deps": [
+      "HOL-Computational_Algebra",
+      "Localization_Ring"
+    ],
+    "theories": [
+      "Nagata-Factoriality.Fraction_Field_Applications",
+      "Nagata-Factoriality.Polynomial_Applications",
+      "Nagata-Factoriality.Localization_Interface",
+      "Nagata-Factoriality.Nagata_Lemmas",
+      "Nagata-Factoriality.Prime_Generated",
+      "Nagata-Factoriality.Nagata_Factoriality"
+    ]
+  },
+  "Nominal_Unification": {
+    "deps": [
+      "HOL",
+      "HOL-Library"
+    ],
+    "theories": [
+      "Nominal_Unification.NU",
+      "Nominal_Unification.NU_Termination",
+      "Nominal_Unification.NU_Mgu",
+      "Nominal_Unification.NU_Substs",
+      "Nominal_Unification.NU_Equ",
+      "Nominal_Unification.NU_PreEqu",
+      "Nominal_Unification.NU_Fresh",
+      "Nominal_Unification.NU_Disagreement",
+      "Nominal_Unification.NU_Terms",
+      "Nominal_Unification.NU_Atoms",
+      "Nominal_Unification.NU_Swap"
     ]
   },
   "Noninterference_CSP": {
@@ -11650,7 +12605,6 @@
       "HOL-Library"
     ],
     "theories": [
-      "Parallel_Shear_Sort.Ceil_Log2",
       "Parallel_Shear_Sort.Parallel_Shear_Sort"
     ]
   },
@@ -11798,6 +12752,27 @@
       "Selection_Heap_Sort.Sort"
     ]
   },
+  "Shallow_Expressions": {
+    "deps": [
+      "Optics",
+      "HOL-Library"
+    ],
+    "theories": [
+      "Shallow_Expressions.Shallow_Expressions_Examples",
+      "Shallow_Expressions.Expressions_Tests",
+      "Shallow_Expressions.Local_State",
+      "Shallow_Expressions.Named_Expressions",
+      "Shallow_Expressions.Collections",
+      "Shallow_Expressions.Quantifiers",
+      "Shallow_Expressions.Liberation",
+      "Shallow_Expressions.Extension",
+      "Shallow_Expressions.Substitutions",
+      "Shallow_Expressions.Unrestriction",
+      "Shallow_Expressions.Expressions",
+      "Shallow_Expressions.Variables",
+      "Shallow_Expressions.Shallow_Expressions"
+    ]
+  },
   "Sigma_Commit_Crypto": {
     "deps": [
       "CryptHOL",
@@ -11817,6 +12792,24 @@
       "Sigma_Commit_Crypto.Cyclic_Group_Ext",
       "Sigma_Commit_Crypto.Commitment_Schemes",
       "Sigma_Commit_Crypto.Pedersen"
+    ]
+  },
+  "Splitting_Framework": {
+    "deps": [
+      "Saturation_Framework",
+      "HOL-Library",
+      "Propositional_Proof_Systems",
+      "Saturation_Framework_Extensions"
+    ],
+    "theories": [
+      "Splitting_Framework.List_Extra",
+      "Splitting_Framework.Modular_Splitting_Calculus",
+      "Splitting_Framework.Lightweight_Avatar",
+      "Splitting_Framework.Light_Lifting_to_Non_Ground_Calculi",
+      "Splitting_Framework.FSet_Extra",
+      "Splitting_Framework.Lazy_List_Limsup",
+      "Splitting_Framework.Disjunctive_Consequence_Relations",
+      "Splitting_Framework.Calculi_And_Annotations"
     ]
   },
   "Stochastic_Matrices": {
@@ -11916,19 +12909,11 @@
       "Probabilistic_Timed_Automata"
     ],
     "theories": [
-      "Worklist_Algorithms.Leadsto",
-      "Worklist_Algorithms.Leadsto_Map",
       "Worklist_Algorithms.Leadsto_Impl",
       "Worklist_Algorithms.Next_Key",
-      "Worklist_Algorithms.Liveness_Subsumption",
-      "Worklist_Algorithms.Liveness_Subsumption_Map",
       "Worklist_Algorithms.Liveness_Subsumption_Impl",
-      "Worklist_Algorithms.Worklist_Subsumption1",
       "Worklist_Algorithms.Worklist_Subsumption_Impl1",
       "Worklist_Algorithms.Worklist_Subsumption_Multiset",
-      "Worklist_Algorithms.Heap_Hash_Map",
-      "Worklist_Algorithms.Unified_PW",
-      "Worklist_Algorithms.Unified_PW_Hashing",
       "Worklist_Algorithms.Unified_PW_Impl",
       "Worklist_Algorithms.Worklist_Algorithms_Subsumption_Graphs",
       "Worklist_Algorithms.Worklist_Algorithms_Tracing",
@@ -11960,6 +12945,7 @@
     "theories": [
       "Amortized_Complexity.Pairing_Heap_List2_Analysis",
       "Amortized_Complexity.Pairing_Heap_List1_Analysis2",
+      "Amortized_Complexity.Pairing_Heap_List1_Analysis1",
       "Amortized_Complexity.Pairing_Heap_List1_Analysis",
       "Amortized_Complexity.Pairing_Heap_Tree_Analysis2",
       "Amortized_Complexity.Pairing_Heap_Tree_Analysis",
@@ -12071,6 +13057,7 @@
       "Polynomial_Factorization",
       "Polynomial_Interpolation",
       "Efficient-Mergesort",
+      "Native_Word",
       "Show"
     ],
     "theories": [
@@ -12170,6 +13157,23 @@
       "Collections_Examples.Examples_Chapter"
     ]
   },
+  "Computational_pAdics": {
+    "deps": [
+      "HOL",
+      "HOL-Analysis",
+      "HOL-Computational_Algebra",
+      "HOL-Library"
+    ],
+    "theories": [
+      "Computational_pAdics.More_pAdic_Product",
+      "Computational_pAdics.Fin_Field_Product",
+      "Computational_pAdics.pAdic_Product",
+      "Computational_pAdics.FLS_Prime_Equiv_Depth",
+      "Computational_pAdics.Parametric_Equiv_Depth",
+      "Computational_pAdics.Polynomial_Extras",
+      "Computational_pAdics.Distinguished_Quotients"
+    ]
+  },
   "Concurrent_Revisions": {
     "deps": [
       "HOL"
@@ -12182,6 +13186,34 @@
       "Concurrent_Revisions.Renaming",
       "Concurrent_Revisions.Occurrences",
       "Concurrent_Revisions.Data"
+    ]
+  },
+  "Context_Free_Grammar": {
+    "deps": [
+      "Finite_Automata_HF",
+      "HOL-Library",
+      "List_Power",
+      "Fresh_Identifiers"
+    ],
+    "theories": [
+      "Context_Free_Grammar.AnBn_Not_Regular",
+      "Context_Free_Grammar.Pumping_Lemma_Regular",
+      "Context_Free_Grammar.NDA_rlin2",
+      "Context_Free_Grammar.Right_Linear_Automata",
+      "Context_Free_Grammar.Inlining1Prod",
+      "Context_Free_Grammar.Binarize",
+      "Context_Free_Grammar.Right_Linear",
+      "Context_Free_Grammar.CFL_Not_Intersection_Closed",
+      "Context_Free_Grammar.AnBnCn_not_CFL",
+      "Context_Free_Grammar.Pumping_Lemma_CFG",
+      "Context_Free_Grammar.Chomsky_Normal_Form",
+      "Context_Free_Grammar.Replace_Terminals",
+      "Context_Free_Grammar.Expansion",
+      "Context_Free_Grammar.Disjoint_Union_CFG",
+      "Context_Free_Grammar.Renaming_CFG",
+      "Context_Free_Grammar.Context_Free_Language",
+      "Context_Free_Grammar.Parse_Tree",
+      "Context_Free_Grammar.Context_Free_Grammar"
     ]
   },
   "Correctness_Algebras": {
@@ -12299,6 +13331,15 @@
       "Furstenberg_Topology.Furstenberg_Topology"
     ]
   },
+  "Greibach_Normal_Form": {
+    "deps": [
+      "Context_Free_Grammar",
+      "Fresh_Identifiers"
+    ],
+    "theories": [
+      "Greibach_Normal_Form.Greibach_Normal_Form"
+    ]
+  },
   "Gromov_Hyperbolicity": {
     "deps": [
       "HOL-Analysis",
@@ -12413,6 +13454,8 @@
       "Secret_Directed_Unwinding"
     ],
     "theories": [
+      "IMP_With_Speculation.Fun_mask_secure",
+      "IMP_With_Speculation.Fun_mask",
       "IMP_With_Speculation.Fun6_secure",
       "IMP_With_Speculation.Fun6",
       "IMP_With_Speculation.Fun5_secure",
@@ -12548,18 +13591,23 @@
   },
   "Pattern_Completeness": {
     "deps": [
-      "First_Order_Terms",
-      "LP_Duality",
-      "Certification_Monads",
-      "Sorted_Terms"
+      "Sorted_Terms",
+      "Certification_Monads"
     ],
     "theories": [
       "Pattern_Completeness.Test_Pat_Complete",
-      "Pattern_Completeness.Compute_Nonempty_Infinite_Sorts",
+      "Pattern_Completeness.Finite_IDL_Solver",
+      "Pattern_Completeness.FCF_Set",
+      "Pattern_Completeness.FCF_Multiset",
+      "Pattern_Completeness.FCF_List",
+      "Pattern_Completeness.Pattern_Completeness_Improved_Algorithm",
+      "Pattern_Completeness.FCF_Problem",
       "Pattern_Completeness.Pattern_Completeness_Set",
       "Pattern_Completeness.Pattern_Completeness_Multiset",
       "Pattern_Completeness.Pattern_Completeness_List",
-      "Pattern_Completeness.Pattern_Completeness"
+      "Pattern_Completeness.Pattern_Completeness",
+      "Pattern_Completeness.Finite_IDL_Solver_Interface",
+      "Pattern_Completeness.Singleton_List"
     ]
   },
   "Prim_Dijkstra_Simple": {
@@ -12608,7 +13656,10 @@
   },
   "Rank_Nullity_Theorem": {
     "deps": [
-      "HOL-Analysis"
+      "HOL-Analysis",
+      "HOL-Probability",
+      "Ergodic_Theory",
+      "Lp"
     ],
     "theories": [
       "Rank_Nullity_Theorem.Dim_Formula"
@@ -12745,12 +13796,23 @@
     "deps": [
       "HOL",
       "First_Order_Terms",
-      "HOL-ex"
+      "HOL-ex",
+      "Regular_Tree_Relations"
     ],
     "theories": [
+      "Abstract_Substitution.Substitution_Lifting_Example",
       "Abstract_Substitution.Substitution_HOL_ex_Unification",
       "Abstract_Substitution.Substitution_First_Order_Term",
-      "Abstract_Substitution.Substitution"
+      "Abstract_Substitution.Natural_Functor",
+      "Abstract_Substitution.Natural_Magma",
+      "Abstract_Substitution.Natural_Magma_Functor",
+      "Abstract_Substitution.Substitution_Lifting",
+      "Abstract_Substitution.Based_Substitution_Lifting",
+      "Abstract_Substitution.Option_Extra",
+      "Abstract_Substitution.Substitution",
+      "Abstract_Substitution.Based_Substitution",
+      "Abstract_Substitution.Monoid_Action",
+      "Abstract_Substitution.Abstract_Substitution"
     ]
   },
   "Actuarial_Mathematics": {
@@ -12763,6 +13825,15 @@
       "Actuarial_Mathematics.Survival_Model",
       "Actuarial_Mathematics.Interest",
       "Actuarial_Mathematics.Preliminaries"
+    ]
+  },
+  "Andrew_Monotone_Chain": {
+    "deps": [
+      "HOL-Analysis"
+    ],
+    "theories": [
+      "Andrew_Monotone_Chain.Andrew_Monotone_Chain_Examples",
+      "Andrew_Monotone_Chain.Andrew_Monotone_Chain"
     ]
   },
   "Arith_Prog_Rel_Primes": {
@@ -12822,9 +13893,7 @@
     ]
   },
   "CAVA_LTL_Modelchecker": {
-    "deps": [
-      "CAVA_Setup"
-    ],
+    "deps": [],
     "theories": [
       "CAVA_LTL_Modelchecker.All_Of_Nested_DFS",
       "CAVA_LTL_Modelchecker.All_Of_CAVA_LTL_Modelchecker",
@@ -12878,8 +13947,6 @@
       "Descartes_Sign_Rule"
     ],
     "theories": [
-      "Chebyshev_Polynomials.Chebyshev_Polynomials_Library",
-      "Chebyshev_Polynomials.Polynomial_Transfer",
       "Chebyshev_Polynomials.Chebyshev_Polynomials"
     ]
   },
@@ -12942,6 +14009,24 @@
       "Falling_Factorial_Sum.Falling_Factorial_Sum_Vandermonde",
       "Falling_Factorial_Sum.Falling_Factorial_Sum_Induction",
       "Falling_Factorial_Sum.Falling_Factorial_Sum_Combinatorics"
+    ]
+  },
+  "First_Order_Rewriting": {
+    "deps": [
+      "First_Order_Terms",
+      "Certification_Monads",
+      "Transitive-Closure"
+    ],
+    "theories": [
+      "First_Order_Rewriting.Rewrite_Relations_Impl",
+      "First_Order_Rewriting.Trs_Impl",
+      "First_Order_Rewriting.Multistep",
+      "First_Order_Rewriting.Orthogonality",
+      "First_Order_Rewriting.Parallel_Rewriting",
+      "First_Order_Rewriting.Critical_Pairs",
+      "First_Order_Rewriting.SubList",
+      "First_Order_Rewriting.Option_Util",
+      "First_Order_Rewriting.FOR_Preliminaries"
     ]
   },
   "First_Welfare_Theorem": {
@@ -13037,7 +14122,6 @@
   },
   "HOL-Proofs-Extraction": {
     "deps": [
-      "HOL-Proofs",
       "HOL-Computational_Algebra"
     ],
     "theories": [
@@ -13075,6 +14159,18 @@
     ],
     "theories": [
       "HOL-Real_Asymp-Manual.Real_Asymp_Doc"
+    ]
+  },
+  "Hidden_Number_Problem": {
+    "deps": [
+      "HOL-Probability",
+      "Babai_Nearest_Plane",
+      "HOL-Algebra"
+    ],
+    "theories": [
+      "Hidden_Number_Problem.Ad_Codegen_Example",
+      "Hidden_Number_Problem.Misc_PMF",
+      "Hidden_Number_Problem.Hidden_Number_Problem"
     ]
   },
   "Hypergraph_Colourings": {
@@ -13200,7 +14296,6 @@
       "Polynomial_Factorization"
     ],
     "theories": [
-      "Power_Sum_Polynomials.Power_Sum_Polynomials",
       "Power_Sum_Polynomials.Power_Sum_Puzzle"
     ]
   },
@@ -13228,7 +14323,6 @@
   },
   "Refine_Imperative_HOL": {
     "deps": [
-      "Sepref_Prereq",
       "Isar_Ref",
       "HOL-Eisbach",
       "List-Index",
@@ -13397,8 +14491,8 @@
       "Hermite_Lindemann"
     ],
     "theories": [
-      "Two_Hermitian_Results.Cauchy_Eigenvalue_Interlacing",
       "Two_Hermitian_Results.Misc_Matrix_Results",
+      "Two_Hermitian_Results.Cauchy_Eigenvalue_Interlacing",
       "Two_Hermitian_Results.Sylvester_Criterion"
     ]
   },
@@ -13412,6 +14506,7 @@
   },
   "Vickrey_Clarke_Groves": {
     "deps": [
+      "HOL",
       "HOL-Library"
     ],
     "theories": [
@@ -13533,8 +14628,8 @@
     ],
     "theories": [
       "EnrichedCategoryBasics.EnrichedCategory",
-      "EnrichedCategoryBasics.CartesianClosedMonoidalCategory",
-      "EnrichedCategoryBasics.ClosedMonoidalCategory"
+      "EnrichedCategoryBasics.ClosedMonoidalCategory",
+      "EnrichedCategoryBasics.CartesianClosedMonoidalCategory"
     ]
   },
   "Fishburn_Impossibility": {
@@ -13565,10 +14660,16 @@
       "HOL-Examples"
     ],
     "theories": [
-      "HOL-Codegenerator_Test.Code_Test_SMLNJ",
-      "HOL-Codegenerator_Test.Code_Test_OCaml",
-      "HOL-Codegenerator_Test.Code_Test_MLton",
       "HOL-Codegenerator_Test.Code_Test_GHC",
+      "HOL-Codegenerator_Test.Code_Test_OCaml",
+      "HOL-Codegenerator_Test.Code_Test_SMLNJ",
+      "HOL-Codegenerator_Test.Code_Test_MLton",
+      "HOL-Codegenerator_Test.Generate_Target_GHC",
+      "HOL-Codegenerator_Test.Generate_Target_OCaml",
+      "HOL-Codegenerator_Test.Generate_Target_SMLNJ",
+      "HOL-Codegenerator_Test.Generate_Target_MLton",
+      "HOL-Codegenerator_Test.Generate_Target_Bit_Operations",
+      "HOL-Codegenerator_Test.Generate_Target_String_Literals",
       "HOL-Codegenerator_Test.Code_Test_Scala",
       "HOL-Codegenerator_Test.Code_Test_PolyML",
       "HOL-Codegenerator_Test.Code_Lazy_Test",
@@ -13576,6 +14677,7 @@
       "HOL-Codegenerator_Test.Generate_Abstract_Char",
       "HOL-Codegenerator_Test.Generate_Target_Nat",
       "HOL-Codegenerator_Test.Generate_Binary_Nat",
+      "HOL-Codegenerator_Test.Basic_Setup",
       "HOL-Codegenerator_Test.Candidates",
       "HOL-Codegenerator_Test.Generate"
     ]
@@ -13683,9 +14785,9 @@
       "HOL-Library"
     ],
     "theories": [
-      "Min_Max_Least_Greatest.Min_Max_Least_Greatest_Multiset",
       "Min_Max_Least_Greatest.Relation_Reachability",
       "Min_Max_Least_Greatest.Min_Max_Least_Greatest_Set",
+      "Min_Max_Least_Greatest.Min_Max_Least_Greatest_Multiset",
       "Min_Max_Least_Greatest.Min_Max_Least_Greatest_FSet"
     ]
   },
@@ -13869,42 +14971,28 @@
   "Superposition_Calculus": {
     "deps": [
       "Saturation_Framework_Extensions",
-      "Abstract_Substitution",
-      "Knuth_Bendix_Order",
-      "Min_Max_Least_Greatest",
-      "Ordered_Resolution_Prover",
-      "Regular_Tree_Relations",
+      "First_Order_Clause",
       "Saturation_Framework",
       "Saturation_Framework_Extensions"
     ],
     "theories": [
-      "Superposition_Calculus.Ground_Superposition_Welltypedness_Preservation",
+      "Superposition_Calculus.Untyped_Superposition_Soundness",
+      "Superposition_Calculus.Untyped_Superposition",
+      "Superposition_Calculus.Untyped_Superposition_Inference_System",
+      "Superposition_Calculus.Untyped_Superposition_Completeness",
+      "Superposition_Calculus.Superposition_Example",
+      "Superposition_Calculus.Superposition_Soundness",
+      "Superposition_Calculus.Superposition_Welltypedness_Preservation",
+      "Superposition_Calculus.Grounded_Superposition",
+      "Superposition_Calculus.Superposition_Completeness",
+      "Superposition_Calculus.Superposition",
+      "Superposition_Calculus.Monomorphic_Superposition",
+      "Superposition_Calculus.Typed_Ground_Superposition",
+      "Superposition_Calculus.Ground_Superposition_Example",
       "Superposition_Calculus.Ground_Superposition_Soundness",
-      "Superposition_Calculus.First_Order_Superposition_Soundness",
-      "Superposition_Calculus.IsaFoR_Term_Copy",
-      "Superposition_Calculus.First_Order_Superposition_Example",
-      "Superposition_Calculus.First_Order_Ordering",
-      "Superposition_Calculus.Fun_Extra",
-      "Superposition_Calculus.First_Order_Type_System",
-      "Superposition_Calculus.Variable_Substitution",
-      "Superposition_Calculus.First_Order_Clause",
-      "Superposition_Calculus.First_Order_Select",
-      "Superposition_Calculus.First_Order_Superposition",
-      "Superposition_Calculus.Grounded_First_Order_Superposition",
-      "Superposition_Calculus.Ground_Type_System",
-      "Superposition_Calculus.Term_Ordering_Lifting",
-      "Superposition_Calculus.Ground_Ordering",
-      "Superposition_Calculus.Ground_Term_Extra",
-      "Superposition_Calculus.Ground_Clause",
-      "Superposition_Calculus.Selection_Function",
-      "Superposition_Calculus.Clausal_Calculus_Extra",
-      "Superposition_Calculus.Uprod_Extra",
-      "Superposition_Calculus.Term_Rewrite_System",
-      "Superposition_Calculus.Ground_Critical_Pairs",
       "Superposition_Calculus.Abstract_Rewriting_Extra",
       "Superposition_Calculus.Ground_Superposition",
-      "Superposition_Calculus.Ground_Superposition_Completeness",
-      "Superposition_Calculus.First_Order_Superposition_Completeness"
+      "Superposition_Calculus.Ground_Superposition_Completeness"
     ]
   },
   "Synthetic_Completeness": {
@@ -14011,6 +15099,18 @@
       "CRYSTALS-Kyber_Security.Crypto_Scheme_new",
       "CRYSTALS-Kyber_Security.Correct_new",
       "CRYSTALS-Kyber_Security.Kyber_gpv_IND_CPA"
+    ]
+  },
+  "Chomsky_Schuetzenberger": {
+    "deps": [
+      "Context_Free_Grammar",
+      "Finite_Automata_HF",
+      "Dyck_Language",
+      "Context_Free_Grammar"
+    ],
+    "theories": [
+      "Chomsky_Schuetzenberger.Chomsky_Schuetzenberger",
+      "Chomsky_Schuetzenberger.Dyck_Language_Syms"
     ]
   },
   "Cubic_Quartic_Equations": {
@@ -14203,6 +15303,16 @@
       "Randomized_Closest_Pair.Randomized_Closest_Pair_Growth",
       "Randomized_Closest_Pair.Randomized_Closest_Pair_Correct",
       "Randomized_Closest_Pair.Randomized_Closest_Pair"
+    ]
+  },
+  "Relational_Divisibility": {
+    "deps": [
+      "Stone_Relation_Algebras"
+    ],
+    "theories": [
+      "Relational_Divisibility.Mono_Atomic",
+      "Relational_Divisibility.Relational_Divisibility",
+      "Relational_Divisibility.Relational_Constructions"
     ]
   },
   "Special_Function_Bounds": {
@@ -14578,6 +15688,15 @@
       "Randomised_Social_Choice.Randomised_Social_Choice"
     ]
   },
+  "Restriction_Spaces-HOLCF": {
+    "deps": [
+      "HOLCF",
+      "Restriction_Spaces"
+    ],
+    "theories": [
+      "Restriction_Spaces-HOLCF.Restriction_Spaces-HOLCF"
+    ]
+  },
   "Sliding_Window_Algorithm": {
     "deps": [
       "HOL"
@@ -14605,6 +15724,32 @@
       "Tail_Recursive_Functions.CaseStudy2",
       "Tail_Recursive_Functions.CaseStudy1",
       "Tail_Recursive_Functions.Method"
+    ]
+  },
+  "Typed_Ordered_Resolution": {
+    "deps": [
+      "Saturation_Framework_Extensions",
+      "First_Order_Clause",
+      "Saturation_Framework",
+      "Saturation_Framework_Extensions",
+      "Abstract_Substitution"
+    ],
+    "theories": [
+      "Typed_Ordered_Resolution.Ordered_Resolution_Example",
+      "Typed_Ordered_Resolution.Monomorphic_Ordered_Resolution",
+      "Typed_Ordered_Resolution.Untyped_Ordered_Resolution_Soundness",
+      "Typed_Ordered_Resolution.Untyped_Ordered_Resolution",
+      "Typed_Ordered_Resolution.Untyped_Ordered_Resolution_Inference_System",
+      "Typed_Ordered_Resolution.Untyped_Ordered_Resolution_Completeness",
+      "Typed_Ordered_Resolution.Ordered_Resolution_Welltypedness_Preservation",
+      "Typed_Ordered_Resolution.Ordered_Resolution_Completeness",
+      "Typed_Ordered_Resolution.Ordered_Resolution",
+      "Typed_Ordered_Resolution.Grounded_Ordered_Resolution",
+      "Typed_Ordered_Resolution.Ordered_Resolution_Soundness",
+      "Typed_Ordered_Resolution.Ground_Ordered_Resolution_Soundness",
+      "Typed_Ordered_Resolution.Relation_Extra",
+      "Typed_Ordered_Resolution.Ground_Ordered_Resolution",
+      "Typed_Ordered_Resolution.Ground_Ordered_Resolution_Completeness"
     ]
   },
   "Universal_Turing_Machine": {
@@ -14708,19 +15853,29 @@
   "Combinatorial_Q_Analogues": {
     "deps": [
       "HOL-Complex_Analysis",
-      "HOL-Computational_Algebra"
+      "HOL-Computational_Algebra",
+      "HOL-Number_Theory",
+      "Gauss_Sums",
+      "Lambert_Series"
     ],
     "theories": [
+      "Combinatorial_Q_Analogues.Euler_Function",
       "Combinatorial_Q_Analogues.Q_Binomial_Identities",
+      "Combinatorial_Q_Analogues.Primitive_Roots",
       "Combinatorial_Q_Analogues.Q_Pochhammer_Infinite",
       "Combinatorial_Q_Analogues.Q_Analogues",
-      "Combinatorial_Q_Analogues.Q_Library",
       "Combinatorial_Q_Analogues.More_Infinite_Products"
     ]
   },
   "Complex_Bounded_Operators": {
     "deps": [
-      "Complex_Bounded_Operators_Dependencies"
+      "HOL-Analysis",
+      "HOL-Examples",
+      "HOL-Types_To_Sets",
+      "Jordan_Normal_Form",
+      "Banach_Steinhaus",
+      "Real_Impl",
+      "Wlog"
     ],
     "theories": [
       "Complex_Bounded_Operators.Extra_Jordan_Normal_Form",
@@ -14802,6 +15957,25 @@
       "Difference_Bound_Matrices.DBM_Basics"
     ]
   },
+  "Dynamic_Pushdown_Networks": {
+    "deps": [
+      "HOL",
+      "HOL-Library",
+      "Automatic_Refinement",
+      "Program-Conflict-Analysis"
+    ],
+    "theories": [
+      "Dynamic_Pushdown_Networks.ImplHelper",
+      "Dynamic_Pushdown_Networks.FSM_ex",
+      "Dynamic_Pushdown_Networks.DPN_implEx",
+      "Dynamic_Pushdown_Networks.DPN_impl",
+      "Dynamic_Pushdown_Networks.NDET",
+      "Dynamic_Pushdown_Networks.FSM",
+      "Dynamic_Pushdown_Networks.SRS",
+      "Dynamic_Pushdown_Networks.DPN",
+      "Dynamic_Pushdown_Networks.DPN_Setup"
+    ]
+  },
   "Elliptic_Curves_Group_Law": {
     "deps": [
       "HOL-Number_Theory",
@@ -14823,6 +15997,7 @@
   },
   "Generalized_Counting_Sort": {
     "deps": [
+      "HOL",
       "HOL-Library"
     ],
     "theories": [
@@ -14855,9 +16030,11 @@
   },
   "HOL-Computational_Algebra": {
     "deps": [
+      "HOL",
       "HOL-Library"
     ],
     "theories": [
+      "HOL-Computational_Algebra.Computation_Checks",
       "HOL-Computational_Algebra.Field_as_Ring",
       "HOL-Computational_Algebra.Computational_Algebra"
     ]
@@ -14969,6 +16146,34 @@
       "Lowe_Ontological_Argument.Relations"
     ]
   },
+  "Munta_Certificate_Checker": {
+    "deps": [
+      "Munta_Model_Checker",
+      "Graph_Theory",
+      "Munta_Model_Checker"
+    ],
+    "theories": [
+      "Munta_Certificate_Checker.Munta_Certificate_Compile_Poly",
+      "Munta_Certificate_Checker.Munta_Certificate_Testing",
+      "Munta_Certificate_Checker.Munta_Certificate_Compile_MLton",
+      "Munta_Certificate_Checker.Simple_Network_Language_Certificate_Checking",
+      "Munta_Certificate_Checker.Extract_Certificate",
+      "Munta_Certificate_Checker.Simple_Network_Language_Certificate",
+      "Munta_Certificate_Checker.Simple_Network_Language_Certificate_Code",
+      "Munta_Certificate_Checker.Normalized_Zone_Semantics_Certification_Impl2",
+      "Munta_Certificate_Checker.Normalized_Zone_Semantics_Certification",
+      "Munta_Certificate_Checker.Normalized_Zone_Semantics_Certification_Impl",
+      "Munta_Certificate_Checker.TA_Simulation",
+      "Munta_Certificate_Checker.Simulation_Graphs2",
+      "Munta_Certificate_Checker.Unreachability_Certification2",
+      "Munta_Certificate_Checker.Unreachability_Misc",
+      "Munta_Certificate_Checker.Simulation_Graphs_Certification",
+      "Munta_Certificate_Checker.Unreachability_Certification",
+      "Munta_Certificate_Checker.More_Graph_Theory",
+      "Munta_Certificate_Checker.Graph_Library_Adaptor",
+      "Munta_Certificate_Checker.Lasso_Freeness_Certificates_Complete"
+    ]
+  },
   "Nested_Multisets_Ordinals": {
     "deps": [
       "Ordinal",
@@ -14999,6 +16204,20 @@
       "Ordered_Resolution_Prover.Herbrand_Interpretation",
       "Ordered_Resolution_Prover.Lazy_List_Chain",
       "Ordered_Resolution_Prover.Map2"
+    ]
+  },
+  "Pentagonal_Number_Theorem": {
+    "deps": [
+      "Theta_Functions",
+      "HOL-Library",
+      "Card_Number_Partitions",
+      "Refine_Monadic",
+      "Refine_Imperative_HOL"
+    ],
+    "theories": [
+      "Pentagonal_Number_Theorem.Partition_Number_Imperative_Test",
+      "Pentagonal_Number_Theorem.Partition_Number_Imperative",
+      "Pentagonal_Number_Theorem.Pentagonal_Number_Theorem"
     ]
   },
   "Probabilistic_Prime_Tests": {
@@ -15058,6 +16277,14 @@
       "Public_Announcement_Logic.PAL"
     ]
   },
+  "Quantum_Fourier_Transform": {
+    "deps": [
+      "Isabelle_Marries_Dirac"
+    ],
+    "theories": [
+      "Quantum_Fourier_Transform.QFT"
+    ]
+  },
   "Regression_Test_Selection": {
     "deps": [
       "HOL-Library",
@@ -15083,6 +16310,8 @@
       "Relative_Security"
     ],
     "theories": [
+      "Secret_Directed_Unwinding.SD_Incomplete",
+      "Secret_Directed_Unwinding.SD_Incomplete_fin",
       "Secret_Directed_Unwinding.SD_Unwinding",
       "Secret_Directed_Unwinding.SD_Unwinding_fin"
     ]
@@ -15098,9 +16327,10 @@
   },
   "Approximate_Model_Counting": {
     "deps": [
-      "Frequency_Moments",
+      "Universal_Hash_Families",
       "Concentration_Inequalities",
-      "Monad_Normalisation"
+      "Monad_Normalisation",
+      "Median_Method"
     ],
     "theories": [
       "Approximate_Model_Counting.CertCheck_CNF_XOR",
@@ -15230,13 +16460,28 @@
       "Number_Theoretic_Transform.Preliminary_Lemmas"
     ]
   },
+  "Proof_Terms_Term_Rewriting": {
+    "deps": [
+      "First_Order_Rewriting",
+      "Well_Quasi_Orders"
+    ],
+    "theories": [
+      "Proof_Terms_Term_Rewriting.Redex_Patterns",
+      "Proof_Terms_Term_Rewriting.Proof_Terms",
+      "Proof_Terms_Term_Rewriting.Residual_Join_Deletion",
+      "Proof_Terms_Term_Rewriting.Orthogonal_PT",
+      "Proof_Terms_Term_Rewriting.Labels_and_Overlaps",
+      "Proof_Terms_Term_Rewriting.Linear_Matching",
+      "Proof_Terms_Term_Rewriting.Proof_Term_Utils"
+    ]
+  },
   "ResiduatedTransitionSystem": {
     "deps": [
       "HOL-Library"
     ],
     "theories": [
-      "ResiduatedTransitionSystem.LambdaCalculus",
-      "ResiduatedTransitionSystem.ResiduatedTransitionSystem"
+      "ResiduatedTransitionSystem.ResiduatedTransitionSystem",
+      "ResiduatedTransitionSystem.LambdaCalculus"
     ]
   },
   "Separation_Logic_Unbounded": {
@@ -15250,6 +16495,20 @@
       "Separation_Logic_Unbounded.Distributivity",
       "Separation_Logic_Unbounded.FixedPoint",
       "Separation_Logic_Unbounded.AutomaticVerifiers"
+    ]
+  },
+  "Unconstrained_Optimization": {
+    "deps": [
+      "Sigmoid_Universal_Approximation",
+      "HOL-Library"
+    ],
+    "theories": [
+      "Unconstrained_Optimization.Cont_Nonisolated_Strict_Local_Minimizer_Exists",
+      "Unconstrained_Optimization.Second_Derivative_Test",
+      "Unconstrained_Optimization.First_Order_Conditions",
+      "Unconstrained_Optimization.Minimizers_Definition",
+      "Unconstrained_Optimization.Auxilary_Facts",
+      "Unconstrained_Optimization.Unconstrained_Optimization"
     ]
   },
   "Boolean_Expression_Checkers": {
@@ -15298,6 +16557,66 @@
       "Comparison_Sort_Lower_Bound.Linorder_Relations"
     ]
   },
+  "Diophantine_Universal_Pairs": {
+    "deps": [
+      "HOL-Complex_Analysis",
+      "HOL-Computational_Algebra",
+      "HOL-Algebra",
+      "HOL-Number_Theory",
+      "Digit_Expansions",
+      "Polynomials",
+      "Three_Squares"
+    ],
+    "theories": [
+      "Diophantine_Universal_Pairs.Universal_Pairs",
+      "Diophantine_Universal_Pairs.Eleven_Unknowns_Z",
+      "Diophantine_Universal_Pairs.Nine_Unknowns_N_Z",
+      "Diophantine_Universal_Pairs.Nine_Unknowns_N_Z_Definitions",
+      "Diophantine_Universal_Pairs.Matiyasevich_Polynomial",
+      "Diophantine_Universal_Pairs.M3_Polynomial",
+      "Diophantine_Universal_Pairs.Pi_to_M3_rat",
+      "Diophantine_Universal_Pairs.Pi_Relations",
+      "Diophantine_Universal_Pairs.J3_Relations",
+      "Diophantine_Universal_Pairs.J3_Polynomial",
+      "Diophantine_Universal_Pairs.Algebra_Basics",
+      "Diophantine_Universal_Pairs.Bridge_Theorem",
+      "Diophantine_Universal_Pairs.Bridge_Theorem_Rev",
+      "Diophantine_Universal_Pairs.Bridge_Theorem_Imp",
+      "Diophantine_Universal_Pairs.DFI_square_3",
+      "Diophantine_Universal_Pairs.DFI_square_2",
+      "Diophantine_Universal_Pairs.DFI_square_1",
+      "Diophantine_Universal_Pairs.DFI_square_0",
+      "Diophantine_Universal_Pairs.Lemma_4_4",
+      "Diophantine_Universal_Pairs.Lucas_Diophantine",
+      "Diophantine_Universal_Pairs.Pell_Equation",
+      "Diophantine_Universal_Pairs.Lucas_Sequences",
+      "Diophantine_Universal_Pairs.Coding_Theorem",
+      "Diophantine_Universal_Pairs.Lower_Bounds",
+      "Diophantine_Universal_Pairs.Lemma_2_2",
+      "Diophantine_Universal_Pairs.Poly_Degree",
+      "Diophantine_Universal_Pairs.Total_Degree_Env",
+      "Diophantine_Universal_Pairs.Coding_Theorem_Definitions",
+      "Diophantine_Universal_Pairs.Diophantine_Definition",
+      "Diophantine_Universal_Pairs.Suitable_For_Coding",
+      "Diophantine_Universal_Pairs.Lemma_1_8",
+      "Diophantine_Universal_Pairs.Lemma_1_8_Coding",
+      "Diophantine_Universal_Pairs.Lemma_1_8_Defs",
+      "Diophantine_Universal_Pairs.Multinomial",
+      "Diophantine_Universal_Pairs.Masking",
+      "Diophantine_Universal_Pairs.Tau_Reduction",
+      "Diophantine_Universal_Pairs.Utils",
+      "Diophantine_Universal_Pairs.Bit_Counting",
+      "Diophantine_Universal_Pairs.Poly_Extract",
+      "Diophantine_Universal_Pairs.Notation",
+      "Diophantine_Universal_Pairs.Degree",
+      "Diophantine_Universal_Pairs.Variables",
+      "Diophantine_Universal_Pairs.Total_Degree",
+      "Diophantine_Universal_Pairs.Poly_Expansions",
+      "Diophantine_Universal_Pairs.Substitutions",
+      "Diophantine_Universal_Pairs.Type_Casting",
+      "Diophantine_Universal_Pairs.More_More_MPoly_Type"
+    ]
+  },
   "Factor_Algebraic_Polynomial": {
     "deps": [
       "Algebraic_Numbers",
@@ -15335,6 +16654,16 @@
       "Iptables_Semantics_Examples.Small_Examples",
       "Iptables_Semantics_Examples.Parser6_Test",
       "Iptables_Semantics_Examples.Parser_Test"
+    ]
+  },
+  "Lebesgue_Stieltjes_Integral": {
+    "deps": [
+      "HOL-Analysis",
+      "Wlog"
+    ],
+    "theories": [
+      "Lebesgue_Stieltjes_Integral.Lebesgue_Stieltjes_Integral",
+      "Lebesgue_Stieltjes_Integral.Preliminaries_LSI"
     ]
   },
   "Median_Of_Medians_Selection": {
@@ -15440,6 +16769,24 @@
       "ResiduatedTransitionSystem2.CategoryOfTransitions"
     ]
   },
+  "Restriction_Spaces-Examples": {
+    "deps": [
+      "HOL-Analysis",
+      "Restriction_Spaces"
+    ],
+    "theories": [
+      "Restriction_Spaces-Examples.RS_Formal_Power_Series",
+      "Restriction_Spaces-Examples.RS_Trace_Model_CSP",
+      "Restriction_Spaces-Examples.RS_Decimals",
+      "Restriction_Spaces-Examples.RS_Tree",
+      "Restriction_Spaces-Examples.RS_List",
+      "Restriction_Spaces-Examples.RS_Option",
+      "Restriction_Spaces-Examples.RS_Int",
+      "Restriction_Spaces-Examples.RS_Nat",
+      "Restriction_Spaces-Examples.RS_Bool",
+      "Restriction_Spaces-Examples.RS_Any_Type"
+    ]
+  },
   "Clique_and_Monotone_Circuits": {
     "deps": [
       "Stirling_Formula",
@@ -15540,18 +16887,7 @@
       "Hilbert_Space_Tensor_Product.Tensor_Product_Code",
       "Hilbert_Space_Tensor_Product.Von_Neumann_Algebras",
       "Hilbert_Space_Tensor_Product.Partial_Trace",
-      "Hilbert_Space_Tensor_Product.Spectral_Theorem",
-      "Hilbert_Space_Tensor_Product.Eigenvalues",
-      "Hilbert_Space_Tensor_Product.Misc_Tensor_Product_TTS",
-      "Hilbert_Space_Tensor_Product.Compact_Operators",
-      "Hilbert_Space_Tensor_Product.Weak_Operator_Topology",
-      "Hilbert_Space_Tensor_Product.HS2Ell2",
-      "Hilbert_Space_Tensor_Product.Trace_Class",
       "Hilbert_Space_Tensor_Product.Weak_Star_Topology",
-      "Hilbert_Space_Tensor_Product.Positive_Operators",
-      "Hilbert_Space_Tensor_Product.Misc_Tensor_Product_BO",
-      "Hilbert_Space_Tensor_Product.Strong_Operator_Topology",
-      "Hilbert_Space_Tensor_Product.Misc_Tensor_Product",
       "Hilbert_Space_Tensor_Product.Hilbert_Space_Tensor_Product"
     ]
   },
@@ -15605,13 +16941,6 @@
     "theories": [
       "Probabilistic_Timed_Automata.PTA_Reachability",
       "Probabilistic_Timed_Automata.PTA",
-      "Probabilistic_Timed_Automata.Stream_More",
-      "Probabilistic_Timed_Automata.More_List",
-      "Probabilistic_Timed_Automata.Graphs",
-      "Probabilistic_Timed_Automata.Instantiate_Existentials",
-      "Probabilistic_Timed_Automata.Basic",
-      "Probabilistic_Timed_Automata.Sequence",
-      "Probabilistic_Timed_Automata.Sequence_LTL",
       "Probabilistic_Timed_Automata.Finiteness",
       "Probabilistic_Timed_Automata.MDP_Aux",
       "Probabilistic_Timed_Automata.Lib"
@@ -15620,7 +16949,8 @@
   "Rewrite_Properties_Reduction": {
     "deps": [
       "HOL-Library",
-      "Regular_Tree_Relations"
+      "Regular_Tree_Relations",
+      "First_Order_Rewriting"
     ],
     "theories": [
       "Rewrite_Properties_Reduction.Ground_Reduction_on_LV",
@@ -15685,6 +17015,18 @@
       "Security_Protocol_Refinement.Infra"
     ]
   },
+  "Abstract_Consistency_Property": {
+    "deps": [
+      "HOL-Number_Theory",
+      "HOL-Cardinals"
+    ],
+    "theories": [
+      "Abstract_Consistency_Property.Example_PIL",
+      "Abstract_Consistency_Property.Example_SOL",
+      "Abstract_Consistency_Property.Example_Bounded_FOL",
+      "Abstract_Consistency_Property.Abstract_Consistency_Property"
+    ]
+  },
   "Architectural_Design_Patterns": {
     "deps": [
       "DynamicArchitectures"
@@ -15710,6 +17052,14 @@
       "Bounded_Deducibility_Security.BD_Security_IO",
       "Bounded_Deducibility_Security.IO_Automaton",
       "Bounded_Deducibility_Security.Bounded_Deducibility_Security"
+    ]
+  },
+  "Combinatorial_Nullstellensatz": {
+    "deps": [
+      "HOL-Computational_Algebra"
+    ],
+    "theories": [
+      "Combinatorial_Nullstellensatz.Combinatorial_Nullstellensatz"
     ]
   },
   "Distributed_Distinct_Elements": {
@@ -15905,6 +17255,19 @@
       "SimplifiedOntologicalArgument.SimplifiedOntologicalArgument"
     ]
   },
+  "Workflow_Net_Fitness_Measures": {
+    "deps": [
+      "HOL-Library"
+    ],
+    "theories": [
+      "Workflow_Net_Fitness_Measures.DefinitionCorrectness",
+      "Workflow_Net_Fitness_Measures.CausalFootprintFitness",
+      "Workflow_Net_Fitness_Measures.Counterexample",
+      "Workflow_Net_Fitness_Measures.TraceFitness",
+      "Workflow_Net_Fitness_Measures.MeasuresProperties",
+      "Workflow_Net_Fitness_Measures.WorkflowNets"
+    ]
+  },
   "Abortable_Linearizable_Modules": {
     "deps": [
       "HOL"
@@ -15917,6 +17280,16 @@
       "Abortable_Linearizable_Modules.IOA",
       "Abortable_Linearizable_Modules.SLin",
       "Abortable_Linearizable_Modules.Idempotence"
+    ]
+  },
+  "Axiom_Free_Ontological_Trinity": {
+    "deps": [
+      "HOL"
+    ],
+    "theories": [
+      "Axiom_Free_Ontological_Trinity.Axiom_And_Assumption_Audit",
+      "Axiom_Free_Ontological_Trinity.Diagnostics_Nitpick",
+      "Axiom_Free_Ontological_Trinity.Axiom_Free_Ontological_Trinity"
     ]
   },
   "Compiling-Exceptions-Correctly": {
@@ -15987,6 +17360,19 @@
     ],
     "theories": [
       "Relational-Incorrectness-Logic.RelationalIncorrectness"
+    ]
+  },
+  "Restriction_Spaces-Ultrametric": {
+    "deps": [
+      "Restriction_Spaces"
+    ],
+    "theories": [
+      "Restriction_Spaces-Ultrametric",
+      "Restriction_Spaces-Ultrametric.Prod_Ultrametric_Restriction_Spaces",
+      "Restriction_Spaces-Ultrametric.Fun_Ultrametric_Restriction_Spaces",
+      "Restriction_Spaces-Ultrametric.Ultrametric_Restriction_Spaces",
+      "Restriction_Spaces-Ultrametric.Ultrametric_Restriction_Spaces_Locale",
+      "Restriction_Spaces-Ultrametric.Banach_Theorem_Extension"
     ]
   },
   "Stone_Kleene_Relation_Algebras": {
@@ -16194,6 +17580,7 @@
   "SCL_Simulates_Ground_Resolution": {
     "deps": [
       "Simple_Clause_Learning",
+      "First_Order_Clause",
       "Min_Max_Least_Greatest",
       "Superposition_Calculus",
       "VeriComp"
@@ -16263,6 +17650,19 @@
       "Separation_Logic_Imperative_HOL.Sep_Main",
       "Separation_Logic_Imperative_HOL.Syntax_Match",
       "Separation_Logic_Imperative_HOL.Imperative_HOL_Add"
+    ]
+  },
+  "Sigmoid_Universal_Approximation": {
+    "deps": [
+      "HOL-Analysis"
+    ],
+    "theories": [
+      "Sigmoid_Universal_Approximation.Universal_Approximation",
+      "Sigmoid_Universal_Approximation.Asymptotic_Qualitative_Properties",
+      "Sigmoid_Universal_Approximation.Derivative_Identities_Smoothness",
+      "Sigmoid_Universal_Approximation.Sigmoid_Definition",
+      "Sigmoid_Universal_Approximation.Limits_Higher_Order_Derivatives",
+      "Sigmoid_Universal_Approximation.Sigmoid_Universal_Approximation"
     ]
   },
   "Transition_Systems_and_Automata": {
@@ -16393,7 +17793,6 @@
   },
   "Transitive_Union_Closed_Families": {
     "deps": [
-      "HOL-Library",
       "Pluennecke_Ruzsa_Inequality"
     ],
     "theories": [
@@ -16519,6 +17918,17 @@
       "Factored_Transition_System_Bounding.ActionSeqProcess"
     ]
   },
+  "Mission_Time_LTL_Language_Partition": {
+    "deps": [
+      "Mission_Time_LTL",
+      "Show"
+    ],
+    "theories": [
+      "Mission_Time_LTL_Language_Partition.MLTL_Language_Partition_Codegen",
+      "Mission_Time_LTL_Language_Partition.MLTL_Language_Partition_Proof",
+      "Mission_Time_LTL_Language_Partition.MLTL_Language_Partition_Algorithm"
+    ]
+  },
   "Noninterference_Inductive_Unwinding": {
     "deps": [
       "HOL",
@@ -16535,6 +17945,14 @@
     ],
     "theories": [
       "Probability_Inequality_Completeness.Probability_Inequality_Completeness"
+    ]
+  },
+  "Arbitrage_Probability_Correspondence": {
+    "deps": [
+      "Probability_Inequality_Completeness"
+    ],
+    "theories": [
+      "Arbitrage_Probability_Correspondence.Arbitrage_Probability_Correspondence"
     ]
   },
   "Combinatorial_Enumeration_Algorithms": {
@@ -16575,6 +17993,14 @@
       "Functional_Ordered_Resolution_Prover.Weighted_FO_Ordered_Resolution_Prover",
       "Functional_Ordered_Resolution_Prover.Deterministic_FO_Ordered_Resolution_Prover",
       "Functional_Ordered_Resolution_Prover.Executable_FO_Ordered_Resolution_Prover"
+    ]
+  },
+  "Mission_Time_LTL_Formula_Progression": {
+    "deps": [
+      "Mission_Time_LTL"
+    ],
+    "theories": [
+      "Mission_Time_LTL_Formula_Progression.MLTL_Formula_Progression"
     ]
   },
   "Network_Security_Policy_Verification": {
@@ -16728,17 +18154,6 @@
       "Wooley_Elementary_Discrete_Inequality.Wooley_Elementary_Discrete_Inequality"
     ]
   },
-  "Complex_Bounded_Operators_Dependencies": {
-    "deps": [
-      "HOL-Analysis",
-      "HOL-Examples",
-      "HOL-Types_To_Sets",
-      "Jordan_Normal_Form",
-      "Banach_Steinhaus",
-      "Real_Impl"
-    ],
-    "theories": []
-  },
   "Mission_Time_LTL_to_Regular_Expression": {
     "deps": [
       "Mission_Time_LTL"
@@ -16766,6 +18181,19 @@
       "Noninterference_Sequential_Composition.Counterexamples",
       "Noninterference_Sequential_Composition.SequentialComposition",
       "Noninterference_Sequential_Composition.Propaedeutics"
+    ]
+  },
+  "Completeness_Decreasing_Diagrams_for_N1": {
+    "deps": [
+      "HOL-Cardinals",
+      "Abstract-Rewriting",
+      "Decreasing-Diagrams"
+    ],
+    "theories": [
+      "Completeness_Decreasing_Diagrams_for_N1.Main_Result_DCR_N1",
+      "Completeness_Decreasing_Diagrams_for_N1.DCR3_Optimality",
+      "Completeness_Decreasing_Diagrams_for_N1.DCR3_Method",
+      "Completeness_Decreasing_Diagrams_for_N1.Finite_DCR_Hierarchy"
     ]
   },
   "Extended_Finite_State_Machine_Inference": {
@@ -16883,13 +18311,11 @@
       "Modular_arithmetic_LLL_and_HNF_algorithms.Storjohann_Impl",
       "Modular_arithmetic_LLL_and_HNF_algorithms.Storjohann",
       "Modular_arithmetic_LLL_and_HNF_algorithms.Storjohann_Mod_Operation",
-      "Modular_arithmetic_LLL_and_HNF_algorithms.Signed_Modulo",
-      "Modular_arithmetic_LLL_and_HNF_algorithms.Matrix_Change_Row"
+      "Modular_arithmetic_LLL_and_HNF_algorithms.Signed_Modulo"
     ]
   },
   "Simplicial_complexes_and_boolean_functions": {
     "deps": [
-      "Sepref_Prereq",
       "Jordan_Normal_Form",
       "ROBDD"
     ],
@@ -16902,6 +18328,17 @@
       "Simplicial_complexes_and_boolean_functions.Bij_betw_simplicial_complex_bool_func",
       "Simplicial_complexes_and_boolean_functions.Evasive",
       "Simplicial_complexes_and_boolean_functions.BDD"
+    ]
+  },
+  "Concentrated_Liquidity_Market_Making_Operations": {
+    "deps": [
+      "HOL-Analysis"
+    ],
+    "theories": [
+      "Concentrated_Liquidity_Market_Making_Operations.CLMM_Transformation",
+      "Concentrated_Liquidity_Market_Making_Operations.CLMM_Description",
+      "Concentrated_Liquidity_Market_Making_Operations.Grid_Information",
+      "Concentrated_Liquidity_Market_Making_Operations.CLMM_Misc"
     ]
   }
 }
