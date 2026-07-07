@@ -486,9 +486,14 @@ class MinilangAgent_Base(Isar_Base):
         # Isabelle's AoA_use_proof_cache defaults to true (the AoA driver looks up
         # a previously cached proof for the goal). Disable it for all agent
         # evaluations so every case is solved by a fresh agent run rather than a
-        # cache hit. Declared on the open proof context before record_state so the
-        # EVAL snapshot carries it and pass@N rollbacks preserve it.
-        await self.repl.config(['AoA_use_proof_cache = false'])
+        # cache hit. Also disable AoA_enable_write_memory: a benchmark run must not
+        # spend the agent's budget writing experience memories, nor pollute the
+        # shared experience DB with them (experience RETRIEVAL via `query` stays on,
+        # so the agent can still use pre-existing memories). Declared on the open
+        # proof context before record_state so the EVAL snapshot carries them and
+        # pass@N rollbacks preserve them.
+        await self.repl.config(['AoA_use_proof_cache = false',
+                                'AoA_enable_write_memory = false'])
 
         if len(proofs) > 1:
             await self.repl.record_state('EVAL')
