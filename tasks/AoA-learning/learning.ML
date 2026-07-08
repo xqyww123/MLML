@@ -177,7 +177,15 @@ fun REPL_App (cin, cout, toplevel) =
       val cfg = { thy_qualifier = thy_qualifier,
                   file = SOME path,
                   position_label = NONE,
-                  additional_libs = [],
+                  (* Inject Minilang_Agent as a base ancestor of every replayed
+                     target theory (PREPENDed — see REPL.ML init_thy): the AoA agent
+                     lives in theory Minilang, so a target that does NOT import it
+                     (e.g. any AFP theory) would otherwise fail every goal with
+                     "Cannot join unrelated theory certificates Minilang:_ and
+                     <target>:_" when the agent applies a Minilang-certified tactic.
+                     Making Minilang_Agent an ancestor gives the goal's theory a
+                     common lineage with Minilang so the certificate join succeeds. *)
+                  additional_libs = ["Minilang_Agent.Minilang_Agent"],
                   configs = [],
                   import_dir = NONE,
                   single_cmd_timeout = SOME (Time.fromSeconds 600),
