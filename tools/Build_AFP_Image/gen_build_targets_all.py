@@ -12,7 +12,7 @@ importing it has no side effects).
 """
 import os
 from data.isabelle import THEORIES, INFLUENCES, SESSIONS, session_of, short_name_of
-from gen_build_targets import has_examples, EXEMPT_SHORT, BASE_THEORIES
+from gen_build_targets import has_examples, EXEMPT_SHORT, BASE_THEORIES, CLASH_EXCLUDE
 
 DEP1_BASE = 'AFP-DEP1-21'                       # chain top of the DEP1 image
 DEP1_DIR  = './tools/Build_AFP_Image/AFP-DEP1'
@@ -22,8 +22,10 @@ BATCH     = 384
 
 def can_use_all(thy):
     """Like gen_build_targets.can_use but WITHOUT the "imported at least once"
-    requirement.  The example/test and own-tooling filters still apply."""
-    return short_name_of(thy) not in EXEMPT_SHORT and not has_examples(thy)
+    requirement.  The example/test, own-tooling and clash filters still apply."""
+    return (thy not in CLASH_EXCLUDE
+            and short_name_of(thy) not in EXEMPT_SHORT
+            and not has_examples(thy))
 
 
 # --- theories already present in the DEP1 image (listed in its ROOTs) ---------

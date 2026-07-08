@@ -14,6 +14,26 @@ EXEMPT_THYS = ['UPF.NormalisationTestSpecification', 'KAT_and_DRA.Conway_Tests',
 EXEMPT_SHORT = ['Isa_REPL', 'Auto_Sledgehammer', 'Minilang', 'MS_Translator',
                 'MS_Translator_Top', 'Minilang_Base']
 
+# Theories that cannot be built inside the image and everything that
+# transitively depends on them. Extended as build failures are discovered.
+#  - QR_Decomposition.Gram_Schmidt_IArrays: `A !! i` is ambiguous once both
+#    HOL-Library.IArray (IArray.sub) and HOL-Library.Stream (Stream.snth) are
+#    in scope -- which they are via QR->Gauss_Jordan->Rank_Nullity->Lp->Stream.
+CLASH_ROOTS = ['QR_Decomposition.Gram_Schmidt_IArrays']
+
+def _clash_closure():
+    excl = set()
+    stack = list(CLASH_ROOTS)
+    while stack:
+        u = stack.pop()
+        if u in excl:
+            continue
+        excl.add(u)
+        stack.extend(INFLUENCES.get(u, ()))
+    return excl
+
+CLASH_EXCLUDE = _clash_closure()
+
 def has_examples(thy):
     """True if `thy` looks like an example/test theory that should be dropped."""
     session = session_of(thy)
@@ -29,6 +49,8 @@ def has_examples(thy):
 
 
 def can_use(thy):
+    if thy in CLASH_EXCLUDE:
+        return False
     ret = INFLUENCES[thy] and \
         short_name_of(thy) not in EXEMPT_SHORT and \
         not has_examples(thy)
