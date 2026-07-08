@@ -1,55 +1,56 @@
 #!/usr/bin/env python3
-"""AoA-learning driver.
+"""AoA-learning driver (parallel / fleet).
 
-Runs, in one process:
-  * an Isabelle_RPC host (provides the `IsaMini.AoA` RPC + all its callbacks — the
-    AoA agent actually executes here), and
-  * a REPL client that drives the `Minilang.AoA_Learning` App on an already-running
-    Isa-REPL server (started separately, on the AoA_Learning_Base heap for the toy
-    smoke test, or on the MathBench_Prover heap for the real corpus, and configured
-    with RPC_Host = this host's address).
+Mirrors tasks/extraction/theorem-relevance/premise-extraction.py: the target
+theories are distributed, work-stealing, across a FLEET of Isa-REPL servers
+(config/evaluation_servers.csv) that this script brings up via
+`tools.server.launch_servers()` — under `CLUSTER=slurmx` onto slurm nodes, on the
+`SESSION` heap (set `SESSION=MathBench_Prover` for the real corpus). Each REPL
+server drives the `Minilang.AoA_Learning` App: for a target theory the App replays
+it from source and, at every goal, runs AoA with a LearningTask (goal + original
+Isar proof). Progress streams over a tiny tagged-tuple protocol (see learning.ML);
+`control.db` records completed theories/goals so a re-run resumes.
 
-For each target theory the App replays it from source and, at every goal, calls back
-into this host to run AoA with a LearningTask (goal + original Isar proof). Progress
-is reported over a tiny tagged-tuple protocol (see learning.ML); `control.db` records
-completed theories/goals so a re-run resumes instead of re-learning.
+The AoA agent itself executes in the SHARED `IsaMini.AoA` RPC host on the login
+node, which is started SEPARATELY by the operator (NOT by this script); every fleet
+REPL server must have `RPC_Host` pointing at it. This script owns only the REPL
+fleet — exactly like premise-extraction, which likewise never starts an RPC host.
 
-Cache is bypassed on the ML side (AoA_use_proof_cache / AoA_store_proof_cache both
-false), so reconstructed proofs never touch the shared production cache. Experience
-memories land directly in the shared Semantic_Embedding DB.
+Concurrency per server = the csv's `num-evaluator` (the AoA workload matches the
+agent evaluators). Cache is bypassed on the ML side (AoA_use_proof_cache /
+AoA_store_proof_cache both false), so reconstructed proofs never touch the shared
+production cache. Experience memories land directly in the shared Semantic_Embedding
+DB.
 """
 
 import argparse
 import asyncio
 import logging
 import os
-import threading
-import time
+import traceback
 
 import msgpack as mp
 from sqlitedict import SqliteDict
 
-import Isabelle_RPC_Host
-import Isabelle_RPC_Host.dialogue  # ensure Connection.dialogue exists before override
-from Isabelle_RPC_Host.rpc import Connection as _Connection
-import IsaMini.AoA  # noqa: F401 — registers the IsaMini.AoA handler + callbacks
+from tools.server import SERVERS, launch_servers, test_server
 from IsaREPL import Client, REPLFail
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("aoa-learn")
 
+# One work-stealing worker per (server x num-evaluator), exactly like
+# premise-extraction (which uses num-translator) and evaluator.py (num-evaluator).
+SERVER_INSTANCES = []
+for _server, _data in SERVERS.items():
+    SERVER_INSTANCES.extend([_server] * _data["num-evaluator"])
+
 
 def parse_args():
-    p = argparse.ArgumentParser(description="AoA-learning driver")
+    p = argparse.ArgumentParser(description="AoA-learning driver (parallel/fleet)")
     p.add_argument("--targets", default="targets",
                    help="Path to a targets file (one theory path per line), OR a "
                         "single .thy path. Default: ./targets")
-    p.add_argument("--repl-addr", default="127.0.0.1:6666",
-                   help="Isa-REPL server address (host:port)")
-    p.add_argument("--rpc-addr", default="127.0.0.1:27183",
-                   help="Address this process serves the IsaMini.AoA RPC host on. "
-                        "Must match the target REPL server's RPC_Host.")
     p.add_argument("--driver", default="ClaudeCode",
                    help="AoA driver (default: ClaudeCode)")
     p.add_argument("--log-dir", default="",
@@ -57,7 +58,7 @@ def parse_args():
     p.add_argument("--timeout-seconds", type=int, default=900,
                    help="Per-goal AoA wall-clock budget (default 900 = 15 min; the "
                         "App hard-kills at this + 300s). Much smaller than the AoA "
-                        "default 14400 so a hard pilot goal cannot run for hours.")
+                        "default 14400 so a hard goal cannot run for hours.")
     p.add_argument("--max-tool-calls", type=int, default=200,
                    help="Per-goal AoA tool-call budget (default 200)")
     p.add_argument("--max-retries", type=int, default=5,
@@ -85,23 +86,35 @@ def load_targets(spec: str) -> list[str]:
 
 async def learn(args):
     targets = load_targets(args.targets)
-    logger.info("targets: %d theories", len(targets))
+    logger.info("targets: %d theories; fleet: %d workers over %d servers",
+                len(targets), len(SERVER_INSTANCES), len(SERVERS))
     os.makedirs(os.path.dirname(args.control_db) or ".", exist_ok=True)
+
+    total_theories = len(targets)
+    finished_theories = 0
     total_goals = 0
     finished_goals = 0
 
-    with SqliteDict(args.control_db) as control_db:
-        async with Client(args.repl_addr, "HOL", timeout=None) as c:
-            await c.set_register_thy(False)
-            await c.set_trace(False)
-            await c.load_theory([args.app_theory])
+    task_queue = asyncio.Queue()
+    for target in targets:
+        task_queue.put_nowait(target)
+    remaining = total_theories
 
-            for ti, target in enumerate(targets):
-                rpath = os.path.abspath(target)
-                if rpath in control_db:
-                    logger.info("[%d/%d] skip (done): %s", ti + 1, len(targets), rpath)
-                    continue
-                logger.info("[%d/%d] learning: %s", ti + 1, len(targets), rpath)
+    with SqliteDict(args.control_db) as control_db:
+
+        async def learn_one(server, target):
+            # Fresh REPL session per theory (mirrors premise-extraction's
+            # translate_one): a crashed theory can't poison the next one.
+            nonlocal total_goals, finished_goals
+            rpath = os.path.abspath(target)
+            if rpath in control_db:
+                logger.info("[%d/%d] skip (done): %s",
+                            finished_theories, total_theories, rpath)
+                return
+            async with Client(server, "HOL", timeout=None) as c:
+                await c.set_register_thy(False)
+                await c.set_trace(False)
+                await c.load_theory([args.app_theory])
                 await c.run_app("Minilang.AoA_Learning")
                 # header: (driver, log_dir, path, (timeout_s, max_tool_calls, max_retries))
                 c.writer.write(mp.packb((
@@ -115,7 +128,7 @@ async def learn(args):
                             # Skip a goal already learned (resume), or every goal in
                             # dry-run. A goal is keyed by "file:line" as sent by App.
                             run = (not args.dry_run) and (pos not in control_db)
-                            logger.info("  goal opened %s -> %s", pos,
+                            logger.info("  [%s] goal %s -> %s", server, pos,
                                         "run" if run else "skip")
                             c.writer.write(mp.packb(bool(run)))
                             await c.writer.drain()
@@ -125,13 +138,14 @@ async def learn(args):
                                 finished_goals += 1
                             control_db[pos] = bool(finished)
                             control_db.commit()
-                            logger.info("  goal %s: %s (%d/%d finished)",
-                                        pos, "finished" if finished else "unfinished",
+                            logger.info("  [%s] goal %s: %s (%d/%d finished)",
+                                        server, pos,
+                                        "finished" if finished else "unfinished",
                                         finished_goals, total_goals)
                         case (2, errs):
-                            logger.error("  error(s): %s", "\n".join(errs))
+                            logger.error("  [%s] error(s): %s", server, "\n".join(errs))
                         case (9, diag):
-                            logger.info("  [DIAG] %s", diag)
+                            logger.info("  [%s] [DIAG] %s", server, diag)
                         case 5:
                             break
                         case (None, err):
@@ -141,33 +155,61 @@ async def learn(args):
 
                 control_db[rpath] = True
                 control_db.commit()
-                logger.info("[%d/%d] done: %s", ti + 1, len(targets), rpath)
 
-    logger.info("ALL DONE: %d/%d goals finished across %d theories",
-                finished_goals, total_goals, len(targets))
+        async def worker(server):
+            nonlocal finished_theories, remaining
+            while True:
+                if not await test_server(server):
+                    logger.error("[%s] server down, waiting...", server)
+                    await asyncio.sleep(60)
+                    continue
+                try:
+                    target = task_queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    if remaining == 0:
+                        break
+                    await asyncio.sleep(30)
+                    continue
+
+                reentry = True
+                try:
+                    for _ in range(5):
+                        try:
+                            await learn_one(server, target)
+                            reentry = False
+                            finished_theories += 1
+                            logger.info("[%d/%d] done: %s",
+                                        finished_theories, total_theories,
+                                        os.path.abspath(target))
+                            break
+                        except ConnectionError:
+                            logger.error("[%s] connection error on %s; retrying",
+                                         server, target)
+                            await asyncio.sleep(180)
+                        except Exception as e:
+                            traceback.print_exc()
+                            logger.error("[%s] error on %s: %s", server, target, e)
+                            break
+                finally:
+                    if reentry:
+                        task_queue.put_nowait(target)
+                    else:
+                        remaining -= 1
+
+        await asyncio.gather(*(worker(s) for s in SERVER_INSTANCES))
+
+    logger.info("ALL DONE: %d/%d goals finished across %d/%d theories",
+                finished_goals, total_goals, finished_theories, total_theories)
 
 
-def main():
+async def main_async():
     args = parse_args()
-
-    # Headless: auto-answer PIDE dialogues (e.g. Semantic_Embedding's
-    # "N entities to embed. Proceed?" gate, which fires after a heap rebuild) with
-    # their first option, so nothing blocks forever. Mirrors test_AoA.py.
-    _rpc_logger = Isabelle_RPC_Host.mk_logger_(args.rpc_addr, None)
-
-    async def _auto_dialogue(self, question: str, options: list) -> str:
-        _rpc_logger.warning("[auto-dialogue] %r -> %r", question, options[0])
-        return options[0]
-
-    _Connection.dialogue = _auto_dialogue  # type: ignore[method-assign]
-
-    def run_server():
-        Isabelle_RPC_Host.launch_server_(args.rpc_addr, _rpc_logger, debugging=True)
-
-    threading.Thread(target=run_server, daemon=True).start()
-    time.sleep(1)
-    asyncio.run(learn(args))
+    # Bring up the REPL fleet (CLUSTER=slurmx -> slurm nodes on the SESSION heap).
+    # The shared IsaMini.AoA RPC host is NOT started here — the operator runs it on
+    # the login node and every fleet REPL points RPC_Host at it.
+    await launch_servers()
+    await learn(args)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main_async())
