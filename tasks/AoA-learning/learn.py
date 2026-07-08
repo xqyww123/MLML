@@ -134,10 +134,13 @@ async def learn(args):
                             await c.writer.drain()
                         case (1, pos, finished):
                             total_goals += 1
+                            # Record ONLY finished goals, so a resume (which replays
+                            # the theory from the start) retries goals AoA failed to
+                            # reconstruct; the skip-check is presence-only.
                             if finished:
                                 finished_goals += 1
-                            control_db[pos] = bool(finished)
-                            control_db.commit()
+                                control_db[pos] = True
+                                control_db.commit()
                             logger.info("  [%s] goal %s: %s (%d/%d finished)",
                                         server, pos,
                                         "finished" if finished else "unfinished",
@@ -153,8 +156,12 @@ async def learn(args):
                         case other:
                             raise REPLFail(f"unexpected message on {rpath}: {other!r}")
 
-                control_db[rpath] = True
-                control_db.commit()
+                # Do NOT mark the theory done in dry-run: every goal was answered
+                # "skip", so persisting completion would make a later REAL run
+                # (same control-db) skip the whole corpus and never invoke AoA.
+                if not args.dry_run:
+                    control_db[rpath] = True
+                    control_db.commit()
 
         async def worker(server):
             nonlocal finished_theories, remaining
@@ -171,30 +178,39 @@ async def learn(args):
                     await asyncio.sleep(30)
                     continue
 
-                reentry = True
-                try:
-                    for _ in range(5):
-                        try:
-                            await learn_one(server, target)
-                            reentry = False
-                            finished_theories += 1
-                            logger.info("[%d/%d] done: %s",
-                                        finished_theories, total_theories,
-                                        os.path.abspath(target))
-                            break
-                        except ConnectionError:
-                            logger.error("[%s] connection error on %s; retrying",
-                                         server, target)
-                            await asyncio.sleep(180)
-                        except Exception as e:
-                            traceback.print_exc()
-                            logger.error("[%s] error on %s: %s", server, target, e)
-                            break
-                finally:
-                    if reentry:
-                        task_queue.put_nowait(target)
-                    else:
-                        remaining -= 1
+                # ConnectionError == the SERVER is the problem: requeue the theory
+                # for another worker/server (remaining unchanged, so the run keeps
+                # waiting for it). Any other error is theory-level: retry a few
+                # times on this server, then GIVE UP on it for this run so the fleet
+                # can terminate — it stays unmarked in control.db, so a resume run
+                # retries it fresh.
+                done = False
+                requeue = False
+                for attempt in range(3):
+                    try:
+                        await learn_one(server, target)
+                        done = True
+                        break
+                    except ConnectionError:
+                        logger.error("[%s] connection error on %s; requeueing",
+                                     server, target)
+                        requeue = True
+                        break
+                    except Exception as e:
+                        traceback.print_exc()
+                        logger.error("[%s] error on %s (attempt %d/3): %s",
+                                     server, target, attempt + 1, e)
+                if done:
+                    finished_theories += 1
+                    remaining -= 1
+                    logger.info("[%d/%d] done: %s", finished_theories,
+                                total_theories, os.path.abspath(target))
+                elif requeue:
+                    task_queue.put_nowait(target)
+                else:
+                    remaining -= 1
+                    logger.error("[%s] giving up on %s after 3 attempts",
+                                 server, target)
 
         await asyncio.gather(*(worker(s) for s in SERVER_INSTANCES))
 
