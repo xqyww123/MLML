@@ -2,9 +2,9 @@
 
 ## Rules
 
-### Memory feature is disabled
+### Memory writes require explicit approval
 
-Do NOT use the memory directory. Record lessons in `CLAUDE.md` or a SKILL, and proactively suggest doing so.
+Never write to, update, or delete anything in the memory directory without my explicit approval for that specific write. Propose what you want to record and wait for me to agree. Reading memory is fine. Recording a lesson in `CLAUDE.md` or a SKILL instead is also fine — proactively suggest whichever fits.
 
 ### Never Act on Assumptions — ALWAYS Ask
 
