@@ -29,8 +29,13 @@ export R2_SECRET_ACCESS_KEY=...
 
 Optional settings live in `~/.config/Isabelle_Semantic_Embedding/config.yaml`,
 seeded from the package template on first run. Any key may be overridden by an
-environment variable (`R2_BUCKET`, `R2_AUTO_PULL`, …); env wins over the file,
+environment variable (`R2_BUCKET`, `R2_AUTO_CHECK`, …); env wins over the file,
 the file wins over the code defaults.
+
+**Nothing ever syncs on its own.** `r2_sync.check_update()` probes the remote at
+most once a week (`auto_check`, one HEAD request) and prints a line telling you
+to run `pull` yourself. It never downloads and never merges. It is a library
+function with no caller yet; wiring it into AoA's startup is pending.
 
 ```bash
 cd contrib/Semantic_Embedding
