@@ -185,7 +185,7 @@ fun REPL_App (cin, cout, toplevel) =
                      <target>:_" when the agent applies a Minilang-certified tactic.
                      Making Minilang_Agent an ancestor gives the goal's theory a
                      common lineage with Minilang so the certificate join succeeds. *)
-                  additional_libs = ["Minilang_Agent.Minilang_Agent"],
+                  additional_libs = ["Minilang_Agent_Injector.Minilang_Agent_Injector"],
                   configs = [],
                   import_dir = NONE,
                   single_cmd_timeout = SOME (Time.fromSeconds 600),
