@@ -105,9 +105,15 @@ class Stats:
     created: list[str] = field(default_factory=list)   # names of NEW experiences
     updated: list[str] = field(default_factory=list)   # names of OVERWRITTEN ones
     rejected: int = 0                                  # dedup-rejected write attempts
+    write_calls: int = 0                               # write_memory calls ATTEMPTED
     tool_calls: int = 0
     tokens: Counter = field(default_factory=Counter)
     seconds: float = 0.0
+    # Goals whose AoA log could not be read. Tracked separately so "this goal
+    # wrote no memory" is never confused with "we could not tell" — the two look
+    # identical in the counters, and the second means the reporting is broken
+    # (e.g. a stale RPC host that predates write_memory's response logging).
+    no_log: int = 0
 
     def __iadd__(self, o: "Stats") -> "Stats":
         self.goals += o.goals
@@ -115,13 +121,22 @@ class Stats:
         self.created += o.created
         self.updated += o.updated
         self.rejected += o.rejected
+        self.write_calls += o.write_calls
         self.tool_calls += o.tool_calls
         self.tokens.update(o.tokens)
+        self.no_log += o.no_log
         return self
 
+    @property
+    def unaccounted_writes(self) -> int:
+        """`write_memory` calls whose outcome never reached the log. Nonzero means
+        the AoA host predates the fix that logs write_memory's response, so its
+        memories are invisible here — NOT that no memory was written."""
+        return max(0, self.write_calls
+                   - len(self.created) - len(self.updated) - self.rejected)
+
     def memory_str(self) -> str:
-        """`+a,b ~c` — created are prefixed `+`, updated `~`. Empty when nothing
-        was written, so a quiet goal stays a quiet log line."""
+        """`+a,b ~c` — created are prefixed `+`, updated `~`."""
         bits = []
         if self.created:
             bits.append("+" + ",".join(self.created))
@@ -129,6 +144,9 @@ class Stats:
             bits.append("~" + ",".join(self.updated))
         if self.rejected:
             bits.append(f"{self.rejected} rejected")
+        if self.unaccounted_writes:
+            bits.append(f"{self.unaccounted_writes} UNACCOUNTED "
+                        f"(stale AoA host: write_memory response not logged)")
         return " ".join(bits)
 
 
@@ -178,15 +196,19 @@ def goal_stats(log_dir: str, iid: str) -> Stats:
     the goal is still counted — reporting must never take the run down."""
     s = Stats(goals=1)
     if not log_dir or not iid:
+        s.no_log = 1
         return s
     path = os.path.join(log_dir, iid, "meta.jsonl.zst")
     if not os.path.exists(path):
+        s.no_log = 1
         return s
     try:
         for o in _iter_meta(path):
             event = o.get("event")
             if event == "TOOL_CALL":
                 s.tool_calls += 1
+                if (o.get("tool_name") or "").endswith("write_memory"):
+                    s.write_calls += 1
             elif event == "USAGE":
                 for k in ("input_tokens", "output_tokens",
                           "cached_tokens", "cache_creation_tokens"):
@@ -202,6 +224,7 @@ def goal_stats(log_dir: str, iid: str) -> Stats:
                     s.updated.append(m.group(2))
     except Exception as e:                     # noqa: BLE001 - reporting is advisory
         logger.warning("could not read AoA log %s: %s", path, e)
+        s.no_log = 1
     return s
 
 
@@ -276,13 +299,20 @@ async def learn(args):
                             if finished:
                                 control_db[pos] = True
                                 control_db.commit()
-                            mem = g.memory_str()
+                            # Always print the memory field, even when empty:
+                            # most goals teach the agent nothing worth saving, and
+                            # an omitted field is indistinguishable from broken
+                            # reporting. The running total makes the run's actual
+                            # product visible without waiting for the summary.
                             logger.info(
-                                "  [%s] goal %s: %s in %.0fs, %d tool calls%s",
+                                "  [%s] goal %s: %s in %.0fs, %d tool calls, "
+                                "memory %s [run +%d ~%d]",
                                 server, pos,
                                 "finished" if finished else "UNFINISHED",
                                 g.seconds, g.tool_calls,
-                                f", memory {mem}" if mem else "")
+                                "n/a (no AoA log)" if g.no_log
+                                else (g.memory_str() or "none"),
+                                len(run.created), len(run.updated))
                         case (2, errs):
                             logger.error("  [%s] error(s): %s", server, "\n".join(errs))
                         case (9, diag):
@@ -303,10 +333,11 @@ async def learn(args):
 
             thy.seconds = time.monotonic() - t_thy
             logger.info("[%s] THEORY %s: %d/%d goals finished in %s; "
-                        "memory +%d new ~%d updated (%d rejected); %s",
+                        "memory +%d new ~%d updated (%d rejected)%s; %s",
                         server, os.path.basename(rpath),
                         thy.goals_finished, thy.goals, fmt_hms(thy.seconds),
                         len(thy.created), len(thy.updated), thy.rejected,
+                        f", {thy.no_log} goals unreadable" if thy.no_log else "",
                         fmt_tokens(thy.tokens))
             if thy.created or thy.updated:
                 logger.info("[%s]   memories: %s", server, thy.memory_str())
@@ -376,6 +407,17 @@ async def learn(args):
     logger.info("  goals    : %d/%d finished", run.goals_finished, run.goals)
     logger.info("  memory   : %d created, %d updated, %d dedup-rejected",
                 len(run.created), len(run.updated), run.rejected)
+    # Zero memories across a whole run is normal (most goals teach nothing worth
+    # saving); zero memories because the logs were unreadable, or because the AoA
+    # host never recorded write_memory's outcome, is a broken pipeline. Never let
+    # the two look alike.
+    if run.no_log:
+        logger.warning("  %d/%d goals had no readable AoA log — their memory "
+                       "counts are MISSING, not zero", run.no_log, run.goals)
+    if run.unaccounted_writes:
+        logger.warning("  %d write_memory calls have no logged outcome — the AoA "
+                       "host predates the response-logging fix; restart it",
+                       run.unaccounted_writes)
     logger.info("  AoA      : %d tool calls, %s",
                 run.tool_calls, fmt_tokens(run.tokens))
     # Names, not just counts: this is the run's actual product, and a duplicate
