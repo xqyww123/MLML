@@ -1,7 +1,72 @@
 ---
 name: sync-semantic-embedding-db
-description: How to refresh the local semantic embedding database (~3 GB LMDB at ~/.cache/Isabelle_Semantic_Embedding) from the published Hugging Face Hub snapshot (contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst) — back up the current cache, pull the tracked tarball pointer, download with manage_data.py, and extract over the cache. Use when setting up or refreshing the semantic DB on a machine, or when deformalizations / vector stores are stale or missing.
+description: How to refresh the local semantic embedding database (~1.5 GB of LMDB at ~/.cache/Isabelle_Semantic_Embedding). Two channels — Cloudflare R2 via `semantics_manage.py pull/push/status` (merges key-by-key, preferred), and the older Hugging Face Hub tarball via manage_data.py (overwrites wholesale). Use when setting up or refreshing the semantic DB on a machine, or when deformalizations / vector stores are stale or missing.
 ---
+
+## Two channels, and how they differ
+
+| | Cloudflare R2 (`semantics_manage.py`) | Hugging Face Hub (`manage_data.py`) |
+| --- | --- | --- |
+| download | **merges** into the local stores, key by key | **overwrites** the cache directory |
+| upload | overwrites the single remote object | overwrites the published tarball |
+| contents | `semantics.lmdb` + `vector_*.lmdb` only | those, plus `experience_index.lmdb` and `AoA_Collected/` |
+| staleness check | one HEAD request, free | download and compare sizes |
+
+Prefer R2. Extracting the HF tarball over a cache that has local work discards it;
+`pull` keeps both sides. The R2 snapshot deliberately omits `experience_index.lmdb`
+— it is a derived view of the EXPERIENCE records, and `pull` rebuilds it.
+
+## Syncing over Cloudflare R2
+
+One-time setup. The two credentials have no defaults and are read only from the
+environment; everything else has a built-in default:
+
+```bash
+# in secret.sh (gitignored)
+export R2_ACCESS_KEY_ID=...
+export R2_SECRET_ACCESS_KEY=...
+```
+
+Optional settings live in `~/.config/Isabelle_Semantic_Embedding/config.yaml`,
+seeded from the package template on first run. Any key may be overridden by an
+environment variable (`R2_BUCKET`, `R2_AUTO_PULL`, …); env wins over the file,
+the file wins over the code defaults.
+
+```bash
+cd contrib/Semantic_Embedding
+source ../../secret.sh
+
+./semantics_manage.py status            # one HEAD request: is there anything newer?
+./semantics_manage.py pull              # download + merge (backs up first)
+./semantics_manage.py push              # pack + upload, OVERWRITING the remote
+```
+
+Both accept `--dry-run`, which never fails: it prints what it would do and names
+whatever would block the real run. `pull` takes `--no-backup`; `push` and `pull`
+take `--force`.
+
+**Always `pull` before you `push`.** The two are asymmetric: `pull` merges, `push`
+replaces the whole remote object. Pushing from a machine with less data leaves
+everyone else pulling an incomplete set — the data is still on the machine that
+had it, but the next person to collect will re-interpret and re-embed theories
+that already existed, which costs real API money. `push` refuses when the remote
+has moved since this machine last synced; `--force` overrides that.
+
+Guardrails, all of which stop the operation before anything is written:
+
+- neither command runs while another process holds the database open (LMDB has a
+  single writer, and packing a live store captures a torn snapshot);
+- the snapshot's `x-amz-meta-*` metadata is checked *before* the download —
+  schema version, vector format (`q15`, not the pre-migration `float32`), and
+  embedding dimension;
+- after extraction and before the merge, a snapshot carrying legacy records
+  (theorem keys with no constituent list) is refused;
+- `pull` backs up the whole cache to `~/Isabelle_Semantic_Embedding.backup_<ts>.tar.zst`
+  and keeps the last two. **That backup is the only way to undo a merge.**
+
+Merge rule: remote records win, with one exception — a theory marked `finished`
+locally stays finished even if the snapshot has it as WIP. (Otherwise the next
+collection run would re-interpret and re-embed it.)
 
 ## Syncing the semantic embedding database from the published snapshot
 
@@ -46,8 +111,11 @@ published snapshot:
    so the download step extracts cleanly into `~/.cache`). **Exclude the entire
    `embed_cache/` directory** — it is a purely local embedding-request cache
    (a diskcache LMDB keyed by API request, 3-day TTL, often >1 GB), not part of
-   the published DB, so it should never ride along in the snapshot. The published
-   snapshot is just `semantics.lmdb/` + the `vector_*.lmdb/` store(s):
+   the published DB, so it should never ride along in the snapshot. Everything
+   else in the cache dir does ride along: `semantics.lmdb/`, the `vector_*.lmdb/`
+   store(s), and also `experience_index.lmdb/` and `AoA_Collected/` (verified
+   2026-07-09 against the tracked tarball — unlike the R2 snapshot, which carries
+   only the first two):
    ```bash
    tar --zstd -cf contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst \
        --exclude='Isabelle_Semantic_Embedding/embed_cache' \
