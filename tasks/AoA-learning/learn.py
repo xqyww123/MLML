@@ -25,9 +25,15 @@ DB.
 
 import argparse
 import asyncio
+import io
+import json
 import logging
 import os
+import re
+import time
 import traceback
+from collections import Counter
+from dataclasses import dataclass, field
 
 import msgpack as mp
 from sqlitedict import SqliteDict
@@ -38,6 +44,12 @@ from IsaREPL import Client, REPLFail
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("aoa-learn")
+
+# `write_memory`'s reply, as built by mcp_http_server._persist: "Saved" is a fresh
+# key (a new experience, or an agent-confirmed non-duplicate); "Updated" overwrites
+# an authorized same-name memory. Anything else is the dedup rejection
+# ("**The memory was NOT written.** ..."), i.e. the write did not land.
+_MEMORY_RE = re.compile(r"^(Saved|Updated) experience `([^`]+)`")
 
 # One work-stealing worker per (server x num-evaluator), exactly like
 # premise-extraction (which uses num-translator) and evaluator.py (num-evaluator).
@@ -84,6 +96,115 @@ def load_targets(spec: str) -> list[str]:
     return out
 
 
+@dataclass
+class Stats:
+    """What a run/theory/goal produced. Summable, so the same type serves all
+    three reporting levels."""
+    goals: int = 0
+    goals_finished: int = 0
+    created: list[str] = field(default_factory=list)   # names of NEW experiences
+    updated: list[str] = field(default_factory=list)   # names of OVERWRITTEN ones
+    rejected: int = 0                                  # dedup-rejected write attempts
+    tool_calls: int = 0
+    tokens: Counter = field(default_factory=Counter)
+    seconds: float = 0.0
+
+    def __iadd__(self, o: "Stats") -> "Stats":
+        self.goals += o.goals
+        self.goals_finished += o.goals_finished
+        self.created += o.created
+        self.updated += o.updated
+        self.rejected += o.rejected
+        self.tool_calls += o.tool_calls
+        self.tokens.update(o.tokens)
+        return self
+
+    def memory_str(self) -> str:
+        """`+a,b ~c` — created are prefixed `+`, updated `~`. Empty when nothing
+        was written, so a quiet goal stays a quiet log line."""
+        bits = []
+        if self.created:
+            bits.append("+" + ",".join(self.created))
+        if self.updated:
+            bits.append("~" + ",".join(self.updated))
+        if self.rejected:
+            bits.append(f"{self.rejected} rejected")
+        return " ".join(bits)
+
+
+def fmt_hms(seconds: float) -> str:
+    s = int(seconds)
+    if s < 60:
+        return f"{s}s"
+    if s < 3600:
+        return f"{s // 60}m{s % 60:02d}s"
+    return f"{s // 3600}h{(s % 3600) // 60:02d}m"
+
+
+def fmt_tokens(t: Counter) -> str:
+    def k(n):
+        return f"{n / 1000:.1f}k" if n >= 1000 else str(n)
+    return (f"tokens in {k(t['input_tokens'])} out {k(t['output_tokens'])} "
+            f"cached {k(t['cached_tokens'])}")
+
+
+def _iter_meta(path: str):
+    """Yield the JSON records of one goal's meta.jsonl.zst.
+
+    `Session._log_meta` flushes every record with FLUSH_FRAME, so the file is a
+    sequence of complete zstd frames and a concurrently-written log always reads
+    back cleanly up to the last flush. `read_across_frames` must be set: on the
+    zstandard versions where it defaults to False, only the FIRST record would be
+    returned — silently, which would look like a goal that did nothing."""
+    import zstandard
+    dctx = zstandard.ZstdDecompressor()
+    with open(path, "rb") as fh:
+        try:
+            reader = dctx.stream_reader(fh, read_across_frames=True)
+        except TypeError:                     # zstandard too old for the kwarg
+            reader = dctx.stream_reader(fh)
+        for line in io.TextIOWrapper(reader, encoding="utf-8", errors="replace"):
+            line = line.strip()
+            if line:
+                try:
+                    yield json.loads(line)
+                except json.JSONDecodeError:  # torn final frame; nothing follows
+                    return
+
+
+def goal_stats(log_dir: str, iid: str) -> Stats:
+    """Mine one goal's AoA log for what it produced. Best-effort: with
+    `--log-dir ""` (logging off) or a missing/corrupt log this returns zeros and
+    the goal is still counted — reporting must never take the run down."""
+    s = Stats(goals=1)
+    if not log_dir or not iid:
+        return s
+    path = os.path.join(log_dir, iid, "meta.jsonl.zst")
+    if not os.path.exists(path):
+        return s
+    try:
+        for o in _iter_meta(path):
+            event = o.get("event")
+            if event == "TOOL_CALL":
+                s.tool_calls += 1
+            elif event == "USAGE":
+                for k in ("input_tokens", "output_tokens",
+                          "cached_tokens", "cache_creation_tokens"):
+                    s.tokens[k] += o.get(k, 0)
+            elif (event == "TOOL_RESPONSE"
+                  and (o.get("tool_name") or "").endswith("write_memory")):
+                m = _MEMORY_RE.match(o.get("response") or "")
+                if not m:
+                    s.rejected += 1
+                elif m.group(1) == "Saved":
+                    s.created.append(m.group(2))
+                else:
+                    s.updated.append(m.group(2))
+    except Exception as e:                     # noqa: BLE001 - reporting is advisory
+        logger.warning("could not read AoA log %s: %s", path, e)
+    return s
+
+
 async def learn(args):
     targets = load_targets(args.targets)
     logger.info("targets: %d theories; fleet: %d workers over %d servers",
@@ -92,8 +213,9 @@ async def learn(args):
 
     total_theories = len(targets)
     finished_theories = 0
-    total_goals = 0
-    finished_goals = 0
+    run = Stats()                 # whole-run totals
+    given_up = []                 # theories abandoned after 3 attempts
+    t_run = time.monotonic()
 
     task_queue = asyncio.Queue()
     for target in targets:
@@ -105,12 +227,14 @@ async def learn(args):
         async def learn_one(server, target):
             # Fresh REPL session per theory (mirrors premise-extraction's
             # translate_one): a crashed theory can't poison the next one.
-            nonlocal total_goals, finished_goals
+            nonlocal run
             rpath = os.path.abspath(target)
             if rpath in control_db:
                 logger.info("[%d/%d] skip (done): %s",
                             finished_theories, total_theories, rpath)
                 return
+            thy = Stats()         # this theory's own totals
+            t_thy = time.monotonic()
             async with Client(server, "HOL", timeout=None) as c:
                 await c.set_register_thy(False)
                 await c.set_trace(False)
@@ -122,29 +246,43 @@ async def learn(args):
                     (args.timeout_seconds, args.max_tool_calls, args.max_retries))))
                 await c.writer.drain()
 
+                t_goal = time.monotonic()
                 while True:
                     match await c._feed_and_unpack():
                         case (0, pos):
                             # Skip a goal already learned (resume), or every goal in
                             # dry-run. A goal is keyed by "file:line" as sent by App.
-                            run = (not args.dry_run) and (pos not in control_db)
+                            do_run = (not args.dry_run) and (pos not in control_db)
                             logger.info("  [%s] goal %s -> %s", server, pos,
-                                        "run" if run else "skip")
-                            c.writer.write(mp.packb(bool(run)))
+                                        "run" if do_run else "skip")
+                            c.writer.write(mp.packb(bool(do_run)))
                             await c.writer.drain()
-                        case (1, pos, finished):
-                            total_goals += 1
+                            t_goal = time.monotonic()
+                        case (1, pos, finished, iid):
+                            # `iid` names this goal's AoA log dir; mine it for the
+                            # experience memories written and the token cost.
+                            g = goal_stats(args.log_dir, iid)
+                            g.seconds = time.monotonic() - t_goal
+                            g.goals_finished = 1 if finished else 0
+                            # Accumulate per GOAL, not per theory: if this theory
+                            # later crashes and is retried, its already-finished
+                            # goals are skipped on the retry (control.db) and would
+                            # otherwise never be counted anywhere.
+                            thy += g
+                            run += g
                             # Record ONLY finished goals, so a resume (which replays
                             # the theory from the start) retries goals AoA failed to
                             # reconstruct; the skip-check is presence-only.
                             if finished:
-                                finished_goals += 1
                                 control_db[pos] = True
                                 control_db.commit()
-                            logger.info("  [%s] goal %s: %s (%d/%d finished)",
-                                        server, pos,
-                                        "finished" if finished else "unfinished",
-                                        finished_goals, total_goals)
+                            mem = g.memory_str()
+                            logger.info(
+                                "  [%s] goal %s: %s in %.0fs, %d tool calls%s",
+                                server, pos,
+                                "finished" if finished else "UNFINISHED",
+                                g.seconds, g.tool_calls,
+                                f", memory {mem}" if mem else "")
                         case (2, errs):
                             logger.error("  [%s] error(s): %s", server, "\n".join(errs))
                         case (9, diag):
@@ -162,6 +300,16 @@ async def learn(args):
                 if not args.dry_run:
                     control_db[rpath] = True
                     control_db.commit()
+
+            thy.seconds = time.monotonic() - t_thy
+            logger.info("[%s] THEORY %s: %d/%d goals finished in %s; "
+                        "memory +%d new ~%d updated (%d rejected); %s",
+                        server, os.path.basename(rpath),
+                        thy.goals_finished, thy.goals, fmt_hms(thy.seconds),
+                        len(thy.created), len(thy.updated), thy.rejected,
+                        fmt_tokens(thy.tokens))
+            if thy.created or thy.updated:
+                logger.info("[%s]   memories: %s", server, thy.memory_str())
 
         async def worker(server):
             nonlocal finished_theories, remaining
@@ -203,19 +351,41 @@ async def learn(args):
                 if done:
                     finished_theories += 1
                     remaining -= 1
-                    logger.info("[%d/%d] done: %s", finished_theories,
-                                total_theories, os.path.abspath(target))
+                    logger.info("[%d/%d theories] %d goals learned, "
+                                "%d memories (+%d ~%d), elapsed %s",
+                                finished_theories, total_theories,
+                                run.goals_finished,
+                                len(run.created) + len(run.updated),
+                                len(run.created), len(run.updated),
+                                fmt_hms(time.monotonic() - t_run))
                 elif requeue:
                     task_queue.put_nowait(target)
                 else:
                     remaining -= 1
+                    given_up.append(os.path.abspath(target))
                     logger.error("[%s] giving up on %s after 3 attempts",
                                  server, target)
 
         await asyncio.gather(*(worker(s) for s in SERVER_INSTANCES))
 
-    logger.info("ALL DONE: %d/%d goals finished across %d/%d theories",
-                finished_goals, total_goals, finished_theories, total_theories)
+    run.seconds = time.monotonic() - t_run
+    logger.info("=" * 72)
+    logger.info("ALL DONE in %s", fmt_hms(run.seconds))
+    logger.info("  theories : %d/%d completed, %d given up",
+                finished_theories, total_theories, len(given_up))
+    logger.info("  goals    : %d/%d finished", run.goals_finished, run.goals)
+    logger.info("  memory   : %d created, %d updated, %d dedup-rejected",
+                len(run.created), len(run.updated), run.rejected)
+    logger.info("  AoA      : %d tool calls, %s",
+                run.tool_calls, fmt_tokens(run.tokens))
+    # Names, not just counts: this is the run's actual product, and a duplicate
+    # name across theories means the same lesson was re-learned (or overwritten).
+    for verb, names in (("created", run.created), ("updated", run.updated)):
+        for name, n in Counter(names).most_common():
+            logger.info("    %s %s%s", verb, name, f" (x{n})" if n > 1 else "")
+    for t in given_up:
+        logger.info("    given up: %s", t)
+    logger.info("=" * 72)
 
 
 async def main_async():

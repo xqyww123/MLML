@@ -17,7 +17,10 @@
      ML -> client per goal:   (0, pos)            goal opened at `pos` ("file:line")
                               client replies bool  (run AoA on this goal? — skip for
                                                     resume via control.db)
-                              (1, pos, finished)  AoA finished (proof reconstructed?)
+                              (1, pos, finished, iid)
+                                                  AoA finished (proof reconstructed?);
+                                                  `iid` = the goal's AoA log directory
+                                                  name, i.e. <log_dir>/<iid>/
                               (2, errs)           error(s) (list of strings)
      ML -> client at end:     5                    theory replay done
 *)
@@ -149,8 +152,13 @@ fun learning_plugin (driver, log_dir, budget : MiniLang_Agent.budget, send, recv
                        (send (fn cout => doPack (packPair (packInt, packList packString))
                                 (2, [pos_str pos ^ " : " ^ (Runtime.exn_message e |> REPL.trim_makrup)]) cout);
                         false)\<close>
-               val _ = send (fn cout => doPack (packTuple3 (packInt, packString, packBool))
-                                (1, pos_str pos, finished) cout)
+               (* `iid` names the AoA log directory <log_dir>/<iid>/ for THIS goal.
+                  The client needs it to attribute experience-memory writes and
+                  token cost to the goal: with a fleet of workers writing into one
+                  shared log_dir concurrently, timestamps cannot identify which
+                  directory belongs to which goal. *)
+               val _ = send (fn cout => doPack (packTuple4 (packInt, packString, packBool, packString))
+                                (1, pos_str pos, finished, iid) cout)
              in (NONE, NONE)   (* let the theory's original proof run *)
              end)
           end
