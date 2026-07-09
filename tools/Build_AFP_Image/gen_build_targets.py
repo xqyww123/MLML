@@ -14,12 +14,19 @@ EXEMPT_THYS = ['UPF.NormalisationTestSpecification', 'KAT_and_DRA.Conway_Tests',
 EXEMPT_SHORT = ['Isa_REPL', 'Auto_Sledgehammer', 'Minilang', 'MS_Translator',
                 'MS_Translator_Top', 'Minilang_Base']
 
-# Theories that cannot be built inside the image and everything that
-# transitively depends on them. Extended as build failures are discovered.
-#  - QR_Decomposition.Gram_Schmidt_IArrays: `A !! i` is ambiguous once both
-#    HOL-Library.IArray (IArray.sub) and HOL-Library.Stream (Stream.snth) are
-#    in scope -- which they are via QR->Gauss_Jordan->Rank_Nullity->Lp->Stream.
-CLASH_ROOTS = ['QR_Decomposition.Gram_Schmidt_IArrays']
+# Theories that cannot be built at all under Isabelle2025-2 + afp-2026, and
+# everything that transitively depends on them. In each, `A !! i` is ambiguous
+# because both HOL-Library.IArray (IArray.sub) and HOL-Library.Stream
+# (Stream.snth) declare `!!` and are both in the theory's import closure (via
+# ...->Rank_Nullity_Theorem->Lp->HOL-Probability->Stream). Neither theory is
+# reachable from its own session's ROOT, so upstream AFP never builds them; our
+# image listed them explicitly and hit the failure.
+#
+# Verified individually with per-theory probe sessions -- do NOT add a theory
+# here on suspicion alone: of 11 theories matching the "IArray+Stream in
+# closure and uses !!" pattern, 9 build fine.
+CLASH_ROOTS = ['QR_Decomposition.Gram_Schmidt_IArrays',
+               'Gauss_Jordan.System_Of_Equations_IArrays']
 
 def _clash_closure():
     excl = set()
