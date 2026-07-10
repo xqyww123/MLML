@@ -25,8 +25,26 @@ EXEMPT_SHORT = ['Isa_REPL', 'Auto_Sledgehammer', 'Minilang', 'MS_Translator',
 # Verified individually with per-theory probe sessions -- do NOT add a theory
 # here on suspicion alone: of 11 theories matching the "IArray+Stream in
 # closure and uses !!" pattern, 9 build fine.
-CLASH_ROOTS = ['QR_Decomposition.Gram_Schmidt_IArrays',
+CLASH_ROOTS = [# Upstream-broken in afp-2026: Rank_Nullity_Theorem.Miscellaneous
+               # gained an `Lp.Functional_Spaces` import, which drags all of
+               # HOL-Analysis.Analysis (measure theory, Stream, ...) into every
+               # downstream closure. `isabelle build <session>` fails on each of
+               # these on its own -- nothing to do with our merged image.
+               #  - the first two: `A !! i` ambiguous, IArray.sub vs Stream.snth
+               #  - Perron_Frobenius_Irreducible: free var `sigma` at line 744
+               #    now resolves to the constant HOL-Analysis.Sigma_Algebra.sigma
+               'QR_Decomposition.Gram_Schmidt_IArrays',
                'Gauss_Jordan.System_Of_Equations_IArrays',
+               'Perron_Frobenius.Perron_Frobenius_Irreducible',
+               # Needs the record_proofs=2 HOL-Proofs base (inductive_realizer):
+               # "thm_name_of: bad proof of theorem". Same class as XML_Data.
+               'HOL-Proofs-Lambda.WeakNorm',
+               # `compile_generated_files` does `cp -r mlunta .` where mlunta is
+               # resolved relative to the *build* directory; the mlunta/ tree only
+               # exists in the Munta_Certificate_Checker session dir, so these can
+               # never be built from another session.
+               'Munta_Certificate_Checker.Munta_Certificate_Compile_Poly',
+               'Munta_Certificate_Checker.Munta_Certificate_Compile_MLton',
                # Theories that need build options our image does not (and should
                # not) set. Their own ROOT grants them via per-theory options or a
                # special base session; a plain session cannot reproduce that.
