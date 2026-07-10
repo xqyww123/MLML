@@ -17,11 +17,27 @@
      ML -> client per goal:   (0, pos)            goal opened at `pos` ("file:line")
                               client replies bool  (run AoA on this goal? — skip for
                                                     resume via control.db)
-                              (1, pos, finished, iid)
-                                                  AoA finished (proof reconstructed?);
+                              (1, pos, outcome, iid)
+                                                  the AoA run concluded; `outcome` is:
+                                                    "finished"  agent ran to completion
+                                                    "timeout"   hard backstop fired (the
+                                                                agent was wedged)
+                                                    "infra"     RPC host unreachable — the
+                                                                agent never ran, so this is
+                                                                NOT evidence the goal is
+                                                                unlearnable; the client
+                                                                retries it rather than
+                                                                counting it toward give-up
+                                                    "error"     other exception
+                                                    "extraction_skipped"
+                                                                the original proof has no
+                                                                recognised terminal
+                                                                (sorry/oops); nothing to
+                                                                learn, no agent runs, iid=""
                                                   `iid` = the goal's AoA log directory
-                                                  name, i.e. <log_dir>/<iid>/
-                              (2, errs)           error(s) (list of strings)
+                                                  <log_dir>/<iid>/ (empty when no run)
+                              (2, errs)           error detail(s) (list of strings), sent
+                                                  alongside every non-"finished" outcome
      ML -> client at end:     5                    theory replay done
 *)
 
@@ -121,6 +137,13 @@ fun learning_plugin (driver, log_dir, budget : MiniLang_Agent.budget, send, recv
                           (send (fn cout => doPack (packPair (packInt, packList packString))
                                    (2, [pos_str pos ^ " : proof extraction skipped: "
                                         ^ (Runtime.exn_message e |> REPL.trim_makrup)]) cout);
+                           (* Terminal, like a finished goal: the original proof has no
+                              recognised terminal (sorry/oops), so there is nothing to
+                              learn and re-running cannot change that. Emit a completion
+                              so the client marks the goal resolved instead of retrying
+                              it forever. No agent ran, so there is no log dir (iid=""). *)
+                           send (fn cout => doPack (packTuple4 (packInt, packString, packString, packString))
+                                   (1, pos_str pos, "extraction_skipped", "") cout);
                            (NONE, NONE))
                       | Exn.Res isar => let
                (* Cache is bypassed for BOTH read and write on the learning path
@@ -145,20 +168,37 @@ fun learning_plugin (driver, log_dir, budget : MiniLang_Agent.budget, send, recv
                   goal 300s past its budget so it cannot wedge the whole replay. *)
                val hard = Time.fromSeconds (#timeout_seconds budget + 300)
                val task = ("learning", packString isar)
-               val finished = \<^try>\<open>
+               (* `outcome` classifies why the AoA run ended so the client can decide
+                  resume policy per goal (see the protocol doc at the top). A plain
+                  return means the agent ran to completion ("finished"); the two catch
+                  clauses split the failures the client treats differently — a timeout
+                  (agent wedged; counts toward give-up) vs. an RPC-host outage ("infra";
+                  the agent never ran, so retry rather than give up). The RPC layer
+                  raises a plain ERROR (no dedicated exception), so infra is matched on
+                  its message text. *)
+               val outcome = \<^try>\<open>
                      Timeout.apply hard (fn () =>
-                        (AoA_RPC (driver, (cfg, budget), iid) task (ctxt, sequent); true)) ()
-                   catch e =>
-                       (send (fn cout => doPack (packPair (packInt, packList packString))
-                                (2, [pos_str pos ^ " : " ^ (Runtime.exn_message e |> REPL.trim_makrup)]) cout);
-                        false)\<close>
+                        (AoA_RPC (driver, (cfg, budget), iid) task (ctxt, sequent); "finished")) ()
+                   catch Timeout.TIMEOUT _ =>
+                           (send (fn cout => doPack (packPair (packInt, packList packString))
+                                    (2, [pos_str pos ^ " : AoA timed out (hard backstop)"]) cout);
+                            "timeout")
+                       | e =>
+                           let val msg = Runtime.exn_message e |> REPL.trim_makrup
+                            in send (fn cout => doPack (packPair (packInt, packList packString))
+                                       (2, [pos_str pos ^ " : " ^ msg]) cout);
+                               if String.isSubstring "RPC host" msg
+                                  orelse String.isSubstring "RPC Host" msg
+                                  orelse String.isSubstring "Cannot connect" msg
+                               then "infra" else "error"
+                           end\<close>
                (* `iid` names the AoA log directory <log_dir>/<iid>/ for THIS goal.
                   The client needs it to attribute experience-memory writes and
                   token cost to the goal: with a fleet of workers writing into one
                   shared log_dir concurrently, timestamps cannot identify which
                   directory belongs to which goal. *)
-               val _ = send (fn cout => doPack (packTuple4 (packInt, packString, packBool, packString))
-                                (1, pos_str pos, finished, iid) cout)
+               val _ = send (fn cout => doPack (packTuple4 (packInt, packString, packString, packString))
+                                (1, pos_str pos, outcome, iid) cout)
              in (NONE, NONE)   (* let the theory's original proof run *)
              end)
           end

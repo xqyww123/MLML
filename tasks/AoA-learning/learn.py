@@ -51,6 +51,31 @@ logger = logging.getLogger("aoa-learn")
 # ("**The memory was NOT written.** ..."), i.e. the write did not land.
 _MEMORY_RE = re.compile(r"^(Saved|Updated) experience `([^`]+)`")
 
+# A goal that keeps failing for a REAL reason (the agent ran but timed out, or an
+# exception other than an infrastructure outage) is retried across resume passes up
+# to this many times, then given up so a genuinely hard/broken goal cannot block its
+# theory from ever completing. Infrastructure failures (RPC host unreachable) do NOT
+# count — see the "infra" outcome in learn_one.
+MAX_GOAL_ATTEMPTS = 3
+
+# control.db value scheme (goal keys are "file:line", theory keys end ".thy"):
+#   True        goal finished (terminal; also the legacy value written before this
+#               scheme, read back correctly)
+#   "skipped"   original proof unparsable (sorry/oops) — terminal, never retried
+#   "givenup"   failed MAX_GOAL_ATTEMPTS times — terminal
+#   int n       failed n (< MAX) real attempts so far — retried on the next pass
+#   True (.thy) theory fully resolved (every goal terminal)
+
+
+def _goal_terminal(v) -> bool:
+    """A goal is terminal (skip it on this/next pass) iff finished, permanently
+    skipped, or given up. Deliberately NOT a `v in (True, ...)` membership test:
+    Python's `==` makes `1 == True`, so the int 1 — the value written after the
+    FIRST real failure, which MUST be retried — would be misread as terminal and
+    the goal permanently skipped. `is True` avoids that; ints fall through to
+    non-terminal (retry)."""
+    return v is True or v == "skipped" or v == "givenup"
+
 # One work-stealing worker per (server x num-evaluator), exactly like
 # premise-extraction (which uses num-translator) and evaluator.py (num-evaluator).
 SERVER_INSTANCES = []
@@ -255,9 +280,15 @@ async def learn(args):
             if rpath in control_db:
                 logger.info("[%d/%d] skip (done): %s",
                             finished_theories, total_theories, rpath)
-                return
+                return True, False    # already resolved; no infra failure
             thy = Stats()         # this theory's own totals
             t_thy = time.monotonic()
+            # A theory is resolved only when every goal it opens ends terminal. A goal
+            # left non-terminal this pass — an infra failure, or a real failure still
+            # under its retry cap — keeps the theory unresolved so the worker requeues
+            # it; already-terminal goals are skipped on that pass, so no work repeats.
+            theory_resolved = True
+            infra_this_pass = 0
             async with Client(server, "HOL", timeout=None) as c:
                 await c.set_register_thy(False)
                 await c.set_trace(False)
@@ -273,19 +304,29 @@ async def learn(args):
                 while True:
                     match await c._feed_and_unpack():
                         case (0, pos):
-                            # Skip a goal already learned (resume), or every goal in
-                            # dry-run. A goal is keyed by "file:line" as sent by App.
-                            do_run = (not args.dry_run) and (pos not in control_db)
+                            # Run this goal unless it is already terminal — finished on
+                            # a prior pass, permanently skipped, or given up after the
+                            # cap. A goal recorded as an int (failed < cap real times) is
+                            # retried. Also skip everything in dry-run.
+                            v = control_db.get(pos)
+                            do_run = (not args.dry_run) and not _goal_terminal(v)
                             logger.info("  [%s] goal %s -> %s", server, pos,
                                         "run" if do_run else "skip")
                             c.writer.write(mp.packb(bool(do_run)))
                             await c.writer.drain()
                             t_goal = time.monotonic()
-                        case (1, pos, finished, iid):
+                        case (1, pos, outcome, iid):
                             # `iid` names this goal's AoA log dir; mine it for the
                             # experience memories written and the token cost.
-                            g = goal_stats(args.log_dir, iid)
+                            # extraction_skipped carries iid="" — no agent ran, so
+                            # there is no log to read and nothing to attribute; build
+                            # empty stats directly rather than letting goal_stats flag
+                            # a (nonexistent) missing log as no_log, which would fire a
+                            # spurious "broken pipeline" warning for every sorry/oops goal.
+                            g = (Stats(goals=1) if outcome == "extraction_skipped"
+                                 else goal_stats(args.log_dir, iid))
                             g.seconds = time.monotonic() - t_goal
+                            finished = outcome == "finished"
                             g.goals_finished = 1 if finished else 0
                             # Accumulate per GOAL, not per theory: if this theory
                             # later crashes and is retried, its already-finished
@@ -293,23 +334,46 @@ async def learn(args):
                             # otherwise never be counted anywhere.
                             thy += g
                             run += g
-                            # Record ONLY finished goals, so a resume (which replays
-                            # the theory from the start) retries goals AoA failed to
-                            # reconstruct; the skip-check is presence-only.
+
                             if finished:
                                 control_db[pos] = True
                                 control_db.commit()
-                            # Always print the memory field, even when empty:
-                            # most goals teach the agent nothing worth saving, and
-                            # an omitted field is indistinguishable from broken
-                            # reporting. The running total makes the run's actual
-                            # product visible without waiting for the summary.
+                                status = "finished"
+                            elif outcome == "extraction_skipped":
+                                # sorry/oops proof — nothing to learn; terminal.
+                                control_db[pos] = "skipped"
+                                control_db.commit()
+                                status = "skipped (no parsable proof)"
+                            elif outcome == "infra":
+                                # The agent never ran (RPC host unreachable). Do NOT
+                                # count it: leave the goal untouched and keep the theory
+                                # unresolved so it is retried once infra is back.
+                                infra_this_pass += 1
+                                theory_resolved = False
+                                status = "INFRA — will retry (not counted)"
+                            else:
+                                # "timeout" / "error": a real failed attempt. Count it,
+                                # and give up once it has failed MAX_GOAL_ATTEMPTS times
+                                # so a hard/broken goal cannot block its theory forever.
+                                v = control_db.get(pos)
+                                n = (v if isinstance(v, int) else 0) + 1
+                                if n >= MAX_GOAL_ATTEMPTS:
+                                    control_db[pos] = "givenup"
+                                    control_db.commit()
+                                    status = f"GAVE UP after {n} attempts ({outcome})"
+                                else:
+                                    control_db[pos] = n
+                                    control_db.commit()
+                                    theory_resolved = False
+                                    status = f"{outcome}, attempt {n}/{MAX_GOAL_ATTEMPTS}"
+
+                            # Always print the memory field, even when empty: most goals
+                            # teach the agent nothing worth saving, and an omitted field
+                            # is indistinguishable from broken reporting.
                             logger.info(
                                 "  [%s] goal %s: %s in %.0fs, %d tool calls, "
                                 "memory %s [run +%d ~%d]",
-                                server, pos,
-                                "finished" if finished else "UNFINISHED",
-                                g.seconds, g.tool_calls,
+                                server, pos, status, g.seconds, g.tool_calls,
                                 "n/a (no AoA log)" if g.no_log
                                 else (g.memory_str() or "none"),
                                 len(run.created), len(run.updated))
@@ -324,23 +388,28 @@ async def learn(args):
                         case other:
                             raise REPLFail(f"unexpected message on {rpath}: {other!r}")
 
-                # Do NOT mark the theory done in dry-run: every goal was answered
-                # "skip", so persisting completion would make a later REAL run
-                # (same control-db) skip the whole corpus and never invoke AoA.
-                if not args.dry_run:
+                # Mark the theory done ONLY when every goal reached a terminal state.
+                # An unresolved theory (an infra failure, or a goal still under its
+                # retry cap) is left unmarked so the worker requeues it for another
+                # pass. Never in dry-run: every goal was answered "skip", so persisting
+                # completion would make a later REAL run skip the whole corpus.
+                if not args.dry_run and theory_resolved:
                     control_db[rpath] = True
                     control_db.commit()
 
             thy.seconds = time.monotonic() - t_thy
-            logger.info("[%s] THEORY %s: %d/%d goals finished in %s; "
+            logger.info("[%s] THEORY %s: %s (%d/%d goals finished) in %s; "
                         "memory +%d new ~%d updated (%d rejected)%s; %s",
                         server, os.path.basename(rpath),
+                        "RESOLVED" if theory_resolved
+                        else f"unresolved, requeue ({infra_this_pass} infra)",
                         thy.goals_finished, thy.goals, fmt_hms(thy.seconds),
                         len(thy.created), len(thy.updated), thy.rejected,
                         f", {thy.no_log} goals unreadable" if thy.no_log else "",
                         fmt_tokens(thy.tokens))
             if thy.created or thy.updated:
                 logger.info("[%s]   memories: %s", server, thy.memory_str())
+            return theory_resolved, infra_this_pass > 0
 
         async def worker(server):
             nonlocal finished_theories, remaining
@@ -363,12 +432,11 @@ async def learn(args):
                 # times on this server, then GIVE UP on it for this run so the fleet
                 # can terminate — it stays unmarked in control.db, so a resume run
                 # retries it fresh.
-                done = False
+                result = None          # (resolved, infra) once a pass completes
                 requeue = False
                 for attempt in range(3):
                     try:
-                        await learn_one(server, target)
-                        done = True
+                        result = await learn_one(server, target)
                         break
                     except ConnectionError:
                         logger.error("[%s] connection error on %s; requeueing",
@@ -379,16 +447,28 @@ async def learn(args):
                         traceback.print_exc()
                         logger.error("[%s] error on %s (attempt %d/3): %s",
                                      server, target, attempt + 1, e)
-                if done:
-                    finished_theories += 1
-                    remaining -= 1
-                    logger.info("[%d/%d theories] %d goals learned, "
-                                "%d memories (+%d ~%d), elapsed %s",
-                                finished_theories, total_theories,
-                                run.goals_finished,
-                                len(run.created) + len(run.updated),
-                                len(run.created), len(run.updated),
-                                fmt_hms(time.monotonic() - t_run))
+
+                if result is not None:
+                    resolved, infra = result
+                    if resolved:
+                        finished_theories += 1
+                        remaining -= 1
+                        logger.info("[%d/%d theories] %d goals learned, "
+                                    "%d memories (+%d ~%d), elapsed %s",
+                                    finished_theories, total_theories,
+                                    run.goals_finished,
+                                    len(run.created) + len(run.updated),
+                                    len(run.created), len(run.updated),
+                                    fmt_hms(time.monotonic() - t_run))
+                    else:
+                        # Not every goal reached a terminal state this pass (an infra
+                        # outage, or goals still under their retry cap). Requeue for
+                        # another pass; `remaining` stays put so the run keeps waiting.
+                        # Back off first on an infra outage so the fleet does not spin
+                        # hammering a down RPC host.
+                        task_queue.put_nowait(target)
+                        if infra:
+                            await asyncio.sleep(60)
                 elif requeue:
                     task_queue.put_nowait(target)
                 else:
@@ -399,12 +479,23 @@ async def learn(args):
 
         await asyncio.gather(*(worker(s) for s in SERVER_INSTANCES))
 
+        # Terminal goal tallies straight from control.db (authoritative across
+        # resumes, unlike the in-memory `run` which only covers this session's passes).
+        gv = sum(1 for k, v in control_db.items()
+                 if not k.endswith(".thy") and v == "givenup")
+        sk = sum(1 for k, v in control_db.items()
+                 if not k.endswith(".thy") and v == "skipped")
+        fin = sum(1 for k, v in control_db.items()
+                  if not k.endswith(".thy") and v is True)
+
     run.seconds = time.monotonic() - t_run
     logger.info("=" * 72)
     logger.info("ALL DONE in %s", fmt_hms(run.seconds))
     logger.info("  theories : %d/%d completed, %d given up",
                 finished_theories, total_theories, len(given_up))
-    logger.info("  goals    : %d/%d finished", run.goals_finished, run.goals)
+    logger.info("  goals    : this run %d/%d finished; control.db totals: "
+                "%d finished, %d gave up, %d skipped (unparsable proof)",
+                run.goals_finished, run.goals, fin, gv, sk)
     logger.info("  memory   : %d created, %d updated, %d dedup-rejected",
                 len(run.created), len(run.updated), run.rejected)
     # Zero memories across a whole run is normal (most goals teach nothing worth
