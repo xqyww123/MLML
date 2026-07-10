@@ -26,7 +26,19 @@ EXEMPT_SHORT = ['Isa_REPL', 'Auto_Sledgehammer', 'Minilang', 'MS_Translator',
 # here on suspicion alone: of 11 theories matching the "IArray+Stream in
 # closure and uses !!" pattern, 9 build fine.
 CLASH_ROOTS = ['QR_Decomposition.Gram_Schmidt_IArrays',
-               'Gauss_Jordan.System_Of_Equations_IArrays']
+               'Gauss_Jordan.System_Of_Equations_IArrays',
+               # Theories that need build options our image does not (and should
+               # not) set. Their own ROOT grants them via per-theory options or a
+               # special base session; a plain session cannot reproduce that.
+               #  - Common_Patterns: `theories [quick_and_dirty]`, has 9 `sorry`s
+               #    -- must never enter a prover image anyway.
+               #  - XML_Data: needs the record_proofs=2 HOL-Proofs base
+               #    ("thm_of_proof: partial proof term"). Its two sibling
+               #    HOL-Proofs-ex theories build fine and are kept.
+               #  - HOL_Light_Import: needs the external HOL_LIGHT_BUNDLE.
+               'HOL-Induct.Common_Patterns',
+               'HOL-Proofs-ex.XML_Data',
+               'HOL-Import.HOL_Light_Import']
 
 def _clash_closure():
     excl = set()
