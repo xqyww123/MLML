@@ -25,17 +25,15 @@ EXEMPT_SHORT = ['Isa_REPL', 'Auto_Sledgehammer', 'Minilang', 'MS_Translator',
 # Verified individually with per-theory probe sessions -- do NOT add a theory
 # here on suspicion alone: of 11 theories matching the "IArray+Stream in
 # closure and uses !!" pattern, 9 build fine.
-CLASH_ROOTS = [# Upstream-broken in afp-2026: Rank_Nullity_Theorem.Miscellaneous
-               # gained an `Lp.Functional_Spaces` import, which drags all of
-               # HOL-Analysis.Analysis (measure theory, Stream, ...) into every
-               # downstream closure. `isabelle build <session>` fails on each of
-               # these on its own -- nothing to do with our merged image.
-               #  - the first two: `A !! i` ambiguous, IArray.sub vs Stream.snth
-               #  - Perron_Frobenius_Irreducible: free var `sigma` at line 744
-               #    now resolves to the constant HOL-Analysis.Sigma_Algebra.sigma
-               'QR_Decomposition.Gram_Schmidt_IArrays',
-               'Gauss_Jordan.System_Of_Equations_IArrays',
-               'Perron_Frobenius.Perron_Frobenius_Irreducible',
+CLASH_ROOTS = [# NOTE: the Gram_Schmidt_IArrays / System_Of_Equations_IArrays /
+               # Perron_Frobenius_Irreducible `!!`/`sigma` clashes were NOT an
+               # afp-2026 defect -- they were caused by a LOCAL patch that had
+               # added `Lp.Functional_Spaces` to Rank_Nullity_Theorem, dragging
+               # measure theory (Stream, Sigma_Algebra) into every downstream
+               # closure. That patch has been reverted (the dead `fun ::
+               # real_vector` instance in Rank_Nullity/Miscellaneous.thy is just
+               # commented out; Lp's more general instance covers it), so those
+               # theories build again and are no longer excluded.
                # Needs the record_proofs=2 HOL-Proofs base (inductive_realizer):
                # "thm_name_of: bad proof of theorem". Same class as XML_Data.
                'HOL-Proofs-Lambda.WeakNorm',
