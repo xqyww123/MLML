@@ -127,10 +127,10 @@ if __name__ == '__main__':
             else:
                 f.write(f'session \"AFP-DEP1-{step_count}\" = \"AFP-DEP1-{step_count-1}\" +\n')
             f.write(f'sessions\n')
-            for session in sorted(used_sessions):
+            for session in used_sessions:
                 f.write(f'  \"{session}\"\n')
             f.write(f'theories\n')
-            for thy in sorted(used_thys):
+            for thy in used_thys:
                 f.write(f'  \"{thy}\"\n')
         used_thys.clear()
         used_sessions.clear()
@@ -158,16 +158,13 @@ if __name__ == '__main__':
     with open('./tools/Build_AFP_Image/AFP-DEP1/all_theories.lst', 'w') as f:
         while ready_thys:
             best = None
-            # deterministic order (sorted): regenerating must not reshuffle the
-            # partition, or already-built AFP-DEP1-N heaps would be invalidated
-            for thy in sorted(ready_thys):
+            for thy in ready_thys:
                 if session_of(thy) in used_sessions:
                     best = thy
                     ready_thys.remove(thy)
                     break
             if not best:
-                best = min(ready_thys)
-                ready_thys.remove(best)
+                best = ready_thys.pop()
             f.write(f'{best}\n')
             use_thy(best)
             for ref in INFLUENCES[best]:
