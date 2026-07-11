@@ -9,6 +9,14 @@ filter as AFP-DEP1 still applies.
 Reuses `has_examples` / `EXEMPT_SHORT` / `BASE_THEORIES` from gen_build_targets
 (imported as a sibling module; its generation body is guarded by __main__ so
 importing it has no side effects).
+
+IMPORTANT: AFP-ALL is a cumulative chain (AFP-ALL-N = AFP-ALL-(N-1) + ...), so
+once a step's heap is built, changing ANY earlier step's ROOT invalidates it.
+Do NOT re-run this generator to drop a clashing theory -- that reshuffles the
+whole partition. Instead remove the theory (and its dependents) from the
+specific ROOT that lists it, in place. Regenerate only for a from-scratch
+rebuild. The partition is deterministic (sorted), so a full regen at least
+reproduces itself.
 """
 import os
 from data.isabelle import THEORIES, INFLUENCES, SESSIONS, session_of, short_name_of
@@ -65,10 +73,10 @@ def emit_step():
     with open(f'{OUT_DIR}/AFP-ALL-{step_count}/ROOT', 'w') as f:
         f.write(f'session "AFP-ALL-{step_count}" = "{base_of_step()}" +\n')
         f.write('sessions\n')
-        for s in used_sessions:
+        for s in sorted(used_sessions):
             f.write(f'  "{s}"\n')
         f.write('theories\n')
-        for t in used_thys:
+        for t in sorted(used_thys):
             f.write(f'  "{t}"\n')
     used_thys.clear()
     used_sessions.clear()
@@ -92,13 +100,16 @@ os.makedirs(OUT_DIR, exist_ok=True)
 with open(f'{OUT_DIR}/all_theories.lst', 'w') as f:
     while ready:
         best = None
-        for thy in ready:
+        # deterministic order (sorted), so regenerating never reshuffles the
+        # partition and already-built AFP-ALL-N heaps stay valid
+        for thy in sorted(ready):
             if session_of(thy) in used_sessions:
                 best = thy
                 ready.remove(thy)
                 break
         if not best:
-            best = ready.pop()
+            best = min(ready)
+            ready.remove(best)
         f.write(f'{best}\n')
         use_thy(best)
         for ref in INFLUENCES[best]:
