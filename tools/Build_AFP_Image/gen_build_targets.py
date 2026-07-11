@@ -45,6 +45,15 @@ CLASH_ROOTS = [# Upstream-broken in afp-2026: Rank_Nullity_Theorem.Miscellaneous
                # never be built from another session.
                'Munta_Certificate_Checker.Munta_Certificate_Compile_Poly',
                'Munta_Certificate_Checker.Munta_Certificate_Compile_MLton',
+               # Read their session-local sat_data/*.xz via a *bare relative*
+               # path from a forked ML task ("forked to the background"), so the
+               # read resolves against the build directory, not the theory's
+               # master dir. Fails from any other session ("BinIO.openIn ...
+               # sat_data/kemeny_profiles_5_2.xz: No such file"). The PAPP
+               # theories that read the same kind of data use `\<^master_dir> +`
+               # and build fine, so this is specific to these two.
+               'SWF_Impossibility.Anon_Unan_Stratproof_Impossibility',
+               'SWF_Impossibility.Majcons_Stratproof_Impossibility',
                # Theories that need build options our image does not (and should
                # not) set. Their own ROOT grants them via per-theory options or a
                # special base session; a plain session cannot reproduce that.
