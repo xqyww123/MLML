@@ -161,18 +161,19 @@ class Stats:
                    - len(self.created) - len(self.updated) - self.rejected)
 
     def memory_str(self) -> str:
-        """`+a,b ~c` — created are prefixed `+`, updated `~`."""
+        """Plain-English summary of the experience memories this scope produced,
+        e.g. `created: alpha, beta; updated: gamma; 1 rejected`."""
         bits = []
         if self.created:
-            bits.append("+" + ",".join(self.created))
+            bits.append("created: " + ", ".join(self.created))
         if self.updated:
-            bits.append("~" + ",".join(self.updated))
+            bits.append("updated: " + ", ".join(self.updated))
         if self.rejected:
-            bits.append(f"{self.rejected} rejected")
+            bits.append(f"{self.rejected} rejected as duplicate")
         if self.unaccounted_writes:
             bits.append(f"{self.unaccounted_writes} UNACCOUNTED "
                         f"(stale AoA host: write_memory response not logged)")
-        return " ".join(bits)
+        return "; ".join(bits)
 
 
 def fmt_hms(seconds: float) -> str:
@@ -372,7 +373,7 @@ async def learn(args):
                             # is indistinguishable from broken reporting.
                             logger.info(
                                 "  [%s] goal %s: %s in %.0fs, %d tool calls, "
-                                "memory %s [run +%d ~%d]",
+                                "memory %s [run total: %d created, %d updated]",
                                 server, pos, status, g.seconds, g.tool_calls,
                                 "n/a (no AoA log)" if g.no_log
                                 else (g.memory_str() or "none"),
@@ -399,7 +400,7 @@ async def learn(args):
 
             thy.seconds = time.monotonic() - t_thy
             logger.info("[%s] THEORY %s: %s (%d/%d goals finished) in %s; "
-                        "memory +%d new ~%d updated (%d rejected)%s; %s",
+                        "memory: %d created, %d updated, %d rejected%s; %s",
                         server, os.path.basename(rpath),
                         "RESOLVED" if theory_resolved
                         else f"unresolved, requeue ({infra_this_pass} infra)",
@@ -454,7 +455,7 @@ async def learn(args):
                         finished_theories += 1
                         remaining -= 1
                         logger.info("[%d/%d theories] %d goals learned, "
-                                    "%d memories (+%d ~%d), elapsed %s",
+                                    "%d memories (%d created, %d updated), elapsed %s",
                                     finished_theories, total_theories,
                                     run.goals_finished,
                                     len(run.created) + len(run.updated),
