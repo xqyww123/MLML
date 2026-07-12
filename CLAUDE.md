@@ -4,7 +4,7 @@
 
 ### Memory writes require explicit approval
 
-Never write to, update, or delete anything in the memory directory without my explicit approval for that specific write. Propose what you want to record and wait for me to agree. Reading memory is fine. Recording a lesson in `CLAUDE.md` or a SKILL instead is also fine — proactively suggest whichever fits.
+Never write to, update, or delete anything in the memory directory without my explicit approval for that specific write. Propose what you want to record and wait for me to agree. Reading memory is fine. When I approve, record it in the memory directory — do NOT put it in a `CLAUDE.md` instead. (Adding a rule to a `CLAUDE.md`, or writing a SKILL, is a separate thing and needs its own explicit approval.)
 
 ### Never Act on Assumptions — ALWAYS Ask
 
