@@ -43,3 +43,6 @@
 [submodule "contrib/phi-system"]
 	path = contrib/phi-system
 	url = git@github.com:xqyww123/phi-system.git
+[submodule "contrib/Isabelle-MCP"]
+	path = contrib/Isabelle-MCP
+	url = git@github.com:xqyww123/Isabelle-MCP.git
