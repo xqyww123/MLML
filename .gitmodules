@@ -46,3 +46,6 @@
 [submodule "contrib/Isabelle-MCP"]
 	path = contrib/Isabelle-MCP
 	url = git@github.com:xqyww123/Isabelle-MCP.git
+[submodule "contrib/isabelle-packaging-ci"]
+	path = contrib/isabelle-packaging-ci
+	url = git@github.com:xqyww123/isabelle-packaging-ci.git
