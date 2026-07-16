@@ -5,10 +5,13 @@
    For the real learning run the REPL boots on the MathBench_Prover heap and loads
    AoA_Learning_App FROM SOURCE at runtime (by its qualified name
    "AoA_Learning_Base.AoA_Learning_App", the same way premise-extraction loads its
-   app) — the App theory only imports Minilang_Agent, which the MathBench_Prover
-   heap already provides transitively, so it needs no separate MathBench-based
-   session. *)
+   app). The App theory imports Minilang_Agent (in the MathBench_Prover heap) +
+   Isa_REPL — Minilang_Agent no longer pulls Isa_REPL, so the App declares it
+   directly; every REPL server already carries Isa_REPL at launch, so the
+   runtime source-load resolves it. *)
 session AoA_Learning_Base = Minilang_Agent +
+  sessions
+    Isa_REPL
   theories
     AoA_Learning_App
     AoA_Learning_Toy

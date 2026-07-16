@@ -437,7 +437,7 @@ class MinilangAgent_Base(Isar_Base):
     # Extra Isabelle libraries loaded into the REPL before evaluation.
     # Subclasses may override to change the loaded libraries (e.g. NTP4VC must
     # not load MathBench_Prover, whose huge math corpus pollutes the namespace).
-    _LIBS = ['MathBench_Prover.MathBench_Prover', 'Minilang_Agent.Minilang_Agent']
+    _LIBS = ['MathBench_Prover.MathBench_Prover', 'Minilang_AoA_REPL.Minilang_AoA_App']
 
     # NOTE: _invocation_serial / _invocation_serial_lock are retained but no
     # longer used. _make_invocation_id now derives a stable per-case directory
@@ -773,7 +773,7 @@ class Isar_MiniF2F(MiniF2F_Mixin, Isar_Base):
     pass
 
 class MinilangAgent_MiniF2F(MiniF2F_Mixin, MinilangAgent_Base):
-    _LIBS = ['MiniF2F_MyProver.MiniF2F_MyProver', 'Minilang_Agent.Minilang_Agent']
+    _LIBS = ['MiniF2F_MyProver.MiniF2F_MyProver', 'Minilang_AoA_REPL.Minilang_AoA_App']
 
 class PutnamBench_Mixin:
     if TYPE_CHECKING:
@@ -924,7 +924,7 @@ class MinilangAgent_NTPVC(NTPVC_Mixin, MinilangAgent_Base):
     # NTP4VC theorems are why3-generated and use short bound-variable names
     # (e.g. or, sl, sr) that collide with constants dragged in by
     # MathBench_Prover's math corpus. Load only the agent language.
-    _LIBS = ['Minilang_Agent.Minilang_Agent']
+    _LIBS = ['Minilang_AoA_REPL.Minilang_AoA_App']
 
 #if __name__ == "__main__":
 #    logger.info('self-testing MiniF2F')

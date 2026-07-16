@@ -83,6 +83,14 @@ echo "Setting Isabelle memory limit to ${isabelle_memory}GB"
 isabelle components -u ./contrib/afp-2026-05-13/thys || exit 1
 isabelle components -u . || exit 1
 
+# Isa-Mini's REPL-app sessions live in per-directory ROOTs (Minilang_Translator,
+# Minilang_REPL, Minilang_AoA_REPL) rather than the top-level contrib/Isa-Mini/ROOT;
+# register each dir so the sessions are discoverable (the `.` component above only
+# reaches contrib/Isa-Mini/ROOT, not these subdirs).
+isabelle components -u ./contrib/Isa-Mini/translator || exit 1
+isabelle components -u ./contrib/Isa-Mini/REPL || exit 1
+isabelle components -u ./contrib/Isa-Mini/Agent/AoA_REPL || exit 1
+
 isabelle ocaml_setup || echo "Fail to activate OCaml support for Isabelle. Some files may fail to be evaluated"
 isabelle ghc_setup || echo "Fail to activate GHC support for Isabelle. Some files may fail to be evaluated"
 
