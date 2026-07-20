@@ -9,7 +9,7 @@ whole run is single-REPL / serial and its logs stay clean.
 
 Equivalent in spirit to::
 
-    evaluation/evaluator_top.py agent-putnam DeepSeekV4.pro --result DB --case-category test
+    evaluation/evaluator_top.py agent-putnam DeepSeek.V4-pro --result DB --case-category test
 
 but with an explicit ``server_instances`` list and no CSV / ssh dependency.
 
@@ -40,8 +40,8 @@ def main():
                    help="Directory for per-invocation agent logs (interaction.yaml etc.)")
     p.add_argument("--repl-addr", default="127.0.0.1:6699",
                    help="Address of the externally-managed REPL (default: 127.0.0.1:6699)")
-    p.add_argument("--driver", default="DeepSeekV4.pro",
-                   help="AoA driver string (default: DeepSeekV4.pro)")
+    p.add_argument("--driver", default="DeepSeek.V4-pro",
+                   help="AoA driver string (default: DeepSeek.V4-pro)")
     p.add_argument("--cases-file",
                    help="Optional file of case names (one per line) to restrict the run")
     p.add_argument("--limit", type=int, default=None,

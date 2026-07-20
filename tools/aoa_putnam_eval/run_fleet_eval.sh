@@ -25,7 +25,7 @@
 # Usage (env-configured):
 #   NODES=cn-01,cn-04,cn-05,cn-06 [LOGIN_IB0=...] [RPC_PORT=27185] \
 #   [PORTS_PER_NODE=6] [BASE_PORT=6666] [NUMPROCS=8] [WALLTIME=48:00:00] \
-#   [CASE_CATEGORY=test] [DRIVER=DeepSeekV4.pro] [JOB=aoaputnam-<uuid>] \
+#   [CASE_CATEGORY=test] [DRIVER=DeepSeek.V4-pro] [JOB=aoaputnam-<uuid>] \
 #   [RESULT_DB=...] [LOG_DIR=...] \
 #   [AOA_AUDIT=1 [AUDIT_POLL_SECONDS=..] [AUDIT_MAX_BUDGET_USD=..]] \
 #   tools/aoa_putnam_eval/run_fleet_eval.sh [-- extra args to evaluator_top]
@@ -53,7 +53,7 @@ BASE_PORT="${BASE_PORT:-6666}"
 NUMPROCS="${NUMPROCS:-8}"              # Isabelle threads per REPL JVM
 WALLTIME="${WALLTIME:-48:00:00}"       # exported as SLURM_EVAL_WALLTIME (slurm.py reads it)
 CASE_CATEGORY="${CASE_CATEGORY:-test}"
-DRIVER="${DRIVER:-DeepSeekV4.pro}"
+DRIVER="${DRIVER:-DeepSeek.V4-pro}"
 RESULT_DB="${RESULT_DB:-$STATE_DIR/putnam_fleet_${DRIVER}.db}"
 LOG_DIR="${LOG_DIR:-$STATE_DIR/logs}"
 GATE_DEADLINE="${GATE_DEADLINE:-1800}"  # seconds to wait for all 24 REPLs to LISTEN (heap load ~90s+ each)

@@ -11,7 +11,7 @@ PutnamBench（跑在 MathBench_Prover 环境上）经常因为环境缺少公共
 ```
 tools/missing_lemma_loop/watcher.py   ← 外层 orchestrator（确定性 Python 循环）
   逐题（单线程顺序）：
-  └─ Phase 1: evaluation/evaluator_top.py agent-putnam DeepSeekV4.pro
+  └─ Phase 1: evaluation/evaluator_top.py agent-putnam DeepSeek.V4-pro
               （--timeout-seconds 3600，AOA_MISSING_LEMMA_SURVEY=10）
      ├─ AoA 内部（contrib/Isa-Mini 改动）：
      │   · 每 10 次 `query` 工具调用 → 同步 forking survey
@@ -262,7 +262,7 @@ watcher 独占它们（设计如此，但请知悉）。
      `search_prompt.md` 的 "Duplicates (safety valve)" 节。
 2. **AoA 运行时验证**：改了 model.py / mcp_http_server.py —— 需要**杀掉
    Isabelle_RPC_Host** 让新代码加载（项目 memory），然后建议先单题冒烟：
-   `AOA_MISSING_LEMMA_SURVEY=3` 起 6666，用便宜 driver（如 DeepSeekV4.flash）跑
+   `AOA_MISSING_LEMMA_SURVEY=3` 起 6666，用便宜 driver（如 DeepSeek.V4-flash）跑
    一题，确认 missing_lemmas.yaml 生成、survey fork 正常、不破坏正常证明流程。
 3. 权限门的 mission 声明（permission_gate.py 的 SEARCH_MISSION / PHASE2_MISSION）
    与静态红线列表是否完备；

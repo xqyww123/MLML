@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Orchestrator (watcher) for the MathBench missing-lemma loop.
 
-Runs PutnamBench cases one at a time through the AoA agent (DeepSeekV4.pro by
+Runs PutnamBench cases one at a time through the AoA agent (DeepSeek.V4-pro by
 default) with the missing-lemma survey enabled (AOA_MISSING_LEMMA_SURVEY),
 tails the per-invocation ``missing_lemmas.yaml`` logs while the case runs,
 confirms each claim against the Isabelle2025-2 + afp-2026-05-13 sources via a
@@ -2491,7 +2491,7 @@ def main() -> None:
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("command", nargs="?", default="run",
                    choices=["run", "scan", "report", "heap-dump"])
-    p.add_argument("--driver", default="DeepSeekV4.pro")
+    p.add_argument("--driver", default="DeepSeek.V4-pro")
     p.add_argument("--result", default=str(ROOT / "result-missing-lemma-loop.db"))
     p.add_argument("--log-dir", default=str(ROOT / "missing_lemma_loop_logs"))
     p.add_argument("--cases", "-c", action="append")

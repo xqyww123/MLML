@@ -41,7 +41,7 @@ auth). One-off Python without sourcing: full path `/home/qiyuan.xu/miniconda3/bi
 ```bash
 ssh -A mbzuai-fm-2 'cd /lustre/scratch/users/qiyuan.xu/MLML
   source ~/miniconda3/etc/profile.d/conda.sh; conda activate base; source envir.sh; source secret.sh
-  nohup python -m tools.missing_lemma_loop.watcher run --fleet --driver DeepSeekV4.pro \
+  nohup python -m tools.missing_lemma_loop.watcher run --fleet --driver DeepSeek.V4-pro \
     --timeout-seconds 1800 --job-name mlloop \
     --log-dir /lustre/scratch/users/qiyuan.xu/MLML/missing_lemma_loop_logs \
     --result /lustre/scratch/users/qiyuan.xu/MLML/result-missing-lemma-loop.db \
