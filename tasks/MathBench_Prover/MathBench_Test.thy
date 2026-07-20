@@ -1,7 +1,7 @@
 theory MathBench_Test
   imports
     (*"HOL-Algebra.Algebra"*)
-    (*Minilang_Agent.Minilang_Agent*)
+    (*Minilang_AoA.Minilang_AoA*)
     HOL.Power
 begin
 

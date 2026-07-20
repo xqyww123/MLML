@@ -3,7 +3,7 @@ theory AoA_Learning_Toy
 begin
 
 (* Tiny target theory for smoke-testing the AoA-learning harness end-to-end on a
-   Minilang_Agent-based heap (no MathBench corpus needed). Each lemma below is
+   Minilang_AoA-based heap (no MathBench corpus needed). Each lemma below is
    replayed from source; at each goal the harness runs the AoA agent with a
    LearningTask (the goal + this original Isar proof), then lets the original
    proof close the goal. *)

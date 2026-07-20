@@ -114,9 +114,9 @@ _ORPHAN_ENV_MARKERS = (f"RPC_Host={RPC_HOST_ADDR}".encode(),
                        f"RPC_Host={COLLECT_RPC_ADDR}".encode())
 
 # Dump MathBench_Prover (covers MathBench_ProverBase + the source-loaded
-# MathBench_Prover.thy layer) AND Minilang_Agent — facts living in the
+# MathBench_Prover.thy layer) AND Minilang_AoA — facts living in the
 # source-loaded layers must not be misjudged as missing imports.
-HEAP_LIST_CMD = "isabelle build -n -l MathBench_Prover Minilang_Agent"
+HEAP_LIST_CMD = "isabelle build -n -l MathBench_Prover Minilang_AoA"
 
 # Cross-cutting runtime stats: missing_lemmas docs ever parsed (the survey
 # canary reads this) and the watcher-owned RPC host pid (liveness checks).

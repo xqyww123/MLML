@@ -11,7 +11,7 @@ session MiniF2F_MyProver = "HOL-Analysis" +
     "Bernoulli"
     "Bell_Numbers_Spivey"
     Symmetric_Polynomials
-    (*Minilang_Agent
+    (*Minilang_AoA
     Semantic_Embedding*)
     Auto_Sledgehammer
   theories

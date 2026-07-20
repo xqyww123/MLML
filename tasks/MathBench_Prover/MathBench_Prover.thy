@@ -1,5 +1,5 @@
 theory MathBench_Prover
-  imports Minilang_Agent.Minilang_Agent
+  imports Minilang_AoA.Minilang_AoA
             MathBench_ProverBase.MathBench_ProverBase
 begin
 

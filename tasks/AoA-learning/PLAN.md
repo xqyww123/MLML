@@ -23,7 +23,7 @@
 ### 1.1 ML → Python 启动链(两入口汇入一核心)
 - 核心:`AoA_RPC (driver, cfg, invocation_id) (ctxt, sequent)` — `Agent/agent_server.ML:325`。构造 `aoa_cmd`,其 `arg_schema` 用 **`packTuple10`**(`:1310-1323`)把
   `(global_context, s0_flat_goal, driver, log_dir, invocation_id, retrieval_forking, interactive_retrieval, budget(3), goal_hash, cache_flags)` 打包发给 Python;`ret_schema = unpackTuple6`(`:1324`);`callback = [...38 个回调...]`(`:1333-1369`)。调用点 `call_command aoa_cmd (...)` 在 `:1374`。
-- 入口①(交互用):`method _ (ctxt, sequent)` — `:1545`(`by aoa` 证明方法,`Minilang_Agent.thy:29` 的 `method_setup aoa` 注册)。读 config `agent_AoA_driver`(默认 `"ClaudeCode"`),`make_invocation_id`,预处理 sequent,调 `AoA_RPC`。
+- 入口①(交互用):`method _ (ctxt, sequent)` — `:1545`(`by aoa` 证明方法,`Minilang_AoA.thy:29` 的 `method_setup aoa` 注册)。读 config `AoA_driver`(默认 `"ClaudeCode"`),`make_invocation_id`,预处理 sequent,调 `AoA_RPC`。
 - 入口②(eval/App 用):`AoA_REPL_App (cin,cout,toplevel)` — `:1438`,注册为 REPL app `"Minilang.AoA"`(`:1534`)。从 client 读 6 元组 header `(invocation_id, driver, cfg, log_dir_override, retrieval_forking_override, interactive_retrieval_override)`(`:1445-1449`),装 config overrides,在一个 Toplevel proof transition 里调同一个 `AoA_RPC`(`:1473`)。
 - Python 接收:`IsaMini_AoA(data, connection)` — `IsaMini/AoA/toplevel.py:65`,`@isabelle_remote_procedure("IsaMini.AoA")`。解 10 元组(`:66-71`),非 test 分支:`drv(...) → Root((global_context, ptree), connection) → session.initialize(root) → session.run()`(`:181-190`)。成功返回 6 元组(`:236`)。
 

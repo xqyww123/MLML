@@ -48,9 +48,9 @@ session MathBench_ProverBase in Base = "HOL-Complex_Analysis" +
     Tarskis_Geometry
     IsaGeoCoq
     Sophomores_Dream
-    (*Minilang_Agent
+    (*Minilang_AoA
     Semantic_Embedding*)
-    Minilang_Agent
+    Minilang_AoA
   theories
     MathBench_ProverBase
 

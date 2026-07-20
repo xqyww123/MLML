@@ -13,7 +13,7 @@ theory MiniF2F_Prover
     "Gauss_Jordan.Determinants_IArrays"
     Symmetric_Polynomials.Symmetric_Polynomials
     (*"HOL-Algebra.Algebra"*)
-    (*Minilang_Agent.Minilang_Agent*)
+    (*Minilang_AoA.Minilang_AoA*)
 (*     Auto_Sledgehammer.Auto_Sledgehammer  *)
     "HOL-Decision_Procs.Reflective_Field"
 begin

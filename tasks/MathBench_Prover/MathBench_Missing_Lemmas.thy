@@ -31,10 +31,10 @@
 *)
 
 theory MathBench_Missing_Lemmas
-  imports MathBench_Prover.MathBench_Prover Minilang_Agent.Minilang_Agent
+  imports MathBench_Prover.MathBench_Prover Minilang_AoA.Minilang_AoA
 begin
 
-declare [[auto_interpret_for_embedding=false, AoA_use_proof_cache=true, agent_AoA_driver="ChatGPT.gpt-5.5-high" ]]
+declare [[auto_interpret_for_embedding=false, AoA_use_proof_cache=true, AoA_driver="ChatGPT.gpt-5.5-high" ]]
 
 section \<open>Topic 1 -- Plane geometry on real^2 (putnam_1966_b5)\<close>
 

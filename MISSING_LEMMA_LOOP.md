@@ -205,7 +205,7 @@ LLM）；13 取预算补偿、14 维持只计成功 query、16a 末轮跳过 Pha
   `rm -Rf`/分写/长选项、`find -delete`、`fuser -k`/裸 `kill`、`--port=6666`、
   Bash 重定向写 golden（`check_putnam_divergence` 豁免）；6666 规则限 Bash
   （`Read offset=6666` 不再误伤）。
-- 杂项：heap 清单改 dump `MathBench_Prover Minilang_Agent`（3183 个 .thy，
+- 杂项：heap 清单改 dump `MathBench_Prover Minilang_AoA`（3183 个 .thy，
   覆盖 source 加载层）；digest 按 key 去重（上限 300）；`lsof -s TCP:LISTEN`
   只杀监听端；fd 泄漏、`sys.path` 累积修复；报告新增 per-case attempt 段；
   AoA 侧：survey 耗时补回预算、env 垃圾值 fail-closed。
