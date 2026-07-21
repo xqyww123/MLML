@@ -1,5 +1,17 @@
 # Connection.getenv 计划:让 Python RPC host 读到"连接着的那个 Isabelle"的环境变量
 
+> **已退役(2026-07-22)**:用户决定把 Isabelle_RPC 改为 **per-Isabelle-process**
+> 启动——每个 Isabelle 进程拉起自己专属的 RPC host,host 出生即继承该 Isabelle
+> 进程的完整环境(getsettings 已 `allexport`),重启 Isabelle 自然得到新 env。
+> 本方案要解决的"常驻 daemon env 冻结"问题从根上消失,`Connection.getenv`
+> 及其全部下游管道已按 git 历史撤销(Isabelle_RPC revert ec3c45e+fa80547;
+> Semantic_Embedding 手工剥离 e923eea/ceda67a/6fd8827 的 getenv 部分,保留其上
+> 79d5248/87dd2ae 的后续工作;Isa-Mini revert 70307d4+6e22b29)。撤销时保留的
+> 独立改进:缺 key guard 检查"实际解析到的 key"、驱动类解析的 memoize 重构、
+> `_apply_context_cap` 校验、`make_embedding_provider` 的 api_key 参数。
+> 本文档保留作为设计档案:若 host 将来再次变回共享常驻进程,此处记录了
+> 完整的方案、评审与易错点。
+
 日期:2026-07-21 · 状态:已过两轮对抗评审(v2,幸存意见已合入,见 §10);D3/D4/过渡文案三个决策点已由用户锁定(见各处标注) · 涉及仓库:Isabelle_RPC、Semantic_Embedding
 
 ## 1. 问题
