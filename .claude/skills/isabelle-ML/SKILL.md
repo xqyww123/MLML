@@ -115,7 +115,8 @@ Common structures: Term, Thm, Context, Proof, Syntax, Type
 ### Working with Terms
 - **Location:** Pure/term.ML
 - **Signatures:** TERM, TYPE
-- Functions: Term.map_types, Term.add_vars, Term.subst_atomic
+- Functions: Term.map_types, Term.add_vars, Term.subst_atomic — whole-term scans and maps, blind to the term's logical shape
+- **See "Writing Code That Operates on Terms" below for how term analysis is written in this project.**
 
 ### Manipulating Theorems
 - **Location:** Pure/thm.ML
@@ -195,11 +196,140 @@ fun define_constant ctxt pos =
 
 Key functions:
 - `ML_Context.expression: Position.T -> ML_Lex.token Antiquote.antiquote list -> Context.generic -> Context.generic`
-  - Returns updated context preserving all effects from execution
-  - Use when effects need to be captured in the returned context
+- Returns updated context preserving all effects from execution
+- Use when effects need to be captured in the returned context
 - `ML_Context.eval_source: ML_Compiler.flags -> Input.source -> unit`
-  - Takes `Input.source` instead of tokens, returns unit
-  - For quick testing only - modifications persist in thread-local context but are not returned
+- Takes `Input.source` instead of tokens, returns unit
+- For quick testing only - modifications persist in thread-local context but are not returned
+
+## Writing Code That Operates on Terms
+
+### Analyse terms with recursive pattern matching
+
+**Express term analysis as recursive pattern matching. Call a `Logic.*` destructor only when the result you want is exactly what that function means.**
+
+`Logic.strip_*` sees only the meta level (`⋀`, `⟹`). Real goals mix the meta and object level (`⋀ ⟹ ∀ ⟶ Trueprop ∀∈`) and may carry wrappers (`Minilang.GOAL`, `TAG`), so a chain of `Logic.strip_*` calls stops one layer short *silently* instead of failing. (`Thm.prems_of` stops at the outer `Pure.imp` chain for the same reason — hence `Minilang.goals_of'`, `contrib/Isa-Mini/library/proof.ML:17-23`.) A recursive `fun` names every shape it accepts, walks both levels in one pass, and fails loudly on the rest.
+
+- Cover the meta and the object level
+- Thread accumulators instead of post-processing
+
+`strip_meta_and_hol_hhf` does both, and is the project's HHF destructor — a superset of `Logic.strip_assums_*`; reuse it rather than writing your own:
+
+```sml
+fun strip_meta_and_hol_hhf term =
+  let fun strip (V,P) (Const("Pure.imp", _) $ H $ B) = strip (V,H::P) B
+        | strip (V,P) (Const(\<^const_name>\<open>HOL.implies\<close>, _) $ H $ B) = strip (V,H::P) B
+        | strip (V,P) (Const("Pure.all", _) $ Abs (a, T, B)) = strip ((a,T)::V,P) B
+        | strip (V,P) (Const(\<^const_name>\<open>HOL.All\<close>, _) $ Abs (a, T, B)) = strip ((a,T)::V,P) B
+        | strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ X) =        (* eta-expand *)
+            strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
+        | strip (V,P) (\<^Const>\<open>HOL.All ty\<close> $ X) =
+            strip (V,P) (\<^Const>\<open>HOL.All ty\<close> $ Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
+        | strip (V,P) (\<^Const>\<open>Trueprop\<close> $ X) = strip (V,P) X
+        | strip (V,P) (Const("Set.Ball", _) $ S $ Abs (a, T, B)) =
+            strip ((a,T)::V, HOLogic.mk_mem (Bound 0, Term.incr_boundvars 1 S) :: P) B
+        | strip (V,P) X = (rev V, rev P, X)
+   in strip ([],[]) term end
+```
+
+It strips `⋀`, `∀` and `∀∈` uniformly, eta-expands a contracted quantifier instead of missing it, and returns the accumulators in source order — none of which `Logic.strip_assums_*` does.
+
+Fine as they are: `Logic.dest_implies (Thm.prop_of st) |> fst` (take the leading subgoal), or a short chain on a genuinely meta-level shape such as `Logic.dest_equals (Logic.strip_imp_concl (Thm.prop_of rule))` (a rewrite rule's LHS). Writing those recursively is fine too. Judge each case by whether the composed `Logic.*` calls still *mean* what you want on every shape that can reach them: as soon as you are gluing destructors together to approximate a shape they do not describe, write the recursion.
+
+**Construction is the other way round — use the constructors.** `Logic.mk_implies`, `list_implies`, `all` / `all_const`, `mk_equals`, `HOLogic.mk_Trueprop`, `mk_eq`, `mk_conj`, with `fold_rev` to build right-nested structure in source order:
+
+```sml
+val shift = incr_boundvars (length qs')
+...
+Logic.mk_implies
+  (HOLogic.mk_Trueprop (HOLogic.eq_const domT $ shift lhs $ lhs'),
+    HOLogic.mk_Trueprop (HOLogic.eq_const ranT $ shift rhs $ rhs'))
+|> fold_rev (curry Logic.mk_implies) (map shift gs @ gs')
+|> fold_rev (fn (n,T) => fn b => Logic.all_const T $ Abs(n,T,b)) (qs @ qs')
+```
+
+### Antiquotations
+
+- Destructing → `Const (\<^const_name>\<open>Pure.imp\<close>, _) $ A $ B`. The type slot is usually `_`.
+- Constructing, or a pattern that must bind a type argument → `\<^Const>\<open>…\<close>` (e.g. `\<^Const>\<open>disj\<close> $ A $ B`, `contrib/Isa-Mini/library/proof.ML:3961`).
+- Write `Const ("literal.name", _)` only when no antiquotation can express it — e.g. the syntax-internal `Const ("_type_constraint_", _)`. Constant names are always fully qualified (`HOL.All`, `Pure.imp`, `Set.Ball`).
+
+The `\<^Const>` family takes `name  type-args…  [for term-args…]`. You must supply **exactly** as many type arguments as the constant has type parameters (`Constant … takes N type argument(s)` otherwise); term arguments after `for` are applied curried with `$`, and you may give fewer than the arity. A type or term argument is either a bare ML identifier or an ML expression wrapped in `\<open>…\<close>`.
+
+```sml
+\<^Const>\<open>HOL.All \<^typ>\<open>nat\<close>\<close>                      (* Const ("HOL.All", (nat ⇒ bool) ⇒ bool) *)
+fun mk_all T body = \<^Const>\<open>HOL.All T for \<open>Abs ("x", T, body)\<close>\<close>
+\<^Const>\<open>conj for P\<close>                                 (* partial application: Const (…) $ P *)
+```
+
+In **patterns** use `\<^Const_>` — a constant's type carries redundant information, and only the underscore form suppresses the duplicate subtrees (with plain `\<^Const>` the pattern would rebind the same ML variable). `\<^Const_fn>` packages pattern and body into a function that raises `TERM` on a mismatch:
+
+```sml
+fun dest_all (\<^Const_>\<open>HOL.All T for \<open>Abs (a, _, b)\<close>\<close>) = SOME (a, T, b)
+  | dest_all _ = NONE
+val dest_conj = \<^Const_fn>\<open>conj for A B => \<open>(A, B)\<close>\<close>
+```
+
+`\<^Type>` / `\<^Type_fn>` are the analogues for type constructors.
+
+### Loose `Bound` variables
+
+`strip_*_hhf` strips `Abs` binders **without substituting**, so its premises carry dangling `Bound` indices.
+
+**1. Keep the bounds; carry their types instead.** A loose `Bound` has no type in itself, so `fastype_of` on such a term raises `fastype_of: Bound`. Use `fastype_of1 (Ts, t)`, where `Ts` is the list of binder types **reversed** (`Bound 0`'s type at the head, `contrib/Isabelle2025-2/src/Pure/term.ML:941`) — the stripping function already handed you those types:
+
+```sml
+val (vars, prems, _) = Minilang.strip_meta_and_hol_hhf goal
+val bTs = rev (map snd vars)               (* cf. contrib/Isa-Mini/library/function/proof_local_function.ML:1023 *)
+val T = fastype_of1 (bTs, t)
+```
+
+Do **not** substitute `Free`s in just to make the term self-contained: `Term.subst_bounds` rebuilds the whole term, which is expensive. Substitute only when the term must leave for somewhere that cannot take a `Ts` (pretty-printing, certification) — and then remember `subst_bounds` wants the list innermost-first, so the `rev` is load-bearing: `Term.subst_bounds (rev (map Free vars), t)`.
+
+To ask only "is this already a `prop`?", decide it syntactically — match `Trueprop` / `Pure.imp` / `Pure.all` — instead of asking for the type.
+
+**2. Moving a subterm across binder depth shifts its loose bounds** by the depth difference: `Term.incr_boundvars n`. Eta-expanding a binder body, pushing a term under a new `Abs`, and lifting a sibling subterm under a binder are all this case:
+
+```sml
+fun strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $ X) =
+    strip (V,P) (\<^Const>\<open>Pure.all ty\<close> $
+                 Abs ("_", ty, Term.incr_boundvars 1 X $ Bound 0))
+  | ...
+```
+### Specific transformation with `Conv`
+
+When you want one definite change — apply *this* equation at *this* position — reach for a `Conv`, not the Simplifier. A `conv` is `cterm -> thm` (`Pure/thm.ML:18`) producing a kernel-checked meta-equality `⊢ lhs ≡ rhs`: the transformation you asked for, with its correctness proof. You control exactly where it fires and which rule applies, so the result is fully predictable — unlike a simpset, which searches an open-ended rule set to a fixed point. Use the Simplifier when you *want* that search; use `Conv` when you already know the change.
+
+Write a conv the way you write a term analysis — dispatch on the **uncertified** term (`Thm.term_of ct`) — then apply the rule at the matching spot with `Conv.rewr_conv`, or `Conv.no_conv` to decline:
+
+```sml
+(* a single-position step, cf. contrib/Isa-Mini/library/proof.ML:1043-1055 *)
+fun step ct =
+  case Thm.term_of ct of
+    \<^Const_>\<open>HOL.All _ for \<open>Abs (_, _, \<^Const_>\<open>HOL.conj for _ _\<close>)\<close>\<close> =>
+      Conv.rewr_conv all_conj_distrib_meta ct
+  | _ => Conv.no_conv ct
+```
+
+- The rule must be a **meta-equality** (`≡`), so pre-resolve an object-level `=` rule once in a `local` block: `val all_conj_distrib_meta = @{thm HOL.all_conj_distrib} RS @{thm eq_reflection}` (`contrib/Isa-Mini/library/proof.ML:1016`).
+- Reach a subposition with the navigation combinators — `Conv.arg_conv` / `arg1_conv` / `abs_conv` / `combination_conv` / `concl_conv` / `params_conv` — and sequence steps with `then_conv` / `else_conv` / `try_conv`. To rewrite everywhere a step matches, wrap it in your own bottom-up walker rather than the Simplifier (`walk_bu`, `contrib/Isa-Mini/library/proof.ML:1022-1035`).
+- Apply the finished conv with `Conv.fconv_rule conv thm` (a whole theorem) or `Conv.gconv_rule conv i st` (subgoal *i* of a proof state).
+
+### Never rebuild a command string and re-parse it
+
+Re-parsing a rebuilt command string dispatches through the command table to a *fixed* entry point, whose flags need not be the ones you want: the behaviour is silently wrong, with no error at compile or run time (`contrib/Isa-Mini/Agent/agent.ML:1865-1878` — a rebuilt `OPEN_MODULE` string is pinned to `auto_unfold_locale=false`).
+
+To reuse a *sub*-parser on a string: tokenize, run that specific `Parse.*` parser, then call the ML function directly (`contrib/Isa-Mini/Agent/agent.ML:1885-1891`):
+
+```sml
+val expr =
+  Token.explode (Thy_Header.get_keywords' ctxt) Position.none src
+  |> filter Token.is_proper
+  |> Scan.error (Scan.finite Token.stopper
+       (Parse.!!! (Parse_Spec.locale_expression --| Scan.ahead Parse.eof)))
+  |> #1
+in Minilang.OPEN_MODULE'' {auto_unfold_locale = true} expr s
+```
 
 ## Data Storage Mechanisms
 
@@ -207,8 +337,7 @@ Isabelle/ML provides two distinct approaches for storing persistent data:
 
 ### Context-Managed Data (Stateless)
 
-**Functors:** Theory_Data, Proof_Data, Generic_Data
-**Location:** Pure/context.ML
+**Functors:** Theory_Data, Proof_Data, Generic_Data **Location:** Pure/context.ML
 
 Data bound to Isabelle contexts (theory, Proof.context, Context.generic). The Isabelle system automatically manages lifecycle:
 - Changes tracked with context
@@ -239,8 +368,7 @@ val thy'' = MyData.map (Symtab.update ("key", 42)) thy;
 
 ### Persistent References (Stateful)
 
-**Types:** Synchronized.var, Unsynchronized.ref
-**Location:** Pure/Concurrent/synchronized.ML, Pure/Concurrent/unsynchronized.ML
+**Types:** Synchronized.var, Unsynchronized.ref **Location:** Pure/Concurrent/synchronized.ML, Pure/Concurrent/unsynchronized.ML
 
 Data independent of Isabelle contexts:
 - Changes persist regardless of context changes

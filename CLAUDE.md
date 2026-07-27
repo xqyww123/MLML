@@ -28,6 +28,10 @@ Commit directly on `main`; never create or switch branches (this is a shared wor
 
 After editing any Isabelle/ML (`.ML`) source, **just restart the REPL server**. A freshly started REPL loads the `.ML` from source even if it was never built — no `isabelle build` is required. An already-running REPL does NOT auto-reload edited code; restart it to pick up the change. Do NOT rebuild the session heap or chase heap timestamps for an `.ML` edit.
 
+### Consistent Terminology — Never Coin Words
+
+Always use the same term for the same concept, consistently. NEVER coin new words on the fly! Fix a single canonical name the first time a concept appears (if a document has a glossary, the glossary is authoritative), and stick to it in all subsequent discussion, documents, and comments. Express properties as descriptive sentences (e.g. "X does not change with content") — never wrap a property into a new noun.
+
 ### Always Reuse Code — Never Reinvent the Wheel
 
 IMPORTANT: Before writing ANY new logic, search the codebase first. Reuse what exists — even if it means importing across modules or adding a parameter to an existing function. Do NOT copy-paste-and-modify; refactor instead.

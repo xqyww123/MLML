@@ -7,14 +7,18 @@ Build both `MathBench_ProverBase` (the heavy AFP heap) and `MathBench_Prover`
 
 ```
 source envir.sh    # puts Isabelle2025-2 on PATH
-RPC_Host=127.0.0.1:27180 isabelle build -b -o threads=10 -o system_heaps MathBench_Prover MathBench_ProverBase
+isabelle build -b -o threads=10 -o system_heaps MathBench_Prover MathBench_ProverBase
 ```
 
 - `-b` writes the heap image; `-o system_heaps` stores it under the Isabelle
   system heap dir; `-o threads=10` parallelises.
-- `RPC_Host` points the Isabelle_RPC server that `Auto_Sledgehammer` depends on at
-  this address; the server auto-launches if not already running, so just set the
-  value — you do not need to start a service yourself.
+- With `RPC_Host` **unset** (as above), each session build gets its own ephemeral
+  Isabelle_RPC host automatically (Isabelle_RPC >= 0.4.0) — nothing to start, nothing
+  to clean up. If you instead want the builds to share one long-lived host (e.g.
+  `RPC_Host=127.0.0.1:27180`), you must now **pre-launch it yourself** before building
+  (`isabelle-rpc-host`, or
+  `python -c 'import Isabelle_RPC_Host; Isabelle_RPC_Host.fork_and_launch__()' 127.0.0.1:27180 /tmp/rpc27180.log`):
+  since 0.4.0 a configured `RPC_Host` is never auto-launched.
 - `isabelle build MathBench_Prover` builds its parent `MathBench_ProverBase`
   first automatically; listing both just refreshes both heaps.
 
