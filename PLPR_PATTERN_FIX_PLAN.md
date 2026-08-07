@@ -288,6 +288,17 @@ pattern.ML:300`），而 `inAbs` 初值是 **false**（`:316`）——**顶层�
 现状：`Phi_Logic_Programming_Reasoner/ROOT` 是 `Main + HOL-Eisbach + Phi_Document`，尚未依赖
 `Performant_Isabelle_ML`。
 
+> **两条后来查实的结构事实（2026-08-07）**
+>
+> 1. **phi-system 全仓库根本不 import `Performant_Isabelle_ML`**（限定目录 grep 零命中）。所以
+>    合并对 phi 而言是**新增一条 session 依赖**，不是改依赖——成本比原先估计的高一点。
+> 2. **`Isabelle_RPC` 的 ROOT 本来就是 `Performant_Isabelle_ML +`**。所以 §8 提到的第三份拷贝
+>    （`Isabelle_RPC/Tools/context.ML`）**没有任何结构性借口**，`PLPR_Pattern` 在那里早就在作用
+>    域里。消除它不需要新增依赖，方案见 `PLPR_PATTERN_DEDUP_PLAN.md`。
+>
+> **验证范围（用户决定）**：合并之后用 `isabelle-mcp` 快速跑一下 `Phi_BI` / `Phi_System` 即可，
+> 不必全栈构建。
+
 合并**同时**涉及另一对拷贝，两者必须一起考虑：
 
 | | 路径 | `Abs` 的 key | `norm` |
@@ -329,6 +340,13 @@ pattern.ML:300`），而 `inAbs` 初值是 **false**（`:316`）——**顶层�
 `PLPR_Pattern.match_rew`、`PLPR_Pattern.rewrite_term`、`PLPR_Pattern.MATCH` 这些名字**指向
 Pure 的实现、用 Pure 的匹配器**；只有 `match` / `first_order_match` / `matches` 被同名覆盖。
 写代码时极易误以为 `PLPR_Pattern.match_rew` 走的是 PLPR 的匹配器。
+
+> **勘误（2026-08-07，两位评审各自实测）：这条警告是假的。** `: PLPR_PATTERN` 这个签名约束把
+> `open Pattern` 带进来的一切都滤掉了，所以 `PLPR_Pattern.match_rew` / `rewrite_term` / `MATCH`
+> 这些名字**根本不存在**——引用它们是编译错误（`Value or constructor (match_rew) has not been
+> declared in structure ...`），不是"静默走了 Pure 的实现"。（`match_rew` 本身也不在
+> `pattern.ML` 里，它在上游 `Pure/more_pattern.ML`。）
+> `PLPR_PATTERN_DEDUP_PLAN.md:125-128` 早就记过同一条更正。
 
 ---
 

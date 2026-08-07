@@ -189,8 +189,8 @@ fun red diff (Abs(_,_,s)) (i::is) js = red diff s is (i::js)
 
 ```sml
 (*`PLPR_Pattern' is the upstream `Pure/pattern.ML' algorithm with `binders'
-  initialised to `bvs' -- the caller's context binders count as already entered --
-  plus one relaxation: a context bound variable the caller declares fixed through
+  initialised to `bvs' -- the caller's contextual binders count as already entered --
+  plus one relaxation: a contextual bound variable the caller declares fixed through
   `fixed_bounds' may stay inside a binding stored into `tenv', which plain upstream
   forbids.
 
@@ -349,6 +349,36 @@ fuzz（本项目三次实测检出率 0/2400）。
 就是语料没造对。（这条门规不适用于那两类，它们本来就是绿的回归见证——本文第一版把门规写成
 无差别适用，会把它们当废料删掉。）
 
+#### 6.3.1 实际交付的语料（`Test/PLPR_Pattern_Test.thy`，17 个样本 + 两个遍历器）
+
+| 样本 | 覆盖 | 在未修改代码上 |
+|---|---|---|
+| `1a` / `1b` | 改动 ⑤ 的多做 / 少做两个方向 | 红 |
+| `1c` | 两次出现**同深度** | **红**——注意：接受/拒绝没变，但 `tenv` 从 `ff B1` 变 `ff B0`，而语料比的是 `tenv`，比上面第 1 族的措辞更严 |
+| `2` | 改动 ② 真正解锁的那一族（闭项模式漏 `Unif`） | 红 |
+| `3a` | `IDE_CP_Applications1.thy:791` 的现役形状（开项模式 + `K false` + 非空 `bvs`） | **绿**（回归见证） |
+| `3b` | 混装 `is`（进入的 binder + 上下文绑定变量） | **绿**（回归见证） |
+| `3c` / `3d` | `is` 是**置换**（F4 第二族的另一半）：`3c` 纯置换，`3d` 置换 + 绑定保留上下文变量 | `3c` 绿 / `3d` 红 |
+| `4` / `4b` | 改动 ④：一阶回退 + 重复 schematic 深度不同 / 单次出现存在 binder 底下 | 红 |
+| `5` | `red` 的存储值不是 `Abs`，走 `app` 支 | 红 |
+| `7a` / `7b` | 那层放宽本身 / 其控制样本（调用方禁止的变量） | `7a` 红 / `7b` 绿 |
+| `X1` | `red` 真正剥 `Abs` 且 `jn ≠ []`，两次深度不同；顺带走 `downto0` 快路 | 绿（变异检测器，见下） |
+| `X2` | 一阶回退的**由接受转拒绝**方向 | 绿（同上） |
+| `X3` | 一阶 `escaping` 闸门——**上一轮修复的唯一回归见证** | 绿（同上） |
+| `X4` | 进入的 binder 类型与上下文绑定变量不同 | 绿（同上） |
+| 第 6 族 | 两个子项遍历器（自建 `bvs` + 写死 `K true`） | **绿** |
+
+**§6.5 第 3 步"必须先红"的门规不适用于**：`3a`、`3b`、`3c`、`7b`、`X1`–`X4`、第 6 族。前四条是
+回归见证（要求改动前后**逐字相同**）；`X1`–`X4` 是变异检测器（它们守的是"改坏了会红"，不是
+"没修时会红"）；第 6 族是**改动之间是否配套**的检测器——改动 ① 与 ⑤ 在它那个形状上互相抵消，
+所以完整未修改的代码上它是绿的，只有**单点**回退 ① 或 ⑤ 才红。
+
+**变异测试的结论**：八个曾经全部存活的变异体现在杀掉七个——改动 ③ 的类型陷阱、`red` 不累积
+`jn`、删 `- length jn`、删 `red` 剥 `Abs` 的第一子句、`downto0` 快路产出错项、一阶 `escaping`
+闸门恒真、一阶重复 schematic 永不拒绝。**第八个仍然存活**：把两个遍历器的 `bvs` 累积方向改反，
+17 个样本一条都不报红。那需要重造第 6 族（让两次出现处于**不同深度**，并改成 `looping_simp.ML`
+的现役形状：模式闭、对象带松散绑定变量），不是加一条样本能解决的，单列排期。
+
 ### 6.4 回归与范围
 
 1. **`(K false)` 的调用点可证且实测是恒等，整批划出验收范围。** 链条：
@@ -395,8 +425,12 @@ fuzz（本项目三次实测检出率 0/2400）。
    REPL 里加 ML 探针，把两版匹配器并排跑在**真实注册表**上（`Phi_CoP_Simp.Checkers`、
    `Phi_Reasoner` 的 iNet、`Norm_Swaps`/`Norm_Assoc`、`Phi_Pointer_Of.Store`），统计布尔翻转数与
    方向。纯读取，不 build、不改仓库。翻转数为 0 就可以把 §10.3 的三条风险关掉；非 0 就有了具体
-   实例。同一趟顺带 dump `Phi_Pointer_Of.list_rewrites` 与 `Syntactical_Type_Of.list_rewrites`，
-   确认没有 schematic 出现在 `Abs` 底下（§5.1 的守门检查）。
+   实例。同一趟顺带 dump `Phi_Pointer_Of.list_rewrites`，确认没有 schematic 出现在 `Abs` 底下
+   （§5.1 的守门检查）。**`Syntactical_Type_Of` 那一趟可以省掉**：`Pattern_Translation` 全树有
+   **4 个**实例（`pointer_of.ML:1` 的 `Phi_Pointer_Of`、`reasoner.ML:1114` 的 `Default_Pattern`、
+   `gen_synthesis_rule.ML:40` 的 `Pattern`、`unfold_typeof.ML:69` 的 `Syntactical_Type_Of`），
+   而最后那个**没有任何 `translate` 调用点**——dump 它是在查一个没人消费的存储；中间两个传的
+   都是 `translate ctxt []`（空 `bvs` + 闭项，按 §6.4.1 可证恒等）。
 
 ### 6.5 顺序
 
@@ -505,7 +539,8 @@ print("SPEC updated, %d lines" % (s.count("\n")+1))
 
 一旦出现下列任一情形，"不做移位代入函数"就要重验：启用 `Pointer_Of` 的 hint 路径；新增构造
 `ptr` 的 `Derive_Pointer_Of` 规则；**写出第一条以 `Module_Assoc\<^sub>\<Lambda>\<^sub>I/E` 为结论的规则**——
-`commutativity.ML:224-227` 注册的 residue
+它们是**一对**，`\<^sub>I` 注册在 `commutativity.ML:222-224`（redex 带 λ 而 residue 是平的，正是
+本次改动**修好**的那一侧），`\<^sub>E` 在 `:229-231`。后者注册的 residue
 `TERM(?Fs ?s (λp\<^sub>s. ?Ft ?t (λp\<^sub>t. ?T (p\<^sub>s, p\<^sub>t))))` 里 `?t` **位于 `λp\<^sub>s` 底下**，
 而 `commutativity.ML:137` 是 `(K true)` + 非空 `bvs`。今天全仓库没有以它为结论的规则，这条 pass
 从未触发，是**埋着的雷**。【评审 B 实测】
@@ -552,6 +587,46 @@ print("SPEC updated, %d lines" % (s.count("\n")+1))
 - 本次改动会改变 `matches_subterm_of` 的真值（方向双向），`Auto_Sledgehammer` 的 looping 检测
   行为可能变——**这是给下游的提醒**，验证归属在 `Auto_Sledgehammer` 自己，不是本轮验收项。
 
+### 10.5 `Phi_Help.subst_with_loose_bounds`：不统一，条件性删除（用户 2026-08-07 决定）
+
+**背景。** `PLPR_Pattern` 新增了导出的 `subst_term`（`Envir.subst_term2` 的骨架 +
+`Pure/proofterm.ML:1429-1442` `prf_subst` 的深度计数器），因为按 §2 的编号约定，落在 n 层 binder
+底下的绑定必须抬高 n，而 `Envir.subst_term` 不抬——**唯一真实的 `tenv` 消费者
+`pattern_translation.ML:41` 已改用它**。
+
+树内**另有一个做同样深度累加的函数**：`Phi_Help.subst_with_loose_bounds`
+（`Phi_Logic_Programming_Reasoner/library/tools/helpers00.ML:174-182`，签名 `:80`，导出）。
+
+**不统一进 `PLPR_Pattern.subst_term`**，三条理由都是语义性的、不是偶然的：
+
+1. **查表时机不同。** 它的键是任意项，所以在**每个子项**上先查表再决定是否下降；`subst_term`
+   只在 `Var` 叶子上查。统一后者就从"叶子上一次 `Vartab` 命中"退化成"每个节点一次闭包调用"。
+2. **类型代换塞不进查表函数。** `subst_term` 还要在未命中的原子上改写类型（`Envir.subst_term`
+   的另一半），这没法经由"查表"表达。
+3. **`Bound` 分支的语义相反。** `subst_with_loose_bounds` 不动其它松散 `Bound`；它的伙伴
+   `Phi_Help.abstract_over`（`Phi_BI/library/tools/Phi_Help.ML:127-139`，共用同一个
+   `aconv_bound_diff`）会 `Bound (j+1)` **给新 binder 让路**。这反映的是"代入到 binder 结构不变
+   的项里" vs "代入的同时引入一个 binder"，两件不同的事。
+
+外加分层：`pattern.ML` 属于 `Performant_Isabelle_ML`（`= Pure`），够不着 `Phi_Help`。
+
+**条件性决定。** 全树 `subst_with_loose_bounds` **只有一个活调用点**
+（`sigma_single_point.ML:123`；`object_equiv.ML:75` 在 `:43-100` 的注释块里）。而那一处是
+
+```sml
+val P' = Abs ("\<sigma>", sigma_ty, Phi_Help.subst_with_loose_bounds [(sigma, Bound 0)] P)
+```
+
+——**它在做抽象**（外面包了新 `Abs`），却用了不给新 binder 让路的那个函数。
+
+> **用户决定：若查证确认这个调用点用错了函数（应为 `Phi_Help.abstract_over`），则直接删除
+> `Phi_Help.subst_with_loose_bounds`，而不是把它统一进 `PLPR_Pattern.subst_term`。**
+> 删除后它将没有任何活调用点。
+
+**待查（agent 进行中）**：`P` 在这条路径上能否带松散 `Bound`——能带则是活缺陷（新 `Abs` 捕获），
+不能带则只是"用错函数但恰好无害"。以及换成 `abstract_over` 在"无松散 `Bound`"时是否逐字等价
+（它带 `Same` 语义，换过去不能引入回归）。【未验证】
+
 ---
 
 ## 11. 评审驳回记录（别重提）
@@ -567,6 +642,19 @@ print("SPEC updated, %d lines" % (s.count("\n")+1))
 | "`red` 的第二子句在两次 `is` 长度不同时还有第二个 bug" | 手推两种情形（本次 `is` 更短 / 更长），"剥掉的层数"与"松散值的偏移"正好抵消，公式仍正确。仍列为 §6.3 第 5 族的语料目标去打 |
 | "测试台要进 `ROOT` 才不会变成死文件" | 本项目测试从不进 `ROOT`（用户 2026-08-07） |
 | "验收 build 范围要加 `Auto_Sledgehammer`" | 层次倒置 / 循环引用（用户 2026-08-07），见 §6.4.7 |
+
+第二轮（审代码与语料）驳回或自行撤回的：
+
+| 意见 | 处置 |
+|---|---|
+| "签名注释只点了 `cases`，漏了一阶路径" | 降为存疑：失败场景需要一个今天不存在的调用方。注释仍已补上 |
+| "`val n = length is` 提到 `if` 之前，快路多付一次 `length`" | **提出者自行撤回**：在"多一次函数调用要付 4–5%"面前不值一提 |
+| "`Vartab.update_new` 的 `DUP` 没被 catch" | **提出者自行撤回**：`Envir.lookup1` 在类型冲突时抛 `TYPE`，runner 接住了，不可达 |
+| "语料一个 `bvs = []` 样本都没有" | **提出者自行撤回**：`bvs = []` + 闭对象时五处改动**可证恒等**，补这类样本是浪费预算 |
+| "§10.4 那两个已知缺陷没被语料钉住" | 删除：那两条明写"改动前就存在、本轮不修，仅记录" |
+| "语料对 `chk_trick` 零覆盖" | 半条删除：§4 已论证它不受重新编号影响，且语料测的是 `match` 不是 `smatch` |
+| "`grow` 造的是共享 DAG 而非真树，会放大代价" | 实测**否定**：DAG 与真树的比值一致。转为已排除的假设存档 |
+| "先只上 `Same` 风格的 `mapbnd`，仍 > 1.10× 才加快路" | 判据成立但被实测判掉：`Same` 风格在那个负载上把 1.772 变成 1.765，等于没动（§7.4） |
 
 ---
 
