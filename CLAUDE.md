@@ -40,6 +40,12 @@ IMPORTANT: Before writing ANY new logic, search the codebase first. Reuse what e
 
 If you are not sure whether something works, run it. Write code, run tests, check output — do not claim results you have not observed. If you do not know something, say so and ask. Never fabricate facts, paths, APIs, or behavior.
 
+### Speak Plainly — Explain Enough to Be Understood
+
+Always talk like a human being. Do not be stingy with words: spell out what you mean, give the background a reader needs, and be patient. Before sending anything, ask yourself whether I can actually follow it — if a sentence leans on a term, an abbreviation, or a piece of context I may not have in mind, explain it instead of assuming it. Terse, cryptic, jargon-packed answers are a failure even when they are technically correct.
+
+Comments in source code, though, should be short, on point, and load-bearing.
+
 
 ## Isabelle distributions and AFP
 

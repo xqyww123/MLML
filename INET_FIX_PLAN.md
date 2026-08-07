@@ -269,17 +269,16 @@ local structure iNet_Covers_NET : NET = iNet in end;
 | **合一方向** | `unify_term` 的对应用例。现有测试完全没覆盖合一方向，而 B1 在那里同样漏 |
 | **永久不变式** | 同时维护一个上游形态的 `Net`，断言 `iNet.match_term ⊇ Net.match_term`。这条能永久挡住这一整类回归，且正是本次 bug 的形态 |
 
-### §6.3 加进 `ROOT`
+### §6.3 **不**加进 `ROOT`（用户决定）
 
-```
-session Performant_Isabelle_ML = Pure +
-  theories
-    Performant_Isabelle_ML
-    Test/Test_iNet
-```
+曾提议把 `Test/Test_iNet` 列进 `Performant_Isabelle_ML` 的 `ROOT`，**已被否决**：测试文件不进
+`ROOT`。
 
-**顺序要求：先在副本上跑通、确认全绿，再加进 `ROOT`。** 这个 session 是
-`Auto_Sledgehammer` → `Minilang` 的底座，红了会挡住上面所有东西。
+理由（用户口径）：这个 session 是 `Auto_Sledgehammer` → `Minilang` 的底座，把测试挂上去意味着
+任何一个测试用例失败都会挡住上面所有东西。
+
+**后果，必须记住**：`Test/Test_iNet.thy` 因此**不会被任何构建自动执行**。它的绿是靠人手动跑
+出来的，改动 `improved_net.ML` 之后**必须显式跑一次**，否则改坏了不会有任何提示。
 
 ---
 
