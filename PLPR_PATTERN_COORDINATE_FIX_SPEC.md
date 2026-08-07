@@ -234,7 +234,13 @@ fun red diff (Abs(_,_,s)) (i::is) js = red diff s is (i::js)
 
 ## 5. 本轮不做的
 
-1. **按落点深度移位的代入函数。** 唯一真实的 `tenv` 消费者是 `pattern_translation.ML:41` 的
+1. ~~**按落点深度移位的代入函数。**~~ **已落地**：模块现在导出 `PLPR_Pattern.subst_term`
+   （`Envir.subst_term2` 加一个穿过 `Abs` 弧的深度计数器，落点处 `Term.incr_boundvars lev`）——
+   它就是 §2 契约里"消费者按落点深度自己抬"那句话的实现。测试台的自洽性检查改用它，所以这个
+   函数本身也进入了被测范围。下面这段保留为当时判断"暂不做"的依据记录；其中的暴露面分析仍然
+   有效，它决定了哪些消费者**必须**改用新函数。
+
+   唯一真实的 `tenv` 消费者是 `pattern_translation.ML:41` 的
    `Envir.subst_term`（不移位），暴露面有两条：
    - `commutativity.ML:122`/`:137`，residue 形如 `TERM(?F (?G ?T)) ⟹ ?F, ?G, ?T`，schematic 全在
      深度 0；
@@ -249,7 +255,7 @@ fun red diff (Abs(_,_,s)) (i::is) js = red diff s is (i::js)
      `ptr` 写在 `\<And>x` **外面**，语法上禁止它依赖被绑变量；再加 `pointer_of.ML:38-41` 的
      frees/vars 检查。【评审 B、C 各自独立追到底，结论一致】
 
-   ⇒ 不需要移位，本轮不提供该函数。**失效条件（见 §10.1）**：一旦有人启用 `Pointer_Of` 的 hint
+   ⇒ 现役消费者恰好不需要移位。**失效条件（见 §10.1）**：一旦有人启用 `Pointer_Of` 的 hint
    路径、新增一条构造 `ptr` 的 `Derive_Pointer_Of` 规则、或写出第一条以 `Module_Assoc\<^sub>\<Lambda>` 为
    结论的规则，这个结论就要重验。
 2. **第三份拷贝** `contrib/Isabelle_RPC/Tools/context.ML:286-652`。它是 `local` 块里的独立代码，
@@ -369,8 +375,9 @@ fuzz（本项目三次实测检出率 0/2400）。
 4. **`pattern_translation.ML:39-42` 的消费者核对**，实测改动前后差异。按第 1 条，
    `deriver_framework.ML:1090` 与 `Phi_Domainoid.thy:519` 可证恒等、不必测；真正要测的是
    `commutativity.ML:122`/`:137` 与 `pointer_of.ML:150`/`:157`。
-5. **两份拷贝同步**：改完 `diff` 必须仍然只差 `matches_subterm_of` / `find_matching_subterms`
-   那 31 行 + 签名 3 行。**主拷贝上的语料结论不能外推到 phi 那份**——两份的前置过滤器（net）在
+5. **两份拷贝同步**：改完 `diff` 必须仍然只差 `matches_subterm_of` / `find_matching_subterms`，
+   **且反向差异为 0**。（那批行数**已经包含**签名里的两行 `val`，不要再另外加 3——按"31 + 3"
+   去数会误判成"脚本抹掉了东西"。）**主拷贝上的语料结论不能外推到 phi 那份**——两份的前置过滤器（net）在
    三条轴上互不包含：对象头是 `Abs` 时主拷贝的 net 更宽；对象头不是 `Abs` 时 phi 的 net 能取到
    主拷贝取不到的 λ 模式；主拷贝 `match_term` 会 `beta_eta_contract` 规范化而 phi 那份不会（其
    文件头明写 "MUST BE BETA-ETA NORMAL"），操作数非范式时 phi 那份会**漏报**。【评审 B 逐行读码】
@@ -406,28 +413,44 @@ fuzz（本项目三次实测检出率 0/2400）。
 
 ---
 
-## 7. 性能
+import pathlib
+p = pathlib.Path("PLPR_PATTERN_COORDINATE_FIX_SPEC.md")
+s = p.read_text()
+edits = [
+("""1. **按落点深度移位的代入函数。** 唯一真实的 `tenv` 消费者是 `pattern_translation.ML:41` 的""",
+ """1. ~~**按落点深度移位的代入函数。**~~ **已落地**：模块现在导出 `PLPR_Pattern.subst_term`
+   （`Envir.subst_term2` 加一个穿过 `Abs` 弧的深度计数器，落点处 `Term.incr_boundvars lev`）——
+   它就是 §2 契约里"消费者按落点深度自己抬"那句话的实现。测试台的自洽性检查改用它，所以这个
+   函数本身也进入了被测范围。下面这段保留为当时判断"暂不做"的依据记录；其中的暴露面分析仍然
+   有效，它决定了哪些消费者**必须**改用新函数。
 
-**没有测过任何数字，以下全部是读代码推出来的。**
-
-- **改动 ①③④ 的 `Term.incr_boundvars` 基本免费**：位移量为 0 时短路成恒等（`term.ML:686-701`），
-  而绝大多数匹配点的进入层数就是 0；非 0 时走 `Same` 机制，未变的子树原样共享。
-- **改动 ② 是常数因子**：慢路上每个松散 `Bound` 多一次 `member` 扫描，而 `is` 长度实际几乎总是
-  1–3。快路完全没动。`length is` 已提到闭包外。
-- **改动 ⑤ 有真实代价，是唯一需要测的**：删掉那条子句后，`is = []` 的情形从 O(1) 直接返回变成走
-  一遍 `mapbnd`；而 `mapbnd` **无条件重建每个 `Abs` 与应用节点**（没有 `Same`、没有共享），所以
-  即使 `diff = 0`（映射是恒等）也会把 `u` 完整复制一份。**只打在同一 schematic 第二次及以后出现
-  的路径上**，线性模式不受影响。
-  两个可选缓解（**都需要用户批准**）：(a) 加一条可证恒等的快路 `| red 0 t [] [] = t`；
-  (b) 让 `mapbnd` 用 `Same` 机制（`incr` 一起受益，但那是逐字抄自上游的函数，改它多一处偏离）。
-- **更大的影响不在算术上**：`matches` / `does_smatch` 的真值两个方向都会变，PLPR 据此选规则，
-  搜索空间随之变化；极端情形见 §10.3 的发散风险。
-
-**要求**：给出 `matches` 热路径改动前后的数据，**交错测量取最小值**
-（`..._COORDINATE_FIX_PLAN.md §8` 记着顺序效应实测能污染到 13%）。
-
----
-
+   唯一真实的 `tenv` 消费者是 `pattern_translation.ML:41` 的"""),
+("""   ⇒ 不需要移位，本轮不提供该函数。**失效条件（见 §10.1）**：一旦有人启用 `Pointer_Of` 的 hint""",
+ """   ⇒ 现役消费者恰好不需要移位。**失效条件（见 §10.1）**：一旦有人启用 `Pointer_Of` 的 hint"""),
+("""5. **两份拷贝同步**：改完 `diff` 必须仍然只差 `matches_subterm_of` / `find_matching_subterms`
+   那 31 行 + 签名 3 行。""",
+ """5. **两份拷贝同步**：改完 `diff` 必须仍然只差 `matches_subterm_of` / `find_matching_subterms`，
+   **且反向差异为 0**。（那批行数**已经包含**签名里的两行 `val`，不要再另外加 3——按"31 + 3"
+   去数会误判成"脚本抹掉了东西"。）"""),
+("""- **第四份同源拷贝** `Isa-Mini/translator/library/XPattern.ML`（`:92` 的 `idx`、`:115` 的 `red`、
+  `:305-315` 的 `match_bind` 同形），实测**没有任何 `ML_file` 引用**、从未被加载。留给
+  `PLPR_PATTERN_DEDUP_PLAN.md`。""",
+ """- **第四份同源拷贝** `Isa-Mini/translator/library/XPattern.ML`，实测**没有任何 `ML_file` 引用**、
+  从未被加载。
+- **第五份同源拷贝** `Isa-Mini/library/unify_diagnostic.ML`，384 行，**由
+  `Isa-Mini/Minilang.unicode.thy:50` 的 `ML_file` 加载——不是死文件**。它 fork 的是**合一器**
+  （`Pattern.unify`）不是匹配器，走上游语义（存进 `Envir` 的绑定按构造是闭的），所以它保留
+  上游那条 `red t [] [] = t` 是**对的**，本轮不需改。
+  两条都留给 `PLPR_PATTERN_DEDUP_PLAN.md`：**"全树一共几份 `red`"的答案是 5，不是 4。**"""),
+]
+for old, new in edits:
+    n = s.count(old)
+    assert n == 1, f"anchor x{n}: {old[:50]!r}"
+    s = s.replace(old, new)
+start = s.index("## 7. 性能\n"); end = s.index("## 8. 对上游两份文档的实质修正")
+s = s[:start] + open("/dev/stdin").read() + s[end:]
+p.write_text(s)
+print("SPEC updated, %d lines" % (s.count("\n")+1))
 ## 8. 对上游两份文档的实质修正
 
 ### 8.1 `..._FIX_PLAN.md §5.1` 给 F2 的公式会在现役调用点上产出逃逸项
@@ -519,9 +542,13 @@ fuzz（本项目三次实测检出率 0/2400）。
 - `find_matching_subterms` 的 `close`（`:238`）用裸绑定器名造 `Free`，没有 `Name.variant`，会与
   对象里的同名自由变量静默混同。实测 `obj = λx. g2 (Bound 0) (Free "x")` 返回
   `g2 (Free "x") (Free "x")`。
-- **第四份同源拷贝** `Isa-Mini/translator/library/XPattern.ML`（`:92` 的 `idx`、`:115` 的 `red`、
-  `:305-315` 的 `match_bind` 同形），实测**没有任何 `ML_file` 引用**、从未被加载。留给
-  `PLPR_PATTERN_DEDUP_PLAN.md`。
+- **第四份同源拷贝** `Isa-Mini/translator/library/XPattern.ML`，实测**没有任何 `ML_file` 引用**、
+  从未被加载。
+- **第五份同源拷贝** `Isa-Mini/library/unify_diagnostic.ML`，384 行，**由
+  `Isa-Mini/Minilang.unicode.thy:50` 的 `ML_file` 加载——不是死文件**。它 fork 的是**合一器**
+  （`Pattern.unify`）不是匹配器，走上游语义（存进 `Envir` 的绑定按构造是闭的），所以它保留
+  上游那条 `red t [] [] = t` 是**对的**，本轮不需改。
+  两条都留给 `PLPR_PATTERN_DEDUP_PLAN.md`：**"全树一共几份 `red`"的答案是 5，不是 4。**
 - 本次改动会改变 `matches_subterm_of` 的真值（方向双向），`Auto_Sledgehammer` 的 looping 检测
   行为可能变——**这是给下游的提醒**，验证归属在 `Auto_Sledgehammer` 自己，不是本轮验收项。
 
