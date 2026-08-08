@@ -799,6 +799,10 @@ session 构建闭包含 `Automatic_Refinement`,但其理论从未被导入）。
   - iso 矩阵**落地列**归档:`Test/isoport_archive/out_LANDED_Iso_*.txt`（十格,README 注明）;
   - `Minilang.unicode.thy` 镜像不可编译、仅助读（用户确认）,第 4 项验证取消;
     第 6 项（重跑 15 处声明等价探针）用户裁定不做。
+- **2026-08-08（I6 phi 侧半边落地,用户指示）**:`PLPR.thy` 的 Predefined Embedding
+  段落新增 `pure_term_embed` 定义与规则（与 Minilang 侧逐字同文,phi 提交 `8e5f5a7d`）;
+  `Phi_Logic_Programming_Reasoner` session 增量构建绿。第二部分 §5.1 就此关闭;
+  D48 时两侧规则表已逐条一致。
 - **2026-08-08（落地后评审,三路 × 两轮对实现提交 `51c0157`）**:内核实现路与站点
   契约路**零发现**;验收证据路 4 条,质证后删 2 条（A4 证据不实——警告通道实为对称,
   原始输出 grep `repair mismatch` 零命中;A3 降级——E2E 已覆盖该站点非短路成功路）,
