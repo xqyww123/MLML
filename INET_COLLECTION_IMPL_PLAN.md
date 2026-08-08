@@ -360,7 +360,8 @@ P7 = §5.3 反例存证（断言自反定理）；P8 = B8（ML 级局部 context
 
 **一次性验收（scratch，归档于本节，不进仓库）**：C3 不透明对照（红在使用处）与 C4；
 变异 (d) 的编译红探针（+ 可选的异 hyps 行为演示作文档）；变异 (b)/(c)/(f) 的门槛跑；
-B2 菱形（需三个 theory 文件，引擎侧已有 `Test_iNet.thy` 覆盖）；α-变体行；
+B2 菱形（需三个 theory 文件；~~引擎侧已有 `Test_iNet.thy` 覆盖~~ **此理由经第二轮评审
+证伪（A2）**——当时 `Test_iNet.thy` 根本没测 `merge`，2026-08-08 已补 Test 12，见 §9.5）；α-变体行；
 declare 级 B4 消息捕获；context 块 escape 事实。
 
 评审探针档案：`/home/qiyuan/.claude/jobs/5fd48bbb/tmp/rev_ml/`、`rev_contract/`、
@@ -368,7 +369,9 @@ declare 级 B4 消息捕获；context 块 escape 事实。
 
 ### §9.4 实施记录（2026-08-07 晚，按 §8 顺序执行）
 
-**结果：全部按计划落地，验收全绿，无行为层偏离。** 逐步记录：
+**结果：全部按计划落地，验收全绿，无行为层偏离。**（勘误 2026-08-08：代码确实
+无偏离，但**计划自身的同键顺序契约被落地后的第二轮评审证伪**——`iNet.merge` 当时会
+反转 net2 侧同叶序列；已根修并补测试，见 §9.5。）逐步记录：
 
 1. **变异门槛先行**（§8 步 1）：复用 `rev_accept/` 的 `IC_Mut_*` 探针，四个变异全部
    按预期红——(a) 函子编译过、红在使用处（`Can't unify POPQ.T to term * string`，
@@ -407,3 +410,29 @@ declare 级 B4 消息捕获；context 块 escape 事实。
 **操作性备忘**（不属验收，记下防复踩）：同名 theory（jobs 目录与 scratchpad 各一个
 `IC_Base`）会把 PIDE 的评估状态搅死——表现为目标 theory 已 clean 但评估永不完成；
 重启 prover、只从单一目录跑即愈。
+
+### §9.5 落地后的第二轮对抗评审与修复（2026-08-07 深夜 – 08-08；三路 × 两轮互驳）
+
+对已落地的代码再跑一轮三路评审（甲 = ML/内核语义，乙 = 契约与文档，丙 = 测试质量），
+第二轮各路互驳对方发现。**删除 1 条被驳倒的意见**（"删掉未 trim 对照行会让 B1 断言
+空转"——同块相邻两行恰好覆盖两个漂移方向，甲乙两路各自独立驳倒）。存活 3 MAJOR +
+6 MINOR，全部修复（用户 2026-08-08 批准；A1 用户亲定 `fold_rev` 方案）：
+
+| # | 发现（全部 ≥2 路独立实测） | 修复 |
+|---|---|---|
+| **A1** MAJOR | `iNet.merge` 对 `dest net2` 做头插 `fold`，把 net2 侧每叶序列**反转**：同一 theory 里声明的同键对，经菱形汇合（且两个父亲都写过该槽）后**先声明的赢**，覆写语义静默回滚（`Merely_Rewrite` 端到端实测旧规则开火）；本计划 §3.1"Merge order across theories is import-order dependent"与 §5.2 B5"限单一 theory 内"**均把这种情况误标为安全**（本条即勘误，那两句以此为准） | **根修**：`improved_net.ML` `merge` 改 `fold_rev`（= 对 `rev (dest net2)` 折叠，每叶连续段恢复原序；用户方案），FIXME 注释换成语义说明；`inet_collection.ML` 头注按新事实改写。修后契约：**同 theory 添加的对在一切后代中保序**；仅跨父亲的同键对相对序仍随合并方向。验收：菱形探针两个 import 方向均"后声明赢"（修前 imports B C 方向为反例），`Test_iNet.thy` 新增 Test 12 |
+| **A2** MAJOR | merge 路径在全仓库永久测试**零覆盖**（"merge" 在 `Test/` 出现 0 次；把 merge 换成"丢弃第二父亲"的变异体全套测试仍绿），且 §9.3 的豁免理由"引擎侧已有 Test_iNet.thy 覆盖"**事实错误** | `Test_iNet.thy` 加 Test 12（同侧序双向保持、去重、跨侧落点为实测行为非契约）；§9.3 就地勘误；菱形探针归档 |
+| **C2'** MAJOR | declare 级 `[... del]` 语法零永久覆盖：`Attrib.add_del add add` 变异体全套绿、退出码 0（B6 在 §9.3 拆分时漏出两个清单） | 永久测试加 declare 级 add/del 往返（净效应为零，不扰动后续段）；变异体现红在往返计数行【实测】 |
+| C1' MINOR（初判 MAJOR，两路降级） | `thm` 是诊断命令，失败不阻断后续：删动态事实注册的变异体报错、退出码 1,**但汇总行照印**——按文件头判据仍能判失败，故非逃逸,只是汇总行证据价值破损 | 冒烟行配 ML 检查 `can (Proof_Context.get_thms …)`；变异体现红且汇总行不再打印（grep 计 0）【实测】 |
+| C3' MINOR | 永久测试 P1 的 `eq` 只比键，违反 §5.1 C1 锁定的"比较整个元素"；且归档复跑探针（`rerun_shipped/IC_Base.thy`）同样只比键——未记录的偏离 | P1 改 `t aconv u andalso a = b`；本行即补记 |
+| B1 MINOR | 头注为"后加的排前"引证 `improved_net.ML` 的保序句（只说 preserve），真正出处是叶行头插注释 | 头注改引叶行句（随 A1 改写一并完成） |
+| B3 MINOR | 头注同键句未写 `eq`-重复例外（静默忽略、不替换不提升——与 `Item_Net.update` 相反的契约只活在计划与测试里） | 头注加一句 duplicate no-op 条款 |
+| B2 MINOR | 设计档案 §12"按 §1 rev 2 逐字"——§1.2 是自标示意稿（通配 handle 占位、`content` 省略），逐字来源是本计划 §3 | §12 措辞已改 |
+| C-新 MINOR | 测试 P6 注释复述了 A1 的错话 | 随 A1 一并改写 |
+
+**修后实测记录（2026-08-08）**：增量 build 过；`Test_iNet`（含 Test 12）、
+`Test_iNet_Collection`（含新行）全绿；菱形探针 D1/D2 双向"后声明赢"；两个新增
+测试行的能红性均以变异体证实。探针与变异体归档（持久）：
+`/home/qiyuan/.claude/jobs/5fd48bbb/tmp/merge_fix/`（菱形五件 + 两个变异体基座）；
+评审员自己的探针在其各自 `/tmp/claude-1002/rev{A,B,C}/`（临时目录，可能被清理）。
+`merely_rewrite.ML:148-157` 的 `merge_rules` 注释经乙路核实**未做顺序断言,不需改**。

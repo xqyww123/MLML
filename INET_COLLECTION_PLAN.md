@@ -47,8 +47,8 @@ Isabelle/ML 的函子应用。**
 属性注册：通用件**始终提供** `setup`（照 `Named_Thms` 注册属性 + 动态事实名）；
 **调不调 `setup` 是各消费者自己的选择**。首个消费者（iso 层）必须调——phi 既有 15 处
 `[iso_atomize_rules, …]` 声明依赖属性名。（旧 §5 的"注不注册"之争是母计划的
-`[atomize]` 遮蔽语境；母计划 2026-08-07 深夜重新启用后，该问题已由用户定为**注册**（遮蔽
-读法生效）——那是消费者侧的选择，不影响通用件本身。）
+`[atomize]` 遮蔽语境；母计划 2026-08-07 深夜重新启用后，该问题已由用户定为**注册**，且属性
+随后改名 `my_atomize` / `my_rulify`（不再遮蔽）——都是消费者侧的选择，不影响通用件本身。）
 
 ---
 
@@ -717,6 +717,14 @@ datatype 'a net = Leaf of 'a list
 > `eq_thm_prop` del 也会**全部删光**（`remove eq` 过滤一切相等副本），不存在"删不掉的幸存者"。
 > 两谓词的真实分歧仅在 **hyps/shyps**。
 
+> **第二次补注（2026-08-08，落地后第二轮评审）**：本节的"正确"只覆盖**计数 / 删除 /
+> 跨 theory 可用性**——合并后的**候选顺序**当时没测。实测发现 `iNet.merge` 彼时用头插
+> `fold` 重放 net2，会把 net2 侧每叶序列反转：同一 theory 里声明的同键对经菱形汇合
+> （两个父亲都写过该槽）后先声明的赢，覆写语义静默回滚。**已根修**（`merge` 改
+> `fold_rev`，用户方案）并补永久测试（`Test_iNet.thy` Test 12）与菱形探针双向验收。
+> 全程记录见 `INET_COLLECTION_IMPL_PLAN.md` §9.5。修后契约：同 theory 添加的对在一切
+> 后代保序；仅跨父亲的同键对相对序随合并方向。
+
 ### D3. `content` 要不要 transfer —— 与 `Named_Thms` 的一处未对齐
 
 见 §3.1 末尾。**这是一个待用户决策**（§8-U2），不是我该拍板的：
@@ -766,7 +774,7 @@ datatype 'a net = Leaf of 'a list
 
 | # | 事项 | 我的建议（仅供参考，不是结论） |
 |---|---|---|
-| ~~U1~~ | **属性注不注册（§5 的读法一 vs 读法二）** | **已消解（转投 iso 后）**：`iso_atomize_rules` / `iso_rulify_rules` 不遮蔽任何 Pure 内建，phi 15 处声明依赖属性名，**必须注册**（读法一）。<br>**深夜补记**：母计划重新启用，M2「遮蔽」恢复；结论不变——通用件始终提供 `setup`、调不调归消费者。`My_Object_Logic` 实例注不注册是母计划 Q2 的残留，已由用户定为**注册**（2026-08-07 深夜），与本通用件无关。 |
+| ~~U1~~ | **属性注不注册（§5 的读法一 vs 读法二）** | **已消解（转投 iso 后）**：`iso_atomize_rules` / `iso_rulify_rules` 不遮蔽任何 Pure 内建，phi 15 处声明依赖属性名，**必须注册**（读法一）。<br>**深夜补记**：母计划重新启用，M2「遮蔽」恢复；结论不变——通用件始终提供 `setup`、调不调归消费者。`My_Object_Logic` 实例注不注册是母计划 Q2 的残留，已由用户定为**注册**（2026-08-07 深夜；属性随后改名 `my_atomize` / `my_rulify`，不遮蔽），与本通用件无关。 |
 | ~~U2~~ | **`content` 要不要 `Thm.transfer''`**（§7-D3） | **已定 → 照抄 `Named_Thms`，做 transfer**（用户 2026-08-07 晚）。只影响 `content`/`get` 出口；交给 `Merely_Rewrite` 的网不需预 transfer（引擎每候选自带 `Thm.transfer'`，`:329`/`:477`） |
 | ~~U3~~ | **函子放通用件还是消费者私有**（§6） | **已定 → 通用件**：`contrib/Performant_Isabelle_ML/library/inet_collection.ML`（用户 2026-08-07 晚，随文件路径一并定稿；后随 rev 2 改名）。 |
 | ~~U4~~ | **「同键不得重叠」写成硬约束还是只记状态**（§3.2） | **已定 → 只记状态**（用户 2026-08-07 晚）：签名注释写明「同键时后声明的排前；取首个匹配的消费者，后声明的赢」。通用集合**本就必须允许同键多条**（`Named_Thms` 从不禁止），硬约束对通用件是错的；要不要禁重叠是各消费者的事。iso 六条规则头常量各异，今天无同键 |
@@ -859,7 +867,8 @@ Isabelle 的归纳 / 分情况 / `rule_format` 等机制在**大量真实 theory
 
 ## 12. 实施档案
 
-**已实施（2026-08-07 晚）**：两层函子按 §1 rev 2 逐字落于
+**已实施（2026-08-07 晚）**：两层函子按实施计划 §3 定稿**逐字**落于（架构按本档案
+§1 rev 2；§1.2 自身是示意稿——通配 handle 占位、`content` 省略——逐字基准在实施计划）
 `contrib/Performant_Isabelle_ML/library/inet_collection.ML`，加载于
 `Performant_Isabelle_ML.thy`（`improved_net.ML` 之后、`merely_rewrite.ML` 之前）。
 实施计划、验收结果、变异门槛记录与对 §3 定稿的仅有偏离（一处行内注释）全在
@@ -869,3 +878,7 @@ Isabelle 的归纳 / 分情况 / `rule_format` 等机制在**大量真实 theory
 `/home/qiyuan/.claude/jobs/5fd48bbb/tmp/rerun_shipped/`）。
 iso 实例（`iso_atomize_rules` / `iso_rulify_rules`）尚未注册——那属于
 `ISO_ATOMIZE_PORT_PLAN.md` 的移植工作，实例定义已定稿在其 I10。
+
+**落地后第二轮对抗评审（2026-08-08）**：发现并根修 `iNet.merge` 的 net2 侧序反转
+（`fold` → `fold_rev`，用户方案；见 §7-D2 第二次补注），补上 merge 与 declare 级
+del 的测试覆盖洞。全部发现、裁决与实测记录在 `INET_COLLECTION_IMPL_PLAN.md` §9.5。
