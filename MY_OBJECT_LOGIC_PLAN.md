@@ -789,6 +789,16 @@ session 构建闭包含 `Automatic_Refinement`,但其理论从未被导入）。
     已抢救入 `Test/isoport_archive/corpus/`（32 件,含 RT_*/Iso_* 全部 theory 源码）。
   - 注释改写:`proof.ML` 四处将变假的 iso 断言注释已按新机制改写（评审补丁 4;含
     `:5942` 一带 `&&&` all_conv 断言 → 嵌入/还原往返的新事实）。
+- **2026-08-08（补遗,用户批示 2/3/5）**:
+  - 三份计划文档存根/指针补提交（主仓库 `744dee9`）;
+  - **§8-4 白名单 (b) 两类跃迁的实证闭环**（`Test/My_Object_Logic_Transitions_Test.thy`,
+    双树各跑一遍）:**按名实例化是真实跃迁**——改前树上
+    `cannot instantiate rule ‹resm›: Variable "yyy" is not found in the rule`
+    （名字随 η 收缩消失）,改后 `res2 : RR5 5`;**链式 xOF 不是跃迁**——卸载合一本就
+    模 βη,损坏形态下两树都成功,该 lemma 留作链式阳性对照;
+  - iso 矩阵**落地列**归档:`Test/isoport_archive/out_LANDED_Iso_*.txt`（十格,README 注明）;
+  - `Minilang.unicode.thy` 镜像不可编译、仅助读（用户确认）,第 4 项验证取消;
+    第 6 项（重跑 15 处声明等价探针）用户裁定不做。
 
 ---
 
