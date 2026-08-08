@@ -1,6 +1,8 @@
 # `My_Object_Logic`：对象逻辑层门面（atomize 修复）+ iso 层移植 —— 总计划
 
-> **状态：方案定稿（用户 2026-08-08 凌晨），对象逻辑层可行性已实测（§4A.2），待实施。**
+> **状态：已实施并通过全部验收（2026-08-08，用户开工令后按 §10 工序落地；档案见 §9 末条）。**
+> 评审档案见 §4A.2-B / §9；评审后新增的用户决策：**融合 + `{strict: bool}` 参数**（W9）、
+> **同批落地**（W10）、**P24 已结**（W11）。
 >
 > **本文两部分，一个 structure**（用户 2026-08-08 凌晨合并）：
 >
@@ -23,19 +25,22 @@
 > **演变**（同一文件多次易稿，读者勿把旧层当现行）：
 > 自建整套（原文）→ 整份作废（2026-08-07 晚）→ 自建重启（2026-08-07 深夜，M/Q 决策层
 > 与"对齐清单"）→ **包装方案 + 门面 + iso 并入（2026-08-08 凌晨，§2.1 W 表 = 现行）**。
-> 现行内容 = 本头部 + §2.1 + §4A + §8 + §9 + 第二部分；**§1 的动机与 §3 的实测事实
-> 继续有效**；M1–M5、Q1–Q6、旧 §4/§5 全部作废，保留供追溯。
+> 现行内容 = 本头部 + §2.1 + §4A + §8 + §9 + **§10（实施工序,开工从这里进）** + 第二部分
+> （及其评审补丁节）；**§1 的动机与 §3 的实测事实继续有效**；M1–M5、Q1–Q6、旧 §4/§5
+> 全部作废，保留供追溯。
 >
 > **依赖**：第一部分零依赖；第二部分要 `Merely_Rewrite`（已落地提交）与
 > `iNet_Collection`（已落地提交）——**都已就绪，全计划可立即实施**。A3 与本计划无关
 > （其在另一会话中的实施自有独立价值，不受影响）。
 >
-> **装载布局（已按源码核实可行）**：单文件
-> **`contrib/Isa-Mini/library/my_object_logic.ML`**，插在 `Minilang.thy:51`
-> （`unify_diagnostic.ML` 旁、`aux.ML` 之前）：嵌入常量定义区（`Minilang.thy:20-44`，
-> 第二部分 §12 的定义段落在此扩充）在它之前，消费者 `aux.ML`/`proof.ML` 在它之后；
+> **装载布局（已按源码核实可行；顺序经评审 F5 定稿,解开了"属性注册 vs 规则 lemma vs
+> hide_const"的死结）**：单文件 **`contrib/Isa-Mini/library/my_object_logic.ML`**,
+> `Minilang.thy` 内顺序为——嵌入常量定义区（`:20-44`,第二部分 §12 的定义段落在此扩充）
+> → **`my_object_logic.ML`**（原 :51 位置,`aux.ML` 之前;ML 内 `Theory.setup` 注册两个
+> iso 属性）→ **六条 iso 规则 lemma**（属性此时已可用,实测）→ **扩充后的 `hide_const`**
+> （从原 :49 移到规则块之后,否则规则陈述里的短名解析失败）→ 消费者 `aux.ML`/`proof.ML`。
 > `Merely_Rewrite`/`iNet_Thm_Collection` 经 `Auto_Sledgehammer → Performant_Isabelle_ML`
-> 的 import 链可达。
+> 的 import 链可达。**`Minilang.unicode.thy` 逐字镜像须同步**（F6）。
 >
 > 相关计划：`MERELY_REWRITE_BVS_THREADING_PLAN.md`（A3，已与本计划解耦）；
 > `INET_COLLECTION_PLAN.md`（容器通用件，第二部分的规则集用它实例化）。
@@ -112,11 +117,14 @@ facts
 |---|---|
 | **W1** | **不自建，包装**：保留系统 `Object_Logic`，对 thm 级 `atomize` 的结果做事后 βη 修复。靶子 = 导出的 `atomize_term`（term 级、实测无损，§3.4）算出的形态；修复 = `Drule.beta_eta_conversion` × 2 + `Thm.transitive`/`symmetric` 的内核等式。可行性实测 §4A.2 |
 | **W2** | **修复只覆盖 atomize；rulify 不修复**。理由两条：§3.6 站点表里 rulify 方向的损坏无一外露（`aux.ML:319` 只当布尔判据、`:363` 构造不出可见例子）；且 `Object_Logic.rulify` 的三个尾巴（`gen_all` / `strip_shyps` / `zero_var_indexes`）改的东西**超出 βη 范围**（Free→schematic、索引归零），靶子重建又碎又脆。（原文"也不提供出口"已被 W7 门面决定取代：**提供**，但只是逐字别名） |
-| **W3** | **失配退回**：坏形态与靶子的 βη 范式不 `aconv` 时，返回未修复的结果（= 今天的行为）。修复是显示质量增强，不是正确性门槛，不许因此炸掉用户的证明 |
+| **W3** | **失配退回**：坏形态与靶子的 βη 范式不 `aconv` 时，返回未修复的结果（= 今天的行为）。修复是显示质量增强，不是正确性门槛，不许因此炸掉用户的证明。（注意与 W9 的分工：失配退回说的是**修复**做不做；`strict` 说的是**完全性**查不查——失配退回后 strict=true 仍照常检查完全性。）**评审 F1**：修复核以 `repair_or_fallback` 名义进签名（仅为 §8-3 验收注入导出），否则此分支不可测——坏 fallback 变异在全部天然语料上全绿穿过（实测） |
 | **W4** | **structure 名仍叫 `My_Object_Logic`**（用户 2026-08-08 确认——角色没变，实现变了名字不用跟着变）；文件 **`contrib/Isa-Mini/library/my_object_logic.ML`**，装载点见文件头"装载布局"（`Minilang.thy` 的 `aux.ML` 之前、嵌入定义区之后） |
-| **W5** | **切换站点**：修复生效的两处受损 thm 级 atomize——`aux.ML:292`（`atomize_back`，§1.1 端到端损坏的触发点）、`proof.ML:1090`（`wraps`）；其余转换站点按 W7 门面纪律**同批文本切换成 `My_Object_Logic` 的别名**，行为逐字不变——`atomize_term` × 3（`agent.ML:303`、`proof.ML:705`、`proof.ML:3508`）、rulify × 2（`aux.ML:319`、`:363`）。判断类查询（`elim_concl`、`is_judgment` 等，如 `proof.ML:2906`）不属转换函数，仍直接用 `Object_Logic` |
+| **W5** | **切换站点（评审后定稿全表,含 F3 补入的 `full_atomize_tac` 族;行号以函数名+形状锚定,实施时重 grep,勿信快照）**：<br>`{strict = true}`——`aux.ML:292`（`atomize_back`,§1.1 触发点）、`proof.ML:1130`（`wraps`,旧引 :1090 已漂）、`proof.ML:3569`（SUFFICES 的 `full_atomize_tac`,损坏已实测）、`agent_server.ML:410`（AoA 多目标合并,同上）;`proof.ML:3509` 的包装内部调 `{strict=true}` 版 `atomize_term`,自带检查删除,catch `TERM` 翻译 `OPR_FAIL`（P9 原则）。<br>`{strict = false}`——打印路径 `agent.ML:303`、`proof.ML:705`（agent 读目标主路径,永不抛）。<br>裸别名——rulify × 2（`aux.ML:319`、`:363`）。<br>不动——判断类查询（`elim_concl` `proof.ML:2890` 等）不属转换函数,仍直接用 `Object_Logic`（评审核实:Isa-Mini 无"一半门内一半门外"站点）。<br>Q6 的"八个衍生函数零调用需求"**撤回**——`full_atomize_tac` 有两个真实站点,进门面 |
 | **W6** | 属性、规则表、seed 在**第一部分**全部不需要；`my_atomize` / `my_rulify` 命名随自建方案作废。（第二部分的 iso 规则集属性 `iso_atomize_rules` / `iso_rulify_rules` 照旧——那是另一张表） |
-| **W7** | **唯一门面**（用户 2026-08-08 凌晨）：`rulify` 与 `atomize_term` 哪怕严格等于系统库也提供（逐字别名），此后调用方只用 `My_Object_Logic`、不再直接用 `Object_Logic` 的转换函数。好处：调用方不用记"哪个坏哪个好"；将来若修 rulify，站点已全在门内，改一处实现即可 |
+| **W7** | **唯一门面**（用户 2026-08-08 凌晨）：`rulify` 与 `atomize_term` 哪怕严格等于系统库也提供，此后调用方只用 `My_Object_Logic`、不再直接用 `Object_Logic` 的转换函数。好处：调用方不用记"哪个坏哪个好"；将来若修 rulify，站点已全在门内，改一处实现即可。（"逐字别名"的原表述被 W9 的融合语义部分取代：`rulify` 仍是逐字别名；atomize 系带 `{strict}` 参数） |
+| **W9** | **融合 + `{strict: bool}` 参数**（用户 2026-08-08，评审 F2 的定稿解法）：不设 `strict_*` 第二名族，atomize 系四函数（`atomize_conv` / `atomize` / `atomize_term` / `full_atomize_tac`）统一带 `{strict: bool}` record 参数（Pure 现成惯用法：`Token.tokenize`、`Lazy.force_result` 同型）。语义 = Trueprop 短路 → 系统 atomize → βη 修复 → `strict=true` 时做完全性检查（结果非 judgment 头即抛，phi 的"严格语义"）、`strict=false` 时返回尽力结果永不因不完全而抛。chk 与修复叠加已实测无冲突（修复不翻转完全性判决）。站点分配见 §4A.1.1。**连带改判**：第二部分 P8 的"不要给今天不带检查的站点加 chk"警告被推翻——`{strict=true}` 站点获得响亮失败,每站点配"不完全输入"验收样本（§8-8） |
+| **W10** | **同批落地**（用户 2026-08-08）：两部分一次做完。前置：F4 的回归矩阵扩充（FUN 延迟 pat / FUN 交互终止 / INTERPRET 三格）升格为**整个计划**的落地前置；F5 的 Minilang.thy 顺序死结已在文件头"装载布局"写死 |
+| **W11** | **P24 已结**（用户 2026-08-08）：isoport 原型档案已归档至 `contrib/Isa-Mini/Test/isoport_archive/`（127 文件 + README；lab3 差分归档时现场生成——此前从未存盘；README 载明"lab3 非落地形态、候选列须用新引擎重建"与"证据早于 FUN 延迟 pat 块"两条告诫） |
 | **W8** | **iso 系列并入同一 structure**（用户 2026-08-08 凌晨，推翻第二部分 P11 的 `Phi_Conv` 命名）：`iso_atomize_conv` / `iso_rulify_conv` / `iso_atomize` / `iso_rulify` 是 `My_Object_Logic` 的成员，机制照第二部分 I9（规则集 `iNet_Thm_Collection` 两实例 + `Merely_Rewrite.rewrite_conv`）。**连带**：phi 的 7 处 `Phi_Conv.iso_*` 调用点在 D48 切换时同步改名 `My_Object_Logic.iso_*`（纯机械，与删 phi 侧 `iso_atomize.ML` 同一提交）；属性名 `iso_atomize_rules` / `iso_rulify_rules` **不变**（phi 15 处声明依赖）。计划文件随之合并：原 `ISO_ATOMIZE_PORT_PLAN.md` 全文并入本文第二部分，原文件成存根 |
 
 ### 2.2 作废的自建决策（M 表，保留供追溯）
@@ -136,6 +144,11 @@ facts
 > 注（2026-08-08）：本节的**实测事实**全部有效，但其中夹带的**自建语境决定**
 > （§3.2 的"seed 塞回 `norm_hhf_eqs`"、§3.3 的"自建后可以不放尾巴"）随方案作废——
 > 包装方案没有 seed、不碰 rulify 的尾巴。
+>
+> **评审新增事实（2026-08-08,K3【实测】）**：thm 级损坏比 §3.5 的叙述更广——**纯 `⋀`
+> 嵌套（无任何 HOL 量词）也丢绑定器名**：`(⋀xx. Tp(PP xx)) ⟹ Tp AA` 与 `⋀a b. Tp(RR a b)`
+> 的系统输出绑定器名单分别塌成 `[]` 与 `[a]`,修复后恢复 `[a]` / `[a,b]`;同形状在**顶层**
+> 不损坏——损坏依赖嵌套位置。修复的实际命中率高于"η-redex 量词体"的印象。
 
 ### 3.1 规则集小得出奇 —— 这是自建可行的根本原因
 
@@ -259,12 +272,17 @@ val _ = Theory.setup (fold (Context.theory_map o add_rulify) Drule.norm_hhf_eqs)
 ```sml
 signature MY_OBJECT_LOGIC =
 sig
-  (*对象逻辑层：atomize 修复 + 门面别名（W7）*)
-  val atomize_conv: Proof.context -> conv    (*修复版；drop-in 替换 Object_Logic.atomize*)
-  val atomize: Proof.context -> thm -> thm   (*= Conv.fconv_rule o atomize_conv*)
-  val atomize_term: Proof.context -> term -> term  (*逐字别名 = Object_Logic.atomize_term*)
-  val rulify: Proof.context -> thm -> thm    (*逐字别名 = Object_Logic.rulify；η 损伤与
-                                               zero_var_indexes 原样保留（W2），签名注释写明*)
+  (*对象逻辑层（W9 融合语义）。四个 atomize 入口 = Trueprop 短路 → 系统 atomize →
+    βη 修复（失配退回,W3）→ strict=true 时完全性检查（结果非 judgment 头即抛,
+    phi 的严格语义）;strict=false 时返回尽力结果、永不因不完全而抛。*)
+  val atomize_conv: {strict: bool} -> Proof.context -> conv
+  val atomize: {strict: bool} -> Proof.context -> thm -> thm
+  val atomize_term: {strict: bool} -> Proof.context -> term -> term
+  val full_atomize_tac: {strict: bool} -> Proof.context -> int -> tactic
+  val rulify: Proof.context -> thm -> thm    (*逐字别名 = Object_Logic.rulify;无检查可融,
+                                               无参数;η 损伤与 zero_var_indexes 原样（W2）*)
+  (*修复核,仅为 §8-3 验收注入导出（F1）:eq 是系统等式（lhs=输入）,term 是靶子*)
+  val repair_or_fallback: Proof.context -> thm -> term -> thm
 
   (*iso 层：可逆嵌入，规则驱动，引擎 Merely_Rewrite（W8；机制与代码见第二部分 I9/I10）*)
   val iso_atomize_conv: Proof.context -> conv
@@ -278,7 +296,7 @@ iso 层的两个规则集（`iNet_Thm_Collection` 实例，binding `iso_atomize_
 `iso_rulify_rules`）在同一 ML 文件内定义、`setup` 注册属性；是否把集合的 `get` 出口
 再导出到签名，落地时按测试需要定（phi 的 7 处调用点只用 conv/thm 级函数）。
 
-第一部分（对象逻辑层）的实现骨架：
+第一部分（对象逻辑层）的实现骨架（修复核形态经评审重构验证，与内联版 13 形状逐字等价）：
 
 ```sml
 structure My_Object_Logic: MY_OBJECT_LOGIC =
@@ -290,12 +308,9 @@ fun target_of ctxt t =
   let val t0 = Object_Logic.atomize_term ctxt t
   in if fastype_of t0 = \<^Type>\<open>bool\<close> then HOLogic.mk_Trueprop t0 else t0 end;
 
-fun atomize_conv ctxt ct =
-  let
-    val eq = Object_Logic.atomize ctxt ct;             (*系统实现，原样*)
-    val damaged = Thm.term_of (Thm.rhs_of eq);
-    val target = target_of ctxt (Thm.term_of ct);
-  in
+(*修复核（F1 注入口）:eq 的 lhs 必须是被 atomize 的原式*)
+fun repair_or_fallback ctxt eq target =
+  let val damaged = Thm.term_of (Thm.rhs_of eq) in
     if damaged aconv target then eq                    (*本就无损：常见情形*)
     else if Envir.beta_eta_contract damaged aconv Envir.beta_eta_contract target
     then                                               (*修复：坏 ≡ 范式 ≡ 好*)
@@ -306,10 +321,43 @@ fun atomize_conv ctxt ct =
     else eq                                            (*W3：失配退回，行为 = 今天*)
   end;
 
-val atomize = Conv.fconv_rule o atomize_conv;
+(*严格检查,phi 语义逐字（源:phi iso_atomize.ML:34-42,已核对原文）。
+  chk 收的是等式定理:右端必须 Trueprop 头,否则 CTERM "Fail to atomize"、
+  载荷 = 等式左端（= 输入;修复保持 lhs=输入,所以载荷与 phi 版逐字同款,评审实测）。*)
+fun chk eq =
+  (case Thm.prop_of eq
+     of _ (*Pure.eq*) $ _ $ (Const (\<^const_name>\<open>Trueprop\<close>, _) $ _) => eq
+      | _ => raise CTERM ("Fail to atomize", [Thm.dest_arg1 (Thm.cprop_of eq)]));
 
-val atomize_term = Object_Logic.atomize_term;   (*W7 门面别名，逐字*)
-val rulify = Object_Logic.rulify;               (*W7 门面别名，逐字；W2：不修复*)
+fun chk_term (Const (\<^const_name>\<open>Trueprop\<close>, _) $ X) = X
+  | chk_term X =
+      (case Term.fastype_of X
+         of \<^Type>\<open>bool\<close> => X
+          | _ => raise TERM ("Fail to atomize", [X]));
+
+(*W9 融合入口。Trueprop 短路两种模式都开（strict=false 下只是无害快路,
+  输入已是 Trueprop 时也无规则可开火）。*)
+fun atomize_conv {strict} ctxt ct =
+  (case Thm.term_of ct
+     of Const (\<^const_name>\<open>Trueprop\<close>, _) $ _ => Conv.all_conv ct
+      | _ =>
+        let
+          val eq = repair_or_fallback ctxt (Object_Logic.atomize ctxt ct)
+                     (target_of ctxt (Thm.term_of ct));
+        in if strict then chk eq else eq end);
+
+fun atomize strict = Conv.fconv_rule o atomize_conv strict;
+
+(*term 级无修复可言（term 级引擎本就无损,§3.4）;strict 只管完全性检查。
+  strict=false 即逐字别名行为（打印站点用）*)
+fun atomize_term {strict} ctxt t =
+  let val t' = Object_Logic.atomize_term ctxt t
+  in if strict then chk_term t' else t' end;
+
+fun full_atomize_tac strict ctxt =
+  CONVERSION (atomize_conv strict ctxt);   (*F3;修复后保护结论完好,已实测*)
+
+val rulify = Object_Logic.rulify;          (*W7 门面别名，逐字；W2：不修复*)
 
 (*…… iso 层成员（规则集两实例 + iso_atomize_conv / iso_rulify_conv /
    iso_atomize / iso_rulify）：定稿代码见第二部分 I9/I10，与本层同住一个 struct ……*)
@@ -317,8 +365,21 @@ val rulify = Object_Logic.rulify;               (*W7 门面别名，逐字；W2�
 end
 ```
 
-骨架与 §4A.2 探针的 `repair_to`（thm→thm 形态，用 `Thm.equal_elim`）等价，只是改写成
-conv 形态方便 `proof.ML:1090` 那类 conv 用法直接替换。落地时以实编译为准、与探针对拍。
+修复核与 §4A.2 探针的 `repair_to`（thm→thm 形态，用 `Thm.equal_elim`）等价，改写成
+conv 形态方便 `wraps` 那类 conv 用法直接替换。落地时以实编译为准、与探针对拍。
+
+### 4A.1.1 站点分配表（`{strict}` 的传值,= W5 的展开）
+
+| 站点 | 调用 | 理由 |
+|---|---|---|
+| `aux.ML:292`（xOF `atomize_back`） | `atomize {strict=true}` | 下游假定 atomize 成功;早炸清楚 |
+| `proof.ML:1130`（`wraps`） | `atomize_conv {strict=true}` | 紧随的 `Trueprop_conv` 本就要求 Trueprop 头 |
+| `proof.ML:3569`（SUFFICES） | `full_atomize_tac {strict=true}` | 取 `goal_G` 拼 `P ⟶ G` 需要 bool |
+| `agent_server.ML:410`（AoA 合并） | `full_atomize_tac {strict=true}` | 后续 `dest_Trueprop` 需要 Trueprop |
+| `proof.ML:3509`（Minilang `atomize_term` 包装） | 内部 `atomize_term {strict=true}` + catch `TERM` → `OPR_FAIL` | P9:异常翻译在调用侧;自带检查删除 |
+| `agent.ML:303`、`proof.ML:705`（打印路径） | `atomize_term {strict=false}` | 打印永不抛;`schematic_goal` 的 `TERM ?c &&& _` 类目标今天真实存在 |
+| `aux.ML:319`、`:363` | `rulify`（无参数） | 裸别名 |
+| phi 9 处非 iso 调用点（D48） | 各自的 `{strict=true}` 对应物 | 行为 = 今天的 chk + 修复;`extracting_pure_facts.ML:62`/`reasoners.ML:603` → `atomize`,`PLPR.thy:945`/`PLPR_Syntax0.ML:90`/`reasoners.ML:500`/`:519` → `atomize_conv`,`deriver_framework.ML:1407`/`typeclass.ML:112` → `atomize_term`,`typeclass.ML:132` → `rulify` |
 
 ### 4A.2 可行性实测（2026-08-08 凌晨，HOL session，共享树零改动）
 
@@ -334,8 +395,35 @@ conv 形态方便 `proof.ML:1090` 那类 conv 用法直接替换。落地时以�
 - **旗舰样本结构 dump**：`⋀a. ⟦AA ∧ BB; ∀xx. PP xx⟧ ⟹ PP a ∧ AA` 修复后为
   `Trueprop (All (Abs ("a", …, … All (Abs ("xx", …, PP $ Bound 0)) …)))`——
   绑定器名 `a`/`xx` 全保、η-redex 体 `PP $ Bound 0` 原样。
-- **已知边界**：前置条件（两级引擎输出 βη 等价）只在 8 个形状上验证过、不是定理，
-  由 W3 失配退回兜底；§8-5 的普查在真实语料上量化它。
+- **已知边界**：前置条件（两级引擎输出 βη 等价）~~只在 8 个形状上验证过~~、不是定理，
+  由 W3 失配退回兜底；§8-5 的普查在真实语料上量化它。**评审后更新**：证据基础已扩到
+  §4A.2-B 的约 9000 形状 / 0 失配。
+
+### 4A.2-B 三路 × 两轮对抗评审档案（2026-08-08）
+
+三路 = 内核正确性 / 契约与消费者 / 验收与证据；第一轮独立评审、第二轮交叉质证
+（CONCEDED/UPHELD/REFUTED），低质量意见按纪律删除。产出 **F1–F10** 已全部修入本文
+（W3/W5/W9/W10/W11、§4A.1/§4A.1.1、§8、第二部分评审补丁节）。要点：
+
+- **前置条件的证据基础**：约 **8940 个形状**（手工对抗 + 3–4 层骨架枚举生成器）×
+  两张真实规则表（裸 HOL 四条 / +`Automatic_Refinement` 五条）＝ **0 失配**、7591 次
+  内核修复全数与靶子逐字 `aconv`；带 Pure 前提 / hyps / schematic Var / TVar 的定理、
+  conv 契约（lhs=输入）、修复产物可组合性（过 `OF`）全部实测。定性理由：规则全是
+  无条件正交元等式，分歧只能来自遍历策略,而其不动点相同、差异被 βη 正规化吸收。
+- **范式同源性**（设计最受攻击点,证实安全）：`Drule.beta_eta_conversion` 与
+  `Envir.beta_eta_contract` 源码同源（`eta_contract o beta_norm`,同一对函数），
+  `Thm.transitive` 的中项检查恰等于前置检查判据——前置过则修复必然成立。
+- **chk 与修复可叠加**（W9 的实测基础）：完全可 atomize 的形状上成功集相同；
+  不完全的形状上异常种类与载荷逐字相同（修复保持 lhs=输入）。
+- **已被实测反驳并删除的意见**："真实环境 atomize 表是五条"（把 session 构建闭包误当
+  理论导入闭包;heap 探针证实全部入口四条,详 §7.4 附注）；"phi 的 `rulify` 也带 chk"
+  （`iso_atomize.ML:58` 是裸别名）。
+- **评审探针目录**（scratchpad,易失;语料按 §8-2 转正）：`rev2_kernel/`（逐字编译、
+  conv 契约、前提/schematic 电池、注入重构、chk 叠加、属性时机）、`rev2_accept/`
+  （攻击语料、变异审计、`full_atomize_tac` 损坏实测、K4 常驻断言扫描、e2e 红态基线）、
+  `rev2_contract/`（heap 探针）。
+- **顺带捞出的另案缺陷**（不属本计划,仅登记）：`proof.ML:2720/:2727` 的
+  `consumes_policy` 注释宣称"多余 using 流入 insertion",实现中找不到该拆分。
 
 ---
 
@@ -580,38 +668,75 @@ Q5（站点切换时机）被 W5 取代（只剩 Minilang 两站点，phi 侧无
 
 ### 7.3 ~~`Merely_Rewrite` 尚未定稿~~ —— 作废（包装方案不用它，也不用 A3）
 
-### 7.4 现行方案的风险（2026-08-08）
+### 7.4 现行方案的风险（2026-08-08，评审后修订）
 
-只有一条：**前置条件失配**——某个输入上 thm 级与 term 级引擎的输出真的超出 βη 等价
-（8 形状探针没见过，但不是定理）。后果由 **W3** 封顶：退回未修复的结果，行为与今天逐字
-相同，没有任何新的失败模式。§8-5 的普查量化失配率；若真出现失配样本，它本身就是值得
-单独记录的两引擎分歧证据。
+1. **前置条件失配**——某个输入上 thm 级与 term 级引擎的输出真的超出 βη 等价
+   （评审语料约 9000 形状 × 两张规则表没见过，但不是定理）。后果由 **W3** 封顶：退回
+   未修复的结果，没有任何新的失败模式。§8-5 的普查量化失配率；若真出现失配样本，它本身
+   就是值得单独记录的两引擎分歧证据。
+2. **`{strict=true}` 站点的新异常面**（W9 对第二部分 P8 警告的改判所引入,是**有意的**
+   行为变化不是事故）：四个转换站点今天不带检查、静默吞下不完全 atomize 化;融合后不完全
+   即抛。逐站点读码结论是下游本就假定成功（§4A.1.1 理由列）,但仍须 §8-8 的逐站点
+   "不完全输入"样本把新异常钉成预期行为。
+3. **修复带来的"报错→成功"跃迁**（评审 C7,两类已核实）：链式 xOF（受损事实再当规则时
+   今天报 "more facts are given than…",修复后正常）;xwhere/WHERE 按名实例化（被收缩掉
+   的 ∀ 变量今天只有 dummy 名指不到,修复后可指）。都是正确方向,但 §8-4 的措辞必须
+   允许并逐例登记（已改）。
 
-另记一条**非风险**：修复分支每次调用多付两次 βη 正规化 + 三次内核等式推理，都是
-项大小线性的一次性操作，站点（`xOF` 放电、`wraps`）本身毫秒级，不构成性能事项。
+**非风险两条**：修复分支每次调用多付两次 βη 正规化 + 三次内核等式推理，项大小线性,
+4800 形状全套实测 0.7 秒;**规则表漂移免疫**——修复靶子（`atomize_term`）与被修对象
+（`atomize`）读**同一张表**,将来任何 `[atomize]` 声明的增删对两侧一致,不产生新失配
+（评审 heap 探针顺带证实:现有全部运行入口的 atomize 表都是裸 HOL 四条;§7.1 旧文
+"AFP 3 处"的说法要读成"不在任何入口的**理论导入闭包**里"——MiniF2F/MathBench 的
+session 构建闭包含 `Automatic_Refinement`,但其理论从未被导入）。
 
 ---
 
-## 8. 验收（2026-08-08 重写，对应包装方案）
+## 8. 验收（2026-08-08 评审后第二次重写）
 
-1. **§1.1 端到端例子**：`SPECIALIZE res: e2e_rule2 WITH fA  PRINT` 在 `aux.ML:292` 换用
-   `My_Object_Logic.atomize` 后，打出 `res : CC ⟶ (∀yyy. RR5 yyy) ⟶ BB`（今天是
-   `CC ⟶ All RR5 ⟶ BB`）。这一条是整个计划存在的理由，红了就是没修成。
-2. **探针语料回归**：§4A.2 的 8 形状语料并入一个 `Test/` 下的验收 theory（不进 ROOT，
-   照 `Test/` 惯例手工跑）：前置条件 8/8、修复 7/7、旗舰样本结构 dump 逐字比对。
-3. **失配退回分支的单元测试**：修复函数无法从真输入触发失配（8/8 全过），改喂**人造假
-   靶子**直接测 else 分支——返回值必须与未包装的 `Object_Logic.atomize` 输出逐字相同。
-4. **回归**：`contrib/Isa-Mini/Test/` 下能跑的 theory 逐字对比；差异只允许出现在经过
-   两处切换站点（W5）的输出形态上。（**`MS_Test.thy` 在共享树上本来就坏**，不作证据。）
-5. **前置条件普查**：回归语料里每次经过 `aux.ML:292` / `proof.ML:1090` 的调用，按
-   「本就无损 / 修复命中 / 失配退回」三分类计数。失配预期为 **0**；不为 0 时逐例
-   dump 存档（那是两引擎分歧的实证，见 §7.4）。
-6. **门面别名切换的验收**（W5/W7）：五处别名站点（`atomize_term` × 3、rulify × 2）换名后
-   输出逐字相同——别名是 `val x = Object_Logic.x` 的逐字绑定，等价由构造保证，验收只需
-   代码走查确认真是裸别名 + 回归（第 4 条）不出新差异。
-7. **iso 层验收**：归第二部分 §10（对拍矩阵）与其验收条目，不在此重复；本部分只增加
-   一条衔接检查——`My_Object_Logic` 单 struct 编译通过、iso 属性注册后 phi 15 处声明
-   语义的等价探针（第二部分 §11 档案）可复跑。
+> 总纪律（评审 A5）：验收 theory **自带靶子重建式**（本地写一份 `target_of`），
+> 不 import 实现内部的——否则实现错在靶子上时验收自引用失明。
+
+1. **§1.1 端到端例子**：`SPECIALIZE res: e2e_rule2 WITH fA  PRINT` 在 `aux.ML:292` 切换
+   后，打出 `res : CC ⟶ (∀yyy. RR5 yyy) ⟶ BB`。红态基线已在未改树上真实复现
+   （`All RR5`,2 秒;探针 `rev2_accept/E2E_Probe.thy`,注意独立成 theory 时
+   `axiomatization` 要补常量类型声明）。这一条是整个计划存在的理由。
+2. **探针语料回归**：评审语料并入 `Test/` 下的验收 theory（不进 ROOT,手工跑）：
+   原 8 形状 + 攻击语料（33 手工对抗 + 骨架枚举生成器）+ **K4 常驻断言扫描**
+   （identical 分支上逐位比对两侧 Abs 绑定器名单,评审 5466 样本零反例,探针
+   `RevA_Q3_NameScan.thy` 可直接并入）。**语料裁剪红线**：必须始终保有
+   `identical=false` 的形状（transitive 拼反类变异只在它们上被内核抓住）。
+3. **失配退回与修复核的注入测试**（F1,评审实测定稿）：经签名导出的
+   `repair_or_fallback` 喂**人造假靶子**测 else 分支——返回值与未包装
+   `Object_Logic.atomize` 输出逐字相同（full_prop/hyps/shyps）。**语料必须含一个
+   t9 类样本**（damaged 侧非 βη 范式,如 `⋀a. W a`,W :: nat ⇒ prop 且系统返回自反
+   等式）——否则"fallback 返回半成品"类变异对注入测试仍不可辨（评审实测）。
+   变异审计基线：坏 fallback / 删守卫 / 忘 Trueprop / transitive 拼反四类变异
+   各至少被一条验收判红（探针 `RevA_Mutants.thy`）。
+4. **回归**：`contrib/Isa-Mini/Test/` 下能跑的 theory 逐字对比。**差异白名单**（评审
+   C7 改写）：(a) 切换站点输出的 η/绑定器形态差异;(b) 两类"报错→成功"跃迁——链式
+   xOF、xwhere 按名实例化（逐例登记,可做阳性对照）;(c) `{strict=true}` 站点对不完全
+   输入的新异常（见第 8 条）。白名单外的任何差异判红。（`MS_Test.thy` 本来就坏,不作证据。）
+5. **前置条件普查**（F7 机制定稿）：`my_object_logic.ML` 内置 `Synchronized.var` 三分类
+   计数（本就无损 / 修复命中 / 失配退回）+ `census`/`reset_census` 出口;失配命中时当场
+   `warning` 打 damaged/target 双结构 dump（逐例存档就地完成）。跑法纪律：一 theory
+   一次 `process_theories` 调用（一调用=一 ML 进程,计数原子、归属精确）。失配预期 **0**。
+   **`wraps` 覆盖要求**：其唯一调用链（`INDUCT'` + `tamper_fact'` 非空）在默认配置的
+   回归里结构上不可达——必须跑专门用例（`declare [[induct_auto_insert_facts]]` +
+   提及归纳变量的脏事实 + INDUCT,形状草图见评审档案）,顺带结掉第二部分 §13.7-1
+   "wraps 端到端未构造"的欠账;**wraps 计数为 0 时该站点记为未覆盖,不得当作干净**。
+6. **门面切换的验收**（W5/W7/W9）：`rulify` 两站点是裸别名,等价由构造保证,走查即可;
+   打印两站点（`{strict=false}`）在完全可 atomize 输入上行为同今天,回归覆盖;
+   `proof.ML:3509` 包装重构后 `OPR_FAIL` 消息不变（有既有测试的话逐字对比）。
+7. **iso 层验收**：归第二部分 §10（对拍矩阵）+ 评审补丁节新增三格（FUN 延迟 pat 义务 /
+   FUN 交互式终止 / INTERPRET）;衔接检查——`My_Object_Logic` 单 struct 编译通过、
+   iso 属性注册后 phi 15 处声明语义的等价探针（第二部分 §11 档案）可复跑。
+   **候选列必须用新引擎重建**（archive 的 lab3 是 Named_Thms + 手写遍历,只有"改前"列
+   与语料可复用,见 `Test/isoport_archive/README.md`）。
+8. **`{strict=true}` 站点的新异常样本**（W9/P8 改判的代价）：四个站点（xOF / wraps /
+   SUFFICES / agent_server 合并）各构造一个**不完全可 atomize** 的输入,确认:(a) 抛的
+   是 "Fail to atomize" 类异常而非静默半成品;(b) 异常在各站点的既有错误处理下呈现为
+   可读的失败（不是未捕获异常炸掉 session）。
 
 ---
 
@@ -619,7 +744,100 @@ Q5（站点切换时机）被 W5 取代（只剩 Minilang 两站点，phi 侧无
 
 - **2026-08-08 凌晨**：包装方案可行性探针（§4A.2）通过：前置条件 8/8、修复 7/7、
   旗舰样本绑定器名与 η-redex 体全保。探针文件在 scratchpad（易失），语料随 §8-2 转正。
-- （实施过程中在此追加。）
+- **2026-08-08**：三路 × 两轮对抗评审完成（档案 §4A.2-B），F1–F10 修入正文；用户同日
+  拍板：融合 + `{strict: bool}`（W9）、同批落地（W10）、P24 归档 `Test/isoport_archive/`
+  （W11,已执行）。另案登记：`consumes_policy` 注释与实现不符（`proof.ML:2720/:2727`,
+  见 §4A.2-B 末条）。
+- **2026-08-08（实施，§10 全六步完成）**：
+  - **落地物**：`contrib/Isa-Mini/library/my_object_logic.ML`（两层一 struct;签名较 §4A.1
+    定稿多出 `census`/`reset_census` 两个出口——§8-5 的 F7 机制要求内置计数,随普查需要
+    进签名）;`Minilang.thy` 按 F5 顺序改排（嵌入定义六个 + `ML_file` + 六条规则 lemma +
+    扩充 `hide_const`）,`Minilang.unicode.thy` 镜像同步（顺带修复镜像此前漂移:缺
+    `ISO_TERM` 行）;站点切换 = §4A.1.1 全表 + §12.1 三 hunk + `aux_thms.ML` 三段删除;
+    嵌入定义与规则 lemma 逐字取自 lab3 存档（P16 定稿:五条 + `pure_term_embed`,
+    **不收 `Ball`**,载重注释一并保留）。
+  - **验收（§8 八条全绿）**：
+    (1) e2e:`Test/My_Object_Logic_E2E_Test.thy`,打出 `res : CC ⟶ (∀yyy. RR5 yyy) ⟶ BB`;
+    (2)(3)(8 单元级) `Test/My_Object_Logic_Acceptance_Test.thy`:4073 形状门面横扫全过
+    （census intact=2879 / repaired=1190 / **fallback=0**）、K4 扫描零反例、注入测试
+    （fallback 逐字返回,含 t9 类样本）、变异审计 a/b/c/e 四类全被抓、strict 异常
+    类型与载荷逐字、`full_atomize_tac` strict 空序列（SUFFICES/agent_server 呈现机制）;
+    (4) 回归:12 个 RT theory 双树对拍（BEFORE=HEAD `e44c188`,AFTER=工作树）,规范化后
+    逐字一致;白名单实况 = census 尾块、ML 签名回显少 4 个删除名（§10.5 已录）、proof.ML
+    警告行号平移、输出块乱序、Structured_Statement 一次 SUFFICES 缓存键变化致重搜
+    （重搜成功）;`RT_Fun_In_Proof` 首轮并行跑时 my_sum 终止证明超时抖动,单独重跑与
+    BEFORE 逐字一致;
+    (5) census:回归全程 fallback=0;wraps 专门用例 `Test/My_Object_Logic_Wraps_Test.thy`
+    实测计数（intact=1,元形态脏事实经 INDUCT 自动插入,case 内以 `?k < 0 ⟶ PP ?k`
+    形态还原）;
+    (6) 门面:`rulify` 裸别名构造保真;打印站点 `{strict=false}` 即逐字别名（实测);
+    `:3541` 包装重构后消息原文不变;
+    (7) iso 矩阵:十格全过——A/A2/B/C1/C2/E 六格由改前的
+    `Conclusion in obtained context must be object-logic judgment` 崩溃转为成功,
+    `##RESULT` 与 lab3 逐字同;C0/D/E0/Isar 与改前逐字同;**F4 三新格**:
+    延迟 pat 合并块（`Test/My_Object_Logic_F4_Cells_Test.thy`,七子目标一块,回调
+    `elim_balanced 2` 经 iso 往返正确拆分）、FUN 交互终止（RT_Fun_In_Proof 的
+    FUN_DEBUG 段,对拍一致）、INTERPRET（带义务 + 空 locale 两路 OK）;
+    (8) 站点级异常样本:wraps（`Fail to atomize TERM n`,可读命令级失败）、
+    xOF（`Test/My_Object_Logic_xOF_Strict_Test.thy`,prop 型前提规则给出
+    `Fail to atomize WWx ⟹ BBx`,含阳性对照）;SUFFICES/agent_server 走
+    CONVERSION→空序列→各自 NONE 分支（st0raw 回退 / `Agent_Give_Up`),不逃逸。
+    另:`isabelle build Minilang_AoA` 增量构建绿（agent.ML/agent_server.ML 权威编译证）。
+  - **顺带发现（另案登记,均非本批引起）**:`Test/Fun_In_Proof_Test.thy:341-346` 引用
+    不存在的 `Minilang.check_looping_simp_rules`（HEAD 上双树同炸）;`aux_thms.ML` 的
+    `combination_conv'` 改动前后都无引用（编译警告既有）;isoport 语料源码此前未归档,
+    已抢救入 `Test/isoport_archive/corpus/`（32 件,含 RT_*/Iso_* 全部 theory 源码）。
+  - 注释改写:`proof.ML` 四处将变假的 iso 断言注释已按新机制改写（评审补丁 4;含
+    `:5942` 一带 `&&&` all_conv 断言 → 嵌入/还原往返的新事实）。
+
+---
+
+## 10. 实施工序（开工清单；为 compaction 后冷启动而写，材料指针全在本文内）
+
+> **改动面**：只动 `contrib/Isa-Mini/` 子模块（+ 本计划文档）。**不碰清单**：
+> `merely_rewrite.ML`（另一会话的 A3 工作,可能未提交）、Isabelle 发行版源码、
+> phi-system（其 9+7 调用点与 15 处声明的切换**全部属于 D48,不在本次范围**——本次
+> phi 侧零改动,两套 iso 并存期由属性同名保证声明兼容）。
+> **纪律**：`.ML` 改动重启 REPL 即生效,不 build 不 `-c`;共享树不 stash/checkout/clean;
+> commit 直接上 main;grep 用 `command grep`;比较用结构 dump（§3.8）。
+
+**Step 0 现场核对**（每一步的行号都可能漂,以函数名+形状锚定）：
+`git status` 看两个仓库现状;确认 `Test/isoport_archive/` 在;
+scratchpad 评审探针若已蒸发不挡工（关键结论已录 §4A.2-B,语料按 §8-2 重建）。
+
+**Step 1 写 `contrib/Isa-Mini/library/my_object_logic.ML`**（单文件,两层一个 struct）：
+- 签名 = §4A.1 定稿;对象逻辑层实现 = §4A.1 骨架**全文可抄**
+  （`target_of` / `repair_or_fallback` / `chk` / `chk_term` / 四个 `{strict}` 入口 /
+  `rulify`;chk 三件已与 phi `iso_atomize.ML:34-42` 逐字核对）。
+- iso 层：两个 `iNet_Thm_Collection` 实例逐字照 **I10**（name/description/key_of/
+  报错短句）+ `Theory.setup` 注册;`iso_atomize_conv` = Trueprop 短路 + `chk` +
+  `Merely_Rewrite.rewrite_conv (Atomize.get_net ctxt) ctxt`,`iso_rulify_conv` 同理
+  **无 chk**（I9;chk 与对象逻辑层共用同一份）;thm 级 = `Conv.fconv_rule o …`。
+
+**Step 2 改 `Minilang.thy`**（顺序 = 文件头"装载布局",死结解在评审补丁 5）：
+嵌入定义段照第二部分 **§3.2** 的 phi 原文落入定义区（现 `:20-44` 一带;与现存
+`ISO_ALL`/`ISO_IMP`/`ISO_PROP`/`ISO_TERM` 的取舍按第二部分 **§4.1** 的逐行表）→
+`ML_file ‹library/my_object_logic.ML›`（`aux.ML` 之前）→ 六条规则 lemma（§3.2 原文,
+属性名不变）→ 扩充后的 `hide_const`（移到规则之后）。
+**同步 `Minilang.unicode.thy` 逐字镜像**（F6）。
+
+**Step 3 站点切换**（全表 = **§4A.1.1**,共 9 处 + 3 hunk）：
+- `aux.ML` 旧硬编码 iso 三分支（`aux_thms.ML:97-132` 一带）**删除**（整体替换,第二部分 §4）;
+- `aux.ML:292`/`:319`/`:363`、`proof.ML` wraps/SUFFICES/`:3509` 包装/`:705`、
+  `agent.ML:303`、`agent_server.ML:410` 按 §4A.1.1 传值切换;
+- `proof.ML` 的 `init_goal`/`finalize_goal`/preruns 三个 hunk 照第二部分 **§12.1**
+  （名字用 `My_Object_Logic.iso_*`）。
+
+**Step 4 验收**（§8 全八条,顺序:单元级 §8-2/3 → e2e §8-1 → 回归 §8-4/5 →
+iso 矩阵 §8-7 含 **F4 三新格**（这是 W10 同批的落地前置,矩阵候选列用新引擎重建,
+见 `Test/isoport_archive/README.md`）→ 新异常样本 §8-8）。
+一 theory 一次 `process_theories`;wraps 用例要 `declare [[induct_auto_insert_facts]]`。
+
+**Step 5 收尾**：改写 `proof.ML:5910` 一带将变假的注释（评审补丁 4）;§9 记实施档案;
+第二部分 §12.3 的脚手架告诫核对(不带 `iso_engine` 开关等实验残留)。
+
+**Step 6 提交**：Isa-Mini 子模块先提交、主仓库 bump;共享树上他人未提交改动若被卷入,
+按仓库规矩在提交信息里一并描述。
 
 
 ---
@@ -640,6 +858,48 @@ Q5（站点切换时机）被 W5 取代（只剩 Minilang 两站点，phi 侧无
 > 4. 本部分内 §N / PN / IN 编号沿用原文；文中「本计划 / 本移植」指本部分；
 >    对 `MY_OBJECT_LOGIC_PLAN.md` 的引用今后即指本文件第一部分。
 > 5. 原 `ISO_ATOMIZE_PORT_PLAN.md` 已成存根，仅防断链。
+
+## 第二部分评审补丁（2026-08-08，三路 × 两轮评审产出；本节压过下文正文的冲突处）
+
+1. **P8 改判（W9 连带）**：P8 的警告"不要给今天不带检查的七站点加 chk"被用户的融合决定
+   推翻——`{strict=true}` 站点有意获得完全性检查（新异常面 = §7.4-2,验收 §8-8）。
+   P8 前半段（chk_term 与 :3509 检查等价、`drop_judgment` 死代码分析）不受影响。
+2. **I4 落点更新**：phi 的四个非 iso 导出（`atomize_conv`/`atomize`/`atomize_term` 带
+   chk;`rulify` 裸别名——评审纠偏:它不带 chk）"都搬"的落点 = 第一部分 W9 的
+   `{strict}` 参数化门面,不再是独立的搬运件;**P8 后半句改判**:`proof.ML:3509` 的包装
+   不"统一掉",而是内部改调 `atomize_term {strict=true}`、catch `TERM` 翻译 `OPR_FAIL`
+   （与 P9 一致）。**phi 的 9 处非 iso 调用点**（此前任何清单都没数进来,评审 C1）:
+   `PLPR.thy:945`、`PLPR_Syntax0.ML:90`、`reasoners.ML:500`/`:519`、
+   `extracting_pure_facts.ML:62`、`reasoners.ML:603`、`deriver_framework.ML:1407`、
+   `typeclass.ML:112`、`typeclass.ML:132`——D48 时按第一部分 §4A.1.1 的表改指;
+   行为 = 今天的 chk **加上 βη 修复**（叠加无冲突已实测,这个改良随融合决定一并签署）。
+3. **D48 的 `Phi_Conv` 累积链处置**（评审 C1 精化）:删 `iso_atomize.ML` 环后,
+   后续环节的 `include PHI_CONV`/`open Phi_Conv` 自动适应,无需结构性改动;
+   `helper_conv.ML:50`/`:62` 是**非限定名**调用,改写成限定的 `My_Object_Logic.iso_*`
+   （删环后旧名解析失败,编译错精确指到这两行）;**不做** re-export 垫片环
+   （违反术语一致性与 W8）;**绝不能** `structure Phi_Conv = My_Object_Logic`
+   （`Phi_Conv` 里还有几十个其它 conv 助手）。
+4. **回归矩阵新增三格（F4,落地前置——W10 同批后是全计划前置）**：FUN 延迟
+   pat-completeness 块（`proof.ML:5904-5920`,注释明文依赖"iso 在 `&&&` 头上是
+   all_conv",移植会打破;`530281e` 进树,**晚于本部分全部原型证据**——archive 的
+   lab3/base 上 grep 零命中;§8.4/§10.3 从未测过 `#(A &&& B)` 合成形状,三个可测前提
+   已实测/读码确认）、FUN 交互式终止（`:5498-5512`）、INTERPRET（`:4967-4992`）。
+   落地时改写 `:5910` 那条将变假的注释;`init_goal` 消费者现状共 6 处
+   （`proof.ML:2204/3432/3603/4992/5502/5920`）。
+5. **Minilang.thy 装载顺序死结的解**（F5,评审实测属性时机后定稿）:
+   **定义区（≤:44）→ `my_object_logic.ML`（:51,ML 内 `Theory.setup` 注册两个 iso
+   属性）→ 六条 iso 规则 lemma → 扩充后的 `hide_const`（从 :49 移到规则块之后）**。
+   下文 §4.1 的"紧接 TAG/GOAL/PROTECT 之后、aux_thms.ML 之前"与"新增
+   `ML_file ‹./library/iso_atomize.ML›`"两处按此作废;属性注册后同 theory 紧邻命令
+   立即可用（真函子实例实测,含 declare/lemma 头挂属性/动态事实名/del）。
+6. **`Minilang.unicode.thy` 是逐字维护的镜像**（F6,commit `31bbef3` 为证）:
+   本计划对 `Minilang.thy` 的全部改动须同步镜像,落地步骤含此项。
+7. **§0 末段"`iso_atomize.ML` 的 Named_Thms 外壳"字样过时**（评审 C8）:容器已定
+   `iNet_Thm_Collection`（P25 甲）,且不再有独立 iso_atomize.ML 文件;照抄原型外壳
+   即走错容器。archive 使用告诫见 `Test/isoport_archive/README.md`。
+8. **行号漂移**:下文正文的 `proof.ML` 行号快照多处已漂（:1090→:1130、:2906→:2890、
+   :3508→:3509、:578/:664→:580/:666、:3482-3488→:3466 等,评审逐处核过、分类无误）;
+   实施时一律以函数名+代码形状重锚,勿信快照。
 
 # 把 phi-system 的 iso-atomize/rulify 机制移植给 Minilang —— 实施计划
 
