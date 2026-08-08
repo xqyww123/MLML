@@ -16,11 +16,13 @@
 > | 键 | **键函数是模型的一部分**（"这张网回答什么问题"），单键 `'T -> term`；thm 没有天然唯一键，`full_prop_of`（Named_Thms 语义）与左式（重写规则语义）都是正当实例 |
 >
 > **首个消费者**：iso 层规则集 `iso_atomize_rules` / `iso_rulify_rules`
-> （`ISO_ATOMIZE_PORT_PLAN.md` I9 / P25）。
+> （`MY_OBJECT_LOGIC_PLAN.md` 第二部分 I9 / P25——原 `ISO_ATOMIZE_PORT_PLAN.md`
+> 已于 2026-08-08 并入该文件，iso 系列函数并入 `My_Object_Logic` structure；
+> 本文其余处引 "ISO_ATOMIZE_PORT_PLAN.md" 者一律到那边找同号）。
 >
 > **来历**：本文内容自 `MY_OBJECT_LOGIC_RULE_TABLE_PLAN.md` 移入。原为 `My_Object_Logic`
-> 的 Q2 子计划；母计划一度作废、**2026-08-07 深夜重新启用**（见其文件头），成为本通用件
-> 继 iso 层之后的第二个消费者（atomize / rulify 两个实例）。通用机制的设计与探针与消费者
+> 的 Q2 子计划；母计划几经反转后**定稿为包装方案（2026-08-08 凌晨）——不再自建规则表，
+> 不再是本通用件的消费者**。通用件的消费者现为 iso 层一家；通用机制的设计与探针与消费者
 > 无关，全部有效。
 > **§11 探针档案里出现的 `Rule_Table` / `probe_atomize` / `My_Atomize` 等是探针当时的临时名**，
 > 机制与今名相同，档案原文不改。凡正文提 `[atomize]` / `[rulify]` 遮蔽、seed 清单者，
@@ -47,8 +49,8 @@ Isabelle/ML 的函子应用。**
 属性注册：通用件**始终提供** `setup`（照 `Named_Thms` 注册属性 + 动态事实名）；
 **调不调 `setup` 是各消费者自己的选择**。首个消费者（iso 层）必须调——phi 既有 15 处
 `[iso_atomize_rules, …]` 声明依赖属性名。（旧 §5 的"注不注册"之争是母计划的
-`[atomize]` 遮蔽语境；母计划 2026-08-07 深夜重新启用后，该问题已由用户定为**注册**，且属性
-随后改名 `my_atomize` / `my_rulify`（不再遮蔽）——都是消费者侧的选择，不影响通用件本身。）
+`[atomize]` 遮蔽语境；母计划 2026-08-08 凌晨定稿为包装方案后**整个问题连同消费者资格一并
+消失**——本通用件的消费者只剩 iso 层，其属性注册已定（15 处声明依赖属性名，必须调 `setup`）。）
 
 ---
 
@@ -591,7 +593,9 @@ phi 的规则**全部是元等式**【只读推断，逐条读 `PLPR.thy:485-506
 **全栈里 `Named_Thms(` 的用点一共只有两处**，都在 `iso_atomize.ML`
 （`Isa-Mini` / `auto_sledgehammer` / `Semantic_Embedding` / `Isabelle_RPC` /
 `Performant_Isabelle_ML` / `Automation_Base` 全部为零）。【实测：`command grep -rn "Named_Thms("`】
-所以这个通用件将来的实例一共四个：phi 两个 + `My_Object_Logic` 两个。
+~~所以这个通用件将来的实例一共四个：phi 两个 + `My_Object_Logic` 两个。~~
+（2026-08-08 订正：`My_Object_Logic` 定稿为包装方案、不再实例化本通用件；实例就是
+iso 的两个。）
 
 ### 6.3 加载顺序：**phi-system 目前没有 import `Performant_Isabelle_ML`** —— 已核实
 
@@ -774,7 +778,7 @@ datatype 'a net = Leaf of 'a list
 
 | # | 事项 | 我的建议（仅供参考，不是结论） |
 |---|---|---|
-| ~~U1~~ | **属性注不注册（§5 的读法一 vs 读法二）** | **已消解（转投 iso 后）**：`iso_atomize_rules` / `iso_rulify_rules` 不遮蔽任何 Pure 内建，phi 15 处声明依赖属性名，**必须注册**（读法一）。<br>**深夜补记**：母计划重新启用，M2「遮蔽」恢复；结论不变——通用件始终提供 `setup`、调不调归消费者。`My_Object_Logic` 实例注不注册是母计划 Q2 的残留，已由用户定为**注册**（2026-08-07 深夜；属性随后改名 `my_atomize` / `my_rulify`，不遮蔽），与本通用件无关。 |
+| ~~U1~~ | **属性注不注册（§5 的读法一 vs 读法二）** | **已消解（转投 iso 后）**：`iso_atomize_rules` / `iso_rulify_rules` 不遮蔽任何 Pure 内建，phi 15 处声明依赖属性名，**必须注册**（读法一）。<br>（08-07 深夜母计划自建重启期间曾连带出 `my_atomize`/`my_rulify` 实例的注册决定；08-08 凌晨母计划定稿为包装方案，该消费者连同其属性一并消失，本行只剩 iso 结论。） |
 | ~~U2~~ | **`content` 要不要 `Thm.transfer''`**（§7-D3） | **已定 → 照抄 `Named_Thms`，做 transfer**（用户 2026-08-07 晚）。只影响 `content`/`get` 出口；交给 `Merely_Rewrite` 的网不需预 transfer（引擎每候选自带 `Thm.transfer'`，`:329`/`:477`） |
 | ~~U3~~ | **函子放通用件还是消费者私有**（§6） | **已定 → 通用件**：`contrib/Performant_Isabelle_ML/library/inet_collection.ML`（用户 2026-08-07 晚，随文件路径一并定稿；后随 rev 2 改名）。 |
 | ~~U4~~ | **「同键不得重叠」写成硬约束还是只记状态**（§3.2） | **已定 → 只记状态**（用户 2026-08-07 晚）：签名注释写明「同键时后声明的排前；取首个匹配的消费者，后声明的赢」。通用集合**本就必须允许同键多条**（`Named_Thms` 从不禁止），硬约束对通用件是错的；要不要禁重叠是各消费者的事。iso 六条规则头常量各异，今天无同键 |
