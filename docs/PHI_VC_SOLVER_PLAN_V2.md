@@ -2146,13 +2146,39 @@ cost 行的 writeln 通道原样保留，等 fork 侧对发现 3 的裁决。
   `error (组装 exn)` 中止命令，异步路径 `Future.error_message pos (组装 exn)`。
   cast 的 D58 出处是在该函数外再包一层。这同时**追认**阶段 2 的 async 活线。
 - **三号 PC-2**＝作者裁决 **(a)**：`agent_server.ML` 的 `[AoA]` 成本行 `writeln`→`tracing`。
-- **四号 MERGE-CAT**＝短期文档注记与长期帧级三方合并**待作者答复**（A3）。
+  **已由阶段 3 会话落地**（该行现为 `tracing` 并注明出处）。
+- **四号 MERGE-CAT**＝短期只在 D63 行补档案注记（作者裁决 README 不加，因长期方案将
+  很快实现）；**长期帧级三方合并已立项**——算法与实现载体待定项见 D63 行末补注。
 - **盲区处置**：④ Isa-REPL 消费面已亲核闭合（`sledgehammer.ML:67` 是 REPL 自有同名私函数，
   纯撞名；`REPL.ML:952/:956` 用上游、签名已跟进）；①③⑤ 挂阶段 3/5 专项；
   ② **作者裁决（2026-08-09）**：5 号（attack_obligations）与 6 号（cast）从"纯经典、
   不碰缓存"变为"搜索并录 store"**是想要的行为**，作为事实记录；两点现传
   `proof_id = NONE`（键从目标自算）——**记为后续事项：以后给它们确定的 proof id**。
-- 实验在途：异步失败"报在哪里"的 PIDE 与批处理两组实验（agent 进行中，结果回来补记）。
+- **失败面钩子的定稿设计与实施（作者 2026-08-09 全批，当晚实施）**：
+  ① 引擎 options 加 `failure_msg : (exn -> string) option`（纯呈现钩子，不碰任何
+  控制流；SML 记录无默认值 ⇒ 全部 8 处构造点补字段，6 处外部点传 `NONE` 零行为变化）；
+  ② `async_prove'` 新 prime 变体带钩子，`async_prove = async_prove' NONE` 保旧签名
+  （`agent_server.ML:1781` 直调不受扰）；③ fork 体报错文本经钩子（交互 output panel）；
+  ④ **同步口装在 `auto`/`all_auto` 层**（作者定）：`raise_Error…=true` 且钩子在场时
+  `guard_errors` 的通用 `Auto_Fail` 臂改用钩子文本，`Internal_Failure` 臂原样，
+  `=false` 永不转换（ORELSE 观察契约压过呈现）；⑤ **期票分支变换**（作者批）：
+  有钩子时定理那一支失败改抛 `ERROR (钩子文本 ^ Position.here pos)`——批构建收尾
+  打印变为人话＋发起命令位置；膜 join 的文本那一支逐字节不动。实现注记：
+  `Exn_Properties.update` 不导出且改不了行号，位置改走 `Position.here` 排进文本
+  （`ERROR` 渲染无 "raised (line…)" 噪音，实测干净）。
+  phi 侧：`hammer_obligation_solver(')` 增 `(string -> string)` 包装参，组装函数
+  在战术槽内构造（`Agent_Give_Up`→banner+cost、`Auto_Fail`→"Fail to solve…"+目标项、
+  其他→原样）；`Phi_Envir.solve_obligation' wrap` 新增，`solve_obligation = ' I`；
+  cast 点改 `solve_obligation'` 传出处包装、原 handle 块整体删除（D58 出处随包装
+  抵达同步/异步/批三面）。
+- **实验记录（2026-08-09 夜，全部实测）**：① 批构建里孤儿期票（不注册进 theory）
+  无声消失、构建绿、消息被默认 verbosity 丢弃；② 注册进 theory 的坏期票在收尾
+  join 时炸、构建失败——修正前打印裸异常＋库内 raise 行号，**修正后打印钩子文本＋
+  `(line 6 of "….thy")`（发起命令行）**；③ PIDE 下：不调 `Future.error_message`
+  的裸 fork 失败**彻底无声**（3 分钟观察窗）；引擎 fork 失败的错误消息**准确挂载
+  在发起命令的 output panel**、延迟到达（20s–3min）、文本出自钩子（前缀实证）。
+  六个 D49 调用点异步失败的呈现由此统一：发起命令红标（人话）＋批构建人话定位；
+  各点自有 handler 仅同步退化时上岗，此为设计本意（与旧引擎同构）。
 
 **阶段 3 实施记录（2026-08-09 晚，`Isa-Mini` 一条提交，ML+Python 同批）**：
 
