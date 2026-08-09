@@ -352,13 +352,13 @@ hammer_or_AoA {fact_override, proof_id, hammer_timeout, async, read_store, write
 
 **坏条目的清理规则（作者定）**：**凡是"读到了、重放失败了"，一律清**（墓碑**落盘持久**，
 `cache_file.ML:587` 的 `append_record (encode_tombstone id)`；下游用户的机器上重放失败同样
-会清掉随包分发的那条记录，**这是设计预期**——重放不了的条目对那台机器就是无效的）——⓪-L2、⓪-L1 与
+会清掉随包分发的那条记录，**这是设计预期**（作者 2026-08-09 裁决）——重放不了的条目对那台机器就是无效的）——⓪-L2、⓪-L1 与
 `auto` / `all_auto` 的缓存层同一规则。清理动作在 L2 侧是 `invalidate_proof_cache`（打墓碑），
 在 L1 侧是**新增的作废 RPC**（`DELETE` 掉那一行）。两者都是 **store 的自动维护，
 不受 `read_store` / `write_store` 管辖**。安全性由结构保证：它们只在**命中之后**才可能触发，
 而命中必须先经过 `read_store` ⇒ `read_store = false` 时永远不会清。
-L1 的作废 RPC 与查询 RPC 一样，**失败必须静静吞掉**（下游用户可能根本没有 Python），
-不得让整条义务崩掉。
+L1 的作废 RPC 与查询 RPC 一样，**失败必须静静吞掉**（D59 作者原话；下游用户可能
+根本没有 Python），不得让整条义务崩掉。
 
 #### 三层的接口签名
 
@@ -2219,8 +2219,9 @@ cast 组装前 ERROR 失去 D58 溯源〔低/活，钩子批〕）；
 ④ **D61 计划文本订正**（考古已证实：作者 08-08 05:00 原话即"复用既有重放，只加计时"，
 现行"记在节点上"措辞源于当日一个建立在错误前提上的反提案；D61 行与 §2.8 应改写为
 "对 toplevel.py 既有装配验证重放逐 op 求和"，阶段 3 记录里的"偏差①"随之撤销）；
-⑤ 其余待追认/待裁决遗留（split 方法命名、gate_error 路径复刻两处偏差；split 独自解光
-目标的既有角落是否立项；Test_Preprocess.thy 断言漂移基线）。
+⑤ 其余待追认/待裁决遗留（split 方法命名；split 独自解光目标的既有角落是否立项；
+Test_Preprocess.thy 断言漂移基线。gate_error 路径复刻已了结——
+`Phi_Proof_Store.store_path` 进签名，见〔已了结〕条）。
 **本会话**：继续执行计划——消费在途的 7 处失败鉴定 agent（在 isabelle-mcp 上全文重评
 `Phi_Type.thy` 中，结果回本会话；期间 MCP 服务器曾断连重连，回来时先核实其状态），
 然后进入**阶段 3a**（`FactInTime` 把证明记进构造子，D37，见 §7 阶段 3a——
@@ -2319,8 +2320,9 @@ blob→写回→重放端到端必须真正跑一遍（与阶段 3 的 REPL 依�
      「向下传开关值」矛盾，判示意非规范（它还引用了作用域外的 `override`）。**待作者追认**。
    - D58 的 cast 包裹在 `handle ERROR` 外**加了 `Automation_Fail` 臂**（新接线下
      `solve_obligation` 的失败回调抛 `Automation_Fail`，只接 ERROR 会让它裸穿）。
-   - D51 handler 里 `agent_cost` 走 `info_print` 的格式暂为一行
-     `AoA cost: $… tool_calls=…`（该 handler 阶段 5 前不可达）。**格式待作者定**。
+   - D51 handler 里 `agent_cost` 走 `info_print`，内容 = 九字段共享 cost 行
+     `MiniLang_Agent_AoA.string_of_cost`（作者 2026-08-10 定稿；`Isa-Mini 402a2e1` /
+     `phi-system 385d20c1`；该 handler 阶段 5 前不可达）。
 2. `hammer_obligation_solver'` 的失败回调形参照 `auto_obligation_solver'` 成例；
    `solve_obligation` 传入的回调抛 `Automation_Fail`（文案沿用原
    "Fail to solve the proof obligation automatically" + 首前提）。
@@ -3133,12 +3135,21 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 ### 阶段 5 —— 换接与全栈验证
 
 1. `hammer_obligation_solver` 的战术位从独立版引擎换成 `hammer_or_AoA_tac`
-   （阶段 2 预留的位置；D51 分派随之生效）。`solve_obligation` 传
+   （阶段 2 预留的位置）。D51 修订版的组装函数与 `failure_msg` 钩子接线已随
+   失败文案钩子实施完毕（§2.2 骨架、阶段 4 第 3 步）：换接**不新建任何分派**，
+   唯一的行为增量是 `Agent_Give_Up` 臂自此可达。`solve_obligation'` 的 `wrap`
+   包装参（cast 点传出处行）保持既有接线不动；向 AoA 侧传
    `{async = \<phi>async_proof 开关值, read_store = NONE, write_store = NONE}`
    （写回走配置，现默认 true，零行为变化）。
+   换接完成后**立即**把 `Phi_Type.thy:5132` 的 `certified sorry`（Isabelle2024
+   移植遗留）替换为 `by hammer_or_aoa`，实测该义务真能解出（作者 2026-08-09
+   裁决"等我们整个计划执行完后"，2026-08-10 修订：提前至本阶段换接后立即做）。
+   替换成功后 `Phi_System` 及以上会话的批构建恢复可用——本阶段第 3 步的全栈重建、
+   5c 的批构建项与第 6 步的建满验收都以此为前提。
 2. **D51 验证**：五类退出原因各人为触发一次（含 ML 侧第 4 个 `technical_failure` 生产者
    ——合并段的 give_up 分支），确认 banner 正确、`Agent_Give_Up` 不逃逸、phi 侧同步态的
-   `agent_cost` 走 `info_print`、method 层与异步态走普通 `tracing`；确认三个消费点读的是
+   `agent_cost` 走 `info_print`（内容 = 九字段共享 cost 行 `string_of_cost`，
+   作者 2026-08-10 定稿）、method 层与异步态走普通 `tracing`；确认三个消费点读的是
    **同一张下沉后的 `banner_of`**；确认 `QuitInfo` 的 `Restart`/`Refresh` 确实到不了
    `Agent_Give_Up`。
 3. 全栈重建；jEdit 里手工制造一条 sledgehammer 打不动的义务，确认 AoA 被叫起来、
@@ -3164,10 +3175,11 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
    ② `Phi_Examples` 完整双跑（首跑重搜建库、二跑回放提速）——与本阶段第 6 步
    （目标 4 端到端验收）的"建满"步骤合并执行，不重复跑；
    ③ D38 专项（`Quicksort.thy` 里 `ML_val` 打印 `sledgehammer_params` 得
-   `"try0 = false"`）；④ D45 按键计数（每条新证义务至多一条记录）；
+   `"try0 = false"`；作者 2026-08-10 追认收录）；④ D45 按键计数（每条新证义务至多一条记录）；
    ⑤ ㊀ 关块行为变化专项（快攻打不动的义务走完整求解路径）；
    ⑥ D63 双克隆合并实测（届时帧级三方合并驱动若已落地则一并验它）。
-6. **目标 4 的端到端验收**——§1 第 4 条的唯一验收点。前面各阶段的重放验证都是单点探针
+6. **目标 4 的端到端验收**（验收协议经作者 2026-08-10 批准）——§1 第 4 条的唯一
+   验收点。前面各阶段的重放验证都是单点探针
    （一条义务、同机同树、闸门靠环境变量开关），验不到「整个包在下游用户手上能不能 build」。
    - **建满**：闸门放行（交互编辑，或批处理构建下设 `AOA_ALLOW_NONINTERACTIVE=yes`），
      全栈跑到 `Phi_Examples`，跑到**零 §6.1 报错**为止——这一步就是目标 4 的前半句；
@@ -3182,11 +3194,7 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 
 ### 阶段 6 —— 清理与文案批次
 
-0. **`Phi_Type.thy:5132` 的 `certified sorry`（Isabelle2024 移植遗留）替换为
-   `by hammer_or_aoa`**（作者 2026-08-09 裁决："等我们整个计划执行完后"——method
-   阶段 4 建成、阶段 5 接入引擎后，本阶段落地替换并实测该义务真能解出）。
-   替换成功后 `Phi_System` 及以上会话的批构建恢复可用，补跑阶段 2 遗留的
-   批构建验证项。
+（`Phi_Type.thy:5132` 的 `sorry` 替换已提前至阶段 5 第 1 步，作者 2026-08-10 裁决。）
 
 1. phi-system `.gitignore`（**八处现有规则里唯一留到本阶段的一处**——另外七处连同
    PutnamBench 那处新增，共八处，已在阶段 0 第 13 步改完）：删 `*.phi-cache` 与 `*.proof-cache`；**不要**加 `*.proof-store`（D13），
@@ -3397,7 +3405,16 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 
 ## 9. 仍待作者拍板
 
-**零项。**
+1. `FACT_PRF` 的线上 tag（阶段 3a；tag 分派表现用到 19，20 只是看上去空闲，
+   不得自行选定）。
+2. REPLAY 命中记录的重放预算（阶段 3a Q3）。
+3. §2.5「`async_prove` 只有这一道守卫」句与第三道 fork 守卫
+   （`Proofterm.any_proofs_enabled`，§7 阶段 0 后记 ⑥）的措辞归一。
+4. §2.5「不放对象逻辑检查（作者定）」标签的出处待查证。
+5. §2.3 坏条目清理规则的「⓪-L2、⓪-L1 与 `auto` / `all_auto` 缓存层同一规则」
+   泛化句待追认（作者原话只覆盖 ⓪ 对称打墓碑与 L1 作废两处）。
+6. `standard_time` 除数的 `Real.max (Timeout.scale (), 0.001)` 箝位在 §2.8 规范中的
+   表述（与 D60「不设绝对下限」——那说的是落库时间值，不是除数——的措辞区分）。
 
 **阶段 6 的用户可见文案**已全部定稿，清单见 §7 阶段 6 第 4 项。
 
