@@ -149,10 +149,10 @@ fun learning_plugin (driver, log_dir, budget : MiniLang_Agent.budget, send, recv
                (* Cache is bypassed for BOTH read and write on the learning path
                   (C8): a cache hit would replace the proof before the agent ever
                   runs (zero learning), and a store would pollute the shared
-                  production cache. *)
+                  production cache.  The bypass is structural — this path calls
+                  raw_AoA directly, and all store/cache logic lives one layer up
+                  in run_AoA, which the learning path never uses. *)
                val ctxt = Toplevel.context_of state
-                     |> Config.put AoA_read_proof_store false
-                     |> Config.put AoA_write_proof_store false
                      |> Config.put AoA_log_dir log_dir
                val sequent = #goal (Proof.raw_goal (Toplevel.proof_of state))
                val iid = "learn_" ^ string_of_int (serial ())
@@ -167,22 +167,30 @@ fun learning_plugin (driver, log_dir, budget : MiniLang_Agent.budget, send, recv
                (* Hard backstop over AoA's own cooperative budget: kill a wedged
                   goal 300s past its budget so it cannot wedge the whole replay. *)
                val hard = Time.fromSeconds (#timeout_seconds budget + 300)
-               val task = ("learning", packString isar)
+               val task = Learning isar
                (* `outcome` classifies why the AoA run ended so the client can decide
                   resume policy per goal (see the protocol doc at the top). A plain
-                  return means the agent ran to completion ("finished"); the two catch
+                  return means the agent ran to completion ("finished"); the catch
                   clauses split the failures the client treats differently — a timeout
-                  (agent wedged; counts toward give-up) vs. an RPC-host outage ("infra";
-                  the agent never ran, so retry rather than give up). The RPC layer
-                  raises a plain ERROR (no dedicated exception), so infra is matched on
-                  its message text. *)
+                  (agent wedged; counts toward give-up) vs. an infrastructure outage
+                  ("infra"; the agent did no work, so retry rather than give up).
+                  raw_AoA signals give-up via Agent_Give_Up, whose reason
+                  "resource_unavailable" is its infrastructure case; the RPC layer
+                  below it raises a plain ERROR (no dedicated exception), so infra
+                  is additionally matched on the message text. *)
                val outcome = \<^try>\<open>
                      Timeout.apply hard (fn () =>
-                        (AoA_RPC (driver, (cfg, budget), iid) task (ctxt, sequent); "finished")) ()
+                        (raw_AoA {driver = driver, minilang_cfg = cfg, budget = budget,
+                                  invocation_id = iid, task = task} (ctxt, sequent);
+                         "finished")) ()
                    catch Timeout.TIMEOUT _ =>
                            (send (fn cout => doPack (packPair (packInt, packList packString))
                                     (2, [pos_str pos ^ " : AoA timed out (hard backstop)"]) cout);
                             "timeout")
+                       | Agent_Give_Up (reason, detail, _) =>
+                           (send (fn cout => doPack (packPair (packInt, packList packString))
+                                    (2, [pos_str pos ^ " : " ^ banner_of reason ^ "\n" ^ detail]) cout);
+                            if reason = "resource_unavailable" then "infra" else "error")
                        | e =>
                            let val msg = Runtime.exn_message e |> REPL.trim_makrup
                             in send (fn cout => doPack (packPair (packInt, packList packString))
