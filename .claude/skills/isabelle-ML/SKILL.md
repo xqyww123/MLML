@@ -43,6 +43,12 @@ Proof state machine and proof construction:
 - variable.ML - Variable naming management and name conflict resolution
 - facts.ML - Facts storage and visibility management
 
+### Pure/PIDE/ - Document Model (avoid)
+Things under Pure/PIDE/ are generally not meant for ordinary development — avoid them where you can. (Pure data modules like markup.ML / xml.ML are the exception.)
+
+### Tracing limit under PIDE frontends
+`tracing` output is counted per command against the option `editor_tracing_messages` (default 1000); past the limit PIDE prints "Tracing paused." and BLOCKS the emitting thread on a dialog answer (`Pure/System/isabelle_process.ML`). jEdit can answer it; a headless frontend (e.g. a language server) hangs forever. Setting `editor_tracing_messages = 0` disables the limiter entirely — put the line in `~/.isabelle/<dist>/etc/preferences`, or pass `-o editor_tracing_messages=0` at frontend launch. Batch `isabelle build` already forces 0.
+
 ### Pure/Isar/ - Theory and Context
 Theory infrastructure and command processing:
 - local_theory.ML - Local theory targets

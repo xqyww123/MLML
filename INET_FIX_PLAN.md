@@ -254,6 +254,34 @@ local structure iNet_Covers_NET : NET = iNet in end;
 
 ## §6 `Test/Test_iNet.thy` 的处置
 
+### §6.0 已落地（2026-08-07）
+
+`signature INET` 已加进 `improved_net.ML`：`NET` 的规格逐条抄一遍，`key` 写成具体 datatype。
+`structure iNet : INET`。文件末尾加了编译期护栏
+
+> **`norm` 没有导出**（用户决定）。它曾短暂加进 `INET`，随即撤掉——树内零使用者（三个目录
+> grep 全无命中，只有 `/var/tmp` 的测试脚手架在用），而 `NET` 里也没有它，撤掉不影响护栏。
+> **因此 `INET` 与 `NET` 的唯一差别只剩 `key` 变成具体 datatype 这一处。**
+
+```sml
+local structure iNet_Covers_NET : NET = iNet in end;
+```
+
+**护栏的活性已验证**：在副本上从 `INET` 删掉一个成员，构建立刻报
+`Structure does not match signature.`（`improved_net.ML:371`）。
+
+**`Test/Test_iNet.thy` 第一次跑通了。** 它此前从未在任何构建里执行过（不在 `ROOT` 里，而且
+`open iNet` 之后直接用 `CombK` 等构造子，在 `key` 抽象时根本编译不过）。`INET` 把构造子暴露
+出来之后，**测试文件一个字都不用改**。跑法（不进 `ROOT`，见 §6.3）：
+
+```
+session INET_TEST = HOL +
+  directories "Test"
+  theories Test_iNet
+```
+
+绿即通过——`assert_true`（`:12`）在失败时 `error`。
+
 ### §6.1 构造子可用，原有断言不动
 
 `INET` 把 `key` 变成具体 datatype 之后，`iNet.CombK` 直接可用，`assert_eq_keys` 和那 5 个
@@ -381,10 +409,15 @@ schematic，于是断定"σ 抹不掉 front 里的 x"。**这个论证只在 bet
 
 **影响范围**：四个入口（`insert_term` / `delete_term` / `match_term` / `unify_term`）都先
 `norm`，而 `norm` 是完备的（实测 30 万项归一后残留 redex 为 0），所以判据在这些路径上只会看到
-beta-范式。破口只在**导出的裸 API** `insert eq (key_of_term t, x)`。仓库内唯一的裸 API 用户是
-`phi-system/.../reasoner.ML:424, :495`，用的是 `lookup ∘ key_of_term`（精确键查表），后果是
-缓存/重复检测漏一次，不是重写漏规则；而且这条错位在未修版本上同样存在，**不是本次引入的
-回归**。
+beta-范式。破口只在**导出的裸 API** `insert eq (key_of_term t, x)`。
+
+> **更正（2026-08-07）**：这里原先写着"仓库内唯一的裸 API 用户是
+> `phi-system/.../reasoner.ML:424, :495`"。**那两处用的是乙-net**（phi 自己那份
+> `imporved_net.ML`），与甲-net 无关。独立复核的结论是：**phi-system 全仓库根本不 import
+> `Performant_Isabelle_ML`**（grep 零命中），甲-net 的消费者只有 `merely_rewrite.ML`、
+> `Isa-Mini/Agent/agent_server.ML`、`Semantic_Embedding` 的两个文件，**其中没有任何裸 API
+> 用户**。所以这个破口目前**无人暴露**——但它仍然是导出面上的一个陷阱，见
+> `INET_FUSED_NORM_PLAN.md`。
 
 **因此必须做的两件文档工作**（不是代码工作）：
 

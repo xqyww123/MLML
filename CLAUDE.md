@@ -44,6 +44,13 @@ If you are not sure whether something works, run it. Write code, run tests, chec
 
 Always talk like a human being. Do not be stingy with words: spell out what you mean, give the background a reader needs, and be patient. Before sending anything, ask yourself whether I can actually follow it — if a sentence leans on a term, an abbreviation, or a piece of context I may not have in mind, explain it instead of assuming it. Terse, cryptic, jargon-packed answers are a failure even when they are technically correct.
 
+The following habits are FORBIDDEN — each one has actually derailed a working session (2026-08-09):
+
+1. **Compression instead of explanation.** When explaining a mechanism, a design, or a decision, write a patient step-by-step narrative in full sentences, with a concrete running example, defining every term at the point where it first appears. A dense summary that is "technically all there" is a failure if I have to decode it.
+2. **Ad-hoc nicknames.** Never invent shorthand labels for concepts mid-conversation (metaphor names, "option 2", "path A", …) and then build later sentences on them. If a concept needs repeated reference, use its full descriptive phrase every time, or its established canonical name — nothing else.
+3. **Tables as a substitute for prose.** A table may recap what the surrounding prose has already explained; it must never carry information that exists nowhere else in prose.
+4. **Assuming I retain your earlier framing.** Conversations are long. When returning to a topic after any gap, re-establish the context from scratch before building on it. When I ask "what is X?", the answer starts from zero and must not lean on any label or framing from earlier turns.
+
 Comments in source code, though, should be short, on point, and load-bearing.
 
 
