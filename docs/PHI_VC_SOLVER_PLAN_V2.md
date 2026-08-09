@@ -350,10 +350,12 @@ hammer_or_AoA {fact_override, proof_id, hammer_timeout, async, read_store, write
 同一原则在 `auto` / `all_auto` 那一层的落地形式是**缓存层与搜索层分开**——搜索单元
 `auto'i` 体内根本没有 store 概念，读与写都在 `auto` / `all_auto` 这一层、用同一把键（§2.4）。
 
-**坏条目的清理规则（作者定）**：**凡是"读到了、重放失败了"，一律清**（墓碑**落盘持久**，
+**坏条目的清理规则**：**凡是"读到了、重放失败了"，一律清**（墓碑**落盘持久**，
 `cache_file.ML:587` 的 `append_record (encode_tombstone id)`；下游用户的机器上重放失败同样
 会清掉随包分发的那条记录，**这是设计预期**（作者 2026-08-09 裁决）——重放不了的条目对那台机器就是无效的）——⓪-L2、⓪-L1 与
-`auto` / `all_auto` 的缓存层同一规则。清理动作在 L2 侧是 `invalidate_proof_cache`（打墓碑），
+`auto` / `all_auto` 的缓存层同一规则（⓪ 两级对称打墓碑与 L1 作废是作者定；
+`auto` / `all_auto` 缓存层的清理是引擎既有行为——`sledgehammer_solver.ML:1795/:1881`
+重放失败即 `invalidate_proof_cache`——同一形状）。清理动作在 L2 侧是 `invalidate_proof_cache`（打墓碑），
 在 L1 侧是**新增的作废 RPC**（`DELETE` 掉那一行）。两者都是 **store 的自动维护，
 不受 `read_store` / `write_store` 管辖**。安全性由结构保证：它们只在**命中之后**才可能触发，
 而命中必须先经过 `read_store` ⇒ `read_store = false` 时永远不会清。
@@ -796,10 +798,11 @@ val async_prove : bool                               (*async*)
 `hammer_or_AoA` / AoA 一线必须是 `All_At_Once`：AoA 会在 fork 体内改变子目标数量，
 `Each_Goal` 结构性不可用；只有 AoA 能一次证掉 n 个子目标。
 
-#### schematic 守卫
+#### 两道守卫
 
-`async_prove` **只有这一道守卫**，因为它是**内核约束**：`Goal.future_result` 要求承诺命题
-不含 schematic 变量，否则内核直接拒绝。**逐个 `G_i`** 检查：
+`async_prove` 的守卫**只有两道，都是内核约束**。第一道是 **schematic 守卫**：
+`Goal.future_result` 要求承诺命题不含 schematic 变量，否则内核直接拒绝。
+**逐个 `G_i`** 检查：
 
 - **必须用 `Term.maxidx_term`，绝不能用 `Thm.maxidx_of_cterm`**——`Thm.cprem_of` 把整条
   sequent 的 maxidx 原样抄进每个前提的 cterm，而 phi 的结论几乎必然含 schematic ⇒
@@ -809,7 +812,11 @@ val async_prove : bool                               (*async*)
 **不过 ⇒ 本次退回同步执行**，并报出是第几个子目标。beta 那一项由下面的正规化解决，
 不必检查。`Leading` 查首前提；`Each_Goal` 逐前提查、任一不过就把那条踢回同步。
 
-⚠️ **`async_prove` 里不放任何对象逻辑相关的检查**（作者定）：它住在 `Auto_Sledgehammer`
+第二道是 **proof term 守卫**：`Thm.future` 在 proof term 记录开启时拒绝承诺定理 ⇒
+fork 决策处检查 `Proofterm.any_proofs_enabled`（§7 阶段 0 后记 ⑥），不过同样退回
+同步执行并说明原因。两道守卫之外，`async_prove` 不做任何别的检查。
+
+⚠️ **`async_prove` 里不放任何对象逻辑相关的检查**：它住在 `Auto_Sledgehammer`
 （`= HOL + Performant_Isabelle_ML`），是**通用组合子**；`iso_atomize_conv` 之类是 Minilang
 的特化，既在下游、也不该钉进通用件。此前把"能否单独 `iso_atomize_conv`"写进本守卫是错的，
 **已删除**。
@@ -1032,6 +1039,9 @@ aoa_replay 方法 (ctxt, sequent):
 
 - **写入侧正规化**：一切落库时间 = `实测耗时 ÷ Timeout.scale ()`（标准机时间）。
   `timeout_scale` 是 Isabelle 官方选项（`etc/options:115`，默认 1.0，慢机设 >1）。
+  除数取 `Real.max (Timeout.scale (), 0.001)` 防零因子（`cache_file.ML:709`）——
+  箝的是**除数**，不是时间值；与 D60「不设绝对下限」不冲突，后者说的是读出侧
+  不给重放超时设绝对下限。
 - **读出侧零改动**：`tolerant_time t = Time.scale 1.5 t + 1s`（`cache_file.ML:667-668`）
   的结果作为**名义时间**交给 `Timeout.apply`，后者内部自乘本机因子——
   **严禁在读出侧显式再乘因子**（双重计入）。不设绝对下限、不加新缩放旋钮
@@ -3408,13 +3418,6 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 1. `FACT_PRF` 的线上 tag（阶段 3a；tag 分派表现用到 19，20 只是看上去空闲，
    不得自行选定）。
 2. REPLAY 命中记录的重放预算（阶段 3a Q3）。
-3. §2.5「`async_prove` 只有这一道守卫」句与第三道 fork 守卫
-   （`Proofterm.any_proofs_enabled`，§7 阶段 0 后记 ⑥）的措辞归一。
-4. §2.5「不放对象逻辑检查（作者定）」标签的出处待查证。
-5. §2.3 坏条目清理规则的「⓪-L2、⓪-L1 与 `auto` / `all_auto` 缓存层同一规则」
-   泛化句待追认（作者原话只覆盖 ⓪ 对称打墓碑与 L1 作废两处）。
-6. `standard_time` 除数的 `Real.max (Timeout.scale (), 0.001)` 箝位在 §2.8 规范中的
-   表述（与 D60「不设绝对下限」——那说的是落库时间值，不是除数——的措辞区分）。
 
 **阶段 6 的用户可见文案**已全部定稿，清单见 §7 阶段 6 第 4 项。
 
