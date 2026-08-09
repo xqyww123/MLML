@@ -1014,9 +1014,11 @@ aoa_replay 方法 (ctxt, sequent):
   的结果作为**名义时间**交给 `Timeout.apply`，后者内部自乘本机因子——
   **严禁在读出侧显式再乘因子**（双重计入）。不设绝对下限、不加新缩放旋钮
   （慢机用户的正道是配置 `timeout_scale`，文档写明——阶段 6 文案批次）。
-- **AoA 条目的耗时 = 精确版**：最终 op 流各操作在录制会话中的 ML 侧实测执行耗时之和
-  （`proof_opr` 逐 op 计时，排除 RPC 开销与死支）+ 入口预处理耗时（`prep_elapsed`），
-  再 ÷ 因子。**不做第二次执行**——op 流在 live 证明中已逐条真实执行过。
+- **AoA 条目的耗时 = 精确版**：复用**装配验证重放**（Python 落库校验流程中对最终 op 流
+  自 `$init` 的既有逐 op 重放）——`proof_opr` 逐 op 计时（只计 ML 执行，天然排除 RPC
+  开销；死支不在最终流里），对该次重放求和，+ 入口预处理耗时（`prep_elapsed`），
+  再 ÷ 因子。**不为计时新增任何执行**——装配验证重放本就是每条新证落库前的必经步骤，
+  且它恰好就是"重放这条证明"这件被预测的事本身：同一最终流、恰好一遍、按序。
   签名变更（作者批准）：
   1. `IsaMini.proof_opr` 的 `ret_schema`：`packPair (messages, flat_goal)` →
      `packTuple3 (messages, flat_goal, packInt (*elapsed_ms*))`；实现处
@@ -1178,7 +1180,7 @@ fun normalise exn =
 | **D38** | **`auto_sledgehammer_params`、`classical_prover_timeout` 两个 config 与 `auto_sledgehammer` 这个 method，phi-system 侧一律不注册，全盘用上游 `Auto_Sledgehammer` 的那份——绝不允许自己定义。** 同名 binding 不报错、后声明的赢短名且无 warning，`declare [[…]]` 会**一声不吭地**写进没人读的槽位。删掉 phi 侧的 `sledgehammer_solver.ML` 后三条同时消失。见 §5.13。 |
 | **D39** | **删除「`aoa_replay` 不能住在 import 了 `Semantic_Embedding` 的 theory 里」这条约束。** 它基于一个错误的观察——加载 SE **不会**启动 Python，host 是懒启动的，见 §5.7(7)。`aoa_replay` 就住在 `Minilang_AoA.thy`，**不新建 theory、不动 Isa-Mini 的结构**。 |
 | **D40** | **proof store 的垃圾回收不做。** 压实（`Theory.at_end` → `compact_cache`）已经处理「同 key 的旧版本」；「再也没人用的 key」没有回收机制（`cache_file.ML:611` 的 TODO 仍然成立）——**作者判断这不是问题，本次不考虑，也不作为后续议题记录。** |
-| **D41** | **`preprocess_split_tac` 的不确定性：录制时把它实际做的变换渲染成 proof tactic script 记进 blob（D30 二元组的第一分量），重放时直接执行那段脚本。** 不记 0/1/2 的分支编码——脚本是自描述的（与 D37 同思路：**存"做了什么"，不存"走了哪条分支"**）。依据见 §5.7(10)。**〔2026-08-08 增补〕**录制管道：脚本在 `raw_AoA` 预处理段渲染，经 reporter 消息交 Python，装配时放进 blob 第一分量（阶段 3）。**射程只有 split 段**——standard_tac 段与 合并段是确定性的，按 D64 重放时现场重跑，不录。 |
+| **D41** | **`preprocess_split_tac` 的不确定性：录制时把它实际做的变换渲染成 proof tactic script 记进 blob（D30 二元组的第一分量），重放时直接执行那段脚本。** 不记 0/1/2 的分支编码——脚本是自描述的（与 D37 同思路：**存"做了什么"，不存"走了哪条分支"**）。依据见 §5.7(10)。录制管道全程在 ML 侧：脚本在 `raw_AoA` 预处理段渲染、留作局部值；agent 跑完后 `raw_AoA` 用 D31 的 BytesIO packer 把（脚本, Python 随返回值交回的最终 op 流）打包成 blob（组装方与解码方见 §2.3「blob 永不外泄」）。**射程只有 split 段**——standard_tac 段与 合并段是确定性的，按 D64 重放时现场重跑，不录。 |
 | **D42** | **接受 `ground_code_eval` 这个 oracle 进 phi-system 的可信基。** 独立版六路并行的第一路 `ground` 由 `Thm.add_oracle` 注册，直接造出 `lhs ≡ rhs`、不产生证明项。落盘的证明文本会是 `"…, ground_eval"` 并随 D13 入 git。**一并接受的第二重后果**：`Debt_Axiom/kernel.ML:21` 的 discharge 检查只排除 `debt` 一个 oracle，所以经 `ground_eval` 证出的 certification 可以合法 discharge 一条 debt axiom（R23）。 |
 | **D43** | **AoA 的 L2 缓存机制保留**；〔2026-08-08 修订，12.3〕**`aoa:` 前缀废弃、一个键空间**——L2 = store 里的**无前缀哈希键条目**（键 = 预处理前原始目标的 `Hasher.goal`），值 = `(标准机时间, "aoa_replay \"<b64>\"")`，与 proof-id 条目同种值、同一台重放机；角色 = AoA 证明的存放处 + ⓪ 查找（`store_hit_replay`）的对象。〔2026-08-09 修订，L1 通用化〕**Python 侧不再解码 blob**：L1 存的是与 L2 同形的 `(std_time, 证明文本)`，AoA 的文本恰为 `aoa_replay "<b64>"` 时，其 blob **只由 ML 侧的 `aoa_replay` 方法解**——与「blob 永不外泄、编码格式只有组装方 `raw_AoA` 与解码方 `aoa_replay` 知道」逐字一致。原先那条「阶段 3 读端必须同步改，改靶 = L1 值格式与查询 RPC 线格式，`json.loads` → `msgpack.unpackb(base64.b64decode(...))`」**整条作废**（R24 随之作废）。〔历史层次：旧版「`aoa:` 独立键空间随 D29 取消」的三处说法先被第五轮的「一个 store、两类键」（proof-id 键「重放通道」+ `aoa:` 键 agent 侧缓存）取代，后者又被 12.3 的「一个键空间」取代——与 proof-id 条目同种值、同一台重放机〕 |
 | **D44** | **`migrate_legacy` 的调用点规则：凡是可能触及 store 文件的公开入口，进入前一律先调**，清单五个 = 三个读入口 `get_cache` / `force_reload` / `register_async_task` + 两个写入口 `update_cached_proof` / `invalidate_proof_cache`。**为什么两个写入口必须钉**：它们走 `get_cache_i`（在临界区内）而非 `get_cache`，然后直接 `append_record` → `ensure_new_format` 会在新路径上**凭空造出文件** → 一次性迁移被**永久跳过**。真实场景就是 AoA：读受 `AoA_read_proof_store` 管、写受 `AoA_write_proof_store` 管，**读关掉不影响写**。D25 原有的两条禁令（不进 `openning_caches` 临界区、不进 `append_record` 的 `Synchronized.change v` 体内）保持不变。 |
@@ -1914,7 +1916,7 @@ restricted to interactive editing.
 | **1a(ii)** | **已实施、已提交**（2026-08-09） | `auto_sledgehammer` `1b54aef`、`Isa-Mini` `3a1ae60`、`phi-system` `aa596dcc`。`NO_SIMP` 下沉到共同祖先 |
 | **1b** | **已实施、已提交**（2026-08-09） | `Isa-Mini` `4b1b92e`。`banner_of` 建成并导出，`by aoa` 五类失败全走它 |
 | **2** | **已实施、已提交**（2026-08-09，**验证部分未决**） | `phi-system` `74835138`。八步全落；PLPR/Phi_BI/PSF 批构建绿、Phi_Type PIDE 全文跑通（deriver 编译干净）；**未决：Phi_Type 9 处义务冷库重搜失败（见阶段 2 实施记录）+ R10 四文件 / Phi_Examples 双跑 / D45 计数 / ㊀ / D63 双克隆实测未做（被 `Phi_Type.thy:5132` 的 sorry 与 9 处失败的分诊挡着）** |
-| **3** | **已实施**（2026-08-09 晚；纯 ML 验证过，REPL 依赖项待作者配合） | `Isa-Mini` 一条提交：16 步全落、ML+Python 同批；`Minilang_AoA` / `Minilang_AoA_REPL` 构建绿；纯 ML 冒烟 13 项全过。**四个待追认偏差与未竟验证见阶段 3 实施记录** |
+| **3** | **已实施**（2026-08-09 晚，D41/D61 订正 2026-08-10 凌晨随后落地；纯 ML 验证过，REPL 依赖项待作者配合） | `Isa-Mini`：16 步全落、ML+Python 同批；blob 组装在 `raw_AoA`（D41）、耗时取自装配验证重放（D61）；`Minilang_AoA` / `Minilang_AoA_REPL` 构建绿；纯 ML 冒烟全过。**待追认偏差与未竟验证见阶段 3 实施记录** |
 | 3a / 4 / 5 / 6 | 未开始 | |
 
 **阶段 0 实施记录（与计划的差异，逐条）**：
@@ -2211,8 +2213,10 @@ failure_msg 钩子修复批（`auto_sledgehammer` `0901907..f6d08c4`、`phi-syst
 裁判；9 候选 → **5 确认 3 删除**（重复合并若干）。五条确认本会话已逐条到真仓库核验属实，
 中文汇报连同修复方案已交作者；修复归 fork 会话（见上方会话分工）。被删主力
 "首个 op 失败丢 split 脚本"系对手证明 initialize 的 SKIP 必先行而破（但该顺序未注明
-承重——分工③）。七条覆盖缺口备查，其中最要紧：PY-1 崩掉整条新证明管线，修复后
+承重——分工③）。七条覆盖缺口备查，其中最要紧：新证明管线的
 blob→写回→重放端到端必须真正跑一遍（与阶段 3 的 REPL 依赖验证四件合并执行）。
+**PY-1 的后续**：作者批准的 D41 订正（blob 组装移回 `raw_AoA`，ML 侧）删除了
+崩溃行所在的整条 Python 组装管线，该发现随之整体消除，无需单独修复。
 
 **阶段 3 实施记录（2026-08-09 晚，`Isa-Mini` 一条提交，ML+Python 同批）**：
 
@@ -2234,21 +2238,18 @@ blob→写回→重放端到端必须真正跑一遍（与阶段 3 的 REPL 依�
    （`:206-219` 语义解释跳过保留）、`proof_store.py` 新表结构
    （`proof_text`/`std_time_ms`）+ `invalidate` + 三个 RPC（过程名
    `IsaMini.ProofStore.lookup/store/invalidate`，**模块加载名 = `IsaMini.proof_store`**，
-   `load` 即 `importlib.import_module`）；blob = `base64.b64encode(msgpack.packb((script,
-   ops)))`；`proof_opr` ret tuple3 + ML 侧 `Timing.timing`；统计记录 tuple9→tuple10
-   （第 10 件 `assembled_isabelle_time` ms，不进 `agent_cost`）；成功必带 blob、缺失=
-   协议错误。旧 L1 SQLite 库已按冷启动授权删除（`~/.cache/IsaMini/aoa_proof_cache.db*`）。
-2. **四个待追认偏差**：
-   - **D61 落点**：`assembled_isabelle_time` 不是"记在节点上、装配时求和"——
-     `Minilang_Operation` 是 NamedTuple 挂不了属性、`assemble()` 每次新造对象；改为对
-     **装配验证重放**（`toplevel.py` 本就对最终流逐 op 重放的那一次）的 per-op `elapsed_ms`
-     求和。它恰好是"重放要花多久"的直接实测（同一最终流、恰一遍、按序），语义更准。
+   `load` 即 `importlib.import_module`）；blob 由 `raw_AoA` 成功分支在 ML 侧组装
+   （BytesIO packer 打包 `(split 脚本, 返回的 op 流)` + Scala 桥 Base64，第 16 步）——
+   agent 启动 RPC 返回表五件（op 流、终态、统计、reason、detail），不含 blob；
+   `proof_opr` ret tuple3 + ML 侧 `Timing.timing`；统计记录 tuple9→tuple10
+   （第 10 件 `assembled_isabelle_time` ms = 装配验证重放逐 op 求和，不进 `agent_cost`）。
+   旧 L1 SQLite 库已按冷启动授权删除（`~/.cache/IsaMini/aoa_proof_cache.db*`）。
+2. **待追认偏差**：
    - **split 脚本词汇**：新注册三个 method `aoa_split_auto` / `aoa_split_clarsimp` /
      `aoa_split_custom` = 三分支录制战术**逐字**注册（auto_sledgehammer 现成的
      `auto_split`/`clarsimp_split` 不同形：CHANGED_PROP / 只打首目标）；脚本 = 三者的组合
      文本（`""` / `aoa_split_auto` / `(aoa_split_clarsimp, aoa_split_custom)` /
      `aoa_split_custom`）；auto 分支产出与输入 `eq_thm_prop` 时渲染 `""`（精确性）。
-     脚本经新 reporter 消息 `SPLIT_SCRIPT`（tag 20）随首个 op 交 Python。
    - **`gate_error` 里 store 路径两行复刻**自 `cache_file.ML` 的 `store_path`（未导出，
      而本阶段 auto_sledgehammer 只读）——待定：阶段 5 顺路给它加导出后回收。
    - **PC-2 裁决 (a) 顺手折入**：`[AoA]` 成本行 `writeln`→`tracing`（该行在本阶段重写的
@@ -2820,8 +2821,8 @@ phi 那份按 D57 要等本计划落地之后才删，**并存窗口必然存在
    `raw_AoA` 与 `aoa_replay` 共用；整体包 `Timing.timing` 得 `prep_elapsed`，**`raw_AoA`
    把它与 Python 交回的 `assembled_isabelle_time` 相加，作为副产品 future 四元组的
    第三件（`Time.time`）交出**（§2.8 第 3 条；`assembled_isabelle_time` 不进 `agent_cost`）；
-   **split 段在 `raw_AoA` 侧渲染脚本**（D41 录制管道：
-   渲染 → reporter 消息 → Python 装配进 blob 第一分量），在 `aoa_replay` 侧以录制脚本
+   **split 段在 `raw_AoA` 侧渲染脚本**（D41：脚本留在 ML 侧，由 `raw_AoA` 打包进
+   blob 第一分量，见第 16 步），在 `aoa_replay` 侧以录制脚本
    替换（D64 边界；重放序 = standard_tac 段 → split 脚本 → 合并段）。
 5. **`aoa_replay` 方法**（§2.7 流程），住 `Minilang_AoA.thy`（D39）。
 6. **新建 `proof_store_AoA.ML`**（§2.1）：同名扩展；**由 `Minilang_AoA.thy` 加载，且必须
@@ -2901,23 +2902,22 @@ phi 那份按 D57 要等本计划落地之后才删，**并存窗口必然存在
     仍留着 `cache` 这一路（服务端不动），删完之后**再没有测试盯着它**——客户端与服务端的
     契约从此是非对称的，这是知情选择，不是疏漏。
 14. **Python 侧编码改造（D43 / D30 / D61）**：
-    - 写：`json.dumps(assembled)` → `base64(msgpack((script, assembled)))`
-      （**必须 `b64encode()`**，见 §5.11）——这一步只是**组装 blob 交回 ML**，
-      Python 侧不再把它存进任何地方；
+    - **写端删除**：Python 不产出任何 blob——最终 op 流本就随 agent 启动 RPC 的返回值
+      交回，blob 由 `raw_AoA` 在 ML 侧组装（D41；`proof.json` 日志照旧写 op 流）；
     - **不再有"读端"**：L1 通用化后 Python 存的是证明文本，blob 的解码只发生在 ML 侧的
       `aoa_replay` 方法里。原「`json.loads` → `msgpack.unpackb(base64.b64decode(...))`」
       **整条删除**（D43 修订，R24 作废）；
-    - **计时管道（D61）**：`proof_opr` 返回的 `elapsed_ms` 记在节点上，装配时求和为
-      `assembled_isabelle_time` 随统计记录返回（**线上多一个数**；ML 侧解包后当场加进
-      耗时，**不进 `agent_cost`**，见 §2.8 第 2 条）。
+    - **计时管道（D61）**：`proof_opr` 返回本 op 的 `elapsed_ms`（ret 改 tuple3，第 15 步）；
+      装配验证重放对最终流逐 op 求和为 `assembled_isabelle_time` 随统计记录返回
+      （**线上多一个数**；ML 侧解包后当场加进耗时，**不进 `agent_cost`**，见 §2.8 第 2 条）。
 15. **`proof_opr` 的 `ret_schema` 改 tuple3**（D61 签名 1）+ ML 侧 `Timing.timing`。
-16. **证明文本落地**：`raw_AoA` 组装 `aoa_replay "<b64>"`，作为副产品 future 里四元组的
-    **第四件**返回（第三件是与它配对的耗时），`run_AoA` 用这两件写库并继续交出。**blob 永不外泄**——编码格式只有组装方 `raw_AoA` 与
-    解码方 `aoa_replay` 方法知道。类型是 `string` **不设 option**：Python 侧三个返回点使
-    「证明状态」与「证明文本」永远同生共死（缓存命中 `toplevel.py:264` 两者皆有、新证成功
-    `:418` 两者皆有、证明未完成 `:424` 两者皆无），而 `s1o = NONE` 时 ML 侧走
-    `raise Agent_Give_Up` 的**异常出口**、返回值根本不存在。ML 侧现有的
-    `NONE => tracing "store SKIPPED (proof_json=NONE)"` 是防御性死代码，**改为明确的协议错误**。
+16. **证明文本落地**：`raw_AoA` 在成功分支就地组装——用 D31 的 BytesIO packer 打包
+    `(split 脚本, 返回的最终 op 流)`、经 Scala 桥 Base64 编码，拼出
+    `aoa_replay "<b64>"`，作为副产品 future 里四元组的**第四件**返回（第三件是与它
+    配对的耗时），`run_AoA` 用这两件写库并继续交出。**blob 永不外泄**——脚本与 blob
+    全程不出 ML，编码格式只有组装方 `raw_AoA` 与解码方 `aoa_replay` 方法知道。
+    类型是 `string` **不设 option**：文本由 ML 在成功分支构造性产生（`s1o = NONE` 时
+    走 `raise Agent_Give_Up` 的异常出口、返回值根本不存在），不存在"成功而无文本"的态。
 
 **验证**：
 
