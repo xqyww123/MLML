@@ -1914,7 +1914,7 @@ restricted to interactive editing.
 | **1a(ii)** | **已实施、已提交**（2026-08-09） | `auto_sledgehammer` `1b54aef`、`Isa-Mini` `3a1ae60`、`phi-system` `aa596dcc`。`NO_SIMP` 下沉到共同祖先 |
 | **1b** | **已实施、已提交**（2026-08-09） | `Isa-Mini` `4b1b92e`。`banner_of` 建成并导出，`by aoa` 五类失败全走它 |
 | **2** | **已实施、已提交**（2026-08-09，**验证部分未决**） | `phi-system` `74835138`。八步全落；PLPR/Phi_BI/PSF 批构建绿、Phi_Type PIDE 全文跑通（deriver 编译干净）；**未决：Phi_Type 9 处义务冷库重搜失败（见阶段 2 实施记录）+ R10 四文件 / Phi_Examples 双跑 / D45 计数 / ㊀ / D63 双克隆实测未做（被 `Phi_Type.thy:5132` 的 sorry 与 9 处失败的分诊挡着）** |
-| 3 | 未开始 | 下一个（第三轮评审结论处理完后进入） |
+| **3** | **已实施**（2026-08-09 晚；纯 ML 验证过，REPL 依赖项待作者配合） | `Isa-Mini` 一条提交：16 步全落、ML+Python 同批；`Minilang_AoA` / `Minilang_AoA_REPL` 构建绿；纯 ML 冒烟 13 项全过。**四个待追认偏差与未竟验证见阶段 3 实施记录** |
 | 3a / 4 / 5 / 6 | 未开始 | |
 
 **阶段 0 实施记录（与计划的差异，逐条）**：
@@ -2154,6 +2154,61 @@ cost 行的 writeln 通道原样保留，等 fork 侧对发现 3 的裁决。
   `proof_id = NONE`（键从目标自算）——**记为后续事项：以后给它们确定的 proof id**。
 - 实验在途：异步失败"报在哪里"的 PIDE 与批处理两组实验（agent 进行中，结果回来补记）。
 
+**阶段 3 实施记录（2026-08-09 晚，`Isa-Mini` 一条提交，ML+Python 同批）**：
+
+1. **16 步全落**：D31 导出（`xcmd_packer_bytes`/`xcmd_unpacker_bytes`）；D35
+   `configure_for_minilang`（12 个无条件 put，第 13 个条件式留调用方）；`AoA_RPC` 拆成
+   内部同步体 `raw_AoA_i` + 公开 `raw_AoA`（`Future.value` 包四元组）；闸门
+   `aoa_allowed ()` 为体内第一格、关闭即抛 §6.1 定稿文案；体内 store/哈希/epoch 前缀
+   全删；`datatype task = Usual | Learning of string` + 内部 `pack_task`；D34 两个确定性段
+   抽为 `standard_tac_segment` / `merge_segment`（合并段旁注释按 D59 改写）、三段整体包
+   `Timing.timing` 得 `prep_elapsed`；split 段录制走新的
+   `Goal_Preprocess.preprocess_split_recorded`（核心三分支 `split_race` 与原
+   `preprocess_split_tac` 共用，tactic 语义逐字保留）；`aoa_replay` method 注册在
+   `Minilang_AoA.thy`、体 `aoa_replay_method` 在 `agent_server.ML`（⓪–⑦ 照 §2.7，失败=
+   方法失败）；新建 `Agent/proof_store_AoA.ML`（L1 三 RPC + `store_hit_replay`，载于
+   `agent_server.ML` 之前）；`run_AoA` 按 D50 无条件调 `async_prove All_At_Once`、写回挂
+   产出 future 的依赖任务（`deps=[task_of fut]`，值 future 的 dummy task 依赖即时满足，
+   两态一份代码）；`aoa_repl_app.ML` 四处改造（含测试旁路 `read_store=SOME false`）；
+   Python 侧：`IsaMini.AoA` 参数表 12→10、两级查询/旁路缓存分支/EVENT_CACHE 全删
+   （`:206-219` 语义解释跳过保留）、`proof_store.py` 新表结构
+   （`proof_text`/`std_time_ms`）+ `invalidate` + 三个 RPC（过程名
+   `IsaMini.ProofStore.lookup/store/invalidate`，**模块加载名 = `IsaMini.proof_store`**，
+   `load` 即 `importlib.import_module`）；blob = `base64.b64encode(msgpack.packb((script,
+   ops)))`；`proof_opr` ret tuple3 + ML 侧 `Timing.timing`；统计记录 tuple9→tuple10
+   （第 10 件 `assembled_isabelle_time` ms，不进 `agent_cost`）；成功必带 blob、缺失=
+   协议错误。旧 L1 SQLite 库已按冷启动授权删除（`~/.cache/IsaMini/aoa_proof_cache.db*`）。
+2. **四个待追认偏差**：
+   - **D61 落点**：`assembled_isabelle_time` 不是"记在节点上、装配时求和"——
+     `Minilang_Operation` 是 NamedTuple 挂不了属性、`assemble()` 每次新造对象；改为对
+     **装配验证重放**（`toplevel.py` 本就对最终流逐 op 重放的那一次）的 per-op `elapsed_ms`
+     求和。它恰好是"重放要花多久"的直接实测（同一最终流、恰一遍、按序），语义更准。
+   - **split 脚本词汇**：新注册三个 method `aoa_split_auto` / `aoa_split_clarsimp` /
+     `aoa_split_custom` = 三分支录制战术**逐字**注册（auto_sledgehammer 现成的
+     `auto_split`/`clarsimp_split` 不同形：CHANGED_PROP / 只打首目标）；脚本 = 三者的组合
+     文本（`""` / `aoa_split_auto` / `(aoa_split_clarsimp, aoa_split_custom)` /
+     `aoa_split_custom`）；auto 分支产出与输入 `eq_thm_prop` 时渲染 `""`（精确性）。
+     脚本经新 reporter 消息 `SPLIT_SCRIPT`（tag 20）随首个 op 交 Python。
+   - **`gate_error` 里 store 路径两行复刻**自 `cache_file.ML` 的 `store_path`（未导出，
+     而本阶段 auto_sledgehammer 只读）——待定：阶段 5 顺路给它加导出后回收。
+   - **PC-2 裁决 (a) 顺手折入**：`[AoA]` 成本行 `writeln`→`tracing`（该行在本阶段重写的
+     文件里，折入避免两会话撞车）。
+3. **已验**（纯 ML 冒烟 13 项，`isabelle ML_process -l Minilang_AoA`）：闸门批处理
+   fail-closed；§6.1 文案逐字（含 store 路径与环境变量行）；⓪ 命中四元组
+   `([], zero_cost, 记录时间, 原文文本)` 且 future 已兑现、目标被重放关闭、**闸门关闭时
+   照常工作（D29）**；键稳定；垃圾 blob = 干净方法失败；三个 split method 已注册；
+   `(script, ops)` msgpack 往返；坏条目重放失败→墓碑→MISS（L1 静默降级）。
+   `Minilang_AoA` / `Minilang_AoA_REPL` 构建绿；Python 全侧 `py_compile` 过。
+   **注**：`Base64.encode/decode` 是 Scala 桥（`Pure/General/base64.ML`），裸
+   `ML_process` 无 Scala 才不可用；build/PIDE/REPL 会话都有 Scala，重放不受影响。
+4. **未竟验证（需作者配合或等资源）**：① `test_AoA.py` 372 快照 + 评测冒烟——6666 上现跑着
+   **别人的 MathBench REPL 服务器**，不可动；需作者重启 REPL 服务器（新 heap 已建好），
+   且**服务器进程必须设 `AOA_ALLOW_NONINTERACTIVE=yes`**（闸门真值表第四行的设计后果，
+   快照测试的 driver 也要过闸门）；② 真 blob 的 `(script, ops)` 两形态往返（需 Python 装配，
+   走快照测试顺带覆盖）；③ L1 三 RPC 的真 Python 往返；④ `Test_Preprocess.thy` 12 断言
+   手工过（等 isabelle-mcp 空闲，Phi_Type 重评在用）；⑤ ⓪ 命中副产品经 REPL app 的九零
+   专项。
+
 **阶段 2 实施记录（2026-08-09，提交 `phi-system` `74835138`）**：
 
 1. 八步照做。实施中的三个**新决策/待批点**：
@@ -2182,7 +2237,8 @@ cost 行的 writeln 通道原样保留，等 fork 侧对发现 3 的裁决。
    上游引擎保有 `\<phi>sledgehammer_simps` 通道（`:1300-1304`），能力差距不是主因。
    出路（待作者定）：逐个重搜（更长超时/批条件）或人工补证明。
    其余验证项（R10 四文件、Phi_Examples 双跑、D45、㊀、D63 双克隆）被
-   `Phi_Type.thy:5132` sorry 的批构建阻断 + 9 处失败的分诊挡着。
+   `Phi_Type.thy:5132` sorry 的批构建阻断 + 9 处失败的分诊挡着——
+   **作者 2026-08-09 裁决：推到阶段 5 合并跑，清单见 §7 阶段 5 第 5c 条。**
    **sorry 的处置已由作者裁决（2026-08-09）：保留到整个计划执行完毕，然后替换为
    `by hammer_or_aoa`**（method 阶段 4 建成）。在那之前 `Phi_System` 及以上会话
    批构建持续不可用，验证一律走 MCP 活会话（PIDE 下 sorry 只是告警）。
@@ -2963,6 +3019,16 @@ FactInTime 需要一个多带 fact 名的同类消息）。形状照抄 HAMMER �
    异步解出的、证明文本引用 `the_\<phi>lemmata(N)` / `the_\<phi>` 具名快照的义务，
    其录制文本必须能在第二次构建中重放成功——重放通过即证明"冻结语境被 fork 闭包
    完整带走且进入事实选择"，链路闭合。
+5c. **阶段 2 递延验证批（作者 2026-08-09 裁决：阶段 2 剩余验证项推到本阶段合并跑，
+   见"阶段 2 实施记录"第 5 条）**——逐项照阶段 2 的"验证"清单执行：
+   ① R10 四文件（`Binary_Trees.thy` / `Quicksort.thy` / `Bucket_Hash.thy` /
+   `Matrix_Oprs.thy`，确认 D19 语义变化没弄挂原本能过的证明）；
+   ② `Phi_Examples` 完整双跑（首跑重搜建库、二跑回放提速）——与本阶段第 6 步
+   （目标 4 端到端验收）的"建满"步骤合并执行，不重复跑；
+   ③ D38 专项（`Quicksort.thy` 里 `ML_val` 打印 `sledgehammer_params` 得
+   `"try0 = false"`）；④ D45 按键计数（每条新证义务至多一条记录）；
+   ⑤ ㊀ 关块行为变化专项（快攻打不动的义务走完整求解路径）；
+   ⑥ D63 双克隆合并实测（届时帧级三方合并驱动若已落地则一并验它）。
 6. **目标 4 的端到端验收**——§1 第 4 条的唯一验收点。前面各阶段的重放验证都是单点探针
    （一条义务、同机同树、闸门靠环境变量开关），验不到「整个包在下游用户手上能不能 build」。
    - **建满**：闸门放行（交互编辑，或批处理构建下设 `AOA_ALLOW_NONINTERACTIVE=yes`），
