@@ -3013,13 +3013,15 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
    与 D31 同类的两行导出）。
 2. 新增 reporter 消息 `FACT_PRF of string * string * Time.time`（仿 `SH_PRF`，
    多带 fact 名——一个 op 可以带好几个 fact）；Python 侧 `unpack_message` 同批加分支。
-   ⚠️ **线 tag 待作者定**（tag 分派表现用到 19；20 只是看上去空闲，不得自行选定）。
+   线 tag = **20**（作者 2026-08-10 批准）。
 3. `FactInTime of string * 'term` → 加 `(string * int) option` 字段——**字段形状**照抄
    HAMMER 的 `cached_proof`（`(证明文本, 毫秒)`，可选）；`agent.ML` **两处**声明
    （签名声明与结构体内的重声明，同一个多态 datatype）都要改。
 4. `pre_resolve_fact` 加 `exec_mode` 参数，三分支：**有记录**（不论模式）用
-   `replay_mepo_proof`（⚠️ 该支的重放预算待作者定——HAMMER 范式是
-   `1.5 × time_ms + 3000` 毫秒）；**`LIVE` 无记录**用 `run_mepo_and_render`（10 秒）
+   `replay_mepo_proof`（重放预算 = `1.5 × time_ms + 3000` 毫秒，HAMMER 范式，
+   作者 2026-08-10 裁决；记录文本重放失败则回落到当前模式的搜索——有界 10 秒，
+   与 REPLAY 无记录的优雅降级同一口径，LIVE 回落时重发 `FACT_PRF` 刷新过期记录）；
+   **`LIVE` 无记录**用 `run_mepo_and_render`（10 秒）
    搜出并拿到证明文本、经 `FACT_PRF` 上报——不能调 `fast_mepo_tac`，它在 agent 语境
    （`enable_proof_store = false`）下把证明文本丢在体内，调用方无物可报；
    **`REPLAY` 无记录照常搜——优雅降级，不报错**（作者定；
@@ -3150,7 +3152,20 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
   `Conv.fconv_rule` 返回同一个 thm 对象。
 - **键一致性专项**：同一条义务走异步与走同步算出**同一把键**。
 
-### 阶段 5 —— 换接与全栈验证
+**实施记录（2026-08-10）**：`auto_sledgehammer 74d76e0` / `Isa-Mini d0b085d`。
+第 1/2/4 步照 §2.3 流程图落地（`hammer_or_AoA` + method `hammer_or_aoa` + fork 末尾
+一次写回）；4a–4c 对照引擎代码逐项核毕（承诺形状/两道守卫/两道防护均在位）；
+4e/4f 同批落地——`back_conv` 进 `aux_thms.ML`（`MINILANG_AUX` 导出），捕获/还原点
+定在 AoA 边界（`raw_AoA` 与 `aoa_replay` 两个往返出口：入口
+`Drule.strip_imp_concl` 记受保护结论、`Minilang.conclude` 后 `fconv_rule` 还原——
+即"在 conclude 之后对整条 prop 施加还原"的落法）；4d 依"先 4e/4f 再定去留"撤除
+（`aconv` 断言保留为末位保险）。已完成的验证：R33 两形状回归、`back_conv` 单元、
+引擎支同/异步 `All_At_Once` 端到端（同键同文本）、零子目标短路、裸 ML 进程
+`aoa_allowed () = false`（fail-closed）。**待 REPL/Python 环境的验证项**（store 两级、
+L1 写、闸门关闭重放、`Each_Goal` 部分失败、异常可见性等）挂起至阶段 5 全栈验证一并跑。
+**⚠️ 待作者追认一件**：`hammer_or_AoA` fork 体内对两个恒同步内层 future 的
+2 处 `Future.join`（提取分支产物所必需，joined 的都是已兑现的 `Future.value`）
+需增补进 §2.5 的 join 放行名单——该名单原文自称穷举，故不擅改，先记于此。
 
 1. `hammer_obligation_solver` 的战术位从独立版引擎换成 `hammer_or_AoA_tac`
    （阶段 2 预留的位置）。D51 修订版的组装函数与 `failure_msg` 钩子接线已随
@@ -3423,9 +3438,11 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 
 ## 9. 仍待作者拍板
 
-1. `FACT_PRF` 的线上 tag（阶段 3a；tag 分派表现用到 19，20 只是看上去空闲，
-   不得自行选定）。
-2. REPLAY 命中记录的重放预算（阶段 3a Q3）。
+（零项。原第 1/2 项已于 2026-08-10 裁决：`FACT_PRF` 线上 tag = **20**（「批准」）；
+`FactInTime` 有记录分支的重放预算 = **`1.5 × 记录毫秒数 + 3000` 毫秒**（HAMMER 范式，
+作者「1.5 × 记录毫秒数 + 3000 毫秒 不好吗？」）。同日作者裁决 **`exec_mode` 保留**
+（「好的，那就保留」；实际管辖范围 = HAMMER 与 FactInTime 两处消费者，D32 实测），
+了结其"引入时无批准记录"的来历问题。三条均已录入 PLAN_AUTHOR_DECISIONS.md。）
 
 **阶段 6 的用户可见文案**已全部定稿，清单见 §7 阶段 6 第 4 项。
 
