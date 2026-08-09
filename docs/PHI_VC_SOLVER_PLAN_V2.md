@@ -2193,21 +2193,38 @@ cost 行的 writeln 通道原样保留，等 fork 侧对发现 3 的裁决。
      而本阶段 auto_sledgehammer 只读）——待定：阶段 5 顺路给它加导出后回收。
    - **PC-2 裁决 (a) 顺手折入**：`[AoA]` 成本行 `writeln`→`tracing`（该行在本阶段重写的
      文件里，折入避免两会话撞车）。
-3. **已验**（纯 ML 冒烟 13 项，`isabelle ML_process -l Minilang_AoA`）：闸门批处理
-   fail-closed；§6.1 文案逐字（含 store 路径与环境变量行）；⓪ 命中四元组
-   `([], zero_cost, 记录时间, 原文文本)` 且 future 已兑现、目标被重放关闭、**闸门关闭时
-   照常工作（D29）**；键稳定；垃圾 blob = 干净方法失败；三个 split method 已注册；
-   `(script, ops)` msgpack 往返；坏条目重放失败→墓碑→MISS（L1 静默降级）。
-   `Minilang_AoA` / `Minilang_AoA_REPL` 构建绿；Python 全侧 `py_compile` 过。
-   **注**：`Base64.encode/decode` 是 Scala 桥（`Pure/General/base64.ML`），裸
-   `ML_process` 无 Scala 才不可用；build/PIDE/REPL 会话都有 Scala，重放不受影响。
-4. **未竟验证（需作者配合或等资源）**：① `test_AoA.py` 372 快照 + 评测冒烟——6666 上现跑着
+3. **已验**：
+   - 纯 ML 冒烟 13 项（`isabelle ML_process -l Minilang_AoA`）：闸门批处理
+     fail-closed；§6.1 文案逐字（含 store 路径与环境变量行）；⓪ 命中四元组
+     `([], zero_cost, 记录时间, 原文文本)` 且 future 已兑现、目标被重放关闭、**闸门关闭时
+     照常工作（D29）**；命中文本用的是 `(simp)` 这类**无 op 流**的条目——⓪ 命中专项第④小项
+     由此顺带过；键稳定；垃圾 blob = 干净方法失败；三个 split method 已注册；
+     `(script, ops)` msgpack 往返；坏条目重放失败→墓碑→MISS（L1 静默降级）。
+   - PIDE 会话（isabelle-mcp，`Minilang_AoA` heap）四项：**纯 ML 重放隔离测试过**——
+     真 b64 blob（Scala Base64）+ 真 op 流（带 `cached_proof` 的 HAMMER + 收尾
+     `NEXT_OR_END`）经 `aoa_replay` 全程无 Python 重放、目标关闭；空 blob 打开目标 =
+     干净方法失败；**R22 脚本稳定性过**——600 元合取两次录制同脚本
+     `"(aoa_split_clarsimp, aoa_split_custom)"`、状态 α-等价；录制脚本单独执行复现录制
+     状态（D41 往返）。
+   - `Minilang_AoA` / `Minilang_AoA_REPL` 构建绿；Python 全侧 `py_compile` 过。
+   - **注**：`Base64.encode/decode` 是 Scala 桥（`Pure/General/base64.ML`），裸
+     `ML_process` 无 Scala 才不可用；build/PIDE/REPL 会话都有 Scala，重放不受影响。
+   - **实测出的既有角落（非本阶段回归，两侧对称）**：split 段**独自解光全部目标**时，
+     ops=[]、INIT 的 `ENDBLK T_END` 无人弹出 ⇒ `conclude` 报 "incomplete MINSHELL
+     script"——重放侧按契约干净失败；live 侧同形（Python 见已解树、装配 []、
+     `is_finished "$init"` = false ⇒ 报 Internal Error）。此角落先于本阶段存在
+     （预处理下沉是 schematic 闸门批次做的）。**候选修法**：预处理后零目标时短路、
+     根本不起 agent。待作者定是否立项。
+   - **`Agent/Test/Test_Preprocess.thy` 手工跑过：第 1 断言失败（期望 76 个子目标、
+     实得 86），系既有漂移**——本阶段对 `custom_split_tac`、两个阈值与
+     `Infra_Filter.smart_size_of_term` 零改动（diff 可证），该文件不属任何 ROOT、
+     rename 之后从未再跑过，漂移来自更早的 `smart_size` 变动。**断言基线不改，
+     待作者定**（后续 8 个断言被同块 ML 挡住未跑到）。
+4. **未竟验证（需作者配合）**：① `test_AoA.py` 372 快照 + 评测冒烟——6666 上现跑着
    **别人的 MathBench REPL 服务器**，不可动；需作者重启 REPL 服务器（新 heap 已建好），
    且**服务器进程必须设 `AOA_ALLOW_NONINTERACTIVE=yes`**（闸门真值表第四行的设计后果，
-   快照测试的 driver 也要过闸门）；② 真 blob 的 `(script, ops)` 两形态往返（需 Python 装配，
-   走快照测试顺带覆盖）；③ L1 三 RPC 的真 Python 往返；④ `Test_Preprocess.thy` 12 断言
-   手工过（等 isabelle-mcp 空闲，Phi_Type 重评在用）；⑤ ⓪ 命中副产品经 REPL app 的九零
-   专项。
+   快照测试的 driver 也要过闸门）；② L1 三 RPC 的真 Python 往返（含作废的真 `DELETE`）；
+   ③ ⓪ 命中副产品经 REPL app 的九零专项；④ Python 装配的真 blob 往返（快照测试顺带）。
 
 **阶段 2 实施记录（2026-08-09，提交 `phi-system` `74835138`）**：
 
