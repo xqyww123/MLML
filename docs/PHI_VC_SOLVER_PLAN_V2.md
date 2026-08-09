@@ -413,9 +413,12 @@ val hammer_or_AoA :
       hammer_timeout: Time.time option,            (*→ 转发 all_auto*)
       async: bool,
       read_store: bool option,   (*管 ⓪ 的两级（L2 + L1）；NONE 走 AoA_read_proof_store*)
-      write_store: bool option}  (*管**一切写**：⓪-L1 的升格写回、fork 末尾的
+      write_store: bool option,  (*管**一切写**：⓪-L1 的升格写回、fork 末尾的
                                    **L2 与 L1 两处写**；NONE 走 AoA_write_proof_store。
                                    **不转发给内层**——内层恒 SOME false*)
+      failure_msg: (exn -> string) option}
+                                 (*phi 战术槽建的组装函数（§2.2）；本层转发给
+                                   all_auto 与自身 fork 的报告口，不另建分派（§7 阶段 4）*)
   -> Proof.context -> thm
   -> string future (*证明文本；phi oblg 层丢弃*) * thm
 ```
