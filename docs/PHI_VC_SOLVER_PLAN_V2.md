@@ -2273,10 +2273,11 @@ blob→写回→重放端到端必须真正跑一遍（与阶段 3 的 REPL 依�
      `auto_split`/`clarsimp_split` 不同形：CHANGED_PROP / 只打首目标）；脚本 = 三者的组合
      文本（`""` / `aoa_split_auto` / `(aoa_split_clarsimp, aoa_split_custom)` /
      `aoa_split_custom`）；auto 分支产出与输入 `eq_thm_prop` 时渲染 `""`（精确性）。
-   - **`gate_error` 里 store 路径两行复刻**自 `cache_file.ML` 的 `store_path`（未导出，
-     而本阶段 auto_sledgehammer 只读）——待定：阶段 5 顺路给它加导出后回收。
    - **PC-2 裁决 (a) 顺手折入**：`[AoA]` 成本行 `writeln`→`tracing`（该行在本阶段重写的
      文件里，折入避免两会话撞车）。
+   〔已了结〕store 文件名约定单一来源：`Phi_Proof_Store.store_path` 进签名（作者
+   2026-08-10 批），`gate_error` 直调之，原复刻删除（`auto_sledgehammer` `29971c6` /
+   `Isa-Mini` `ef90e2e`）。
 3. **已验**：
    - 纯 ML 冒烟 13 项（`isabelle ML_process -l Minilang_AoA`）：闸门批处理
      fail-closed；§6.1 文案逐字（含 store 路径与环境变量行）；⓪ 命中四元组
