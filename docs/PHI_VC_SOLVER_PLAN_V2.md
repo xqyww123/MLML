@@ -2180,6 +2180,40 @@ cost 行的 writeln 通道原样保留，等 fork 侧对发现 3 的裁决。
   六个 D49 调用点异步失败的呈现由此统一：发起命令红标（人话）＋批构建人话定位；
   各点自有 handler 仅同步退化时上岗，此为设计本意（与旧引擎同构）。
 
+**会话分工（2026-08-10 凌晨，作者第二次 fork，作者裁定）**：以下事项全部归 **fork 出去的
+另一个 agent**，本会话不做、不等：
+① **第四轮评审 5 条确认发现的修复**（见下方"第四轮已结"记录：PY-1 会话关闭后读
+split 脚本〔高/活，阶段 3 Python〕、L1 旧 schema 静默失效〔低/潜伏〕、组装函数异步面
+吞 `Internal_Failure` 真因〔中/活，钩子批〕、cast 空序列失败裸穿〔中/潜伏，钩子批〕、
+cast 组装前 ERROR 失去 D58 溯源〔低/活，钩子批〕）；
+② **`tasks/AoA-learning/learning.ML:181` 的阶段 3 漏网改造**（仍调已删除的 `AoA_RPC` +
+手拼 task 元组；按阶段 3 第 3 步改直调 `raw_AoA {…, task = Learning isar}`，返回 future
+丢弃；该流水线需设 `AOA_ALLOW_NONINTERACTIVE=yes`；它在主仓库 tasks/ 下，评审克隆仓
+之外，所以四轮评审都看不见它）；
+③ SKIP-首发顺序承重注释（`Session.initialize` 的首个 proof_opr 必为 SKIP 是 split
+脚本递送不丢的前提，评审裁判建议注明）；
+④ **D61 计划文本订正**（考古已证实：作者 08-08 05:00 原话即"复用既有重放，只加计时"，
+现行"记在节点上"措辞源于当日一个建立在错误前提上的反提案；D61 行与 §2.8 应改写为
+"对 toplevel.py 既有装配验证重放逐 op 求和"，阶段 3 记录里的"偏差①"随之撤销）；
+⑤ 其余待追认/待裁决遗留（split 方法命名、gate_error 路径复刻两处偏差；split 独自解光
+目标的既有角落是否立项；Test_Preprocess.thy 断言漂移基线）。
+**本会话**：继续执行计划——消费在途的 7 处失败鉴定 agent（在 isabelle-mcp 上全文重评
+`Phi_Type.thy` 中，结果回本会话；期间 MCP 服务器曾断连重连，回来时先核实其状态），
+然后进入**阶段 3a**（`FactInTime` 把证明记进构造子，D37，见 §7 阶段 3a——
+`run_mepo_and_render` / `replay_mepo_proof` 两行导出 + 带 fact 名的同类 reporter 消息，
+形状照抄 HAMMER 的 `cached_proof`；注意核查台账 C9：其六步实施清单曾整体丢失，实施前
+先按 §5.7(9) 与 C9 复原步骤）。修复批完成后按 C2 惯例并入下一轮评审。
+
+**第四轮对抗评审已结（2026-08-10 凌晨，Workflow run `wf_4c5b30eb-0b2`，9 agents，
+102 万 token）**：覆盖两批——阶段 3（`Isa-Mini` `4b1b92e..4e28a79`，含 `195d577`）+
+failure_msg 钩子修复批（`auto_sledgehammer` `0901907..f6d08c4`、`phi-system`
+`74835138..98b45e67`、Isa-REPL `3c32266`、translator `d2fa23e`）。四镜头 → 对手 →
+裁判；9 候选 → **5 确认 3 删除**（重复合并若干）。五条确认本会话已逐条到真仓库核验属实，
+中文汇报连同修复方案已交作者；修复归 fork 会话（见上方会话分工）。被删主力
+"首个 op 失败丢 split 脚本"系对手证明 initialize 的 SKIP 必先行而破（但该顺序未注明
+承重——分工③）。七条覆盖缺口备查，其中最要紧：PY-1 崩掉整条新证明管线，修复后
+blob→写回→重放端到端必须真正跑一遍（与阶段 3 的 REPL 依赖验证四件合并执行）。
+
 **阶段 3 实施记录（2026-08-09 晚，`Isa-Mini` 一条提交，ML+Python 同批）**：
 
 1. **16 步全落**：D31 导出（`xcmd_packer_bytes`/`xcmd_unpacker_bytes`）；D35
