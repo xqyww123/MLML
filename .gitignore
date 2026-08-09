@@ -90,3 +90,7 @@ secret.sh
 /missing_lemma_loop_state/
 /putnam_audit/
 *.proof-store
+
+# working plan documents live in docs/; stray manual backups stay untracked
+PHI_VC_SOLVER_PLAN*.bak*
+*.md.bak*
