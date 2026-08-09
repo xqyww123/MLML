@@ -2232,12 +2232,20 @@ cast 组装前 ERROR 失去 D58 溯源〔低/活，钩子批〕）；
 ⑤ 其余待追认/待裁决遗留（split 方法命名；split 独自解光目标的既有角落是否立项；
 Test_Preprocess.thy 断言漂移基线。gate_error 路径复刻已了结——
 `Phi_Proof_Store.store_path` 进签名，见〔已了结〕条）。
-**本会话**：继续执行计划——消费在途的 7 处失败鉴定 agent（在 isabelle-mcp 上全文重评
-`Phi_Type.thy` 中，结果回本会话；期间 MCP 服务器曾断连重连，回来时先核实其状态），
-然后进入**阶段 3a**（`FactInTime` 把证明记进构造子，D37，见 §7 阶段 3a——
-`run_mepo_and_render` / `replay_mepo_proof` 两行导出 + 带 fact 名的同类 reporter 消息，
-形状照抄 HAMMER 的 `cached_proof`；注意核查台账 C9：其六步实施清单曾整体丢失，实施前
-先按 §5.7(9) 与 C9 复原步骤）。修复批完成后按 C2 惯例并入下一轮评审。
+**会话分工（2026-08-10 再次 fork 后）**：**fork 会话**接手 §9 的六项待拍板连同其
+落笔，以及第五轮增量评审确认项的修复。**本会话**专责推进计划实现：
+（甲）消费仍在途的三个后台任务——7 处失败鉴定 agent（isabelle-mcp 上全文重评
+`Phi_Type.thy`）、phi 接线实现审计 agent、第五轮增量对抗评审 workflow
+（阶段 3 订正后重评，五透镜→去重→两轮辩论；结果都回本会话，到达即向作者中文汇报，
+确认项的修复归 fork 会话）；
+（乙）补掉分工②——`tasks/AoA-learning/learning.ML:181` 改直调
+`raw_AoA {…, task = Learning isar}`（无需裁决，阶段 3 漏网步骤）；
+（丙）进入**阶段 3a** 实施（§7 阶段 3a 的六步清单已恢复：两行导出 / `FACT_PRF` 消息 /
+构造子加 `(string * int) option` / `pre_resolve_fact` 三分支 / pair→triple 双元数解包 /
+Python schema+assembler；**`REPLAY` 无记录照常搜、不报错**（作者定，勿抄 HAMMER 的
+报错分支）；⚠️ 线上 tag 与重放预算两项待拍板（§9 第 1/2 项，归 fork 会话）——推进到
+需要 tag 处若裁决未到，先实现其余步骤并向作者催问，**不得自行选 tag**）。
+修复批完成后按 C2 惯例并入下一轮评审。
 
 **第四轮对抗评审已结（2026-08-10 凌晨，Workflow run `wf_4c5b30eb-0b2`，9 agents，
 102 万 token）**：覆盖两批——阶段 3（`Isa-Mini` `4b1b92e..4e28a79`，含 `195d577`）+
