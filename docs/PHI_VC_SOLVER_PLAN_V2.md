@@ -405,7 +405,14 @@ val run_AoA : {driver: driver, minilang_cfg: MiniLang_Agent.cfg,
      Remote_Calling_Failure 分支也在用它）。
      xcmds 为什么不能给真值：store 里存的是证明文本，op 流藏在 blob 里，而 blob 永不
      外泄（格式只有组装方 raw_AoA 与解码方 aoa_replay 知道）；何况同一把键上出现的
-     可能是 metis … 这类根本没有 op 流的文本（§2.7 末）。*)
+     可能是 metis … 这类根本没有 op 流的文本（§2.7 末）。
+
+     零子目标时四件取值（作者 2026-08-10 批）：`async_prove` 的零子目标短路（§2.5）
+     交回空 future 表，`run_AoA` 交出
+     `(Future.value ([], zero_cost, Time.zeroTime, ""), sequent)`——没什么可证、
+     什么都没跑。**第四件的 `""` 不是 store 文本**（`""` 非法，§2.4）：本臂不建写库
+     任务，`""` 结构上到不了 L2/L1；任何消费者（含阶段 4 `hammer_or_AoA` 的
+     fork 末尾写回——零子目标时 future 表为空、写回无从触发）都不得把它当可存文本。*)
 
 val hammer_or_AoA :
      {fact_override: Sledgehammer.fact_override,   (*→ 只喂 auto_sledgehammer 分支*)
