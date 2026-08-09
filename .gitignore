@@ -6,8 +6,8 @@
 *.swo
 .~lock*
 *~
-*.proof-cache.lock
-*.proof-cache.tmp*
+*.proof-store.lock
+*.proof-store.tmp*
 /cache
 /contrib
 /result.csv
@@ -89,4 +89,4 @@ secret.sh
 /contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst
 /missing_lemma_loop_state/
 /putnam_audit/
-*.proof-cache
+*.proof-store

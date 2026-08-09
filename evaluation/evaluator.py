@@ -483,7 +483,7 @@ class MinilangAgent_Base(Isar_Base):
         else:
             raise ValueError(f"Invalid proofs: {proofs}")
 
-        # Isabelle's AoA_use_proof_cache defaults to true (the AoA driver looks up
+        # Isabelle's AoA_read_proof_store defaults to true (the AoA driver looks up
         # a previously cached proof for the goal). Disable it for all agent
         # evaluations so every case is solved by a fresh agent run rather than a
         # cache hit. Also disable AoA_enable_write_memory: a benchmark run must not
@@ -492,7 +492,7 @@ class MinilangAgent_Base(Isar_Base):
         # so the agent can still use pre-existing memories). Declared on the open
         # proof context before record_state so the EVAL snapshot carries them and
         # pass@N rollbacks preserve them.
-        await self.repl.config(['AoA_use_proof_cache = false',
+        await self.repl.config(['AoA_read_proof_store = false',
                                 'AoA_enable_write_memory = false'])
 
         if len(proofs) > 1:

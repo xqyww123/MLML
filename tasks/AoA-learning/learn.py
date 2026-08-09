@@ -17,8 +17,8 @@ REPL server must have `RPC_Host` pointing at it. This script owns only the REPL
 fleet — exactly like premise-extraction, which likewise never starts an RPC host.
 
 Concurrency per server = the csv's `num-evaluator` (the AoA workload matches the
-agent evaluators). Cache is bypassed on the ML side (AoA_use_proof_cache /
-AoA_store_proof_cache both false), so reconstructed proofs never touch the shared
+agent evaluators). Cache is bypassed on the ML side (AoA_read_proof_store /
+AoA_write_proof_store both false), so reconstructed proofs never touch the shared
 production cache. Experience memories land directly in the shared Semantic_Embedding
 DB.
 """

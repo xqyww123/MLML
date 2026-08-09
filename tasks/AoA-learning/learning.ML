@@ -151,8 +151,8 @@ fun learning_plugin (driver, log_dir, budget : MiniLang_Agent.budget, send, recv
                   runs (zero learning), and a store would pollute the shared
                   production cache. *)
                val ctxt = Toplevel.context_of state
-                     |> Config.put AoA_use_proof_cache false
-                     |> Config.put AoA_store_proof_cache false
+                     |> Config.put AoA_read_proof_store false
+                     |> Config.put AoA_write_proof_store false
                      |> Config.put AoA_log_dir log_dir
                val sequent = #goal (Proof.raw_goal (Toplevel.proof_of state))
                val iid = "learn_" ^ string_of_int (serial ())
