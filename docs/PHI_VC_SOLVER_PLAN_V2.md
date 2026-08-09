@@ -148,20 +148,25 @@ phi 侧新增物**只有两件**。
 `safe_obligation_solver` / `defer_obligation` 等存留的独立实例并列。骨架：
 
 ```sml
-(*PLPR reasoners.ML —— 示意*)
-fun hammer_obligation_solver id = oblg_template true {can_inst=true, fix_level=0}
+(*PLPR reasoners.ML —— 示意；wrap : string -> string 是失败文案的外层包装
+  （cast 点传出处行，其余点传 I），组装函数 compose 建在战术槽内、
+  经引擎 options 的 failure_msg 钩子抵达三个投递口（§2.4/§6.2）*)
+fun hammer_obligation_solver {async, read_store, write_store} wrap id =
+  oblg_template true {can_inst=true, fix_level=0}
   (fn ctxt => fn th =>
      let val (_, th'1) = collect_obligation_premises (…) ctxt th
          val th' = @{thm' Premise_I} RS th'1
+         fun compose (Agent_Give_Up (reason, detail, _)) =
+               wrap (banner_of reason ^ "\n" ^ detail)
+           | compose (exn as Auto_Fail _) = wrap ("Fail to solve …" ^ 义务项)
+           | compose exn = wrap (Runtime.exn_message exn)
       in th'
       |> head_only (apply_tac ctxt (fn (ctxt,pre,aux,_) =>
            pre THEN HEADGOAL (Method.insert_tac ctxt aux)
-               THEN hammer_or_AoA_tac id ctxt) Agressive_Solver)
+               THEN hammer_or_AoA_tac {failure_msg = SOME compose, …} id ctxt)
+           Agressive_Solver)
       |> Seq.pull
-     end
-     handle Agent_Give_Up (reason, detail, cost) =>
-       (Phi_Reasoner.info_print … cost;
-        error (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail)))
+     end)
 ```
 
 - 战术位 = **捕获了 `id` 等参数的闭包 `hammer_or_AoA_tac`**，内调 Isa-Mini 的
@@ -197,10 +202,12 @@ fun hammer_obligation_solver id = oblg_template true {can_inst=true, fix_level=0
 失败回调对齐）：
 
 ```sml
-(*示意——async 开关值怎样传给 prime 变体（位置参数 / 记录字段）尚未定稿，实施时定*)
-fun solve_obligation id ctxt =
+(*示意*)
+fun solve_obligation' wrap id ctxt =
       Phi_Reasoners.hammer_obligation_solver'
-        {async = Config.get ctxt \<phi>async_proof, ...} id (freeze_dynamic_lemmas ctxt)
+        {async = Config.get ctxt \<phi>async_proof, read_store = NONE, write_store = NONE}
+        wrap id (…失败回调…) (freeze_dynamic_lemmas ctxt)
+val solve_obligation = solve_obligation' I
 ```
 
 - 向 AoA 侧的传参：`{async = 开关值, read_store = NONE, write_store = NONE}`——
@@ -455,7 +462,7 @@ datatype task = Usual | Learning of string (*原 Isar 证明*)
   **不要**在核心三层内部把 `Agent_Give_Up` 拍成 `error`（分派在 phi 侧的
   `hammer_obligation_solver` 与 AoA 侧的两个 method 层，见 §2.2 / §6）。
 
-### 2.4 auto_sledgehammer 侧：两个入口与八字段 options
+### 2.4 auto_sledgehammer 侧：两个入口与九字段 options
 
 **只有两个入口**：`auto`（单目标）与 `all_auto`（多目标）。
 **`auto_raw` 取消**——它与 `auto` 的差别**只是一层 `handle` 包装**、类型完全相同，
@@ -473,7 +480,10 @@ type options = {improved      : bool,
                 timeout       : Time.time option,
                 read_store    : bool option,   (*NONE 走 enable_proof_store 配置*)
                 write_store   : bool option,   (*NONE 走 enable_proof_store 配置*)
-                raise_Error_instead_of_Auto_Fail : bool}
+                raise_Error_instead_of_Auto_Fail : bool,
+                failure_msg   : (exn -> string) option
+                  (*失败文案钩子（纯呈现，不碰控制流）：同步转 ERROR 臂、fork 体报告、
+                    批构建期票打印三个投递口共用；NONE = 旧面孔*)}
 val auto     : options -> Proof.context -> thm -> string future * thm   (*单目标*)
 val all_auto : options -> Proof.context -> thm
             -> (Time.time * string) future * thm                        (*多目标*)
@@ -801,7 +811,8 @@ val async_prove : bool                               (*async*)
 2. 统一 `handle exn => (Future.error_message pos ((serial (), …), NONE); Exn.reraise exn)`
    ——`execution.ML:178-179` 硬编码 `if exec_id = 0 then ()`，批处理/Isa-REPL 下 fork 体
    异常**一条都不打印**；**第三分量必须传 `NONE`**（`future.ML:407-412` 的条件），
-   消息才必然打印。
+   消息才必然打印。消息文本经 options 的 `failure_msg` 钩子组装（§2.4；
+   钩子缺席时退回 `Runtime.exn_message`）。
 
 #### `All_At_Once` 的 beta-eta 正规化
 
@@ -2970,14 +2981,17 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 1. auto_sledgehammer 导出 `run_mepo_and_render` / `replay_mepo_proof`（加进签名，
    与 D31 同类的两行导出）。
 2. 新增 reporter 消息 `FACT_PRF of string * string * Time.time`（仿 `SH_PRF`，
-   多带 fact 名——一个 op 可以带好几个 fact）；线上取当前最小空闲 tag
-   （tag 分派表现用到 19，Python 侧 `unpack_message` 同批加分支）。
+   多带 fact 名——一个 op 可以带好几个 fact）；Python 侧 `unpack_message` 同批加分支。
+   ⚠️ **线 tag 待作者定**（tag 分派表现用到 19；20 只是看上去空闲，不得自行选定）。
 3. `FactInTime of string * 'term` → 加 `(string * int) option` 字段——**字段形状**照抄
    HAMMER 的 `cached_proof`（`(证明文本, 毫秒)`，可选）；`agent.ML` **两处**声明
-   （多态版与单态版）都要改。
+   （签名声明与结构体内的重声明，同一个多态 datatype）都要改。
 4. `pre_resolve_fact` 加 `exec_mode` 参数，三分支：**有记录**（不论模式）用
-   `replay_mepo_proof`；**`LIVE` 无记录**照今天搜（`fast_mepo_tac` 10 秒）并经
-   `FACT_PRF` 上报；**`REPLAY` 无记录照常搜——优雅降级，不报错**（作者定；
+   `replay_mepo_proof`（⚠️ 该支的重放预算待作者定——HAMMER 范式是
+   `1.5 × time_ms + 3000` 毫秒）；**`LIVE` 无记录**用 `run_mepo_and_render`（10 秒）
+   搜出并拿到证明文本、经 `FACT_PRF` 上报——不能调 `fast_mepo_tac`，它在 agent 语境
+   （`enable_proof_store = false`）下把证明文本丢在体内，调用方无物可报；
+   **`REPLAY` 无记录照常搜——优雅降级，不报错**（作者定；
    ⚠️ 这一支与 HAMMER 相反——HAMMER 的 REPLAY 无记录分支是报错，**不要照抄**）。
 5. 打包/解包 `pack_extended_fact` pair → triple，**解包双元数**
    （`unpackTuple3 || unpackPair >> 补 NONE`——元数是线格式的一部分，`packOption`
@@ -2990,7 +3004,8 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 ⚠️ 别顺手动它）。ML 与 Python **两侧改动同一提交**（R19）。
 
 **验证**：带 prove-in-time 事实的证明录制再重放，确认日志无 MePo/fastforce 搜索痕迹
-（构造子里已有证明就不搜）；双元数解包单元测试（pair 输入 → `NONE` 字段）；纯 ML 会话
+（构造子里已有证明就不搜）；**REPLAY 无记录那一支真跑一遍**——确认走的是优雅降级的
+搜索而不是报错；双元数解包单元测试（pair 输入 → `NONE` 字段）；纯 ML 会话
 重放一条含 `FactInTime` 的证明（重放通道本就不发 RPC，顺手确认）；跑 `test.py`。
 （旧记录端到端兼容验证不需要——D59 冷启动后盘上无旧格式条目；双元数解包保留为
 稳健性措施。）
@@ -3018,17 +3033,18 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 3. **异步接线（§2.5）**：`async_prove` 已在阶段 0 改造完，`run_AoA` 已在阶段 3 无条件
    接上 `async_prove All_At_Once`（写回挂产出 future 的依赖任务）；本阶段只剩把
    `hammer_or_AoA` 接上：
-   - **4a** `All_At_Once` 的实现：承诺 `G1 &&& … &&& Gn`，结论 `C` 绝不进承诺；照抄
-     `proof.ML:5285-5322` 的 `merge_goal_states`；保持 `Pure.prop` 头；拆回前留
-     `aconv` 断言。
-   - **4b** schematic 守卫：逐个 `G_i` 查有无 schematic（**必须 `Term.maxidx_term`，
-     绝不能 `Thm.maxidx_of_cterm`**）；守卫覆盖 `Assumption.all_assms_of ctxt`；
-     不过 ⇒ 退回同步并报出是第几个子目标。
+   - **4a** `All_At_Once` 的实现**已在引擎内**（承诺 `G1 &&& … &&& Gn`、结论 `C` 绝不
+     进承诺、`Pure.prop` 头、拆回前 `aconv` 断言——`sledgehammer_solver.ML:927-955`，
+     `merge_goal_states` 形状）——本阶段是**验证项**。
+   - **4b** schematic 守卫**已在引擎内**（`Term.maxidx_term`、覆盖
+     `Assumption.all_assms_of ctxt`、不过则退同步并报出第几个子目标——`:799/:892-905`）
+     ——本阶段是**验证项**。
      **`async_prove` 里不放对象逻辑相关的检查**（§2.5）——它是通用组合子。
    - **4c** fork 体两道防护**已在引擎内**（`Goal.check_finished`
      `sledgehammer_solver.ML:816`；统一报告经 `failure_msg` 钩子、第三分量 `NONE`，
      `:835`）——本阶段是**验证项**：确认两道在 `All_At_Once` 场景下同样生效，不再实现。
-   - **4d** beta-eta 对称正规化（`Envir.beta_eta_contract`，两边都做，`#C` 不碰）。
+   - **4d** beta-eta 对称正规化**已在引擎内**（两边都做、`#C` 不碰——`:938-954`）——
+     本阶段是**验证项**（去留复审仍按下文"先 4e/4f 再定 4d"）。
    - **4e** **AoA 契约修复 `back_conv`**（改本计划之外的既有代码，§2.5）。
    - **4f** **`concl_conv` 死分支修复**（`aux_thms.ML:90`，§2.5）——**三件一起做**。
    **4e 与 4f 相互耦合**（`back_conv` 的 `orig` 捕获点要跟着 4f 调整），且与阶段 0 第 8 步
@@ -3039,11 +3055,11 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
    "必须在 fork 体内完成"这条靠人遵守的纪律，也不再有占位值（§2.5）。
    **⚠️ 主路径上绝不许 `Future.join` 产出 future**，join 一下异步就退化成同步了
    （两处已具名的同步调用点例外，穷举名单见 §2.5）。
-   **D51 分派（修订版,随失败文案钩子实施）**：文案全部出自 phi 战术槽里的那一个组装
+   **D51 分派（修订版，随失败文案钩子实施）**：文案全部出自 phi 战术槽里的那一个组装
    函数（`Agent_Give_Up`→`banner_of`+cost、`Auto_Fail`→"Fail to solve…"+义务项、
    其他→原样），经引擎 options 的 `failure_msg` 钩子抵达三个投递口——同步 `error`、
    fork 体 `Future.error_message`、批构建期票打印。`hammer_or_AoA` 把该组装函数传给
-   `all_auto` 与自身的 fork,**不另建任何分派**。
+   `all_auto` 与自身的 fork，**不另建任何分派**。
    **⚠️ 「异步会让错误在很久以后从别处冒出来」这条反对意见已被否决**：错误经 exec id
    路由回原命令、在那一行的 output panel 就地同步显示。**勿再提"异步不可观测"。**
    同理，「异步 fork 会把 worker 池占满」也已被否决——排队正是 Isabelle 的设计，
