@@ -1838,7 +1838,7 @@ restricted to interactive editing.
 | 消费点 | 位置 |
 | --- | --- |
 | phi 侧同步态 | `hammer_obligation_solver` 内 handle（`agent_cost` 走 `Phi_Reasoner.info_print`） |
-| phi 侧异步态 | future 体错误处理，拼好文案再 `Future.error_message`（`agent_cost` 走普通 `tracing`） |
+| phi 侧异步态 | 同一个组装函数经引擎 `failure_msg` 钩子投递（fork 体 `Future.error_message` / 批构建期票打印；`agent_cost` 走普通 `tracing`） |
 | AoA 侧两个 method | `by aoa` 与 `by hammer_or_aoa`，`handle Agent_Give_Up (reason, detail, _) => error (banner_of reason ^ "\n" ^ detail)`（`agent_cost` 走普通 `tracing`——`info_print` 是 phi 侧的东西、method 住 AoA 侧够不到，而它本来就只是"按 `\<phi>trace_reasoning` 分级的 tracing"、默认静默） |
 
 **核心三层（`hammer_or_AoA` / `run_AoA` / `raw_AoA`）照旧只抛结构化异常**，
@@ -3015,8 +3015,9 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
    两个 method 恒 `async = false`。新 method 用**阶段 1b 建好的那张 `banner_of`**、
    **五类原因全覆盖**（§6.2）——`by aoa` 那半截已在阶段 1b 补齐，本步只管新 method；
    **核心三层照旧只抛结构化异常**；method 层的 `agent_cost` 用普通 `tracing`。
-3. **异步接线（§2.5）**：`async_prove` 已在阶段 0 改造完，本阶段把 `run_AoA` /
-   `hammer_or_AoA` 接上 `All_At_Once`：
+3. **异步接线（§2.5）**：`async_prove` 已在阶段 0 改造完，`run_AoA` 已在阶段 3 无条件
+   接上 `async_prove All_At_Once`（写回挂产出 future 的依赖任务）；本阶段只剩把
+   `hammer_or_AoA` 接上：
    - **4a** `All_At_Once` 的实现：承诺 `G1 &&& … &&& Gn`，结论 `C` 绝不进承诺；照抄
      `proof.ML:5285-5322` 的 `merge_goal_states`；保持 `Pure.prop` 头；拆回前留
      `aconv` 断言。
@@ -3024,9 +3025,9 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
      绝不能 `Thm.maxidx_of_cterm`**）；守卫覆盖 `Assumption.all_assms_of ctxt`；
      不过 ⇒ 退回同步并报出是第几个子目标。
      **`async_prove` 里不放对象逻辑相关的检查**（§2.5）——它是通用组合子。
-   - **4c** fork 体两道防护：`Goal.check_finished`；统一
-     `handle exn => (Future.error_message pos ((serial (), …), NONE); Exn.reraise exn)`
-     ——**第三分量必须传 `NONE`**。
+   - **4c** fork 体两道防护**已在引擎内**（`Goal.check_finished`
+     `sledgehammer_solver.ML:816`；统一报告经 `failure_msg` 钩子、第三分量 `NONE`，
+     `:835`）——本阶段是**验证项**：确认两道在 `All_At_Once` 场景下同样生效，不再实现。
    - **4d** beta-eta 对称正规化（`Envir.beta_eta_contract`，两边都做，`#C` 不碰）。
    - **4e** **AoA 契约修复 `back_conv`**（改本计划之外的既有代码，§2.5）。
    - **4f** **`concl_conv` 死分支修复**（`aux_thms.ML:90`，§2.5）——**三件一起做**。
@@ -3038,7 +3039,11 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
    "必须在 fork 体内完成"这条靠人遵守的纪律，也不再有占位值（§2.5）。
    **⚠️ 主路径上绝不许 `Future.join` 产出 future**，join 一下异步就退化成同步了
    （两处已具名的同步调用点例外，穷举名单见 §2.5）。
-   **D51 分派双态**：异步态用同一张 `banner_of` 表拼文案再 `Future.error_message`。
+   **D51 分派（修订版,随失败文案钩子实施）**：文案全部出自 phi 战术槽里的那一个组装
+   函数（`Agent_Give_Up`→`banner_of`+cost、`Auto_Fail`→"Fail to solve…"+义务项、
+   其他→原样），经引擎 options 的 `failure_msg` 钩子抵达三个投递口——同步 `error`、
+   fork 体 `Future.error_message`、批构建期票打印。`hammer_or_AoA` 把该组装函数传给
+   `all_auto` 与自身的 fork,**不另建任何分派**。
    **⚠️ 「异步会让错误在很久以后从别处冒出来」这条反对意见已被否决**：错误经 exec id
    路由回原命令、在那一行的 output panel 就地同步显示。**勿再提"异步不可观测"。**
    同理，「异步 fork 会把 worker 池占满」也已被否决——排队正是 Isabelle 的设计，
