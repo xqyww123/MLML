@@ -359,10 +359,11 @@ L1 的作废 RPC 与查询 RPC 一样，**失败必须静静吞掉**（下游用
 val raw_AoA : {driver: driver, minilang_cfg: MiniLang_Agent.cfg,
                budget: MiniLang_Agent.budget, invocation_id: string, task: task}
            -> Proof.context * thm
-           -> (MiniLang_Agent.xcmd list * agent_cost * Time.time * string) future * thm
+           -> (MiniLang_Agent.xcmd list * agent_cost * Time.time * string) * thm
    (*记录只有这五个字段——raw_AoA 完全不碰 store，无 async / 无 store 相关字段。
-     副产品四件（xcmds / cost / **耗时** / 证明文本）合成一个 future 交出，与四个入口的
-     形状对齐（作者定的是那四个入口；`raw_AoA` 这一处是本计划为保持一致外推的）。
+     同步函数，裸返回副产品四件（xcmds / cost / **耗时** / 证明文本）与定理；
+     future 在上一层产生——run_AoA 把本函数喂给 async_prove（作者 2026-08-10 定：
+     future 形状只属于四个入口，raw_AoA 不包 future）。
      **第三件 `Time.time` 就是这条证明将来重放要花的时间**（未除 `Timeout.scale ()` 的原始
      耗时），由 `raw_AoA` 就地把两块加好：入口三段预处理的实测耗时 `prep_elapsed`
      + Python 交回的 `assembled_isabelle_time`（最终 op 流逐 op 的 ML 侧实测耗时之和）。
@@ -2221,8 +2222,9 @@ blob→写回→重放端到端必须真正跑一遍（与阶段 3 的 REPL 依�
 **阶段 3 实施记录（2026-08-09 晚，`Isa-Mini` 一条提交，ML+Python 同批）**：
 
 1. **16 步全落**：D31 导出（`xcmd_packer_bytes`/`xcmd_unpacker_bytes`）；D35
-   `configure_for_minilang`（12 个无条件 put，第 13 个条件式留调用方）；`AoA_RPC` 拆成
-   内部同步体 `raw_AoA_i` + 公开 `raw_AoA`（`Future.value` 包四元组）；闸门
+   `configure_for_minilang`（12 个无条件 put，第 13 个条件式留调用方）；`AoA_RPC` 改名
+   `raw_AoA`（同步函数，裸返回四元组与定理；future 由 `run_AoA` 层的 `async_prove`
+   产生——作者 2026-08-10 定）；闸门
    `aoa_allowed ()` 为体内第一格、关闭即抛 §6.1 定稿文案；体内 store/哈希/epoch 前缀
    全删；`datatype task = Usual | Learning of string` + 内部 `pack_task`；D34 两个确定性段
    抽为 `standard_tac_segment` / `merge_segment`（合并段旁注释按 D59 改写）、三段整体包
@@ -2955,16 +2957,43 @@ phi 那份按 D57 要等本计划落地之后才删，**并存窗口必然存在
 ### 阶段 3a —— `FactInTime` 把证明记进构造子（D37）
 
 零件现成：`run_mepo_and_render` 返回 `(st', prf_str, elapsed)`——证明文本本来就渲染出来了，
-只是被丢掉；`replay_mepo_proof` 已能重放；**但这两个都没进签名**（本阶段加两行导出）。
-「ML 找到证明 → Python 记进 op」的通道也现成（HAMMER 用 reporter 消息 `SH_PRF`；
-FactInTime 需要一个多带 fact 名的同类消息）。形状照抄 HAMMER 的 `cached_proof`。
+只是被丢掉；`replay_mepo_proof` 已能重放；**但这两个都没进签名**（第 1 步补导出）。
+「ML 找到证明 → Python 记进 op」的通道也现成（HAMMER 用 reporter 消息 `SH_PRF`，
+Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方向必须过 Python，因为
+最终 op 流由 Python 装配后交回）。
 
 这让 AoA 的 blob **自包含**：一个 blob 就是完整的证明（含子证明），发出去就能重放，
 不依赖 store 状态、不依赖哈希匹配、**不改变 agent 的探索行为**。
 
-**验证**：录一条含 `FactInTime` 的证明，在无 Python 会话里重放；确认 `fast_mepo_tac` 的
-10 秒搜索**不再发生**（构造子里已有证明）。schema 改动跨 ML/Python 两侧，双元数解包保住
-健壮性，两侧改动同一提交（R19）。
+**六步实施清单**（每一步照抄 HAMMER 的现成范式；步序不许调换）：
+
+1. auto_sledgehammer 导出 `run_mepo_and_render` / `replay_mepo_proof`（加进签名，
+   与 D31 同类的两行导出）。
+2. 新增 reporter 消息 `FACT_PRF of string * string * Time.time`（仿 `SH_PRF`，
+   多带 fact 名——一个 op 可以带好几个 fact）；线上取当前最小空闲 tag
+   （tag 分派表现用到 19，Python 侧 `unpack_message` 同批加分支）。
+3. `FactInTime of string * 'term` → 加 `(string * int) option` 字段——**字段形状**照抄
+   HAMMER 的 `cached_proof`（`(证明文本, 毫秒)`，可选）；`agent.ML` **两处**声明
+   （多态版与单态版）都要改。
+4. `pre_resolve_fact` 加 `exec_mode` 参数，三分支：**有记录**（不论模式）用
+   `replay_mepo_proof`；**`LIVE` 无记录**照今天搜（`fast_mepo_tac` 10 秒）并经
+   `FACT_PRF` 上报；**`REPLAY` 无记录照常搜——优雅降级，不报错**（作者定；
+   ⚠️ 这一支与 HAMMER 相反——HAMMER 的 REPLAY 无记录分支是报错，**不要照抄**）。
+5. 打包/解包 `pack_extended_fact` pair → triple，**解包双元数**
+   （`unpackTuple3 || unpackPair >> 补 NONE`——元数是线格式的一部分，`packOption`
+   管不了字段缺席；`BytesIO` 的 instream 不可变，回退安全）；打包侧一律写 triple。
+6. Python 侧：schema 加可选字段（`IsabelleFact.pack` 与 `IsabelleFact_ProveInTime.pack`
+   两处 pair → triple）；assembler 按 fact 名（`assigned_name`）贴回，范式照抄 HAMMER
+   按 `SH_PRF_Msg` 回填 `_found_tactic` 的那段；接收新消息。
+
+`enable_proof_store` **保持不变**（agent 语境恒 false，D35——探索行为不依赖 store 状态，
+⚠️ 别顺手动它）。ML 与 Python **两侧改动同一提交**（R19）。
+
+**验证**：带 prove-in-time 事实的证明录制再重放，确认日志无 MePo/fastforce 搜索痕迹
+（构造子里已有证明就不搜）；双元数解包单元测试（pair 输入 → `NONE` 字段）；纯 ML 会话
+重放一条含 `FactInTime` 的证明（重放通道本就不发 RPC，顺手确认）；跑 `test.py`。
+（旧记录端到端兼容验证不需要——D59 冷启动后盘上无旧格式条目；双元数解包保留为
+稳健性措施。）
 
 ### 阶段 4 —— `hammer_or_AoA` 拼装、异步、落库
 
