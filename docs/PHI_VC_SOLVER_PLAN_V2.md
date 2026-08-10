@@ -3452,11 +3452,19 @@ F2 运行期配置串（`AoA_read_proof_store = false`、`AoA_enable_write_memor
 D19 裸引擎位，take/drop 列表手术目标）。随后 mcp 交互全文评估该文件（2810 行）：
 `:2732` 引擎借 store 续搜自愈并写库；`:2712` 交互仍解不动（真·引擎硬点）；
 `:2715` 纯级联（前一证明未闭合的 "Bad context"）；**`:2529` 交互失败但批构建通过**——
-其推导义务含 schematic 变量，批构建引擎靠实例化解出，而交互路径上引擎未果转 AoA 后,
-合并段 atomize 把 schematic 拍成**全称闭包**，agent 对闭包给出反驳（banner ① 渲染
-正确、论证对闭包成立），但**全称闭包为假不蕴含原 schematic 义务为假——refute 报告
-对 schematic 义务语义不可靠**（不伤可靠性，只会把健康义务误报为已反驳）；处置待
-作者裁决。工序注记：批构建第一次尝试被本会话的 10 分钟工具超时误杀，遗留
+已证实的事实（证据：该次运行的 `proof.yaml`）：交互路径上 AoA 收到的根目标**文本上
+就是** `∀x xa (xb::nat⇒'c). A ∧ B`、无任何前提（`iv'` 留在固定变量区），agent 取
+`x := (λ_ _ _. False)` 反驳之——**对这个 ∀ 目标，反驳论证本身是对的**；而批构建通过了
+同一条命令。两者若面对同一义务则矛盾（引擎证不出假命题），故**两条路径上的义务
+必有分歧**。分歧点尚未钉死——已排除的嫌疑：合并段（atomize 是 conversion 动不了
+schematic；`Variable.import`/`export` 往返后仍是 schematic）、`Minilang.INIT`
+（只拒多子目标共享 schematic）、ML→Python 目标序列化（`leading_goal_data` 原样传项）；
+且管线本为 schematic 直传而设（`INST_VAR` 操作、Python 侧
+`can_operate_on_schematic_goal`）。待查候选：义务生成端（deriver 两种模式下产出
+不同义务）、phi 槽前提收集的丢失、或某个未找到的闭包步。**探针方案**：在战术槽入口
+与 `run_AoA` 入口各 dump 一次 `:2529` 义务的 sequent，批/交互两模式对比。处置与
+探针执行待作者裁决。〔更正：本记录先前一版写"批构建引擎靠实例化解出、合并段拍成
+全称闭包"，为未经证实的推断，已撤回。〕工序注记：批构建第一次尝试被本会话的 10 分钟工具超时误杀，遗留
 `Phi_System_Base` 半写构建库（`SQLITE_CONSTRAINT_PRIMARYKEY`），删除该残件三件套
 （均为本会话产物）后二跑即绿——长构建一律 `nohup` 脱离。
 `Phi_Types.proof-store`（未跟踪，非本会话所建）在评估中有增长，未纳入提交，待作者定。
