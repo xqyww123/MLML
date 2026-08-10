@@ -3413,8 +3413,53 @@ refute（论证独立性）——报告种类是 agent 的行为选择，分派�
 **本步未竟小项**：phi 同步态的 give-up 渲染（`hammer_obligation_solver` 外层 handle
 的 `info_print` + banner）只做了静态核对，实弹触发需要一条真 phi 义务走到 AoA
 give-up——留待后续批次顺带（如 `:3843` 处置后的批构建）。
+〔追记，同日晚些〕该小项已意外闭合：`Phi_Types.thy:2529` 的推导义务在交互评估中
+经战术槽真走到 AoA 并收到 give-up，错误面 = banner ① + 反驳论证，渲染正确
+（见下文第 3 步记录，含随之发现的 refute 语义问题）。
 附带开销：启动检查把 6 个 theory 的 9 个缺失实体解释补进语义 DB（$0.90，一次性、
 持久复用）。
+
+**第 4 步（两 method × 五类矩阵）已按作者裁决逐格实跑（2026-08-10）**：
+作者当日四项裁决——REPL 服务器带 `AOA_ALLOW_NONINTERACTIVE=yes` 重启（已做）；
+test driver 闸门豁免（批准）；`:3843` 甲案；矩阵逐格实跑（批准）。
+矩阵结果：10 格中 8 格字面实跑全过——`by aoa`×`resource_unavailable`（第 2 步 R1）、
+`by hammer_or_aoa`×`resource_unavailable`（零成本，代理不在）、两 method×`refute`
+（$0.11/$0.08）、两 method×`surrender`（哥德巴赫，走完默认 8 次重试的投降协议，
+$1.30/$1.93、各 26 次工具调用）——五格错误文案逐字 = 对应 banner + detail；
+`technical_failure` 两格以 method 体直调完成（不可 atomize 的共享 schematic 状态
+无法用字面 lemma 陈述，method 体即字面上限）。**两个 `resource_exhausted` 格
+不可实跑**：method 面写死 `default_cfg`（14400 s / 10000 工具调用 / 8 重试），
+真跑不可行；已由 `run_AoA` 缩预算真轨道触发覆盖（第 2 步 ③）。矩阵开销 ≈ $3.42。
+`aoa_repl_app.ML`（现 :106-119）静态核对：`Agent_Give_Up` 按结构化异常消费、
+原样回传 reason/detail/九字段 cost，不经 `banner_of`——核心层未被拍成 `error`。
+**闸门豁免落地**：`is_test_driver` 建于 `agent_server.ML` 并导出，闸门
+（`raw_AoA` 入口）与 REPL app 的 store 旁路共用；`Minilang_AoA`/`Minilang_AoA_REPL`
+增量构建绿；`Isa-Mini e79508f`。golden 测试 `Branch1` 经重启后的 REPL 通过（2.0 s）。
+
+**第 5 步（REPL 与评测冒烟）部分完成（2026-08-10）**：
+`REPL.ML:955`（阶段 0 的 options record + 特许 join）经 IsaREPL 客户端实弹冒烟——
+`Minilang_AoA` 语境开平凡引理，`hammer` 返回真战术文本；`evaluator.py:495` 的两条
+F2 运行期配置串（`AoA_read_proof_store = false`、`AoA_enable_write_memory = false`）
+经同一 `repl.config` 轨道在线接受（名字失效会当场报错）。**潜伏 bug（非本计划回归，
+待作者裁决修法）**：REPL `hammer` 带正超时把 `"timeout = N, "` 拼在默认为空的
+`auto_sledgehammer_params` 前，`get_sledgehammer_params` 的严格解析拒绝孤立尾巴
+（`Isa-REPL 647ab23` 即有；修法二选一：REPL 端不拼尾逗号 / 解析器跳过空白 token）。
+完整基准评测（jEdit + Xvfb 全栈）冒烟未跑，基准/案例选择待作者给定。
+
+**第 3 步（全栈重建）首轮：`Phi_System` 批构建被 `Phi_Types.thy` 挡住（2026-08-10）**：
+`:3843` 清障后闭闸批构建 `Phi_System`——`Phi_System_Base`/`Phi_Semantics_Framework`
+绿，`Phi_System` 本体倒在 **`Phi_Types.thy:2712`**（`certified by auto_sledgehammer .`，
+D19 裸引擎位，take/drop 列表手术目标）。随后 mcp 交互全文评估该文件（2810 行）：
+`:2732` 引擎借 store 续搜自愈并写库；`:2712` 交互仍解不动（真·引擎硬点）；
+`:2715` 纯级联（前一证明未闭合的 "Bad context"）；**`:2529` 交互失败但批构建通过**——
+其推导义务含 schematic 变量，批构建引擎靠实例化解出，而交互路径上引擎未果转 AoA 后,
+合并段 atomize 把 schematic 拍成**全称闭包**，agent 对闭包给出反驳（banner ① 渲染
+正确、论证对闭包成立），但**全称闭包为假不蕴含原 schematic 义务为假——refute 报告
+对 schematic 义务语义不可靠**（不伤可靠性，只会把健康义务误报为已反驳）；处置待
+作者裁决。工序注记：批构建第一次尝试被本会话的 10 分钟工具超时误杀，遗留
+`Phi_System_Base` 半写构建库（`SQLITE_CONSTRAINT_PRIMARYKEY`），删除该残件三件套
+（均为本会话产物）后二跑即绿——长构建一律 `nohup` 脱离。
+`Phi_Types.proof-store`（未跟踪，非本会话所建）在评估中有增长，未纳入提交，待作者定。
 
 ### 阶段 6 —— 清理与文案批次
 
