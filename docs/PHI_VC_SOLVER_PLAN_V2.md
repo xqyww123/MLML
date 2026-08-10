@@ -3232,8 +3232,30 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 的落法）；4d 依"先 4e/4f 再定去留"撤除（`aconv` 断言保留为末位保险）。
 已完成的验证：R33 两形状回归、还原函数单元、
 引擎支同/异步 `All_At_Once` 端到端（同键同文本）、零子目标短路、裸 ML 进程
-`aoa_allowed () = false`（fail-closed）。**待 REPL/Python 环境的验证项**（store 两级、
-L1 写、闸门关闭重放、`Each_Goal` 部分失败、异常可见性等）挂起至阶段 5 全栈验证一并跑。
+`aoa_allowed () = false`（fail-closed）。
+
+**REPL 重启后补跑的一批（2026-08-10 中午，作者重启 REPL 并批准开跑）**：
+
+- **快照套件 `test_AoA.py` 全跑：368/368 通过**（一次全跑 366/368——`ObviousTimeout_subproof`
+  是满负荷下 sledgehammer 踩 10 秒超时的抖动，单跑即过；`QueryScalarStringField` 是
+  2026-07-09 的 golden 收录了**依赖嵌入排序**的实体列表而语义库已演进，作者批准更新
+  golden，`Isa-Mini 710a096`。该用例的断言本身自始至终是过的）。它顺带覆盖了本批新落地的
+  `FactInTime` 三元组线格式、`FACT_PRF` 五处回填、`Induction` 的 `else` 分支、
+  `concl_conv` 的 `⋀` 分支修活（R33）。
+- **`Each_Goal` 异步下部分失败专项**：① **整条记录不落库**——写库**打开**下实测，探针键
+  查不到、store 文件里也搜不到；② **已成功的子目标不被拖累**——直调 `async_prove'`
+  （`all_auto` 只交回合并后的单个 future，验不到这一项），两个子目标各自一个 future，
+  失败那条抛异常、**成功那条照常兑现**；③ "报错指出是第几个"——实际报的是
+  `Auto_Fail (Subgoal_Fail <失败子目标的项>)`，**用项而非序号标识**；作者
+  2026-08-10 裁决**先跳过**（本条验收措辞与引擎既有设计的出入留待日后）。
+- **产出 future 的异常可见性**（本在挂起清单里，随上一项顺带验到）：fork 体失败经
+  `Future.error_message` 在**无头 ML 进程**下**确实打印**（`***` 行），产出 future 被
+  join 时如实抛同一异常，写库依赖任务的异常分支是空操作故**不重复报错**。
+
+**仍待环境的两项**：**L1 写与两级 store 专项**必须有 Python RPC host（无头 ML 进程里
+三个 L1 RPC 只会静默降级成"未命中"，验不出东西），需照 `test_AoA.py --rpc-addr` 那套
+搭台；**闸门关闭时的重放**与阶段 5 fork 会话已实测的真实记录纯 ML 重放高度重合
+（即抓到 `aoa_replay_method` 缺 `is_dummy` 守卫那次），不重复做，以其阶段 5 记录为准。
 **join 放行（作者 2026-08-10 裁决，已了结）**：`hammer_or_AoA` MISS 路径里提取两个
 内层分支产物的 2 处 `Future.join`（`agent_server.ML:2002` / `:2029`）合规。清点该问题
 时发现旧名单**开工前就已不穷举**——`agent.ML:1663`、`proof.ML:4362`、`thor.ML:134`
