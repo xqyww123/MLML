@@ -3350,8 +3350,17 @@ L1 写、闸门关闭重放、`Each_Goal` 部分失败、异常可见性等）�
 故在调用点加一臂 `handle Auto_Fail => error (compose e)`（仍走同一个组装函数，
 不建第二套分派；`Agent_Give_Up` 不在此拦截，照旧落到外层打印 agent 花费的 handler）。
 已验：PLPR / Phi_BI / Phi_Semantics_Framework 三会话闸门关闭增量批构建全绿。
-**未完**：`Phi_Type.thy:5132` 义务的闸门放行实测解出与落库（需 LLM + Python 在场）、
-第 2 步起的全部项。
+**`:5132` 义务实测解出（2026-08-10，isabelle-mcp + `AOA_ALLOW_NONINTERACTIVE=yes`，
+`.mcp.json` 的该行环境变量经作者批准加入）**：store miss（键 `21edc3ab99b5bcfe`）→
+引擎两子目标解出其一（cvc5）→ 另一子目标 Auto_Fail 转 AoA（driver ClaudeCode）→
+第 1 轮即证毕（cost：input 4108 / output 3720 / $0.9629 / 111.4s，其中
+isabelle_time 25.5s）→ L2 写回在场（`Phi_Type.proof-store` 出现该键与
+`aoa_replay "<b64>"` 文本）。L1 写与闸门关闭重放的验证随第 3 步起的批次做。
+**既存失败，与换接无关**：`:5132` 之前另有三处 `certified by (…auto_sledgehammer…)`
+失败（`:3806`/`:3843`/`:4570`，阶段 2 记录的冷库重搜失败批的成员）——它们写的是
+**上游引擎裸 method**（D19 后解析到 `Auto_Sledgehammer.auto_sledgehammer`），
+不经 `hammer_or_AoA`、开闸也不叫 AoA；`Phi_System` 批构建仍被它们挡住，
+分诊与处置待作者裁决。**未完**：第 2 步起的全部项。
 
 ### 阶段 6 —— 清理与文案批次
 
