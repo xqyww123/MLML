@@ -831,32 +831,63 @@ fork 决策处检查 `Proofterm.any_proofs_enabled`（§7 阶段 0 后记 ⑥）
    消息才必然打印。消息文本经 options 的 `failure_msg` 钩子组装（§2.4；
    钩子缺席时退回 `Runtime.exn_message`）。
 
-#### `All_At_Once` 的 beta-eta 正规化
+#### `All_At_Once` 的 beta 正规化
 
-拿到新的证明状态后，对**承诺里的合取**与**原 sequent 的那些 goals** 同时做
-**beta-eta contraction**（`Envir.beta_eta_contract`），两边形状一致；**结论 `#C` 不碰**。
+造承诺与造目标状态之前，对**承诺里的合取**与**原 sequent 的那些 goals** 同时做
+**beta 正规化**（`Envir.beta_norm`），两边形状一致；**结论 `#C` 不碰**。
 必须**对称做两边**：只正规化抽出来的 `G_i` 会撞上 `Thm.implies_elim` 的 `aconv`（alpha-only）。
-连 eta 一起做是为了把"依赖实测、依赖规则集"的性质换成**结构性**性质。
+回程那座桥用同一口径（`Thm.beta_conversion true`），把归一后的 part 接回原始 cprem。
 
-已知且接受的后果：AoA 在 fork 体内看到的是 **eta-收缩后的子目标**（会进 LLM 提示、参与其
-模式匹配）（R30）。`aconv` 断言保留为末位保险。
+**为什么必须有它**（作者 2026-08-10 裁决，第六轮评审触发）：`Goal.protect` 本身就是一次
+定理合成（`Drule.comp_no_flatten` → `Thm.bicompose`），其全正规化分支会把代入的项
+**beta 正规化**。于是承诺若用原始 cprems、而求解器收到的是已正规化的状态，**任何含
+beta-redex 的子目标都会让 `aconv` 断言对一次成功的证明误触发**。这与 AoA 往返无关——
+那个原因已由 4e 在 AoA 自己那端修掉；本条修的是承诺与目标状态之间的同形性。
 
-**落地 `back_conv` 之后本条即可撤**（退成一句断言或删除）——`back_conv` 修的是**原因**，
-正规化修的是**症状**；实施顺序：先做 `back_conv`，再决定正规化的去留。
+**只做 beta，不做 eta**（作者 2026-08-10 裁决）：实测 `Goal.protect` **不碰 eta-redex**
+（不做任何正规化时，带 eta-redex 的子目标照样让断言通过），所以 eta 那一半在这里买不到
+任何东西，却要付 R30 的代价——它会让 AoA 在 fork 体内看到 eta-收缩后的子目标（进 LLM
+提示、参与其模式匹配）。改成 beta-only 后 **R30 这笔账消失**。
+留下的口径差别：eta 那一半原本还买"归成范式后任何人再收缩都是空操作"这层结构性保险，
+beta-only 之下这条降为经验判断——若求解器自己去 eta-收缩受保护结论，承诺会对不上；
+AoA 一侧已由 4e 的还原关上，引擎一侧靠 `#` 保护，且真出事是内核在兑现时**响亮报错**。
+`aconv` 断言保留为末位保险。
 
-#### AoA 必须归还与收到时逐字相同的结论
+#### AoA 必须归还与收到时相符的结论
 
 这是 AoA 的一个**既有缺陷**（`Minilang.INIT` 的 `init_goal` 在往返中 beta-收缩了受保护
 结论），异步机制只是第一个探测器。**修法是构造，不是验证**：入口（`init_goal` 之前）
-记下当时的受保护结论 cterm `orig`，出口（`finalize_goal` 之后）用
+记下当时的受保护结论 cterm `orig`，出口（`finalize_goal` 之后）把它还原回去。
+
+「相符」的口径是 **alpha/beta/eta 加上实例化**（作者 2026-08-10 裁决）：**实例化必须保留、
+不得还原**——agent 把结论里的 `?v` 实例化成 `t` 之后证出的是 `P t`，改写回 `P ?v` 等于
+凭特例宣称通则，不健全。所以还原的目标是「`orig` 在这次证明中被实例化后的样子」：
 
 ```sml
-fun back_conv orig ct =
-      Thm.transitive (Drule.beta_eta_conversion ct)                    (* ct ≡ norm ct *)
-                     (Thm.symmetric (Drule.beta_eta_conversion orig))  (* norm orig ≡ orig *)
+fun alpha_beta_eta_conv target ct =
+      Thm.transitive (Drule.beta_eta_conversion ct)                      (* ct ≡ norm ct *)
+                     (Thm.symmetric (Drule.beta_eta_conversion target))  (* norm target ≡ target *)
+
+fun alpha_beta_eta_inst_conv orig ct =
+  let val nf = Thm.rhs_of o Drule.beta_eta_conversion
+      val target = Thm.instantiate_cterm (Thm.match (nf orig, nf ct)) orig
+                   handle Pattern.MATCH => orig
+   in alpha_beta_eta_conv target ct end
 ```
 
-得 `ct ≡ orig`，再 `Conv.fconv_rule (concl_conv (K (back_conv orig)) ctxt) th`。
+再 `Conv.fconv_rule (alpha_beta_eta_inst_conv orig) th`。三处要点：**匹配在 beta-eta
+范式上做**（`Pattern.match` 拒绝头部是 `Abs` 的模式，而带 beta-redex 的受保护结论正是
+这个形状——实测确认这是必需的），**实例化用未归一的 `orig`**（这样还原出来的是它逐字的
+形状），**健全性不依赖匹配**（σ 再离谱也只会让 `Thm.transitive` 抛异常，内核是硬闸）。
+`orig` 不含 schematic 时 σ 恒空、两个函数逐字等价，**异步路径因此不受影响**（实测）。
+
+两者住在 `structure Phi_Conv`，基座落在 `Isa-Mini/library/aux_thms.ML`——消费者都在
+phi 之下，phi-system 那五个 `Phi_Conv` 文件按它们既有的 `include PHI_CONV` /
+`open Phi_Conv` 写法接续扩展。
+
+还原**失败时宽容**（`handle THM _ => th`，交回未还原的结论）：这是留给未被预见的偏差的
+兜底，避免烧完整个 agent 预算之后把一次成功的证明判成硬失败；异步路径的严格契约仍由
+`fork_state` 的 `aconv` 断言把关。
 用 `fconv_rule` 而非手写 `Thm.equal_elim`——结论未被动过时等式自反，`Conv.fconv_rule`
 原样返回同一个 thm 对象（`conv.ML:218-221` 的短路），常见情形零代价。失败面是诚实的：
 差别超出 beta/eta 时 `Thm.transitive` 当场抛异常，不会悄悄给出错误结果
@@ -3164,11 +3195,11 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 **实施记录（2026-08-10）**：`auto_sledgehammer 74d76e0` / `Isa-Mini d0b085d`。
 第 1/2/4 步照 §2.3 流程图落地（`hammer_or_AoA` + method `hammer_or_aoa` + fork 末尾
 一次写回）；4a–4c 对照引擎代码逐项核毕（承诺形状/两道守卫/两道防护均在位）；
-4e/4f 同批落地——`back_conv` 进 `aux_thms.ML`（`MINILANG_AUX` 导出），捕获/还原点
-定在 AoA 边界（`raw_AoA` 与 `aoa_replay` 两个往返出口：入口
-`Drule.strip_imp_concl` 记受保护结论、`Minilang.conclude` 后 `fconv_rule` 还原——
-即"在 conclude 之后对整条 prop 施加还原"的落法）；4d 依"先 4e/4f 再定去留"撤除
-（`aconv` 断言保留为末位保险）。已完成的验证：R33 两形状回归、`back_conv` 单元、
+4e/4f 同批落地——还原函数进 `aux_thms.ML`，捕获/还原点定在 AoA 边界（`raw_AoA` 与
+`aoa_replay` 两个往返出口：入口 `Drule.strip_imp_concl` 记受保护结论、
+`Minilang.conclude` 后 `fconv_rule` 还原——即"在 conclude 之后对整条 prop 施加还原"
+的落法）；4d 依"先 4e/4f 再定去留"撤除（`aconv` 断言保留为末位保险）。
+已完成的验证：R33 两形状回归、还原函数单元、
 引擎支同/异步 `All_At_Once` 端到端（同键同文本）、零子目标短路、裸 ML 进程
 `aoa_allowed () = false`（fail-closed）。**待 REPL/Python 环境的验证项**（store 两级、
 L1 写、闸门关闭重放、`Each_Goal` 部分失败、异常可见性等）挂起至阶段 5 全栈验证一并跑。
@@ -3183,11 +3214,11 @@ L1 写、闸门关闭重放、`Each_Goal` 部分失败、异常可见性等）�
    超出 beta/eta 的运行**会在烧完整个 agent 预算之后被 `Thm.transitive` 打成硬失败：
    同步路径上实例化了结论里的 schematic（`INST_GOAL_VARS`、普通规则消解），
    以及合并段的 `Variable.import/export` 往返把结论里的 `Var` 按 fresh index
-   重新泛化——两者都是正确结果而非缺陷。现在这两种情形原样交回未还原的定理
-   （即 4e 之前的行为）；没有损失：schematic 目标永不进异步路径，异步路径上真出现
-   超出 beta/eta 的偏差仍由 `fork_state` 的 `aconv` 断言诚实报出。
+   重新泛化——两者都是正确结果而非缺陷。宽容化先落地（交回未还原的定理，即 4e 之前
+   的行为）；**随后（作者 2026-08-10 裁决）改为把转换本身加强**：见下方"还原口径的
+   加强"。
    ⚠️ **这推翻了 §2.5 "失败面是诚实的…实施时把它包成一句说人话的错误"那一句**
-   （该句以"差别只在 beta/eta"为前提，评审证明前提不成立）；§2.5 正文待改，
+   （该句以"差别只在 beta/eta"为前提，评审证明前提不成立）；§2.5 正文已改，
    阶段 6 的文案批次不再需要为它准备错误文案。
 2. **`Internal_Failure` 单列一臂上抛**（§2.9 消费侧第一条，实现时漏读）。原通配
    `handle Auto_Fail _` 会把"引擎坏了"也链进 AoA：闸门开着则每条义务白烧一次 LLM
@@ -3203,6 +3234,23 @@ L1 写、闸门关闭重放、`Each_Goal` 部分失败、异常可见性等）�
    那端修掉），而是**保持承诺与目标状态同形**；§2.5 "落地 `back_conv` 之后本条即可撤"
    那句预测据此作废。已实测复现：手工构造的含 redex 两前提状态经异步 `All_At_Once`
    跑通，而就地复刻的撤除后写法在同一输入上确实不匹配。
+
+**还原口径的加强与 beta-only 正规化（作者 2026-08-10 裁决；`auto_sledgehammer 3102b9d`
+/ `Isa-Mini c713b7f` / `phi-system b09f497e`）**：
+
+- **`back_conv` 更名并加强为 `Phi_Conv.alpha_beta_eta_inst_conv`**，口径 = alpha/beta/eta
+  **加实例化**（§2.5 正文已改写，含实现与三处要点）。上面第 1 条那两类"合法却还原不了"
+  的运行（结论 schematic 被实例化、合并段重索引）**现在能真的还原**，宽容兜底退居为
+  未预见偏差的最后一道。落点 `structure Phi_Conv`，基座在 `Isa-Mini/library/aux_thms.ML`，
+  phi-system 的 `helpers.ML` 改成 `include PHI_CONV` / `open Phi_Conv` 接续。
+  实测：实例化、重索引、`orig` 自带 redex、redex 叠重索引四类都还原成功；真偏差与
+  泛化方向仍然抛异常；**`orig` 无 schematic 时与旧实现逐字等价**（成功与失败两种情形
+  都比过），异步路径因此可证不受影响。
+  一处实测订正：重索引**不是** `Variable.import/export` 本身造成的（单独往返原样还回
+  `?x.0`），而是合并段在 import 之后的内核前向构造把 maxidx 顶高，`export` 的重新泛化
+  落在 `maxidx+1`。
+- **对称正规化改 beta-only**（`Envir.beta_norm`，回程桥同口径 `Thm.beta_conversion true`）。
+  实测 `Goal.protect` 不碰 eta-redex，eta 那一半买不到东西却要付 R30；**R30 随之消除**。
 
 ### 阶段 5 —— 换接与全栈验证
 
@@ -3465,7 +3513,7 @@ L1 写、闸门关闭重放、`Each_Goal` 部分失败、异常可见性等）�
 | R27 | D60 依赖各机器诚实配置 `timeout_scale`。**下游用户机器更慢又没配时，重放预算 `1.5t+1s` 不够 ⇒ 重放超时 ⇒ 按坏条目清理打落盘墓碑 ⇒ 随包分发的那条记录在他机器上被永久删掉 ⇒ 闸门关着即报 §6.1、构建失败，重跑也救不回来**（墓碑落到下游机器上本身是设计预期，见 §2.3；风险在于它可能成片触发） | 作者知情接受（不设下限）；文档写明慢机应配置该官方选项；**阶段 5 第 6 步的端到端验收量墓碑条数，非 0 即暴露** |
 | R28 | 键公式改造 ⇒ **全部**既有证明缓存条目失效（含 phi 的 `.phi-cache` 35、Isa-Mini 的 141 个 `.proof-cache`、其余仓库的 20 个 `.proof-cache`——主仓库 4 / PutnamBench 13 / miniF2F 2 / NTP4VC 1、Python 侧 L1 的 89 条） | 作者知情接受并授权实施时顺带清除（§2.6 / 阶段 6 第 3 步）；评测流水线首轮成本升高后回落 |
 | **R29** | 闸门移到 `raw_AoA` 入口后，**闸门关着的机器上 ⓪-L2 未命中仍会发一次 L1 查询 RPC、懒启动 Python**；L1 前置到 ⓪ 之后，这落在**主路径**上 | 作者接受此交换（换来 D29「闸门与重放无关」完整成立）；**硬性要求：L1 查询 RPC 失败必须降级为「未命中」**，阶段 3/4 各有专项。〔2026-08-09 缩小〕L1 通用化后拉起的是独立的 `IsaMini.ProofStore`（一个 SQLite 包装），**不再拉起 AoA 的 agent 栈** |
-| **R30** | `All_At_Once` 的 beta-eta 正规化使 AoA 在 fork 体内看到 **eta-收缩后的子目标**（会进 LLM 提示、参与其模式匹配），属行为面变化 | 作者知情接受；`back_conv`（4e）落地后本条即可撤——它修的是原因，正规化修的是症状 |
+| **R30** | `All_At_Once` 的 beta-eta 正规化使 AoA 在 fork 体内看到 **eta-收缩后的子目标**（会进 LLM 提示、参与其模式匹配），属行为面变化 | **已消除**（作者 2026-08-10 裁决改 beta-only）：实测 `Goal.protect` 不碰 eta-redex，eta 那一半买不到东西；正规化本身则**长期保留**，理由改为"保持承诺与目标状态同形"（§2.5），原先"`back_conv` 落地后即可撤"的预测已被实测推翻 |
 | **R31** | `Internal_Failure` 对"兄弟任务把我们拖垮"这种情形标签略重（不单列"祖先 group 已死"分支，作者定：别做；"有竞态"是评审分析，不是作者的话） | 作者知情接受；`Internal_Failure` 原样上抛、不叫 AoA，用户能看到真因 |
 | **R32** | 停报 `EVENT_CACHE` 造成用量统计的**历史数据断层**，跨期比较会失真；Worker 一律不动，于是服务端两列显示同一个数 | 作者知情接受（一个错的数字比没有更糟）；`usage_count.py` 文档写明（阶段 6） |
 | **R33** | 修活 `concl_conv` 的死分支后，`init_goal` / `finalize_goal` 在 `⋀`-顶层状态上的行为会变（今天作用于整项、修好后只作用于内层结论） | 阶段 4 第 4f 步"三件一起做"，两种形状各跑一遍往返与还原 |

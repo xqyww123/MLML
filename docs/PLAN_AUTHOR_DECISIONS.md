@@ -576,3 +576,17 @@ hammer_or_AoA:
   **随之作废的两句计划原文**（评审证明其前提不成立，非作者改主意）：
   §2.5「差别超出 beta/eta 时…把它包成一句说人话的错误」——超出 beta/eta 不再等于
   缺陷；§2.5「落地 `back_conv` 之后本条即可撤」——对称正规化另有承诺同形的作用。
+
+## 2026-08-10 裁决批（第六轮评审后：还原口径与正规化口径）
+
+- **`back_conv` 加强为实例化感知，并更名**：作者对「back_conv 会把合法的成功证明打成
+  硬失败」答「**建议 back_conv 重命名为 alpha_beta_eta_inst_conv 来解决场景 ABC**」。
+  口径 = alpha/beta/eta **加实例化**；实例化必须**保留**不得还原（否则以特例充通则，
+  不健全）。落点由作者指定：「**你可以在 aux_thm.ML 中自建 structure Phi_Conv 然后之后
+  `structure Phi_Conv = struct open Phi_Conv ... end` 用这种方式来 extend**」。
+  实现细节（匹配在 beta-eta 范式上做、实例化用未归一的 orig、删掉冗余的第二级
+  first-order 匹配）出自实证验证，非作者裁决。
+- **对称正规化只做 beta，不做 eta**：作者问「**那么我们只需要保留旧的 beta 正规化，
+  对吗？而不需要 eta 对吗？**」，实测支持（`Goal.protect` 不碰 eta-redex），据此定案。
+  连带 **R30 消除**。
+- **`exec_mode` 的存废**（同日早些时候）：作者答「**好的，那就保留**」，见上一批次。
