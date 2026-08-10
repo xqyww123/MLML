@@ -3456,15 +3456,30 @@ D19 裸引擎位，take/drop 列表手术目标）。随后 mcp 交互全文评�
 就是** `∀x xa (xb::nat⇒'c). A ∧ B`、无任何前提（`iv'` 留在固定变量区），agent 取
 `x := (λ_ _ _. False)` 反驳之——**对这个 ∀ 目标，反驳论证本身是对的**；而批构建通过了
 同一条命令。两者若面对同一义务则矛盾（引擎证不出假命题），故**两条路径上的义务
-必有分歧**。分歧点尚未钉死——已排除的嫌疑：合并段（atomize 是 conversion 动不了
-schematic；`Variable.import`/`export` 往返后仍是 schematic）、`Minilang.INIT`
-（只拒多子目标共享 schematic）、ML→Python 目标序列化（`leading_goal_data` 原样传项）；
-且管线本为 schematic 直传而设（`INST_VAR` 操作、Python 侧
-`can_operate_on_schematic_goal`）。待查候选：义务生成端（deriver 两种模式下产出
-不同义务）、phi 槽前提收集的丢失、或某个未找到的闭包步。**探针方案**：在战术槽入口
-与 `run_AoA` 入口各 dump 一次 `:2529` 义务的 sequent，批/交互两模式对比。处置与
-探针执行待作者裁决。〔更正：本记录先前一版写"批构建引擎靠实例化解出、合并段拍成
-全称闭包"，为未经证实的推断，已撤回。〕工序注记：批构建第一次尝试被本会话的 10 分钟工具超时误杀，遗留
+必有分歧**。**探针已执行、分歧点已钉死（2026-08-10，作者批准；探针为临时代码，跑完即撤，
+两仓库已回到已提交状态）**：探针三处——phi 战术槽入口（键含 `Mul_Quant_LenIv` 者）、
+`raw_AoA` 入口、AoA 预处理段之后。结论：**全称闭包是义务生成端（deriver）产出的**，
+在战术槽入口的 dump 里就已带 `∀x xa xb`；`raw_AoA` 入口与预处理后三份 dump 逐字相同
+——AoA 的标准段/拆分段/合并段**一个字都没动**。故合并段、`Minilang.INIT`、序列化、
+D51 渲染全部无责，agent 的反驳对它收到的义务**成立**。
+该义务本身畸形：同批其他性质（`Abstract_Domain`/`Carrier_Set`/`Functionality`/
+`Identity_Element⇩I⇩E`/`Object_Equiv`/`Separation_Homo⇩I`/`Module_*`）的义务都是
+「假设 ⟶ 断言」的健康形状，唯独 `Transformation_Functor` 这条把「mapper 关系逐点
+成立」放进了**结论的合取肢**而非假设，且第三个量化变元类型是 `nat ⇒ 'c`
+而结论侧同位是 `'c list`（列表 vs 函数的错位＝退化分支指纹）。
+**非确定性**：健康运行（作者 jEdit、二跑、五跑）根本不产生这条义务——store 转储
+（`Proof_Store_Format.scan` 全表 67 条记录、**零墓碑**）显示键
+`local.φMul_Quant_LenIv/Transformation_Functor/0` **从未有过记录**；异常运行
+（本会话 mcp 两次、三/四跑）才产出它。哪条分支触发取决于 reasoner 搜索顺序/时序。
+影响面：换接前引擎只是"失败"，换接后 agent 会**正确地反驳**它，D51 分派把 refute
+拍成硬 `error`，整条 `\<phi>type_def` 当场阵亡。已记入 `phi-system Docs/TODO.md`
+（`f9bc1c8c`），含"refute 类 give-up 在义务槽是否应软失败（空 Seq、让 reasoner
+回溯）而非硬 error"这一设计问题。〔更正：本记录先前一版写"批构建引擎靠实例化解出、
+合并段拍成全称闭包"，为未经证实的推断，已撤回。〕
+**同批新拦路者 `Phi_Types.thy:2591`**（五跑首次暴露）：`❴`（phi 块开括号）抛裸
+`exception Option raised (General/basics.ML:84)`（即某处 `the NONE`）。它与 `:2529`
+**互斥出现**：三/四跑死在 2529 未到 2591；五跑 2529 走了健康分支、越过后死在 2591。
+成因未查，归属未定（phi 推理机内部 vs 换接面），待裁。工序注记：批构建第一次尝试被本会话的 10 分钟工具超时误杀，遗留
 `Phi_System_Base` 半写构建库（`SQLITE_CONSTRAINT_PRIMARYKEY`），删除该残件三件套
 （均为本会话产物）后二跑即绿——长构建一律 `nohup` 脱离。
 `Phi_Types.proof-store`（未跟踪，非本会话所建）在评估中有增长，未纳入提交，待作者定。
