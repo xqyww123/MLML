@@ -3378,7 +3378,43 @@ AoA 记录的首次 store 命中重放报
 阶段 3 纯 ML 冒烟全是直调函数、不经方法机械，故未暴露。修复 = 同款守卫
 （`is_dummy` 定义上移）。验证：合成 blob 走完整 store 通道（`eval_prf_str`）
 端到端成功 + dummy 干净跳过（单元）；`Phi_Type.thy:5132` 真记录 store 命中、
-纯 ML 重放成功、零 AoA 调用（实弹验收）。**未完**：第 2 步起的全部项。
+纯 ML 重放成功、零 AoA 调用（实弹验收）。**未完**：第 3 步起的全部项（第 2 步见下段）。
+
+**第 2 步 D51 验证已完（2026-08-10，isabelle-mcp，五类退出原因全部人为触发）**：
+静态面——`banner_of` 六条输出（五条定稿 + 未识别原因的兜底条）逐字节断言全过；
+三个消费点（phi 战术槽的组装函数、`by aoa`、`by hammer_or_aoa`）读的都是同一个
+`MiniLang_Agent_AoA.banner_of`；phi 同步态 `agent_cost` 走 `Phi_Reasoner.info_print`
+（等级 1，内容即九字段 `string_of_cost`）；`raw_AoA` 在每次 agent 返回处 `tracing`
+九字段 cost 行（追加 ` time=` 字段），`by hammer_or_aoa` 的 handler 另补一行普通
+`tracing`——通道与 §6.2 的表逐项对上。`QuitInfo` 的 `Restart`/`Refresh` 确认到不了
+`Agent_Give_Up`：两者 `is_terminal = False`，driver 循环底部仅在 quit_info 非此二者时
+才退出（`driver_claude_code.py` 与 `driver_api.py` 同构），`LMUnreachable` 时非终结值
+被 `ResourceUnavailable` 有意覆写，`toplevel.py` 报给 ML 的 reason 只取自循环退出后的
+值；`Restart` 轨道另获动态观察（见 ⑤ 首轮）。
+动态面（scratch theory 于 isabelle-mcp）——
+① `technical_failure`（ML 侧第 4 生产者 = 合并段 give-up）：`Skip_Proof.make_thm`
+合成「两子目标共享 `?x`、其一为 `PROP` 原子不可 atomize」的状态，`merge_segment`
+裸调 reason/detail 逐字；同一状态过 `by aoa` 与 `by hammer_or_aoa` 的 method 体，
+ERROR 文本 = banner ⑤ + 换行 + detail 逐字、`Agent_Give_Up` 不逃逸；
+`by hammer_or_aoa` 走了完整门面（store miss → 引擎失败 → AoA 合并段 give-up），
+零 LLM 成本。② `resource_unavailable`：driver 配置切 `Codex-API`（本地 openai-oauth
+代理未跑），真轨道 fail-fast `LMUnreachable`，`by aoa` 报错 = banner ② + detail
+逐字，零成本。③ `resource_exhausted`：ClaudeCode 真跑、预算 `max_tool_calls = 1`，
+detail「tool call limit (3 >= 1)」（$0.25）。④ `refute`：`1 = 2` 真跑，agent 报反驳
+（$0.13）。⑤ `surrender`：哥德巴赫（`dvd` 展开素性、只用 Main 词汇）真跑、
+`max_retries = 1`，agent 报投降（$0.46）。
+途中查明的行为事实（非缺陷）：主会话的 `report(surrender)` 每次先 `_retry_count += 1`，
+未达 `max_retries` 前走 `request_restart()` 换新上下文重来，达到才置 `Surrender`
+（`mcp_http_server.py` `_report_tool_logic`）——⑤ 首轮按默认 8 次重试预算跑，
+15 次工具上限先耗尽故得 `resource_exhausted`；`undefined = 0` 被 agent 选择报成
+refute（论证独立性）——报告种类是 agent 的行为选择，分派机械无缺陷。
+测试匣自身教训：`apply (tactic …)` 同样有方法 closure 阶段的 dummy 预演，直调
+`run_AoA` 的测试匣需要 `nprems = 0` 守卫（D29 同款）。
+**本步未竟小项**：phi 同步态的 give-up 渲染（`hammer_obligation_solver` 外层 handle
+的 `info_print` + banner）只做了静态核对，实弹触发需要一条真 phi 义务走到 AoA
+give-up——留待后续批次顺带（如 `:3843` 处置后的批构建）。
+附带开销：启动检查把 6 个 theory 的 9 个缺失实体解释补进语义 DB（$0.90，一次性、
+持久复用）。
 
 ### 阶段 6 —— 清理与文案批次
 
