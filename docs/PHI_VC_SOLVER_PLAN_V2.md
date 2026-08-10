@@ -511,10 +511,9 @@ val all_auto : options -> Proof.context -> thm
      future 取代了旧的占位值 "-" / [] / zero_cost：不再需要在返回槽位里编一个假值，
      "结果还没产生"这件事由 future 本身表达。射程只到这一件事——run_AoA 在 ⓪ 命中时
      交出的 [] 与 zero_cost 不在作废之列（§2.3）。
-     ⚠️ 主路径上绝不许 join 它——join 一下异步就退化成同步了。
-     两处已具名的例外（都是恒 async = false 的同步调用点，join 拿到的是 Future.value、
-     零代价）：Isa-REPL 的 REPL.ML:955（阶段 0 第 5 步）与 aoa_repl_app.ML:53
-     （阶段 3 第 11 步）。除这两处与落库那个依赖任务之外，一律不许 join。*)
+     ⚠️ async 可能为真的调用点绝不许在主路径上 join 它——join 一下异步就退化成同步了。
+     恒 async = false 的调用点不在此列（join 到的必然是 Future.value、零代价）；
+     判据、七处实例与依赖任务的处置见 §2.5。*)
 ```
 
 - **不设 `default_options`**（作者定）：强制每个调用点写完整记录。SML 记录无缺省值、
@@ -747,12 +746,34 @@ val async_prove : bool                               (*async*)
   劈成两半——`Future.map snd` 喂 `Goal.future_result` 当承诺，`Future.map fst` 作为
   `'a future` 交出去。`Future.map` 建的是依赖任务，不是第二次执行。
 - **⚠️ 纪律：主路径上绝不许 `Future.join` 这些 future。** join 一下异步就退化成同步了。
-  它们只该被"结果到齐之后要干的那件事"（落库）依赖。
-  **两处已具名的例外**：`Isa-REPL/library/REPL.ML:955`（阶段 0 第 5 步）与
-  `Isa-Mini/Agent/AoA_REPL/aoa_repl_app.ML:53`（阶段 3 第 11 步）——两者都是恒
-  `async = false` 的同步调用点，join 拿到的是 `Future.value`、零代价，而它们都要把
-  future 里的东西交回 REPL 客户端。**这份名单是穷举的**，阶段 4 的"不许 join 专项"
-  按它放行。
+  它们只该被"结果到齐之后要干的那件事"（落库）依赖。损失有三层：这一条义务的完成
+  时间被绑回 agent 的运行时间；**多条义务之间的并行没了**（十条义务的墙钟从"最慢
+  一条"变成"十条之和"，批构建下这是数量级差别）；失败的投递格局从"承诺兑现时经
+  exec id 路由"变成"当场抛、后续命令不再检查"。
+
+  **纪律的射程（作者 2026-08-10 裁决，"其二"）**：本条只管**产出 future**，且只管
+  **该调用点的 `async` 可能为真**的位置。判据是**结构性**的——看调用点传的 `async`
+  是不是写死的 `false`：写死 false 的调用点拿到的必然是 `Future.value`，join 它不
+  等待任何东西，不在射程内。系统里其它 future 也不在射程内：`auto_sledgehammer`
+  搜索单元内部把多个 prover 扇出再 `Future.join_results` 收拢
+  （`sledgehammer_solver.ML:790-791`）是搜索自身的语义，必须 join；依赖任务与 fork
+  体内的 join（`after` 的落库任务、两处写回任务、`fork_state` 的承诺分支）根本不在
+  主线程上。
+
+  **实际清单（作者 2026-08-10 裁决，"其一"；2026-08-10 全仓库清点）**——以下**七处**
+  都在主线程上 join 产出 future，判据同上（恒 `async = false`，join 到的是
+  `Future.value`），一律放行：`Isa-REPL/library/REPL.ML:968`（阶段 0 第 5 步，证明
+  文本交回 REPL 客户端）、`Isa-Mini/Agent/AoA_REPL/aoa_repl_app.ML:74`（阶段 3
+  第 11 步，九项花费交回 REPL 客户端）、`Isa-Mini/Agent/agent.ML:1663`（Minilang 的
+  `HAMMER` 命令）、`Isa-Mini/library/proof.ML:4362`（`default_prover`）、
+  `Isa-Mini/translator/library/thor.ML:134` 与 `:193`（Isar 转译器）、
+  `Isa-Mini/Agent/agent_server.ML:2002` 与 `:2029`（阶段 4 `hammer_or_AoA` 的
+  MISS 路径提取两个内层分支的产物；异步时这段整个在 fork 体内）。
+  中间四处（`agent.ML` / `proof.ML` / `thor.ML`）是**本计划开工前就存在**的代码，
+  上一版名单漏清点；旧名单引的 `REPL.ML:955` 与 `aoa_repl_app.ML:53` 是已漂移的行号。
+  按 §0 的清点纪律，本清单以**判据**为准、行号仅供定位：新增调用点只要 `async`
+  写死 `false` 即自动合规，**不必回来改这份清单**；`async` 可能为真的位置则一处都不
+  许 join。
 - **为什么还要一个 `bool`**：list 两态等长，所以"空不空"不再能指示是否 fork，而这是
   **判断本次到底有没有 fork 的唯一可靠依据**（`async` 入参会骗人，见下）。
   ⚠️ 它**不参与**决定返回值形状——四个入口无条件交 future，两态共用一份代码（§2.4）。
@@ -2970,7 +2991,7 @@ phi 那份按 D57 要等本计划落地之后才删，**并存窗口必然存在
     **本处准许 `Future.join`**（与 `REPL.ML:955` 同一条理由，逐字照办）：`cost` 要经
     `cost_tuple` → `packTuple9` 交回 REPL 客户端、评测流水线按下标读那九个数，不 join
     就拿不到；而本 app 恒 `async = false`，future 是 `Future.value`，**join 零代价**。
-    这是 §2.5 那份穷举例外名单里的第二处，阶段 4 的"不许 join 专项"照它放行。
+    它满足 §2.5 的放行判据（恒 `async = false`），阶段 4 的"不许 join 专项"照判据放行。
     **⓪ 命中时这九个数全为零**（`zero_cost`，§2.3）——agent 没跑，不是统计出了错；
     ④ **测试旁路**：判定 driver 为 `test.…` 时传 **`read_store = SOME false`**
     （`write_store` 留 `NONE`，忠实复现今天"只挡读、不挡写"）。
@@ -3174,11 +3195,15 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 - **`Each_Goal` 异步下部分失败专项**：n 个子目标里人为让第 2 个证不出来，确认
   ① 整条记录**不落库**（部分证明不该入库）；② 已经成功的那几个**不会**被拖成"未证"状态；
   ③ 报错指出是第几个。
-- **不许 join 专项**：静态检查主路径上没有对产出 future 的 `Future.join` / `Future.joins`。
-  **放行三处，此外一处都不许**：落库那个依赖任务、`Isa-REPL/library/REPL.ML:955`、
-  `Isa-Mini/Agent/AoA_REPL/aoa_repl_app.ML:53`（后两处是恒 `async = false` 的同步调用点，
-  名单与理由见 §2.5）。**别把这条检查写成"一处 join 都不许"**——那会把两个必须 join
-  的同步调用点判成违规。
+- **不许 join 专项**（射程与清单以 §2.5 为准，作者 2026-08-10 裁决）：静态检查
+  **`async` 可能为真的调用点**没有对产出 future 的 `Future.join` / `Future.joins`。
+  检查是**按判据**做的，不是按行号核对名单：对每个 join 产出 future 的位置，看它上游
+  传的 `async` 是不是写死 `false`——是则合规（join 到的必然是 `Future.value`），否则
+  违规。§2.5 列的那七处恒同步调用点是本判据下今天的全部合规实例，供定位与对照。
+  两类东西**不在射程内**，别把它们扫进来：依赖任务与 fork 体内的 join（落库任务、
+  两处写回任务、`fork_state` 的承诺分支），以及产出 future 之外的 future
+  （`sledgehammer_solver.ML:790-791` 把多个 prover 扇出再收拢，那是搜索自身的语义）。
+  **别把这条检查写成"一处 join 都不许"**——那会把必须 join 的同步调用点判成违规。
 - **`Each_Goal` 同步遍历专项**：3 子目标状态上 `by auto_sledgehammers`（`async = false`）
   **必须把三个都证掉**；人为让第 2 个证不出来，确认**报错**而不是静默返回。
 - **`All_At_Once` 专项**：n 个子目标一次 fork 消光；schematic 守卫用 `Term.maxidx_term`
@@ -3203,9 +3228,12 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 引擎支同/异步 `All_At_Once` 端到端（同键同文本）、零子目标短路、裸 ML 进程
 `aoa_allowed () = false`（fail-closed）。**待 REPL/Python 环境的验证项**（store 两级、
 L1 写、闸门关闭重放、`Each_Goal` 部分失败、异常可见性等）挂起至阶段 5 全栈验证一并跑。
-**⚠️ 待作者追认一件**：`hammer_or_AoA` fork 体内对两个恒同步内层 future 的
-2 处 `Future.join`（提取分支产物所必需，joined 的都是已兑现的 `Future.value`）
-需增补进 §2.5 的 join 放行名单——该名单原文自称穷举，故不擅改，先记于此。
+**join 放行（作者 2026-08-10 裁决，已了结）**：`hammer_or_AoA` MISS 路径里提取两个
+内层分支产物的 2 处 `Future.join`（`agent_server.ML:2002` / `:2029`）合规。清点该问题
+时发现旧名单**开工前就已不穷举**——`agent.ML:1663`、`proof.ML:4362`、`thor.ML:134`
+与 `:193` 这四行同性质的既有 join 从未被列入。作者裁决两件一起做：把纪律的射程改成
+结构性判据（`async` 是否可能为真），并把实际清单补全为七处；§2.5 与本阶段"不许 join
+专项"已照此改写。
 
 **第六轮增量评审的四项修复（作者 2026-08-10 批准；`auto_sledgehammer 55a89a4`
 / `Isa-Mini b0616f7`）**：
