@@ -3476,10 +3476,41 @@ D51 渲染全部无责，agent 的反驳对它收到的义务**成立**。
 （`f9bc1c8c`），含"refute 类 give-up 在义务槽是否应软失败（空 Seq、让 reasoner
 回溯）而非硬 error"这一设计问题。〔更正：本记录先前一版写"批构建引擎靠实例化解出、
 合并段拍成全称闭包"，为未经证实的推断，已撤回。〕
-**同批新拦路者 `Phi_Types.thy:2591`**（五跑首次暴露）：`❴`（phi 块开括号）抛裸
-`exception Option raised (General/basics.ML:84)`（即某处 `the NONE`）。它与 `:2529`
-**互斥出现**：三/四跑死在 2529 未到 2591；五跑 2529 走了健康分支、越过后死在 2591。
-成因未查，归属未定（phi 推理机内部 vs 换接面），待裁。工序注记：批构建第一次尝试被本会话的 10 分钟工具超时误杀，遗留
+**同批新拦路者 `Phi_Types.thy:2591`/`:2594`**（五跑首次暴露）：引理
+`\<phi>Mul_Quant_LenIv_wrap_module_src`（2581–2594）的 phi 块抛裸
+`exception Option raised (General/basics.ML:84)`（即某处 `the NONE`），五跑报在开括号
+`❴`、七跑报在收括号 `❵`。规律：**只要 `:2529` 通过它就必炸**（2/2），且新旧两档 guard
+预算下都出现，故非本轮改动引入。已查明块收尾战术调的正是同一个
+`Phi_Reasoners.guard_condition_solver1`（`toplevel0.ML:363-364`）——两个拦路者共用
+该组件；但该函数自身的失败出口是 `error "Fail to solve the proof obligation
+automatically: …"` 而非 `exception Option`，故"共用组件"尚不等于同一根因，出处待
+`ML_exception_trace` 栈。
+
+**guard 预算实验（作者 2026-08-10 提出并定值，结论：未坐实）**：怀疑
+`prove_or_rebute`（`reasoners.ML`）给 guard 的挂钟预算链（原 30/30/250/100 ms）在负载
+下全部到点后走 `fail`——`fail` 打印"Fail to prove or falisfy … We assume the
+conditions do not hold and this assumption can cause reasoning failure"并按"guard 不
+成立"继续，即退化分支入口；挂钟预算天然解释非确定性（作者 jEdit 空载从不中招、
+本会话高负载批构建 3/4 中招）。该警告在此处不可见，因 `:2527` 声明
+`\<phi>trace_reasoning = 0`。作者定值改为 100/100/300/200 ms 后：七跑通过、八跑仍中招
+（1:1），**不足以判定**——要么档位仍太小，要么 guard 不只是"慢"。四个新值目前留在
+工作树未提交（注释标 UNDER TEST），去留待判。
+
+**5a 已完成两项（2026-08-10，均在 isabelle-mcp/批构建实测，零 LLM 成本）**：
+① **fork 取消沿父链传播**：scratch theory 里按 `async_prove'` 同款参数
+（`group = NONE`、`interrupts = true`）fork 一个每半秒写心跳文件的任务，评估后心跳
+开始增长；随即从 theory 中**删除该命令**并重评——心跳在 69 行处永久停止（10 秒、25 秒
+两次复查均无增长），且无泄漏报错。取消确实经 worker_subgroup 父链免费继承。
+③ **失败期票不双重报错**：`async_prove'` 配 `failure_msg` 组装函数、body 直接抛
+`Auto_Fail`（零成本，不经引擎不经 agent）。**PIDE 交互态**：组装后的文案恰好出现
+一次，theory 的 `end` 无第二份；**批构建态**（为此建的独立小会话 `Probe5A3`，
+7 秒跑完）：同样恰好一次，定位在 fork 命令行并附内层异常出处，构建以
+"Unfinished session(s)" 干净失败。两个投递口（fork 体的 `Future.error_message`
+与期票分支的 `raise ERROR`）不叠加。
+5a ②（批构建 theory 收尾与迟到 fork/store compact 的竞争）仍待 `Phi_System` 可建。
+5b（冻结快照 × 异步重放）已确认 store 中确有引用具名快照的录制文本
+（`Phi_Types.proof-store` 6 条含 `the_\<phi>`、其一为 `the_\<phi>lemmata`；
+`Phi_Type.proof-store` 11 条），其重放验证同样排在批构建之后。工序注记：批构建第一次尝试被本会话的 10 分钟工具超时误杀，遗留
 `Phi_System_Base` 半写构建库（`SQLITE_CONSTRAINT_PRIMARYKEY`），删除该残件三件套
 （均为本会话产物）后二跑即绿——长构建一律 `nohup` 脱离。
 `Phi_Types.proof-store`（未跟踪，非本会话所建）在评估中有增长，未纳入提交，待作者定。
