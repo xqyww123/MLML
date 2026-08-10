@@ -3312,6 +3312,19 @@ L1 写、闸门关闭重放、`Each_Goal` 部分失败、异常可见性等）�
    - **查自洽**：跑完 `git status` 里 `.proof-store` **一个字节都没变**——下游那一遍
      构建理应对 store 零写入。
 
+**实施记录（2026-08-10，进行中）**：第 1 步代码半已落（`phi-system dc35fba2`）——
+战术位换接照 §2.3 签名（`proof_id = id`、`async`/`read_store`/`write_store` 透传、
+`failure_msg = SOME compose`，组装函数原样复用）；`Phi_Type.thy:5132` 的
+`certified sorry` 已替换为 `certified by hammer_or_aoa`。**一处实施细节**（§2.9
+消费侧规则的落地，非新决策）：占位引擎靠 `raise_Error_instead_of_Auto_Fail = true`
+的 `guard_errors` 壳把逃逸的 `Auto_Fail` 转成可读报错，`hammer_or_AoA` 无此壳，
+同步路径上被上抛的 `Auto_Fail (Internal_Failure _)` 会以裸结构化异常逃到战术槽——
+故在调用点加一臂 `handle Auto_Fail => error (compose e)`（仍走同一个组装函数，
+不建第二套分派；`Agent_Give_Up` 不在此拦截，照旧落到外层打印 agent 花费的 handler）。
+已验：PLPR / Phi_BI / Phi_Semantics_Framework 三会话闸门关闭增量批构建全绿。
+**未完**：`Phi_Type.thy:5132` 义务的闸门放行实测解出与落库（需 LLM + Python 在场）、
+第 2 步起的全部项。
+
 ### 阶段 6 —— 清理与文案批次
 
 （`Phi_Type.thy:5132` 的 `sorry` 替换已提前至阶段 5 第 1 步，作者 2026-08-10 裁决。）
