@@ -605,3 +605,36 @@ hammer_or_AoA:
 之外的 future（sledgehammer 内部扇出收拢）与依赖任务/fork 体内的 join 不在射程内；
 阶段 4 的"不许 join 专项"改为**按判据**做静态检查、七处清单仅供定位对照；§2.4 的签名
 注释与阶段 3 第 11 步的引用一并跟改。阶段 4 实施记录里那条"待作者追认"据此了结。
+
+## 补收：考据横扫发现的六条漏收裁决（2026-08-10 补入，作者批「赞同」）
+
+来历：phi 接线合规审计自陈"作者原话只核了一份导出"，据此做了一次横扫。横扫本身
+**未发现实现与裁决相左之处**，但发现六条作者裁决**实现相符却从未进本档**（其中四条
+只在 `PHI_VC_SOLVER_PLAN_V2.md` 里转述、两条两处都没有），补收如下。
+横扫同时揭出一件对以后考据要紧的事：**六份 `UQ_*.txt` 导出全部止于
+2026-08-08T17:37:07**，而 phi 接线的多数裁决发生在 08-09/08-10，任何导出都没覆盖过；
+补抽出的 1386 条（含插队三通道、跨 fork 去重）留在会话 scratchpad 的
+`sweep/MERGED_0809_0810.txt`。
+
+| 作者原话（出处） | 裁决内容 | 实现 |
+| --- | --- | --- |
+| `[e23f54fc:5416 QUEUED 2026-08-06T04:20:06]`「（`classical_prover_timeout`、`auto_sledgehammer_params`、`auto_sledgehammer` method）这些必须全盘用上游的，**绝不允许自己定义！**」 | 上游三件一律不许在 phi 侧重新定义（比本档 :148 那条只管一个 config 的更早裁决**射程更宽、语气是禁令**） | 相符：phi 侧一处都不注册，`Phi_System/library/sledgehammer_solver.ML` 已删；仅 `Phi_Examples` 两处**使用** `auto_sledgehammer_params` |
+| `[e23f54fc:4711 QUEUED 2026-08-06T02:40:25]`「`Phi_Test/…VCG.thy:81/86/91` 这个可以基本废弃了」 | 该教学 theory 随 D49 删除 `auto_obligation_solver` 全家而废弃，不必跟改 | 相符：三处仍写 `auto_obligation_solver1`，故该 theory 现编不过——正是"废弃" |
+| 作者发问 `[f3925efd:3400 2026-08-09T13:32:58]`「`failure_msg` 的语义是什么？…是不是应该跟那个 bool flag 互斥？」→ 助手 `[:3402]` 给出四行契约（① 交互报错经钩子；② **同步失败：`flag=true` ⇒ `error (compose exn)`，`flag=false` ⇒ 不变换、`Auto_Fail` 原样放行**；③ 副产品分支永不变换；④ 期票分支经钩子；并答"不互斥，是 flag 优先"）→ 作者 `[:3592 13:56:45]`「**好的。批准。**」 | `failure_msg` 与 `raise_Error_instead_of_Auto_Fail` 的四行契约 | 相符，且 **phi 侧同步 handler 的合法性正建立在第②行上**：`async_prove'` 同步分支不施加钩子，`hammer_or_AoA` 无该 flag（等价 `flag=false`），故逃到 phi 的同步 `Auto_Fail` 按契约就该由调用方渲染——`reasoners.ML` 那句 `handle e as Auto_Fail _ => error (compose e)` 是履约，**不是多余，别删** |
+| `[f3925efd:2457 2026-08-09T11:58:20]`「赞同 (a) 改代码：那行 `writeln` → `tracing`」 | 成本行走 `tracing`（PC-2 裁决 (a)） | 相符：AoA 侧两处成本行走 `tracing`；phi 侧走 `Phi_Reasoner.info_print`（底层亦 `tracing`，按 `\<phi>trace_reasoning` 分级），分工见 §6.2 通道表 |
+| `[f3925efd:2648 2026-08-09T12:23:24]`「（`attack_obligations` 与关块尾部 cast 传 `proof_id = NONE`、键从目标自算）没错 / 赞同（记进计划）/ **这个记一下，之后我们可以给它一个确定的 proof id**」 | 这两点传 `NONE` 是想要的行为；**给它们确定的 proof id 列为后续事项** | 相符：`toplevel0.ML:294` 与 `:326` 均传 `NONE`；后续事项已记在计划 |
+| `[497b5126:12241/:12255 2026-08-09T08:55:29 / 08:58:56]`「`async_prove` 不能假设其内部计算所 raise 的 exceptions，但可以对**全是 `Auto_Fail` 的场景特判**：此时才调 `classify`，**其他时候直接取第一个 exception to raise**」 | 引擎侧异常归整规则（决定了 phi 侧 `handle Auto_Fail` 能不能接到东西） | 属引擎侧，本次未逐行核；仅登记 |
+
+**顺带补齐一条时间线**（本档原先只记了后半）：`Phi_Type.thy:5132` 的 `sorry` 替换，
+`[f3925efd:2247/:2252 2026-08-09T11:16:51]` 作者原定「**等我们整个计划执行完后**，
+替换为 `by hammer_or_aoa`」，后于 `[3eb74041:35 2026-08-09T16:19:11]` 答「**可以**」
+提前至阶段 5 换接后立即做。**以晚者为准**，实现相符（随 `phi-system dc35fba2` 落地）。
+
+**一处仅文档不一致（代码对、计划文本旧）**：计划 §7 阶段 2 写 cast 点"原 handle 块
+整体删除"，而 `toplevel0.ML` 现有一个薄 `handle ERROR`（第四轮评审 `83a6a5a1` 加回，
+给"包装未上场就抛出的 ERROR"补出处行）。按 D58 作者原话「宽泛 `handle ERROR` 把
+无关错误也裹上出处，**这正是期望的行为**」，代码那侧才是对的；计划那句写于薄 handler
+出现之前、从未跟改，已于 2026-08-10 改正。
+
+**一处无裁决可依**：`holds_fact` 的解析/求解拆分，全部转录里**作者从未提及**，
+系助手设计，不存在可相左的裁决（也无作者背书）。

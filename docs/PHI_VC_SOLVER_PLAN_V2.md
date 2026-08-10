@@ -2257,8 +2257,12 @@ cost 行的 writeln 通道原样保留，等 fork 侧对发现 3 的裁决。
   phi 侧：`hammer_obligation_solver(')` 增 `(string -> string)` 包装参，组装函数
   在战术槽内构造（`Agent_Give_Up`→banner+cost、`Auto_Fail`→"Fail to solve…"+目标项、
   其他→原样）；`Phi_Envir.solve_obligation' wrap` 新增，`solve_obligation = ' I`；
-  cast 点改 `solve_obligation'` 传出处包装、原 handle 块整体删除（D58 出处随包装
-  抵达同步/异步/批三面）。
+  cast 点改 `solve_obligation'` 传出处包装、**原**那块 handle 删除（D58 出处随包装
+  抵达同步/异步/批三面）。⚠️ 订正（2026-08-10）：`toplevel0.ML` 今天**有**一个薄
+  `handle ERROR`——第四轮评审 `phi-system 83a6a5a1` 加回的，给"包装还没上场就抛出的
+  ERROR"（`oblg_template` 里的 simproc、引擎内部）也补上出处行。按 D58 作者原话
+  「宽泛 `handle ERROR` 把无关错误也裹上出处，**这正是期望的行为**」，**代码那侧是对的**；
+  本句写于该薄 handler 出现之前，勿据此再删一次。
 - **实验记录（2026-08-09 夜，全部实测）**：① 批构建里孤儿期票（不注册进 theory）
   无声消失、构建绿、消息被默认 verbosity 丢弃；② 注册进 theory 的坏期票在收尾
   join 时炸、构建失败——修正前打印裸异常＋库内 raise 行号，**修正后打印钩子文本＋
