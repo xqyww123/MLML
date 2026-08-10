@@ -3365,8 +3365,20 @@ isabelle_time 25.5s）→ L2 写回在场（`Phi_Type.proof-store` 出现该键�
 **既存失败，与换接无关**：`:5132` 之前另有三处 `certified by (…auto_sledgehammer…)`
 失败（`:3806`/`:3843`/`:4570`，阶段 2 记录的冷库重搜失败批的成员）——它们写的是
 **上游引擎裸 method**（D19 后解析到 `Auto_Sledgehammer.auto_sledgehammer`），
-不经 `hammer_or_AoA`、开闸也不叫 AoA；`Phi_System` 批构建仍被它们挡住，
-分诊与处置待作者裁决。**未完**：第 2 步起的全部项。
+不经 `hammer_or_AoA`、开闸也不叫 AoA。第二轮重评后 `:3806` 干净、`:4570` 完成
+（首轮引擎把中途搜到的子证明落了库，二轮从 store 续搜成功），**仅剩 `:3843`
+（`D\<^sub>I (fst x) \<and> True`）仍失败**——`Phi_System` 批构建被它挡住，处置待作者裁决。
+
+**阶段 5 抓到并修掉的 D29 破坏者（2026-08-10，`Isa-Mini b176144`）**：第一条真实
+AoA 记录的首次 store 命中重放报
+`THM 0 major_prem_of: rule with no premises` 后被打墓碑重搜。根因：Isar 方法机械
+的 closure 阶段会先把方法在**无前提的 dummy 状态**上预演一遍，`by aoa` 与
+`by hammer_or_aoa` 都带 `is_dummy` 守卫跳过之，而 `aoa_replay_method` 漏了——
+重放管线跑在 dummy 上炸掉，整次重放被判失败，**真状态从未被尝试**，完好记录被冤杀。
+阶段 3 纯 ML 冒烟全是直调函数、不经方法机械，故未暴露。修复 = 同款守卫
+（`is_dummy` 定义上移）。验证：合成 blob 走完整 store 通道（`eval_prf_str`）
+端到端成功 + dummy 干净跳过（单元）；`Phi_Type.thy:5132` 真记录 store 命中、
+纯 ML 重放成功、零 AoA 调用（实弹验收）。**未完**：第 2 步起的全部项。
 
 ### 阶段 6 —— 清理与文案批次
 
