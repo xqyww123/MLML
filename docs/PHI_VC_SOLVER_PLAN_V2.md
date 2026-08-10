@@ -2002,7 +2002,7 @@ restricted to interactive editing.
 | **2** | **已实施、已提交**（2026-08-09，**验证部分未决**） | `phi-system` `74835138`。八步全落；PLPR/Phi_BI/PSF 批构建绿、Phi_Type PIDE 全文跑通（deriver 编译干净）；**未决：Phi_Type 9 处义务冷库重搜失败（见阶段 2 实施记录）+ R10 四文件 / Phi_Examples 双跑 / D45 计数 / ㊀ / D63 双克隆实测未做（被 `Phi_Type.thy:5132` 的 sorry 与 9 处失败的分诊挡着）** |
 | **3** | **已实施**（2026-08-09 晚，D41/D61 订正 2026-08-10 凌晨随后落地；纯 ML 验证过，REPL 依赖项待作者配合） | `Isa-Mini`：16 步全落、ML+Python 同批；blob 组装在 `raw_AoA`（D41）、耗时取自装配验证重放（D61）；`Minilang_AoA` / `Minilang_AoA_REPL` 构建绿；纯 ML 冒烟全过。**待追认偏差与未竟验证见阶段 3 实施记录** |
 | **3a** | **已实施、已提交**（2026-08-10；tag 20 与重放预算两项作者裁决已到并落地） | `Isa-Mini` `820a312` + `4fa550e`；实施记录见阶段 3a |
-| **4** | **已实施、已提交**（2026-08-10；第六轮评审四项修复已批准并落地；REPL/Python 依赖的验证项挂起至阶段 5） | `auto_sledgehammer` `74d76e0`（修复后 `55a89a4`）、`Isa-Mini` `d0b085d`（修复后 `b0616f7` 起）；实施记录见阶段 4 |
+| **4** | **已实施、已提交**（2026-08-10；第六轮评审四项修复已批准并落地、四项修复均已逐项核查通过；REPL/Python 依赖的验证项挂起至阶段 5） | `auto_sledgehammer` `74d76e0`（修复后 `55a89a4`，只做 beta 的裁决 `3102b9d`）、`Isa-Mini` `d0b085d`（修复后 `b0616f7` / `d24b2f6` / `c713b7f`，核查后 `8bde93a`）；实施记录见阶段 4 |
 | 5 / 6 | 未开始（阶段 5 由本会话自 2026-08-10 起推进，见"会话分工（2026-08-10 上午）"） | |
 
 **阶段 0 实施记录（与计划的差异，逐条）**：
@@ -3208,7 +3208,9 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
   **必须把三个都证掉**；人为让第 2 个证不出来，确认**报错**而不是静默返回。
 - **`All_At_Once` 专项**：n 个子目标一次 fork 消光；schematic 守卫用 `Term.maxidx_term`
   （构造一条 sequent maxidx 高、前提本身无 schematic 的用例，确认**不**误判），
-  含 schematic 的 `G_i` 被挡下并报出是第几个；beta-eta 对称正规化后 `implies_elim` 通过；
+  含 schematic 的 `G_i` 被挡下并报出是第几个；**beta** 对称正规化（作者 2026-08-10
+  裁决只做 beta）之后，回程桥 `equal_elim (symmetric (beta_conversion true cprem))`
+  把 part 换回未归一的 `cprem`、`implies_elim` 通过；
   两道防护各验一次（`Future.error_message` 那条在 Isa-REPL 下确认异常**确实打印**）；
   **零子目标状态**上确认由 `async_prove` 入口短路接住、根本不进 `Conjunction` 打包
   （AoA 一线的 all-goals 键不越界，这条闸是它唯一的防线，§2.6）。
