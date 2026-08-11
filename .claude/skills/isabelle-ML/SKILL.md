@@ -43,8 +43,10 @@ Proof state machine and proof construction:
 - variable.ML - Variable naming management and name conflict resolution
 - facts.ML - Facts storage and visibility management
 
-### Pure/PIDE/ - Document Model (avoid)
-Things under Pure/PIDE/ are generally not meant for ordinary development — avoid them where you can. (Pure data modules like markup.ML / xml.ML are the exception.)
+### Pure/PIDE/ - Document Model (avoid unless the user explicitly approves)
+Things under Pure/PIDE/ are generally not meant for ordinary development — avoid them where you can, and never reach for `structure Execution` without the user's explicit approval for that specific use. (Pure data modules like markup.ML / xml.ML are the exception.)
+
+The cost of avoiding it, so the trade-off is visible: a background proof forked with plain `Future.forks {group = NONE, ...}` is invisible to PIDE, so the command stops showing as running and the front-end looks finished while the fork is still working — which makes "the command passed" an unreliable signal. Keeping the command marked running is exactly what `Execution.fork` buys (its closing `status (Future.task_of future) [Markup.forked]`); Isabelle's own forked proofs go through it (`Pure/goal.ML`, `Goal.prove_common`).
 
 ### Tracing limit under PIDE frontends
 `tracing` output is counted per command against the option `editor_tracing_messages` (default 1000); past the limit PIDE prints "Tracing paused." and BLOCKS the emitting thread on a dialog answer (`Pure/System/isabelle_process.ML`). jEdit can answer it; a headless frontend (e.g. a language server) hangs forever. Setting `editor_tracing_messages = 0` disables the limiter entirely — put the line in `~/.isabelle/<dist>/etc/preferences`, or pass `-o editor_tracing_messages=0` at frontend launch. Batch `isabelle build` already forces 0.
