@@ -118,8 +118,16 @@ memo, and only on those.
 2. **The store already contains the damage.** On `cslh19`'s 1,362,343-record
    store, **234,398 records** hold keys the current process cannot reproduce, and
    the same run produced ~240,712 keys with no record — the same mismatch seen
-   from both sides. **19,007 records are duplicates of one another under different
-   prefixes** (the same fact stored two or three times).
+   from both sides. **22,053 records share a tag+tail with another record.**
+   (An earlier revision called these "duplicates of one another … the same fact
+   stored two or three times". **That was wrong**, and the correction matters for
+   the migration: a shared-tail group can be one fact stored twice under two
+   pinnings, OR two genuinely different facts from AFP entries that duplicate one
+   another's theories. Measured on one pair — the two records named
+   `Lens_Laws.lens.defs(2)` — `kind`, `name` and `expr` are identical while the
+   interpretations differ, so the stored fields cannot tell the two cases apart.
+   Worse, when the defect gave two sibling facts the same key, the store holds
+   *one* record where two belong, and that collapse is invisible to any scan.)
 3. **Anything that selects records *by theory* is mis-targeted** on the affected
    records: `keys_belonging_to`, deletion, migration, vector invalidation. An
    affected record names constituent theories that are not even ancestors of the
@@ -159,7 +167,7 @@ were **22/22 byte-identical**. The corruption is confined to the 16-byte prefix.
 | **the short-name memo** | **229,267** | **97.8 %** |
 | genuine source change (constituent's hash moved) | 635 | 0.27 % |
 | theories never swept (`Geo_Real2` 3,073, …) | 3,893 | 1.66 % |
-| name-addressed stragglers | 601 | 0.26 % |
+| name-addressed stragglers | 603 | 0.26 % |
 
 ## 6. What is NOT the cause — do not re-chase these
 
@@ -196,7 +204,7 @@ then decide whether to re-key, to re-collect, or to carry a compatibility index.
 
 The 15-byte `thm128` tail plus the kind tag — `key[16:]` — identifies the
 *statement* and is unaffected. Over 1,134,149 theorem-alike records there are
-**1,124,334 distinct tag+tails**, and **220,252 of the 233,796 unreached (94.2 %)
+**1,124,334 distinct tag+tails**, and **220,252 of the 233,795 unreached (94.2 %)
 have a tail that is globally unique**. The remaining 13,544 share a tail with a
 record that is the *same fact under a different prefix*, so a record-name equality
 tiebreak makes them safe too.
