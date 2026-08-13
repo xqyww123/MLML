@@ -345,13 +345,22 @@ cross-store checks run before anything irreversible happens.
     script's Python **byte for byte**. That is the whole of what is new — the
     argument the ML passes, the place Python folds it in, and the LSB — and
     none of it varies with the number of theories.
-  - **Exhaustive over the migration table** is what the plan wants, and it is
-    blocked on a heap: `AFP-ALL-4` has the *old* `theory_hash.ML` compiled in,
-    so making it mint new-scheme hashes means either rebuilding that image
-    (~60 h) or loading the new `theory_hash.ML` over the running console with
-    `use`, which needs `cslh19`'s checkout carrying the change — which the
-    deployment needs anyway. `migrate_theory_hash_rekey.py verify-live`
-    consumes the resulting `(long name, hash)` dump.
+  - **Exhaustive over the migration table**, and it is cheap. `AFP-ALL-4` does
+    **not** contain `Isabelle_RPC`: its ROOT chain, `AFP-ALL-4` → `AFP-ALL-3` →
+    … → `AFP-DEP1-21`, names AFP sessions only. `repl_server.sh` builds a
+    wrapper `REPL$$ = AFP-ALL-4 + sessions Isa_REPL Auto_Sledgehammer`, and a
+    session named under `sessions` rather than as the parent is loaded **from
+    source** — so `theory_hash.ML` is recompiled on every REPL start and no
+    image anywhere has it frozen in. Nothing needs a 60-hour rebuild, and
+    restarting the REPL is the whole of the deployment.
+
+    G4 is therefore its own wrapper session on the same pattern —
+    `HASHDUMP = AFP-ALL-4 + sessions Isabelle_RPC`, whose one theory imports
+    `Isabelle_RPC.Remote_Procedure_Calling` and runs the §9.1 walk with
+    `Theory_Hash.hash_of` in place of the dump's own path/parent columns,
+    writing `HASH<tab>long name<tab>hex` to a file. That is the live code, over
+    all 10,598 theories, for the cost of one small heap.
+    `migrate_theory_hash_rekey.py verify-live --hashes FILE` consumes it.
 
   Additionally: every key in the migrated vector store must equal a key in the
   migrated record store.
