@@ -621,20 +621,24 @@ construction — the one property `fsck` actually checks:
 
 The vector store is streamed key by key through the **old-key → new-key map**,
 not the theory table; entries whose key has no image are dropped; values —
-including the 8,908 empty-value tombstones — are copied verbatim.
-
-**It also holds one entry that is not a universal key at all**:
-`\x00__vector_format__` = `q15/v1`, the Q1.15 provenance stamp written by
-`migrate_float32_to_q15.py`. It has no image in the key map, so the first run
-of this migration dropped it silently — the `semantics.lmdb` counter was
-handled by hand and nobody asked the same question of the vector store. Such
-entries are now copied verbatim and reported, and both the count gate and the
-vector-key gate know they have no record by design. The 723
+including the 8,908 empty-value tombstones — are copied verbatim. The 723
 sixteen-byte embed-status keys ride that same map: they are theory hashes, and
 every one of them is present as a theory-status key in `semantics.lmdb`
 (measured, 723 of 723), so the map already covers them — and routing them
 through the theory table instead would resurrect a key whose record was
 dropped, manufacturing exactly the orphan the vector gate exists to catch.
+
+**It also holds one entry that is not a universal key at all**:
+`\x00__vector_format__` = `q15/v1`, the Q1.15 provenance stamp written by
+`migrate_float32_to_q15.py`. Nothing reads it at query time — that script is
+its only reader, on its own re-run — but it has no image in the key map, so
+the run of 2026-08-13 dropped it silently and it was restored by hand from the
+pre-migration store afterwards. The `semantics.lmdb` counter was handled by
+hand from the start and nobody asked the same question of the vector store.
+Such entries are now copied verbatim and reported, and both the count gate and
+the vector-key gate know they have no record by design. A migration that
+silently discards a key it does not recognise is the wrong shape whatever the
+key turns out to be.
 
 More than one `vector_*.lmdb` is refused rather than half-migrated: the package
 supports several models, and silently leaving one keyed to the old scheme would
