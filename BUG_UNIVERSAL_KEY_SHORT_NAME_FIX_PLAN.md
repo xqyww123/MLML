@@ -1201,8 +1201,17 @@ skips them, and `semantics.lmdb.pre-swap-*` keeps them. **The pass therefore han
 records, all persistent**, and its context can be built from a heap image with no special
 case. The undecidable residue of §B.10's census drops with them, from 6,857 to 6,764; the
 four empty-constituent GLOBAL records are all persistent and stay. Move the key, then `Experience_Index.rebuild` (the index holds 405
-16-byte keys, not one per experience). Also record the writing context's theory long
-names on the record at write time, so the next migration is not circular.
+16-byte keys, not one per experience).
+
+**Rejected: recording the writing context's theory names on the record.** An earlier
+revision proposed adding a field at write time so that a *future* migration would not
+have to rebuild a context from the very field it is repairing. Dropped 2026-08-13: this
+migration is one-off, and planning for a hypothetical next one is not a reason to change
+the write path. It would not even serve as a contingency here — the field can only reach
+records written after it lands, so the 6,768 that exist are unaffected either way. And it
+is not free: `Record._decode`'s codec is positional tail-append, and its own comment
+warns that a writer built before a field existed truncates the tuple and **drops** that
+field on its next write, so adding one obliges every writer to be upgraded in lockstep.
 
 `write_memory`'s docstring claims content-addressed idempotency
 (`mcp_http_server.py:2242-2244`); after the fix a byte-identical re-write lands on a
