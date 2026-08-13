@@ -1307,65 +1307,46 @@ the code is next touched.
    residual 26 (the empty name, `axiomatization` names like `Set.Collect_member`,
    `instantiation` bindings like `Nat.plus_nat`) genuinely have no space and must keep
    the symmetric fallback. Separate item; do not fold it into item 1 above.
-3. **`Universal_Key.cache` is process-global, never invalidated, and measurably wrong
-   today** (`Universal_Key.ML:362`). Dropped from this list in an earlier restructure;
-   restored, because the probe above drove it directly. Keyed by
-   `(entity, theory long name)`, its value is a full universal key with that theory's
-   content hash inside it, and `key_of_ns_entity` (`:767`) is its only caller — so it
-   decides every name-addressed key. With two `HOL.List` values in one process the memo
-   returned **whichever was computed first** for `(Constant "List.rev", "HOL.List")`, and
-   running the probe in the two orders flipped the key's leading 16 bytes. That is a
-   measured order-dependence of exactly the kind this plan exists to remove, on the other
-   half of the entity space.
-
-   The obvious fix — put the theory hash into the memo key — costs more than it looks:
-   `key_of_ns_entity` gets that hash through `resolve_theory`, whose `Context.get_theory` is
-   a **linear scan over the ancestors** (`context.ML:353`), so hoisting it above the memo
-   makes every hit pay the scan. The alternative is to give this memo D14's treatment — one
-   per theory — so two theories sharing a long name in their cones cannot share an entry.
-   Undecided, and it should be decided with the reload question above rather than apart
-   from it.
-4. **§B.10's refusals** — the experience records whose patterns cannot be re-parsed in
+3. **§B.10's refusals** — the experience records whose patterns cannot be re-parsed in
    the reconstructed context — are reported for adjudication. Who adjudicates, and on
    what basis, is undecided.
 
 ## Assigned elsewhere
 
-- **§A.6's reload question — REACHABLE, and wider than this entry said.** "The whole cone
-  is already accounted for, so nothing to do" terminates the wrapper loop, but it also
-  holds when the same theory is re-executed after an edit, leaving cache entries computed
-  against the previous content. Still being handled outside this plan; do not start work on
-  it here. But an earlier revision of this entry put the blast radius at "WIP records,
-  which are a disposable cache", and a probe on 2026-08-13 disproved that — the owner
-  should have the measurement. Report: `persistent_reload_probe.md`.
+- **§A.6's reload question — REACHABLE, measured, and ACCEPTED rather than fixed.** Still
+  owned outside this plan; do not start work on it here. The disposition, decided
+  2026-08-13: a long name does not determine a content hash within one process, three
+  situations break it, and none is handled — the preconditions are things a normal workflow
+  does not do, and the requirement is that they are not done. They are documented in
+  `contrib/Isabelle_RPC/Tools/theory_hash.ML`'s header (`3d44fea`) with a file:line for
+  each, so the next reader does not re-derive them. The probe is
+  `persistent_reload_probe.md`.
 
-  Two routes each produced two different **persistent** `Theory_Hash.hash_of` values for
-  one long name in one process. **The loader**: `Thy_Info.remove` (`thy_info.ML:183-192`)
-  errors only for a name `Thy_Info`'s graph holds as finished, while `hash_of`'s persistent
-  branch is chosen by `Resources.loaded_theory` alone — and those two sets differ, because
-  under a batch build the session's own theories are in `loaded_theories` from the first
-  instant and are never registered in `Thy_Info` (the PIDE build path never calls
-  `register_thy`, which has one call site in all of Pure). A plain `Thy_Info.use_theories`,
-  no bypass, moved an edited theory's hash from `3442b5d1…` to `20e0660f…` while the
-  constituents cache kept answering with the pre-edit XOR. **`Resources.begin_theory` under
-  a name already loaded**: no uniqueness check exists in the chain (`resources.ML:239`,
-  `theory.ML:189`, `context.ML:535` check only for a non-empty name and non-empty imports);
-  a second `HOL.List` over a stand-in file gave `2ec6c541…` versus `408e07a3…`, both with
-  `loaded_theory = true`. Isa-REPL reaches the second in normal operation — `REPL.ML:422`
-  qualifies the client's theory name with `thy_qualifier`, `:442` begins it, `:686-690`
-  swallows the resulting "Cannot update finished theory".
+  The three, in one line each. **A theory of the session being built, reloaded with
+  different content**: `Thy_Info.remove` errors only for a name `Thy_Info`'s graph holds as
+  finished (`thy_info.ML:183-192`), while `hash_of`'s branch is chosen by
+  `Resources.loaded_theory` alone, and a session's own theories are in that name list from
+  the first instant yet never enter the graph (the build path never calls `register_thy`,
+  whose one call site in Pure is its own definition). Measured: a plain
+  `Thy_Info.use_theories` moved an edited theory's hash from `3442b5d1…` to `20e0660f…`
+  while the constituents cache kept answering with the pre-edit XOR — measured, not
+  inferred; the probe's own summary says otherwise and its body (`[5]`) is authoritative.
+  **A second theory begun under a name already loaded**: nothing checks for it, and
+  Isa-REPL swallows the `register_thy` error (`REPL.ML:442`, `:686-690`); two `HOL.List`
+  values gave `2ec6c541…` versus `408e07a3…`, and `Universal_Key.cache` then returned
+  whichever key was computed first, its leading 16 bytes flipping with call order. **A
+  source file edited after the heap was built**: `hash_of` reads the file at
+  `get_theory_path` from disk rather than the content of the theory value handed to it, so a
+  process on a stale heap hashes the new file while working with the old theory — this one
+  needs no coincidence, and the remedy is the ordinary one, rebuild the heap.
 
-  What is genuinely closed is only the intersection: a theory baked into a **heap image**
-  cannot be shadowed in `Thy_Info`, because `register_thy` errors and the registry keeps
-  pointing at the original. Also do not lean on "the classification cannot change":
-  `Resources.init_session` is exported and replaces the whole session base, though nothing
-  in the repo calls it today.
-
-  **Part B is still not exposed** — the dump reads one theory per long name out of a heap
-  image, so neither route applies there. Not settled by the probe: the constituents-cache
-  staleness was measured on the second route and inferred on the first, and whether
-  `claim_cache_scope` fails to fork for a shadow theory is a flagged corollary, not a
-  measurement.
+  Two things this disposition covers that were separate open items: `Universal_Key.cache`
+  (`Universal_Key.ML:362`), whose order-dependence is the second situation's most direct
+  consequence and which is therefore accepted with it; and the reload staleness of the
+  constituents cache. **Part B is not exposed either way** — the dump reads one theory per
+  long name out of a heap image. Whether the data already in the store bears any mark of
+  this is being measured separately (`split_theory_hash_forensics.md`), and a positive
+  result there would reopen the disposition.
 
 ## Closed
 
