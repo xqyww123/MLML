@@ -84,6 +84,12 @@ From the user. Not open for review; recorded so the plan's assumptions are visib
   `Isabelle_RPC/Tools/context.ML` is byte-identical to its pre-fix text. It was a
   performance change to a path this defect does not touch, and it changed results
   (§A.7 records how). Keeping the blast radius small wins over the latency.
+- **D14.** The constituents cache becomes **one pure `Table` per theory** inside a
+  `Synchronized.var`, carried by `Theory_Data_With_Constructor`, seeded **empty**
+  (§A.6). Decided 2026-08-13 on the measurement recorded there; the cone-scoped shared
+  pair in the tree is superseded. Still conditional on D11's acceptance item 3: if
+  `update_thm_cache`'s delta is empty in the steady state, the live choice becomes this
+  design versus deleting the cache, and both beat what is in the tree.
 - **D13.** The persistent theory hash folds in the theory's long name. That change
   and its whole-store migration belong to `THEORY_HASH_REKEY_PLAN.md`, which runs
   **before** Part B. Consequences here: §A.9's "name-addressed keys are
@@ -311,7 +317,7 @@ Three repo-root scratch theories (`Scratch_FlatPathVerify.thy:19`,
 `Scratch_DryRunVerify.thy:25`, `:43`) also call `resolve_theory`; they are scratch and
 need no action beyond not being broken.
 
-### A.6 `constituents_cache` — re-scope it, and repair the call sites
+### A.6 `constituents_cache` — replace it, and repair the call sites
 
 `Universal_Key.constituents_cache` (`:454`) is a process-global memo:
 
@@ -336,114 +342,87 @@ byte-identical `record ('a, 'b) lens = lens_get … lens_put …` under the shar
 identical `kind`, identical `name` and **byte-identical `expr`**, differing in their
 constituent theory and their interpretation text.
 
-#### The design: scope the cache to a population whose CONES have no base-name collision
+#### The design (decided): one pure table per theory
 
-Rather than delete the cache, bind its scope to the range over which name resolution
-cannot change. The `Theory_Data` value is
+**Decided 2026-08-13 (D14). Not yet implemented** — the code in the tree is still the
+cone-scoped shared pair, recorded under "Designs considered and rejected" below.
+
+The `Theory_Data` value is a **pure** table (Isabelle's `functor Table`, a 2-3 tree,
+`Isabelle2025-2/src/Pure/General/table.ML:74`) inside a `Synchronized.var`, one var per
+theory, carried by `Theory_Data_With_Constructor`
+(`contrib/Performant_Isabelle_ML/library/theory_data_with_constructor.ML`, spec in
+`THEORY_DATA_WITH_CONSTRUCTOR_PLAN.md`) — which recomputes a value from the parents at
+every `begin_theory` instead of inheriting it through `merge_data`'s shortcuts:
 
 ```sml
-type shared_pair = {id : int, var : cache_and_claims Synchronized.var}
-datatype cache_scope = No_Cache | Cache of shared_pair
+structure Digest_Tab = Table(
+  type key = Term_Digest.digest128            (* = Word64.word * Word64.word *)
+  val ord = prod_ord Word64.compare Word64.compare
+)
+
+structure Cache = Theory_Data_With_Constructor(
+  type T = entry Digest_Tab.table Synchronized.var option
+  val empty = NONE
+  fun construct _ = SOME (Synchronized.var "Universal_Key.constituents" Digest_Tab.empty)
+)
 ```
 
-— a **shared mutable pair** of the constituents cache and a map **theory base name →
-theory long name** recording who has claimed each base name under this cache, plus a
-`serial ()` identity so a fork is observable (`Synchronized.var` admits no equality).
+**Why it is sound, in two steps.** `construct` runs at every in-scope begin and returns a
+*fresh* var, so each theory owns its own cell and no two cones can ever write into one
+table — the failure this section exists to prevent becomes unconstructible rather than
+prevented. And because the table is pure, sharing a parent's entries would be a snapshot
+rather than sharing: writes on either side stay invisible to the other, and the snapshot
+would cost nothing, since persistent structures share.
 
-**The invariant is over cones, not over the theories that ran the hook**: for every
-theory `T` sharing the pair and every theory `A` in `T`'s cone,
-`claims[base A] = long A`. Two members whose cones each hold a theory of base name
-`b` must then hold the *same* one, so both resolve the internal names it qualifies
-identically — which is exactly what a digest key cannot distinguish.
+**`empty` must be an option, and this is load-bearing.**
+`THEORY_DATA_WITH_CONSTRUCTOR_ARGS`' `empty` is still a *value*, evaluated once and read by
+every out-of-scope theory, so a bare var there would be one cache shared by all 10,614
+theories of a pre-built heap image — the original defect, reproduced inside the dump.
+`thm_constituents` bypasses the cache on `NONE`.
 
-An earlier revision maintained only "every theory that *ran the hook* has a distinct
-base name". That is not enough, and the gap is not hypothetical: `Context.merge_data`
-skips a data kind's merge function entirely when just one parent carries it
-(`Pure/context.ML:454`), so a theory inherits the pair from one parent while dragging
-in the cones of its others, none of which ever runs the hook. Reachable in an
-Isa-REPL process whose `additional_libs` pull in `Minilang_AoA` (the AoA/PutnamBench
-configuration, `tools/aoa_putnam_eval/start_servers.sh`): two user theories importing
-`Optics.Lens_Laws` and `Clean.Lens_Laws` share one cache, nobody claims the base name
-`Lens_Laws`, no fork fires, and the second cone reads the first's constituent list
-back. Not reachable in Part B's dump, where every swept theory reads `No_Cache`.
+**`construct` seeds an EMPTY table**, decided on measurement rather than taste. Seeding a
+child from the union of its parents' tables is *sound* — the argument is below, recorded
+so it is not re-derived — but `Table.merge (K true) (t1, t2)` for two 10,000-entry halves
+costs **2.8 ms**, three times over the functor's "`construct` must be cheap (<= ~1 ms)"
+contract; at ~280 ns per folded entry, 1 ms buys ~3,500 entries, and the budget would hold
+only while the non-first parents together stayed under that. Seeding empty is O(1) and,
+decisively, **carries no inherited staleness**: nothing crosses a theory boundary, and
+within one theory the world does not change, so §C's reload question does not arise for
+this cache at all. Reuse survives exactly where the design was aimed — inside one
+`update_thm_cache` invocation.
 
-Four rules, and nothing else:
+*The union's soundness, for the record.* A parent's entry was computed in that parent's
+cone, which is contained in the child's; base names are unique within a cone
+(`Context.eq_thy_consistent`), so every internal name resolves in the child exactly as it
+did in the parent. Two parents disagreeing on one digest would require two same-base-name
+theories in the child's cone, which `begin_thy` rejects outright — so the child cannot
+exist, and the union never has to choose on a conflict. `Table.join` also short-circuits on
+an empty first table (`table.ML:544`, measured flat at 1.7-1.9 ns from n = 256 to 200,000),
+so a single parent would be free.
 
-1. **`empty = No_Cache`, and `thm_constituents` bypasses the cache entirely on
-   `No_Cache`.** This is not cosmetic. `THEORY_DATA'_ARGS`' `empty` is a *value*,
-   evaluated once at functor application (`Isabelle2025-2/src/Pure/context.ML:744-749`,
-   `:772-778`), and `get_data` hands that same object to every theory without its own
-   entry (`:441-444`). A record-valued default would therefore make **one process-global
-   unpartitioned cache shared by all 10,614 theories of a pre-built image** — the
-   original defect, reproduced inside the dump. `No_Cache` is what makes "a heap built
-   before this code carries no cache" true rather than catastrophically false.
-2. **merge takes any parent's pair.** It cannot do better: the beginning theory is not
-   among its arguments, and `merge_data`'s single-carrier shortcut means merge is not
-   even called in the case that matters. Rule 3's cone check subsumes what an earlier
-   revision tried to do here (fresh pair plus union of the parents' claims maps).
-3. **`at_begin` accounts for the whole cone, and forks on collision.** On `No_Cache`,
-   allocate a `Cache` whose claims map is this cone's. Otherwise walk
-   `Theory.nodes_of thy` and, per ancestor,
-   - claims maps its base name to its own long name → already accounted for;
-   - **absent** → record it. Not a collision: the theory that allocates a pair brings
-     thousands of never-claimed ancestors, none of which collides with anything;
-   - maps to a **different** long name → collect the base name as colliding.
+**The lookup cost is not a reason to hesitate.** Measured at the real population
+(n = 20,000, being 20,484 distinct digests over 22,545 theorems): a hit costs **29 ns** in
+the mutable `Hash_Table` and **284 ns** in the pure `Table`. The 255 ns difference is
+**2.1 %** of the ~12 µs `compute_constituents` call a hit avoids. Two numbers reframe it:
+the `Synchronized.var` round trip that *both* designs take is **78 ns**, two and a half
+times the entire hash lookup it protects; and seeded empty the table holds one theory's
+working set, where the gap is +17 ns at n = 256 and +52 ns at n = 1,000 — 0.14 % and 0.43 %
+of a miss. The tree reaches 1 % of a miss at n ≈ 1,500; the hash table never does, even at
+200,000 (0.82 %). `Term_Digest.digest128_hasher` alone is 7.2 ns. Method: 3 processes ×
+9 interleaved rounds, medians with full spread, on a box under heavy concurrent load which
+the report states.
 
-   With no collision the theory value does not change, so the hook returns `NONE`.
-   With collisions it forks:
-   `Digest_Tab.make (filter (fn (_, (_, cs, _)) => not (exists (fn (n, _) => Symtab.defined clashing (Long_Name.base_name n)) cs)) (Digest_Tab.dest cache))`,
-   and claims = the old map with this cone's answers written over it.
+**What this deletes.** The claims map, the cone walk, the fork, the purge, `cache_scope_id`
+and the `Theory.at_begin` registration — about a hundred lines net — together with the
+parts of `test/Test_Universal_Key.thy` and all of `test/Test_Cache_Scope.thy` that test
+fork and purge. Those tests are replaced by one that two same-base-name theories cannot see
+each other's entries, which under this design is a property of the type rather than of a
+mechanism.
 
-   `Theory.nodes_of` costs one `Symtab` lookup per ancestor, not a graph traversal:
-   `Context.ancestors_of` is `#ancestors o ancestry_of` (`Pure/context.ML:323`), a
-   materialised field.
-
-   **Termination is load-bearing**: `Theory.apply_wrappers` re-runs the whole wrapper
-   list until every wrapper returns `NONE` (`theory.ML:83` → `perhaps_loop`,
-   `library.ML:334-340`), and a fork must `put` and therefore return `SOME`. The
-   re-application finds the whole cone accounted for and returns `NONE`, which is what
-   stops the fork repeating forever inside a `Synchronized` critical section. A second
-   wrapper already forces the extra pass: `update_thm_cache` returns `SOME` whenever its
-   fact delta is non-empty (`semantic_store.ML:2148`, hooked at `:2155`).
-4. **Do not write the cache when the empty-name fallback fired.** `default_thy_long_name
-   context ""` (`Universal_Key.ML:417-419`) records *the reading context's own theory*
-   for entities whose `Name_Space` entry carries no theory name — proof-local and
-   `global_naming` declarations (`name_space.ML:487`). Two theories with textually
-   identical local statements produce the same `thm128` and would otherwise share a cache
-   entry naming whichever theory computed it first — **with no base-name collision
-   anywhere, so no fork fires and no purge runs**. A refutation round found no producer
-   of such an entry anywhere in the distribution, the AFP or this repository (measured:
-   0 constants and 0 types with an empty theory name over 710 loaded theories), so this
-   rule is belt-and-braces rather than load-bearing.
-
-**Why purging is complete.** A cached entry keyed on digest *d* was computed from a
-proposition whose internal names are fixed by *d*. If that proposition mentions a
-constant declared by some `*.B` in the forking theory's cone, then in the computing cone
-the same internal name `B.c` resolved to that cone's `*.B`, so the entry's stored
-constituent list names a theory of base name `B` and the filter drops it. One gap
-remains: a constant **skipped** in the computing cone (§A.4) names no `*.B` and survives
-with a short constituent set — §A.4's "skipped = 0" gate is the second reason that gate
-must be enforced. Rule 4 closes the other.
-
-**Atomicity.** The pair lives behind one `Synchronized.var`, and the cone check, the
-fork and the claims all happen inside a single `Synchronized.change_result`. That var is
-also the lock for **all** cache reads and writes — otherwise a fork's `dest` walks a
-table being rehashed in place by a concurrent writer
-(`Performant_Isabelle_ML/library/hash_table.ML:59-60`). `constituents_registry` keeps a
-lock of its own, and no path holds both.
-
-**Recorded costs, since they are real and were argued over.** A fork is
-O(cache size) — `Hash_Table` has no copy primitive, only `dest`/`make`
-(`hash_table.ML:20-47`) — and the AFP has 1,652 − 608 = **1,044** forking theories, each
-retaining its filtered copy for as long as its theory value lives. Re-beginning a
-colliding theory re-forks, because the fork deliberately does not record its claim in
-the *old* pair: doing so would send the next begin of that theory down the "it is me"
-branch and have it adopt the other claimant's entries unpurged. The cone walk adds one
-`Symtab` lookup per ancestor per theory begin, on theories descending from
-`Remote_Procedure_Calling` only. The measured ceiling on what any such cache can save is
-**9.14 %** of propositions (22,545 theorems over 20,484 distinct digests) at 12.03 µs a
-hit — about **25 ms** per image-scale pass, none of which the dump collects (see below).
-
+**Still conditional on one measurement.** D11's acceptance item 3 — what `update_thm_cache`
+actually costs, and whether its fact delta is empty in the steady state — is running. If the
+delta is empty, the choice becomes this design versus deleting the cache outright, not this
+design versus what is in the tree; both beat what is in the tree.
 #### What this does and does not cover
 
 `compute_constituents` is reached from three places, with very different frequencies,
@@ -502,77 +481,19 @@ or not a cache is present:
 memo here whose key determines its value, since the key embeds the XOR and the WIP OR of
 exactly the list stored.
 
-#### Proposed replacement: one pure table per theory — NOT IMPLEMENTED
-
-Everything above describes the code as shipped. This subsection is a proposal under review; no
-code has been written for it. It is on the table because
-`contrib/Performant_Isabelle_ML/library/theory_data_with_constructor.ML` (its own spec:
-`THEORY_DATA_WITH_CONSTRUCTOR_PLAN.md`) now provides what stock `Theory_Data` does not — a value
-**recomputed from the parents at every `begin_theory`** rather than inherited through
-`merge_data`'s shortcuts.
-
-The value becomes a **pure** red-black tree (`functor Table`,
-`Isabelle2025-2/src/Pure/General/table.ML:74`) inside a `Synchronized.var`, one var per theory:
-
-```sml
-structure Digest_Tab = Table(
-  type key = Term_Digest.digest128            (* = Word64.word * Word64.word *)
-  val ord = prod_ord Word64.compare Word64.compare
-)
-
-structure Cache = Theory_Data_With_Constructor(
-  type T = entry Digest_Tab.table Synchronized.var option
-  val empty = NONE
-  fun construct _ = SOME (Synchronized.var "Universal_Key.constituents" Digest_Tab.empty)
-)
-```
-
-**Why it is sound, in two steps.** `construct` runs at every in-scope begin and returns a *fresh*
-var, so each theory owns its own cell and no two cones can write into one table — the
-`Lens_Laws` failure that motivated the cone check becomes unconstructible rather than prevented.
-And because the table is pure, "inheriting" a parent's entries is a snapshot, not sharing: later
-writes on either side are invisible to the other, and the snapshot costs nothing, since
-persistent structures share.
-
-That removes the entire mechanism above — the claims map, the cone walk, the fork, the purge,
-`cache_scope_id`, and the `Theory.at_begin` registration — roughly a hundred lines net.
-
-**`empty` must stay an option.** `THEORY_DATA_WITH_CONSTRUCTOR_ARGS`' `empty` is still a *value*
-evaluated once and read by every out-of-scope theory, so a bare var there would be one cache for
-all 10,614 theories of a heap image — the same trap `No_Cache` exists to avoid today.
-
-**The open choice: what `construct` seeds with.**
-
-- *Empty.* O(1), no reuse across theories, and — decisively — **no inherited staleness**: nothing
-  crosses a theory boundary, and within one theory the world does not change, so §C item 1
-  disappears for this cache. Reuse survives exactly where the design was aimed: inside one
-  `update_thm_cache` invocation.
-- *The union of the parents' tables.* More reuse, inherits the parents' staleness, and pays a
-  `Table.merge` at every theory begin against the functor's "`construct` must be cheap (<= ~1 ms)"
-  contract.
-
-  The union is **sound, and never has to choose on a conflict** — record the argument so it is not
-  re-derived. A parent's entry was computed in that parent's cone, which is contained in the
-  child's; base names are unique within a cone (`Context.eq_thy_consistent`), so every internal
-  name resolves in the child exactly as it did in the parent. Two parents disagreeing on one
-  digest would require two same-base-name theories in the child's cone, which `begin_thy` rejects
-  outright — so the child cannot exist. `Table.join` also short-circuits on an empty first table
-  (`table.ML:539-548`), which makes the single-parent case O(1) for free.
-
-**Deciding it.** A measurement is in flight: `Table` versus `Hash_Table` at populations 256 /
-1,000 / 20,000 / 200,000, for hit, miss, insert, the `Synchronized.var` round trip that both
-designs pay, `Table.merge`, and var allocation — each expressed against the ~12-15 µs a cache
-miss costs. Seeded empty, the per-theory table is one theory's working set (hundreds of entries),
-where O(log n) is unlikely to be measurable; seeded from the parents it reaches the full ~20,000
-and `construct` must stay inside its budget. That measurement plus D11's still-unrun acceptance
-item 3 (what `update_thm_cache` actually costs) decide both the seeding choice and whether the
-cache is worth keeping at all.
-
-**What it does not fix.** The reload question (§C item 1) only for the *empty* seeding; and
-nothing at all about `Universal_Key.cache` (§C item 8), which is a different table.
-
 #### Designs considered and rejected
 
+- **The cone-scoped shared pair — what is in the tree today, to be replaced by the design
+  above.** One mutable `Hash_Table` plus a claims map (theory base name -> theory long
+  name) behind a `Synchronized.var`, shared by a whole population of theories through
+  `Theory_Data`; `at_begin` walked the beginning theory's entire cone against the claims
+  map and forked a filtered copy on a collision. It is sound as it stands — the cone walk
+  was added in `7776d76` precisely because an earlier version checked only the theories
+  that had run the hook, which `Context.merge_data`'s single-carrier shortcut
+  (`Pure/context.ML:454`) lets a theory bypass while dragging in unclaimed cones. But
+  soundness costs a claims map, a cone walk at every begin, a fork, a purge, and a
+  completeness argument for the purge with two documented gaps. The pure-table design gets
+  the same guarantee from the type, so all of that goes.
 - **Deleting the cache outright.** Sound, simple, and — on the corrected reading of the
   benchmark above — free within measurement error. Rejected because it gives up
   `update_thm_cache`'s reuse permanently.
@@ -1226,12 +1147,23 @@ be in the cone — silently, with a plausible new prefix. If that hazard is to b
 needs its own check, comparing the recomputed set against the old one for divergence, and
 that check has to be designed rather than inherited from this sentence.
 
-*What happens to the 93 WIP records.* Recomputing their prefixes in a heap-loaded context
-flips them from WIP to persistent, because `Resources.loaded_theory` is true there for the
-19 theories they name. A WIP record is a disposable cache that `clean_wip` deletes; a
-persistent one is not. Migrating them therefore changes what they are, and the three
-options — flip, skip, or preserve WIP-ness by keeping the FNV hashes — have not been
-weighed. Move the key, then `Experience_Index.rebuild` (the index holds 405
+*What happens to the 93 WIP records.* Their WIP bit is an artefact of how the writing AoA
+session was configured, not a property of the experience. All 93 touch one of 19 theories —
+the whole of `Abstract-Rewriting.*` (7) and `Affine_Arithmetic.*` (11), plus
+`Algebraic_Numbers.Interval_Arithmetic` — ordinary AFP theories that that session happened
+to load from source rather than from a heap, so `Resources.loaded_theory` was false and
+their hash is FNV-1a-128 of the long name (verified: all 19 stored hashes reproduce
+exactly). 41 of the 93 mix a WIP constituent with a persistent one; the prefix's LSB is the
+OR, so one WIP constituent colours the whole record.
+
+Recomputing their prefixes in a heap-loaded context flips them to persistent. Two things
+argue for letting it: `clean_wip` may delete a WIP record at any time, and these are as
+unregenerable as the other 6,768; and a WIP hash is content-independent, so a WIP-keyed
+record never invalidates when the theory it talks about changes — flipping puts these 93
+under real content-addressed invalidation for the first time. Against it: the CI export
+filter treats persistent records as publishable, so flipping publishes them. Not flipping
+is expensive — reproducing the WIP hashes needs the migration's context built from source
+rather than from a heap, or a special case for those 19 names. Move the key, then `Experience_Index.rebuild` (the index holds 405
 16-byte keys, not one per experience). Also record the writing context's theory long
 names on the record at write time, so the next migration is not circular.
 
