@@ -97,6 +97,34 @@ From the user. Not open for review; recorded so the plan's assumptions are visib
   pair in the tree is superseded. Still conditional on D11's acceptance item 3: if
   `update_thm_cache`'s delta is empty in the steady state, the live choice becomes this
   design versus deleting the cache, and both beat what is in the tree.
+- **D16.** The constituents cache is **kept, not deleted**. Decided 2026-08-13 on the
+  per-AoA-call measurement in §A.6: the cache saves ≈117 ms of every AoA invocation at a
+  100 % steady-state hit rate, against ≈10 % it costs a one-pass sweep. This settles
+  deletion only. **Whether to build D14's pure-`Table` redesign is still open** — what is
+  in the tree today is the cone-scoped shared pair.
+- **D17.** The dump gets **no resume**; an interrupted run is redone from an empty
+  scratch store. Decided 2026-08-13, knowing the exposure: `schedule_dag` cancels the
+  whole group when one theory raises, so a failure at theory 10,000 of 10,614 discards
+  everything. Accepted because a resume is only worth building if the run actually
+  fails — and the guard that makes the accident impossible (the handler refuses a theory
+  already in the dump; the driver refuses a directory that already exists) is what
+  matters, since a second pass over a non-empty dump appends every record again and makes
+  **every** key look ambiguous, which sends the whole corpus to the gap list. If it does
+  fail: the resume is ~20 lines (an RPC returning the long names that already have a
+  completion record, and a filter over the cone), and it is sound by construction —
+  a theory's entities and its completion record share one transaction, so "has a
+  completion record" and "is completely dumped" are the same statement.
+- **D18.** The **`HOL-Decision_Procs` legacy records are abandoned**, under D10 like any
+  other leftover. `is_infra_session` (`infra_filter.ML:26`) excludes that whole session
+  from `collect_cone`, so the dump cannot cover it and the join maps none of its
+  records. Measured 2026-08-14 on the local store: 923 legacy (6/7/8-field) records
+  under `HOL-Decision_Procs` base names, of which **836 are theorem-alike** and 87
+  name-addressed. Keeping them was considered and dropped: they carry no field naming
+  any theory, so the join cannot even recognise them without falling back to the name
+  prefix — the very fallacy this plan exists to remove — and the alternatives were
+  either to stop pruning leftovers at all or to make the dump enumerate a session the
+  per-entity infra filter is built to reject, which would put records into the new store
+  that current collection never produces.
 - **D13.** The persistent theory hash folds in the theory's long name. That change
   and its whole-store migration belong to `THEORY_HASH_REKEY_PLAN.md`, which runs
   **before** Part B. Consequences here: §A.9's "name-addressed keys are
@@ -502,11 +530,30 @@ so their hit rate is near 100 % from the second call onward, far above the 16 % 
    name filter nearly every candidate pays. For the four rule kinds the live set is the
    Source-1 net.
 
-**The counts are being measured on `MathBench_ProverBase`** — how many thms each population
-is, and each one's cost with and without the cache, first call versus steady state. Until
-that lands, keep versus delete is undecided; the absolute saving is on the order of
-milliseconds per AoA call against an invocation that makes LLM round trips, so the decision
-is about whether the machinery earns its keep, not about latency the user can feel.
+**Measured 2026-08-13 on `MathBench_Prover`**, medians of 11 interleaved rounds
+(`evidence/universal-key/aoa_per_call_recompute.md`; `MathBench_ProverBase` was
+unusable — it does not import `Minilang_AoA`, so its cone holds no `Universal_Key` at
+all and a scratch theory over it reports `cache_scope_id = NONE`):
+
+| population | thms | without the cache | with it |
+|---|---|---|---|
+| static delta, after 150 lemmas | 150 | 1.31 ms | 0.23 ms |
+| dynamic-collection members | 3,245 | 34.5 ms | 16.6 ms |
+| the five live query sets | 5,042 | 107.5 ms | 9.3 ms |
+
+So the cache saves **≈117 ms per AoA call** and the hit rate is 100 % in the steady
+state (`skipped = 0`, `empty_name_fallback = 0` over ~13,500 propositions) — against
+the ≈10 % it costs a one-pass sweep of mostly distinct propositions. **The cache is
+kept (D16)**; whether to build D14's redesign is a separate, still-open question. Two
+corrections the measurement forced: the key and the constituent list are
+built *unconditionally*, before `is_infra_thm` is consulted, so the dynamic population
+paying is all 3,245 members and not the 3,113 that survive the filter; and the cache is
+**already warm before the first AoA call** — the scratch theory inherits
+`MathBench_Prover`'s populated cache object (same `cache_scope_id`), and a stride sample
+of 5,026 never-touched static facts cost 4.75 µs against 18.02 µs uncached on its
+first-ever pass, i.e. ~84 % hits cold. Genuinely cold are only freshly proved
+proof-local facts and the two `Induct.dest_rules` nets, which is why the first
+induction-rule query costs ~56 ms and later ones ~3 ms.
 
 **And the hook's real cost is somewhere else entirely.** `t0` is taken *after*
 `Facts.dest_static`, so the printed milliseconds exclude the scan that dominates: 18.4 ms at
@@ -838,6 +885,11 @@ it splits in two:
   invisible to the base-name test because a namesake was swept —
   `Actuarial_Mathematics.Examples`, `Auto2_Imperative_HOL.Sep_Examples`,
   `HOL-Decision_Procs.Approximation`, `HOL-Decision_Procs.Cooper` — worth 939 records.
+  **Correction (2026-08-14): about 923 of those 939 are not recoverable by any target
+  list.** Both `HOL-Decision_Procs` theories sit in an infrastructure session, which
+  `collect_cone` excludes and the per-entity infra filter rejects, so no dump covers
+  them; D18 abandons those records deliberately. Only the two
+  `Actuarial_Mathematics` / `Auto2_Imperative_HOL` theories are recovered here.
 - **19,539 records across 719 theories NOT in the image** — `Geo_Real2` 3,349 and a
   long tail of Why3-generated verification-condition theories. **This figure is exact**
   and D7 abandons them.
@@ -903,6 +955,21 @@ that collapsed. This is why §B.6's matching rule must be one-to-one in both dir
    disk check in the run script and name who deletes a failed attempt.
 6. **`isabelle build` is not run at all**, and `-c` is never passed anywhere. The
    `AFP-ALL-4` image cost 60 hours.
+7. **The target list must be the right file, and nothing downstream can tell.**
+   `afp_all4_roots.heap.txt` is 10,614 names; `tools/Build_AFP_Image/afp_all4_theories.txt`
+   is a **strict subset** of it, 9,331 names, every one of which resolves — so pointing
+   the dump at it succeeds, is internally consistent, and silently abandons ~659
+   theories' records under D10. The heap list is not in the repository. Record its path
+   on `cslh19`, its line count and its sha256 here before the run, and check them; the
+   copy this plan was written against is 10,614 lines,
+   `df31f638a52851091b1763acb7b64500c4c50882de9b1ff2635feb952ed42795`. The driver
+   echoes the file it was given and its line count into the run log.
+8. **The RPC host must be able to read Isabelle's symbol table.** The dump stores
+   `name` and `prop` in Unicode, converting them with `pretty_unicode` exactly as the
+   collection path does; that reads `$ISABELLE_HOME/etc/symbols` and refuses to fall
+   back to identity, so a host started with neither `ISABELLE_HOME` nor `isabelle` on
+   `PATH` kills the sweep on its first theory. Not a new dependency for a host that has
+   ever served collection.
 
 ### B.3 Step 1 — the entity dump
 
@@ -936,7 +1003,16 @@ new Python RPC handler, which appends to a scratch LMDB `semantics.rekey-dump.lm
   include `$AFP/Clean/src/Optics.thy` and `~~/src/...`.
 
 `map_size` is `SEMANTICS_MAP_SIZE` (4 GiB): the live store carries every LLM
-interpretation in 44 % of that, and the dump carries none.
+interpretation in 44 % of that, and the dump carries none. Confirmed by replaying
+1,362,343 real records into the dump's record shape — 1.085 GiB in randomised key order,
+27 % of the ceiling — and `MapFullError` aborts the transaction cleanly.
+
+**The number to compare the dump's own read-back against** is the previous full
+`AFP-ALL-4` sweep, recorded in `ENTITY_POSITION_PLAN.md` §18.1: **9,955 theories,
+1,303,856 entities enumerated**, with four surviving per-theory logs
+(`semantics.lmdb.positions-*.log`) covering 10,572 theories. Same enumeration, same
+image, so the totals should agree closely; a systematic shortfall of even 1 % is ~13,000
+records and visible at a glance.
 
 The completion records exist because otherwise a short dump is undetectable — §B.9's
 reconciliation balances identically for a dump covering 9,955 theories and one covering
@@ -967,6 +1043,72 @@ universal key while `enumerate_entries`' dedup is per-theory and `schedule_dag` 
 theories as parallel futures, so two theories producing one key write it twice with
 scheduling-dependent `name`/`position`. The handler must detect a duplicate key, keep
 both, and count them; such keys are ambiguous for the join.
+
+#### As written (2026-08-13, not yet run)
+
+- ML: `Semantic_Store.dump_cone` / `dump_theory` / `dump_report` and the
+  `Semantic_Store.dump_entities` RPC command in `semantic_store.ML`; the app of the same
+  name in `semantic_interpretation_app.ML`. `backfill_theory` and `dump_theory` now share
+  `sweep_theory`, which carries only the WIP skip and the enumeration — what a
+  position-quality refusal *means* stays in each body, since that is exactly where they
+  differ.
+- Python: `Isabelle_Semantic_Embedding/rekey_dump.py` (the handler and the scratch
+  environment) and the driver `dump_universal_keys.py`.
+- The completion record's theory source path is
+  `Entity_Position.portable_path (Theory_Hash.get_theory_path thy)`, not
+  `File.symbolic_path` as this section first said: `portable_path` is the function that
+  wrote the file component of every stored position, so §B.6's discriminator compares
+  strings produced the same way. Both were exported for it (one signature line each).
+  In the `AFP-ALL-4` image the two foldings should agree everywhere — every theory is
+  either AFP or distribution — so this removes a question rather than fixing a fault.
+- Scratch-store layout, keys told apart by length exactly as the live store tells them
+  apart: an entity key (≥17 bytes) holds a msgpack **list** of
+  `[name, kind, position, constituents, prop, theory_longname]`, length 1 unless two
+  theories claimed the key; a theory key (16 bytes) holds
+  `[theory_longname, enumerated, theory_file, tie_break_degraded, line_mismatch]` and is
+  written **last in the same transaction** as that theory's entities, so an uncommitted
+  theory leaves no completion record.
+- **`name` and `prop` are stored in Unicode**, converted by `pretty_unicode` exactly as
+  the collection path converts them before they become `Record.name` / `Record.expr`.
+  Storing them raw was a real defect, caught in review: measured over the whole corpus,
+  87.0 % of records have a non-ASCII `expr` and 4.2 % a non-ASCII `name`, so §B.6's
+  divergence rule would have rewritten nearly every `expr`, dropped nearly every vector,
+  and saturated the divergence count it designates as the leak detector for the
+  one-to-one rule. `position` is deliberately **not** converted — it is a filesystem
+  path, and a literal `\<...>` inside one would be rewritten.
+- **There is no resume** (D17), and the guard that makes the accident impossible runs
+  **in the RPC host, not in the driver**. Also caught in review, and demonstrated: the
+  driver is not the writing process — an externally launched host outlives it, and with
+  no host configured Isabelle forks an ephemeral one of its own — while `lmdb.open`
+  holds the directory by fd and mmap, which neither rename nor unlink disturbs. So after
+  the documented "move it aside and start over", a rerun wrote **into the moved-aside
+  directory**; after "delete it", into an unlinked inode, while a fresh driver process
+  reported an empty dump and exited 0. As shipped: `Semantic_Store.dump_preflight`
+  claims the scratch store in the host (refusing if that host already holds one open, or
+  if the path exists) and returns the path actually claimed; `Semantic_Store.dump_scan`
+  reads the committed dump back there too; the driver opens no LMDB at all and only
+  prints what they report. `_ensure_env` stamps the directory's inode and every batch
+  re-checks it, so a directory moved under a live host is named on the next theory.
+  **The recovery is therefore: move the directory aside AND restart the RPC host.**
+- **The §B.7 skipped-name gate is a gate**, not a log line: `dump_cone` snapshots
+  `constituents_totals` before the sweep and `error`s on a non-zero **delta** — a delta
+  because the counter is process-global and monotone and the driver loads
+  `Semantic_Collection_App` from source first. All reporting (the read-back scan, the
+  constituent-name deltas) happens **before** any gate fires, since a run that stops is
+  the run whose numbers are wanted; that ordering is the defect Part C item 3 records
+  against `backfill_cone`.
+- `dump_cone` logs the **names** of the roots `collect_cone` dropped, not just a count,
+  so §B.7's completeness gate can be evaluated against ML's own answer rather than a
+  second implementation of `is_excluded_theory` in Python.
+- The `written = enumerated` check is kept but its comment is corrected: it is a
+  wire-arity assertion across the msgpack boundary and nothing more. What guarantees a
+  theory landed is that its completion record shares a transaction with its entities.
+- Verified before the run: the ML compiles (`isabelle process_theories -l HOL` over a
+  scratch session importing both `Semantic_Embedding` and `Isa_REPL`; no `isabelle
+  build`), and the handler was exercised directly on a scratch store — entities written,
+  a two-theory key collision kept and counted, a second claim on the store refused,
+  ASCII symbol notation landing as Unicode with the position left alone, and a renamed
+  directory detected on the next batch.
 
 ### B.4 The cone the dump must cover
 
@@ -1068,7 +1210,16 @@ by length before touching field 5; a 6- or 7-field record has no `theory_constit
 and cannot be tail-joined on stored provenance.
 
 **Leftovers** — old records no dump entry maps — are **pruned** (D10), counted by
-category, and listed in the run report.
+category, and listed in the run report. "Pruned" means **not copied into
+`semantics.lmdb.building`**; nothing is deleted from the old store, which stays live and
+untouched until §B.9's swap (D1).
+
+**EXPERIENCE-kind records are not leftovers.** The dump never sees them (§B.10) and
+§B.10's own pass carries them, at Part E step 7 — after this join and before the swap.
+Recognise them by `key[16] == int(EntityKind.EXPERIENCE)`, the same test
+`check_consistency` already uses (`semantics.py:904`), and count them as their own
+category rather than folding them into the leftover count, which would otherwise be
+uninterpretable by 6,768.
 
 **Theory-status records and the counter** (keys ≤ 16 bytes) are copied — their keys are
 real theory hashes, unaffected — with one edit, addressed **only by the 16-byte hash the
@@ -1100,15 +1251,24 @@ Reported either way; the join refuses to promote a store that fails one.
 - **One-to-one**: the count of old records that fed more than one new key is **zero**.
   Not reported — required.
 - **Partition**: every old entity record is in exactly one category — fill source (with
-  the one new key it fed), pruned leftover, or carried tombstone — and every new key has
-  either exactly one source or a gap-list entry. Reported as counts per category, not as
-  a single balancing equation.
+  the one new key it fed), pruned leftover, **carried by the §B.10 experience pass**, or
+  carried tombstone — and every new key has either exactly one source or a gap-list
+  entry. Reported as counts per category, not as a single balancing equation. The
+  experience category exists because those 6,768 records are migrated by a separate pass
+  and would otherwise have to be miscounted as leftovers for the partition to balance.
+- **No WIP keys in the dump**: the count of dumped keys whose `key[0]` LSB is set is
+  zero. One expression over a dump the join already scans end to end. It cannot be
+  non-zero in an `AFP-ALL-4` run — every theory and its whole cone come from the heap —
+  which is exactly why a non-zero value means something is wrong with the run rather
+  than with the corpus.
 - **No lost interpretation**: no old record's interpretation disappears without either
   feeding a new key or being deliberately pruned as a leftover.
 - **Prefix check**: for every theorem-alike record in the new store,
   `xor_theory_prefix([h for _, h in rec.theory_constituents]) == key[:16]`. Reuse
   `check_consistency`'s scan (`semantics.py:893-930`); do not re-implement the fold.
-  Note it must tolerate the 23,052 XOR-prefixed WIP records.
+  Note the fold must include the WIP OR, or every XOR-prefixed WIP record reads as a
+  mismatch — 23,052 of them at the pre-re-key count, which per §B.0 must be re-taken
+  before it is used as a gate.
 - **Skipped names** (§A.4) total zero across the dump.
 - **No stray empty values**: no zero-length value in the new store except those copied
   from old tombstones.
@@ -1315,6 +1475,31 @@ memories cannot be regenerated this way at all.
 ---
 
 # Part C — loose ends
+
+## To delete when Part B completes
+
+Decided 2026-08-14, at the user's instruction: the migration scaffolding goes into the
+repository so that it reaches `cslh19` by the same route as everything else and so that
+the four permanent files it touches are not left as an indefinite uncommitted diff in a
+shared working tree — and comes back out when it has done its job. History keeps it;
+`HEAD` does not.
+
+- `contrib/Semantic_Embedding/Isabelle_Semantic_Embedding/rekey_dump.py` — whole file,
+  and its import line in `Isabelle_Semantic_Embedding/__init__.py`.
+- `contrib/Semantic_Embedding/dump_universal_keys.py` — whole file.
+- `contrib/Semantic_Embedding/migrate_universal_keys.py` (the join, §B.5–B.7) — whole
+  file, once written.
+- In `Tools/semantic_store.ML`: `dump_entities_cmd`, `dump_preflight_cmd`,
+  `dump_scan_cmd`, `dump_report` and its helpers, `dump_theory`, `dump_cone`, and their
+  signature entries.
+- In `Tools/semantic_interpretation_app.ML`: the `Semantic_Store.dump_entities` app and
+  its paragraph of the header comment.
+- **Keep** the two signature exports (`Entity_Position.portable_path`,
+  `Theory_Hash.get_theory_path`): both name something the module already computed and
+  the second is what the theory hash is taken over.
+- **Decide then, not now**: whether `sweep_theory` reverts into `backfill_theory`. It
+  exists to keep the two passes from drifting on which theories they cover, and with the
+  dump gone there is one pass again.
 
 ## Settled, not yet applied
 
@@ -1540,10 +1725,12 @@ the code is next touched.
    contain the migration script; the migration was run from elsewhere. The five missing
    commits are Python-side, so the ML that the REPL loaded is current.
 
-3. **The acceptance measurements** of §A.6 on a real cone. Report; do not argue the
-   gate in advance (D11).
-4. **The dump app and its Python handler** (§B.3), then the dump run on `cslh19` —
-   user approval for that specific run.
+3. ~~**The acceptance measurements** of §A.6 on a real cone~~ — taken; §A.6 carries the
+   numbers and D16 keeps the cache on them. The D14 pure-table redesign is still unbuilt
+   and undecided.
+4. **The dump app and its Python handler** (§B.3) — **written 2026-08-13**, see "As
+   written" there; then the dump run on `cslh19`, needing user approval for that
+   specific run.
    **Review cadence, decided 2026-08-13.** No further *plan* review before this step: §B.3
    went through all four adversarial rounds and has not changed since, the re-key does not
    affect it (the dump computes fresh keys and reads no old hash), and it is read-only with
@@ -1564,6 +1751,54 @@ the code is next touched.
 ---
 
 # Part F — review record
+
+**The dump app's code, reviewed 2026-08-14** (the review Part E step 4 called for): four
+reviewers by lens — ML correctness, join fitness, Python/LMDB operations, silent-failure
+detectability — producing 19 findings, then three refuters, one per group, instructed to
+default to refuted. **Five survived.** Two were fixed in code and are recorded in §B.3's
+"As written" (the ASCII-vs-Unicode defect and the guard-in-the-wrong-process defect,
+the latter demonstrated experimentally by both the reviewer and its refuter); one became
+a gate (§B.7's skipped names); one became a precondition (§B.2 item 7, the target list);
+one became a category in §B.7's Partition gate (experiences). Two figures the review
+proved wrong are corrected in §B.0 and in the code's comments.
+
+Refuted, recorded so they are not raised again:
+
+- *The recomputed `locale_provenance` is discarded, so the join has no post-fix
+  `template_uk`.* The stored field is write-only — `build_entries`' "Template meaning:"
+  line uses a `tuk` computed live from `Locale_Instance.provenance`, not the store's —
+  and the join can remap it from its own old→new map, which is what
+  `migrate_theory_hash_rekey.py:508-525` did.
+- *`written = enumerated` is vacuous.* True, and not a defect: it is a wire-arity
+  assertion, and the loss it was said to cover is covered by the completion record
+  sharing a transaction with its entities. The comment was corrected instead.
+- *Nothing records which target names were dropped, so §B.7's completeness gate cannot
+  be evaluated.* The dumped set is in the completion records and the difference is about
+  twenty names classified by one string test. `dump_cone` now logs them by name anyway.
+- *A theory skipped by the WIP test shortens the dump undetectably.* The trigger is
+  unreachable: `hash_of`'s WIP branch is chosen by `Resources.loaded_theory`, and every
+  theory of a heap-loaded image is in that set by construction.
+- *Nothing asserts that the running ML contains the Part A fix.* Part A's commits are
+  strict ancestors of D13's theory-hash change, so pre-Part-A ML also means the pre-D13
+  hash, and then every theory key the dump emits misses the re-keyed store — §B.6 step 1
+  stops loudly.
+- *The 23,052 WIP entity records are deleted while §B.7 assumes they survive.* §B.7's
+  sentence means the fold must include the WIP OR, not that those records reach the new
+  store; and a WIP record shares a tail with the persistent key of the same fact, so it
+  can be a tail candidate rather than an automatic leftover.
+- *§B.6 writes the dump's positions even for a degraded theory.* Measured zero on this
+  corpus (`ENTITY_POSITION_PLAN.md` §18.1: 0 line mismatches, 0 refusals over 9,955
+  theories), and `tie_break_degraded` fires only when the `check_theorem_name_in_file`
+  RPC fails, which is loud.
+- *No check that a dumped entity key is persistent.* Theoretical; folded into §B.7 as a
+  free report instead.
+- *Under-enumeration relative to the original collection is invisible.* The comparison
+  exists — `ENTITY_POSITION_PLAN.md` §18.1, now cited in §B.3.
+- *No disk check in the driver.* §B.2 item 5's disk check is about the migration's 38 GiB
+  peak, none of which the dump creates; the dump is capped at 4 GiB by `map_size`.
+- *`SEMANTIC_DB_DIR` is read independently in each process.* Out of scope by the user's
+  own earlier ruling (`RPC_GETENV_PLAN.md` §9.5, "不修(用户指示)"), and mechanically a
+  special case of the guard-in-the-wrong-process defect, which the fix closes.
 
 Four adversarial rounds on the plan: five reviewers by lens, then three refuters, then
 a narrower pair over the parts rewritten in between (the join mechanism, and every
