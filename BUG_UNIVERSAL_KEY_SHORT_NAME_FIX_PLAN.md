@@ -1224,18 +1224,41 @@ memories cannot be regenerated this way at all.
 
 ## Settled, not yet applied
 
-Four corrections, all decided 2026-08-13, none of them a design change. They can be
-made in one commit whenever the code is next touched.
+Decided 2026-08-13. None is a design change; they can be made in one commit whenever
+the code is next touched.
 
-1. **`semantic_digest.ML`'s leading-component comment is wrong** (§A.5). It blames two
-   theories sharing a base name, which cannot happen there: both compared names come
-   from one cone, and `Context.eq_thy_consistent` makes base names unique inside a
-   cone. Rewrite it to name the real hazards — a leading component need not be a theory
-   base name at all (`typerep_itself_inst`, the counterexample printed eight lines below
-   in the same comment), and `Code.type_interpretation`
-   (`Pure/Isar/code.ML:1358-1366`) resets the naming path to the *type's* declaring
-   theory, which is the one proven mechanism for a false "same theory". Comment only;
-   the code is not touched here (see the open item below).
+1. **`semantic_digest.ML`'s own-theory filter** (§A.5) — two changes to the same lines.
+
+   **(a) Consult the axiom space.** `same_theory` (`:307-313`) looks the axiom side up
+   in `Facts.space_of (Global_Theory.facts_of thy)` only, and misses. Try
+   `Theory.axiom_space thy` as well; only if both miss does the comparison degrade to
+   leading components. This is a structural guarantee, not a corpus accident:
+   `Theory.add_def` (`Pure/theory.ML:353-358`) hands `check_def` the `#def` string and
+   calls `add_axiom` with the *same* binding under the *same* naming in one step, so a
+   `#def` name is always in the axiom table. Measured over 710 loaded theories: of
+   12,109 distinct `#def` names, 12,109 resolve in the axiom space, **0** in neither,
+   and **0** resolve in both spaces to *different* theories. Verdicts today: **3 wrong,
+   all false drops**; after: **0**, with false keeps staying at 0. The three are the
+   `*_itself` constants. The `spec_rule_axioms` caller is untouched — **0** of its names
+   resolve in the axiom space, over 50,277 pairs. Prefer axiom-space-first on structural
+   grounds (the axiom entry is minted by the call that minted the `#def` string; the fact
+   entry is a separate later `note`) and assert on disagreement, which costs nothing at a
+   measured zero disagreements over 18,367 names.
+
+   **(b) Rewrite the comment**, which is wrong in two places. It blames two theories
+   sharing a base name, which cannot happen here — both compared names come from one
+   cone, where `Context.eq_thy_consistent` makes base names unique. And its "known cost,
+   2 constants of Main's 2,191" is **3** constants (`typerep_itself_inst.typerep_itself`,
+   `term_of_itself_inst.term_of_itself`,
+   `partial_term_of_itself_inst.partial_term_of_itself`), all fixed by (a).
+
+   **Do not write "an axiom entry's `theory_long_name` is the theory that declared it".**
+   It is false for **283 of 12,627** axiom entries — `Local_Theory.background_theory`
+   transports a naming (`Isar/local_theory.ML:226-236`), so a plugin replay records the
+   item under another theory's name; 147 of 12,534 constants and 447 of 111,864 facts are
+   misrecorded the same way. What actually holds, and what the filter depends on, is that
+   the constant side and the axiom side are misrecorded **identically**, so equality
+   survives. State that, not the stronger claim.
 2. **`Theory_Hash.hash_of_long`'s comment over-claims.** It says `hash_of` reads only
    the name plus file content and parent hashes; the master directory
    (`theory_hash.ML:124-132`) and the parents (`:177`) are read off the theory *value*.
@@ -1247,56 +1270,47 @@ made in one commit whenever the code is next touched.
    exactly the run that needs them. Snapshot `constituents_totals ()` at entry, report
    the delta, and put it before the `error`. The gate proper — refuse on a non-zero skip
    count — belongs to the Part B dump app and is written there, not retrofitted here.
-   Note also that the path which actually mints and stores keys
-   (`interpret_with_parallel` / `collect`) reports nothing; leave that until the dump
-   app exists, then do both with one mechanism.
-4. **The test session sits in the shipped `ROOT`.** `conda/recipe.yaml:69` copies
-   `ROOT` verbatim into the package while `test/` is not packaged, which
+   The path that actually mints and stores keys (`interpret_with_parallel` / `collect`)
+   reports nothing; leave that until the dump app exists, then do both with one mechanism.
+4. **The test session sits in the shipped `ROOT`.** `conda/recipe.yaml:69` copies `ROOT`
+   verbatim into the package while `test/` is not packaged, which
    `contrib/Semantic_Embedding/Test/ROOT:1-12` states as the convention to avoid. Move
-   the `Isabelle_RPC_Test` declaration into `test/ROOT`.
+   the `Isabelle_RPC_Test` declaration into `test/ROOT`. Consider splitting the session
+   while there: only `Test_Name_Spaces` needs the `HOL-Library` parent, the other two are
+   Pure-level and run in seconds.
 
 ## Still open
 
-1. **§A.6's reload question.** "The whole cone is already accounted for, so nothing to
-   do" is what terminates the wrapper loop, but it also holds when the same theory is
-   re-executed after an edit, leaving cache entries computed against the previous
-   content. Harmless for WIP theories (their hash is FNV of the long name) and not for
-   reloaded persistent ones. No identifier is both stable across the wrapper loop and
-   distinct across reloads. Needs an answer before the interactive path is trusted.
-2. **`semantic_digest.ML`'s axiom-side lookup — measure before proposing.** A review
-   argued that the `_raw` definitional axioms live in `Theory.axiom_space`, not in
-   `Facts.space_of (Global_Theory.facts_of thy)` where `same_theory` looks them up
-   (`semantic_digest.ML:310`), so the leading-component fallback is today the *primary*
-   path for `definition`-introduced constants rather than a rare corner. **Unverified
-   here.** If true, switching the lookup would give many constants their real definition
-   content for the first time and move their digests — a large deliberate invalidation.
-   The measurement to take first: over `Main`'s cone, how many constants reach the
-   fallback today, and how many of their digests would move. Separate item; do not fold
-   it into any other commit.
-3. **Nothing runs the test session.** `Isabelle_RPC_Test` appears exactly once in the
+1. **Nothing runs the test session.** `Isabelle_RPC_Test` appears exactly once in the
    tree, in its own declaration; no CI job or Makefile builds it. Three options, and the
-   choice is not made: attach it to `contrib/Isabelle_RPC`'s existing conda release
-   workflow, which already builds `Isabelle_RPC` (but `Test_Cache_Scope` needs a Python
-   environment carrying the `Isabelle_RPC_Host` wheel to start the attached host, and
-   whether CI has one is unverified); give it a CI job of its own; or add no runner and
-   document the invocation in `test/ROOT`, which is what
-   `contrib/Semantic_Embedding/Test/ROOT` does and which at least stops the tree
-   implying a coverage it does not have.
-4. **`Universal_Key.cache` is process-global and never invalidated**
-   (`Universal_Key.ML:362`). Keyed by `(entity, theory long name)`, its value is a full
-   universal key with that theory's content hash inside it, and its only caller is
-   `key_of_ns_entity` — so it decides every name-addressed key. The memo's key carries no
-   content, so when a theory's content changes it keeps returning the old universal key:
-   item 1's staleness again, process-wide rather than per-population, on the other half of
-   the entity space. **Scoping the constituents cache buys no staleness-freedom while this
-   sits next to it**, which is why the two must be decided together. The fix looks cheap
-   and local — put the theory hash into the memo key, `(entity, long name, hash)` —
-   because `key_of_ns_entity` computes that hash on the next line anyway. Not done, and it
-   inherits item 1's unanswered question: whether a persistent theory's content can change
-   within one process at all.
-5. **§B.10's refusals** — the experience records whose patterns cannot be re-parsed in
+   choice is not made: attach it to `contrib/Isabelle_RPC`'s conda release workflow
+   (which already proves an attached Python host starts under a real `isabelle build`,
+   in its `smoke` job — so `Test_Cache_Scope` is feasible there — but that workflow runs
+   against the *installed package*, which does not carry `test/`, and it fires at release
+   time rather than per commit); give it a workflow of its own, triggered on pushes to
+   the submodule; or add no runner and document the invocation in `test/ROOT`, which is
+   what `Semantic_Embedding/Test`, `phi-system/Phi_Test` and
+   `Phi_Syntax_Constraint_Test` all do. Note the superproject has no CI at all.
+2. **A third resolver for `spec_rule_axioms`.** 1,054 of its item names resolve in
+   neither the fact nor the axiom space, and **1,028 of them resolve in the CONSTANT
+   space** — they are the bindings of the defined predicates and functions, not axiom
+   names — with every const-space answer agreeing with today's verdict. Consulting it
+   would remove 97.5 % of that caller's remaining dependence on string comparison. The
+   residual 26 (the empty name, `axiomatization` names like `Set.Collect_member`,
+   `instantiation` bindings like `Nat.plus_nat`) genuinely have no space and must keep
+   the symmetric fallback. Separate item; do not fold it into item 1 above.
+3. **§B.10's refusals** — the experience records whose patterns cannot be re-parsed in
    the reconstructed context — are reported for adjudication. Who adjudicates, and on
    what basis, is undecided.
+
+## Assigned elsewhere
+
+- **§A.6's reload question.** "The whole cone is already accounted for, so nothing to
+  do" terminates the wrapper loop, but it also holds when the same theory is re-executed
+  after an edit, leaving cache entries computed against the previous content. It cannot
+  reach Part B — every theory the dump sweeps reads `No_Cache`, so the dump runs
+  uncached — and its blast radius is WIP records, which are a disposable cache. Being
+  handled outside this plan; do not start work on it here.
 
 ## Closed
 
@@ -1304,7 +1318,18 @@ made in one commit whenever the code is next touched.
   universal key determines its constituent long names. Before D13 that was false: the
   theory hash held no name, so seven byte-identical same-base-name theory pairs shared a
   hash and hence a key. D13 puts the long name in the digest, so the assumption now
-  holds. Recorded so it is not re-derived.
+  holds.
+- **An asymmetric fallback for `same_theory`** — when the constant side resolves and the
+  axiom side does not, compare the constant's resolved theory *base name* against the
+  axiom's leading component. **Refuted, do not re-propose.** It is unreachable once the
+  axiom space is consulted, and where it would be reachable it is wrong: `instantiation`
+  stamps the *type's* home-theory qualifier on every name it generates, so both sides
+  carry the same non-theory qualifier and today's symmetric degradation is right.
+  Measured counterexample, a real pair passed to `same_theory` today —
+  constant `Set.typerep_set_inst.typerep_set` (recorded theory `HOL.List`) against axiom
+  `Set.typerep_set_def_raw`: symmetric gives `Set` = `Set`, correct; the asymmetric rule
+  gives `List` vs `Set`, a wrong drop. Its measured benefit across both callers and both
+  directions is zero.
 
 ---
 
