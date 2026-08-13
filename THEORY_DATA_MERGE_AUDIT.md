@@ -59,13 +59,14 @@ effects, no mutable cells — was **not** reported. Inheriting one parent's valu
 ## Verdict
 
 **122 live functor applications** across the two parts: 91 in `phi-system`, 31 elsewhere.
-**Sixteen are suspect. Exactly one is a live defect, and it is not a merge error:**
+**Sixteen are suspect. Exactly one was a live defect, and it is not a merge error:**
 
-- `phi-system/Phi_Logic_Programming_Reasoner/library/tools/statistics.ML:335` writes
+- `phi-system/Phi_Logic_Programming_Reasoner/library/tools/statistics.ML:335` wrote
   `val _ = Theory.at_begin (…)`, discarding the `theory -> theory` that `Theory.at_begin`
-  returns. **The wrapper is never installed**, so the per-theory reset of the rule-utilization
-  counter never happens and `utilization` reports stale data. The correct idiom is two files
-  away (`thy_hacks.ML:22`). See Part I, F1.
+  returns. **The wrapper was never installed**, so the per-theory reset of the rule-utilization
+  counter never ran and counts accumulated across PIDE re-evaluations of one theory. The
+  correct idiom is `Phi_BI/library/tools/thy_hacks.ML:22`. **Fixed** in phi-system `d5c906ad`.
+  See Part I, F1.
 
 The one genuine instance of the hunted misconception is **latent**, in a dormant file:
 
@@ -76,11 +77,14 @@ The one genuine instance of the hunted misconception is **latent**, in a dormant
   computed. Cost, not correctness. Nothing imports that theory today and the ROOT does not
   build it. See Part II, F1.
 
-The next thing to break, if its writer ever gets a second call site:
+The next thing that would have broken, once its currently-unused writer was used again:
 
-- `phi-system/…/opr_stack.ML:339` — `Meta_Opr.merge = Symtab.merge (K false)` raises
-  `Symtab.DUP` for **any** key two parents share, including one both inherited unchanged from a
-  common ancestor. Unreachable only because `set_meta_opr` has zero call sites. See Part I, F2.
+- `phi-system/…/opr_stack.ML:339` — `Meta_Opr.merge = Symtab.merge (K false)` raised
+  `Symtab.DUP` for a key two parents share **whenever their two tables are not the same ML
+  value** — including a key both inherited unchanged from a common ancestor and touched by
+  neither. Unreachable in the meantime because `set_meta_opr` has zero call sites; it had two,
+  both in one theory, for two days in May 2023. **Fixed**: the merge now tests pointer identity
+  and reports a genuine clash as an `error` naming the operator. See Part I, F2.
 
 Everything else is latent or cosmetic, and is listed in full below with the reason.
 
@@ -112,13 +116,14 @@ ever loads (only `state_space.ML` is loaded, from
 `Phi_Semantics_Framework/Statespace/StateSpaceLocale.thy:11`). There is **no** use of the primed
 `Theory_Data'` anywhere in scope, so no instance inspects its parent list.
 
-**Ten instances are suspect.** Exactly **one is a real, present-tense defect**, and it is the
+**Ten instances are suspect.** Exactly **one was a real, present-tense defect**, and it is the
 mirror-image `Theory.at_begin` error rather than a merge error:
-`Phi_Logic_Programming_Reasoner/library/tools/statistics.ML:335` writes
+`Phi_Logic_Programming_Reasoner/library/tools/statistics.ML:335` wrote
 `val _ = Theory.at_begin (…)`, discarding the `theory -> theory` that `Theory.at_begin` returns, so
-the wrapper is **never installed** and per-theory reset of the rule-utilization statistics never
-happens. Everything else is a latent hazard: one merge (`Meta_Opr`) will abort a theory with an
-uncaught `Symtab.DUP` the day its currently-unused writer gets a second call site; two mutable-cell
+the wrapper was **never installed** and per-theory reset of the rule-utilization statistics never
+happened (fixed in `d5c906ad`). Everything else is a latent hazard: one merge (`Meta_Opr`) would have
+aborted a theory with an uncaught `Symtab.DUP` once its currently-unused writer was used again, and
+has since been fixed; two mutable-cell
 `Proof_Data` wrappers share an `Unsynchronized.ref` across context branches by design but with no
 guard; and several merges are non-identity-on-one-argument in ways that are today masked by the data
 being written from a single place.
@@ -148,9 +153,9 @@ Two background facts I re-derived because several judgements below turn on them:
 
 ## 2. Findings, most severe first
 
-### F1 — `Theory.at_begin` registration is discarded; the wrapper never runs
+### F1 — `Theory.at_begin` registration is discarded; the wrapper never runs — FIXED (`d5c906ad`)
 
-`Phi_Logic_Programming_Reasoner/library/tools/statistics.ML:335`
+`Phi_Logic_Programming_Reasoner/library/tools/statistics.ML:335`, as it stood before the fix
 
 ```sml
 val _ = Theory.at_begin (fn thy => (reset_utilization_statistics thy; NONE))
@@ -164,41 +169,62 @@ Symptoms: the `at_begin` mirror-image check.
 `theory -> theory` function and binds it to `_`. It is never applied to a theory, so the wrapper is
 never stored in any theory's `wrappers` field and `Theory.begin_theory`'s
 `apply_wrappers (begin_wrappers thy)` (`theory.ML:196-205`) never sees it. Contrast the *correct*
-idiom two files away: `Phi_BI/library/tools/thy_hacks.ML:22` writes
+idiom in another component of the same repository: `Phi_BI/library/tools/thy_hacks.ML:22` writes
 `val _ = Theory.setup (Theory.at_begin (…))`.
 
-Concrete consequence. `reset_utilization_statistics thy`
-(`statistics.ML:74-75`) is what installs a fresh, empty per-theory bucket in the process-global
-counter `rule_usage` (`statistics.ML:71-72`), a
-`… Synchronized.var Symtab.table Synchronized.var` keyed by `Context.theory_long_name thy`. Because
-the wrapper never fires, no bucket is ever created at theory-begin. `utilization thy group`
-(`statistics.ML:80-83`) then returns `Net.empty` for any theory whose bucket has not been created by
-the lazy path at `statistics.ML:135`, and `utilization_of_group`
-(`statistics2.ML:43-46`) reports zero utilization for every collected rule. Observably: turn on
-`collect_reasoner_statistics` for a group, build, and ask for the utilization — the counts are those
-accumulated since whenever the lazy path last created the bucket, never reset at theory boundaries,
-which is precisely what this line was written to prevent.
+Concrete consequence. `reset_utilization_statistics thy` (`statistics.ML:74-75`) installs a fresh,
+empty per-theory bucket in the process-global counter `rule_usage` (`statistics.ML:71-72`), a
+`… Synchronized.var Symtab.table Synchronized.var` keyed by `Context.theory_long_name thy`. Buckets
+are also created lazily by `count` (`statistics.ML:133-138`), so nothing was ever *missing* — what
+was missing was the clearing. PIDE re-runs a theory's header on every edit
+(`Pure/PIDE/document.ML:637`, `:651` → `Resources.begin_theory` → `Theory.begin_theory`), so one long
+name is begun many times in one process, and with no reset `count` kept adding to the bucket left by
+the previous run.
 
-Severity: **real** (dead code with a silently wrong observable result). It is not a soundness bug —
-it only corrupts a profiling report.
+How far the effect reached, measured rather than inferred: the attribute that enables collection,
+`\<phi>LPR_collect_statistics` (`statistics.ML:141`), has **no use site anywhere under `contrib/`**, and
+`count` short-circuits to `K ()` when no statistics group is open (`statistics.ML:131-132`). So a
+normal build records nothing at all, and the accumulation was observable only to someone who turned
+collection on by hand in an interactive session. Related rot in the same corner: `statistics2.ML` is
+loaded by no `.thy` and would not typecheck if it were — `:44` binds `utilization thy`, which is
+still a function (`utilization : theory -> group_name -> … Net.net`, `statistics.ML:10`), and `:48`
+hands it to `Net.match_term`, which needs a net.
 
-Smallest fix: wrap it, `val _ = Theory.setup (Theory.at_begin (fn thy => (reset_utilization_statistics thy; NONE)))`.
+Severity: **real** — a wrapper that never ran — but with a profiling-only observable, in a facility
+that is switched off by default.
 
-Two caveats the author should know before doing that, because they are the same class of mistake:
-(a) an `at_begin` wrapper registered by `Theory.setup` in theory *T* applies only to *descendants* of
-*T*, never to *T* itself and never to any theory that came out of a pre-built heap image, so the
-reset will silently not happen for the heap-resident part of the session; (b) the wrapper has a real
-side effect on a process-global `Synchronized.var` and `Theory.apply_wrappers` re-runs the whole
-wrapper list until every wrapper returns `NONE` (`theory.ML:83`) — this one returns `NONE`
-unconditionally, so it terminates, but it will be re-executed once per outer loop iteration if any
-*other* wrapper in the list returns `SOME`. With `Phi_Hacks`' wrapper (F3) in the same list, that is
-exactly what happens: `Thy_At_Begin_Version` returns `SOME` on the first pass, so the loop runs a
-second pass and the reset would fire twice. Harmless for a reset, but it is a side effect in a
-function the framework assumes is re-runnable.
+Fix applied:
+`val _ = Theory.setup (Theory.at_begin (fn thy => (reset_utilization_statistics thy; NONE)))`.
+
+Three facts were established before applying it, by running Isabelle rather than by reading alone:
+
+(a) The wrapper sees the long name of the theory *being begun*, not its parent's. The name is stored
+by `Context.create_thy` (`context.ML:466-471`) inside `Context.begin_thy` (`:550`), which
+`Theory.begin_theory` calls at `theory.ML:196` — before it applies the wrappers at `:197`. Isabelle
+depends on this itself: `Pure/Isar/code.ML:489-493` is an `at_begin` wrapper that compares
+`Context.theory_long_name thy` against a name carried in inherited theory data. Had the name still
+been the parent's at that point, the fix would have wiped the *parent's* bucket at every child begin.
+
+(b) An `at_begin` wrapper registered by `Theory.setup` in theory *T* applies only to *descendants* of
+*T*, never to *T* itself, and never to a theory restored from a heap image — restoring a heap does
+not begin theories again. `rule_usage`'s contents *do* survive into a heap image (Poly/ML saved
+states are memory images; confirmed by `Thy_Info.global_thys`, another top-level `Synchronized.var`,
+coming back populated in a fresh `isabelle console -l HOL`). Counts frozen at heap-build time
+therefore stay frozen; only `reset_utilization_statistics_all` (`statistics.ML:77-78`) clears those,
+and this fix does not.
+
+(c) The reset runs **twice at every begin**, unconditionally. `Theory.apply_wrappers` re-runs the
+whole wrapper list until every wrapper returns `NONE` (`theory.ML:83`), and Pure's own wrappers
+return `SOME` on any fresh theory (`more_thm.ML:724-728`, `Isar/code.ML:489-497`,
+`global_theory.ML:155-159`), so the second pass is forced regardless of what phi-system registers —
+`Phi_Hacks`' wrapper (F3) is sufficient but not necessary. Harmless today, because nothing running
+inside an `at_begin` wrapper invokes the reasoner, which is the only caller of `count`
+(`reasoner.ML:780`). It becomes a data-loss hazard the day some `at_begin` wrapper does trigger
+reasoning: pass one's counts would be discarded by pass two.
 
 ---
 
-### F2 — `Meta_Opr.merge = Symtab.merge (K false)`: any key shared by two parents aborts the theory
+### F2 — `Meta_Opr.merge = Symtab.merge (K false)`: a key shared by two distinct parent tables aborts the theory — FIXED
 
 `Phi_System/library/system/opr_stack.ML:339-343`
 
@@ -210,36 +236,98 @@ structure Meta_Opr = Theory_Data (
 )
 ```
 
-Symptoms: **S4** (merge raises on conflict), and the conflict it "guards" is not a real conflict.
+Symptoms: **S4** (merge raises on conflict), and the conflict it "guards" is not always a real
+conflict.
 
 `Symtab.merge eq = join (fn key => fn xy => if eq xy then raise SAME else raise DUP key)`
-(`table.ML:548`). With `eq = K false`, *every* key that exists in both argument tables raises
-`Symtab.DUP key` — even when the two entries are literally the same ML value inherited unchanged from
-a common ancestor. The `pointer_eq` short-circuit in `join` (`table.ML:539-547`) only rescues the
-case where neither parent modified the table at all.
+(`table.ML:548`). `join` short-circuits first on `pointer_eq (tab1, tab2)` (`table.ML:543`), then on
+`is_empty tab1` (`:544`); only past both does it fold `tab2` into `tab1` (`:545`), and the fold calls
+the conflict function on every shared key with no value-level `pointer_eq` guard (`:541`, `:345-415`).
+So the rule is:
 
-Concrete scenario I can construct from the source (it is not currently reachable — see severity):
-theory `A` calls `set_meta_opr ("foo", op_foo)` (`opr_stack.ML:346`, which is
-`Meta_Opr.map o Symtab.update`). Theory `B imports A` calls `set_meta_opr ("bar", …)`; theory
-`C imports A` calls `set_meta_opr ("baz", …)`. Now `theory D imports B C`. `Context.begin_thy` calls
-`merge_data [B, C]` (`context.ML:548`); both carry the kind, so `invoke_merge` runs
-(`context.ML:452-455`); `Symtab.merge (K false)` folds `C`'s entries into `B`'s table, reaches key
-`"foo"` — present in both, inherited identically from `A` — and raises `Symtab.DUP "foo"`. `D` fails
-to begin with an uncaught exception, not an `error` with a legible message.
+> `Symtab.merge (K false)` raises `DUP` on a key present in both parent tables **whenever the two
+> tables are not the same ML value** — including a key that neither parent touched and both
+> inherited unchanged from a common ancestor.
+
+The precondition is load-bearing: two parents that both inherited the table untouched hold
+pointer-equal tables, and merge returns immediately whatever `eq` is.
+
+Smallest configuration that fires it — one ancestor entry plus **one** write in **one** branch.
+Measured, in two throwaway Isabelle2025-2 sessions: theory `TA` calls `set_meta_opr ("shared", …)`
+(`opr_stack.ML:346`, which is `Meta_Opr.map o Symtab.update`); `MB imports TA` writes any other key,
+which is what stops `MB`'s table from still *being* `TA`'s table; `MC imports TA` writes nothing;
+`MD imports MB MC`. `Context.begin_thy` calls `merge_data [MB, MC]` (`context.ML:447-456`); both
+carry the kind, so `invoke_merge` runs (`context.ML:452-455`); the fold reaches `"shared"` and the
+result is `*** exception DUP "shared" raised (line 548 of "General/table.ML")`, reported against
+`MD.thy`'s `theory` command — an uncaught exception, not an `error` with a legible message. The
+control run, with no writes in either branch, builds clean.
 
 Note the bypass direction here is the *opposite* of the usual worry: the check is *too* eager, and
 the single-parent shortcut is the only reason it has never fired.
 
-Severity: **latent**. I grepped the whole repository (excluding the Isabelle distribution and AFP):
-`set_meta_opr` has **zero call sites** — only its signature declaration at `opr_stack.ML:80` and its
-definition at `opr_stack.ML:346`. So `Meta_Opr` is always `Symtab.empty`, both parents hold the same
-`empty` value, `pointer_eq` fires, and merge never raises. The first user to call `set_meta_opr` in
-two theories that meet at a diamond will hit it.
+Note also what this shape rules *out*. Two writes of *different* names in two branches merge fine, so
+"the writer gets a second call site" is not by itself the trigger; and two writes of the *same* name
+in two branches is a genuine conflict that arguably *should* abort. The false positive needs a name
+registered in one theory, any write at all in a descendant of it, and a diamond closing below.
 
-Smallest fix: `val merge = Symtab.merge (K true)` if last-writer-wins is acceptable, or
-`Symtab.join (fn k => fn _ => error ("Duplicate meta operator " ^ quote k))` if a genuine clash
-really must be rejected — but note even that still cannot distinguish "both inherited from a common
-ancestor" from "genuinely declared twice", because merge does not see the ancestor.
+Where `(K false)` came from. `Meta_Opr` is a copy of its sibling `Operators` twenty lines up
+(`opr_stack.ML:223-227`) — the same shape, but with `val merge = Symtab.merge (op =)`.
+`operator_info` is `int * int * (int * int)` (`:221`), so `op =` is real structural equality there
+and inherited entries compare equal and merge silently. `meta_opr` is a function type (`:144-146`),
+`op =` does not typecheck on it, and `(K false)` is what makes the copy compile. That is a
+compile-fix, not a policy — which is why `pointer_eq`, phi-system's own answer to the same problem at
+`generic_element_access2.ML:25` and `typeclass.ML:68`, is the honest replacement.
+
+A second inconsistency points the same way: `Operators` registers with `Symtab.update_new` (`:234`,
+`:243`, `:246`, `:255`, `:264`, `:273`), rejecting a duplicate declaration within one theory, while
+`set_meta_opr` uses plain `Symtab.update` (`:346`), silently overwriting. The writer is *more*
+permissive than its sibling while the merge is *less* permissive: two writes of one name along a
+single theory line are accepted silently; the same two writes split across a diamond abort.
+
+Severity: **latent**. `set_meta_opr` has **zero call sites** today — only its signature declaration at
+`opr_stack.ML:80` and its definition at `:346` — so `Meta_Opr` is always `Symtab.empty`, both parents
+hold the same `empty` value, `pointer_eq` fires, and merge never raises. It is not dead by design,
+though: it had two call sites, both in `Phi_Semantics/PhiSem_Aggregate_Base.thy` (for `\<tribullet>`
+and `:=`), added 2023-05-25 in phi-system `a1d57a02` and removed two days later in `4decad85`. There
+is no successor — `opr_stack2.ML` declares no `Theory_Data` or `Generic_Data` at all, and every meta
+operator today is hardwired into its own `\<phi>lang_parser` block calling `push_meta_operator`
+directly (`PhSm_Ag_Base.thy:622`, `:669`, `:678`; `PhiSem_Mem_Pointer.thy:748`;
+`generic_element_access.ML:223`). The reader side survives as dead code: the one caller of
+`lookup_meta_opr`, `IDE_CP_Core.thy:2311`, can only ever get `NONE`, so the
+`SOME meta => push_meta_operator …` branch at `:2313` is unreachable. The table is an abandoned
+generalization — declaring meta operators by name instead of giving each one a bespoke parser — that
+was never wired up.
+
+Fix applied — the table is kept, and the merge became `join` with an explicit conflict function that
+tests pointer identity first. Measured to pass an ancestor-inherited key silently and to report a
+genuine clash as `*** Duplicate meta operator "…"`:
+
+```sml
+val merge = Symtab.join (fn k => fn ab =>
+      if pointer_eq ab then raise Symtab.SAME
+      else error ("Duplicate meta operator " ^ quote k))
+```
+
+Merge does not see the ancestor, but it does not need to: pointer identity *is* the evidence of
+shared provenance. `Symtab.merge pointer_eq` is also correct and matches existing house style; its
+only defect is legibility, since a genuine clash still surfaces as a bare
+`exception DUP "…" raised (line 548 of "General/table.ML")`.
+
+`Symtab.merge (K true)` is the wrong answer. It is **first-import-wins**, not last-writer-wins:
+`raise SAME` leaves the accumulator untouched (`table.ML:415`), and `Theory_Data` folds the parents
+with the *first* import as the accumulator (`context.ML:791`). Measured: with `imports SB SC` and
+both branches writing one key, `SB`'s value survives. For function-valued entries, import order would
+then silently decide which code runs.
+
+`pointer_eq` survives a heap image boundary — checked, not assumed. A session was built that declares
+an entry and adds a second key in one branch (so the table-level short-circuit could not fire), its
+heap saved, and a separate child session then imported both branches out of the restored heap; the
+value-level `pointer_eq` still held. Poly/ML saved states are memory images, so structural sharing is
+preserved verbatim, and `share_common_data` can only increase sharing. The one shape where
+`pointer_eq` would be fragile is entries rebuilt per context by a morphism, as at `typeclass.ML:68`
+(`morphism_typeclass`, `:62`, called from `Local_Theory.declaration`, `:147-150`), where two
+structurally equal but pointer-distinct records could meet; no failing case was constructed, so that
+is recorded as fragile in principle only.
 
 ---
 
