@@ -392,11 +392,14 @@ child from the union of its parents' tables is *sound* — the argument is below
 so it is not re-derived — but `Table.merge (K true) (t1, t2)` for two 10,000-entry halves
 costs **2.8 ms**, three times over the functor's "`construct` must be cheap (<= ~1 ms)"
 contract; at ~280 ns per folded entry, 1 ms buys ~3,500 entries, and the budget would hold
-only while the non-first parents together stayed under that. Seeding empty is O(1) and,
-decisively, **carries no inherited staleness**: nothing crosses a theory boundary, and
-within one theory the world does not change, so §C's reload question does not arise for
-this cache at all. Reuse survives exactly where the design was aimed — inside one
-`update_thm_cache` invocation.
+only while the non-first parents together stayed under that. Seeding empty is O(1) and
+**carries no inherited staleness**: no entry crosses a theory boundary, so a stale entry
+cannot propagate from a parent. It does **not** remove §C's reload question, and an earlier
+revision of this paragraph wrongly said it did — a probe on 2026-08-13 reloaded a theory
+underneath a live one and moved its hash, so a long-lived Isa-REPL scratch theory's own
+cache can still go stale. What seeding empty buys is that the window shrinks from the whole
+population's lifetime to one theory's. Reuse survives exactly where the design was aimed —
+inside one `update_thm_cache` invocation.
 
 *The union's soundness, for the record.* A parent's entry was computed in that parent's
 cone, which is contained in the child's; base names are unique within a cone
@@ -1275,18 +1278,65 @@ the code is next touched.
    residual 26 (the empty name, `axiomatization` names like `Set.Collect_member`,
    `instantiation` bindings like `Nat.plus_nat`) genuinely have no space and must keep
    the symmetric fallback. Separate item; do not fold it into item 1 above.
-3. **§B.10's refusals** — the experience records whose patterns cannot be re-parsed in
+3. **`Universal_Key.cache` is process-global, never invalidated, and measurably wrong
+   today** (`Universal_Key.ML:362`). Dropped from this list in an earlier restructure;
+   restored, because the probe above drove it directly. Keyed by
+   `(entity, theory long name)`, its value is a full universal key with that theory's
+   content hash inside it, and `key_of_ns_entity` (`:767`) is its only caller — so it
+   decides every name-addressed key. With two `HOL.List` values in one process the memo
+   returned **whichever was computed first** for `(Constant "List.rev", "HOL.List")`, and
+   running the probe in the two orders flipped the key's leading 16 bytes. That is a
+   measured order-dependence of exactly the kind this plan exists to remove, on the other
+   half of the entity space.
+
+   The obvious fix — put the theory hash into the memo key — costs more than it looks:
+   `key_of_ns_entity` gets that hash through `resolve_theory`, whose `Context.get_theory` is
+   a **linear scan over the ancestors** (`context.ML:353`), so hoisting it above the memo
+   makes every hit pay the scan. The alternative is to give this memo D14's treatment — one
+   per theory — so two theories sharing a long name in their cones cannot share an entry.
+   Undecided, and it should be decided with the reload question above rather than apart
+   from it.
+4. **§B.10's refusals** — the experience records whose patterns cannot be re-parsed in
    the reconstructed context — are reported for adjudication. Who adjudicates, and on
    what basis, is undecided.
 
 ## Assigned elsewhere
 
-- **§A.6's reload question.** "The whole cone is already accounted for, so nothing to
-  do" terminates the wrapper loop, but it also holds when the same theory is re-executed
-  after an edit, leaving cache entries computed against the previous content. It cannot
-  reach Part B — every theory the dump sweeps reads `No_Cache`, so the dump runs
-  uncached — and its blast radius is WIP records, which are a disposable cache. Being
-  handled outside this plan; do not start work on it here.
+- **§A.6's reload question — REACHABLE, and wider than this entry said.** "The whole cone
+  is already accounted for, so nothing to do" terminates the wrapper loop, but it also
+  holds when the same theory is re-executed after an edit, leaving cache entries computed
+  against the previous content. Still being handled outside this plan; do not start work on
+  it here. But an earlier revision of this entry put the blast radius at "WIP records,
+  which are a disposable cache", and a probe on 2026-08-13 disproved that — the owner
+  should have the measurement. Report: `persistent_reload_probe.md`.
+
+  Two routes each produced two different **persistent** `Theory_Hash.hash_of` values for
+  one long name in one process. **The loader**: `Thy_Info.remove` (`thy_info.ML:183-192`)
+  errors only for a name `Thy_Info`'s graph holds as finished, while `hash_of`'s persistent
+  branch is chosen by `Resources.loaded_theory` alone — and those two sets differ, because
+  under a batch build the session's own theories are in `loaded_theories` from the first
+  instant and are never registered in `Thy_Info` (the PIDE build path never calls
+  `register_thy`, which has one call site in all of Pure). A plain `Thy_Info.use_theories`,
+  no bypass, moved an edited theory's hash from `3442b5d1…` to `20e0660f…` while the
+  constituents cache kept answering with the pre-edit XOR. **`Resources.begin_theory` under
+  a name already loaded**: no uniqueness check exists in the chain (`resources.ML:239`,
+  `theory.ML:189`, `context.ML:535` check only for a non-empty name and non-empty imports);
+  a second `HOL.List` over a stand-in file gave `2ec6c541…` versus `408e07a3…`, both with
+  `loaded_theory = true`. Isa-REPL reaches the second in normal operation — `REPL.ML:422`
+  qualifies the client's theory name with `thy_qualifier`, `:442` begins it, `:686-690`
+  swallows the resulting "Cannot update finished theory".
+
+  What is genuinely closed is only the intersection: a theory baked into a **heap image**
+  cannot be shadowed in `Thy_Info`, because `register_thy` errors and the registry keeps
+  pointing at the original. Also do not lean on "the classification cannot change":
+  `Resources.init_session` is exported and replaces the whole session base, though nothing
+  in the repo calls it today.
+
+  **Part B is still not exposed** — the dump reads one theory per long name out of a heap
+  image, so neither route applies there. Not settled by the probe: the constituents-cache
+  staleness was measured on the second route and inferred on the first, and whether
+  `claim_cache_scope` fails to fork for a shadow theory is a flagged corollary, not a
+  measurement.
 
 ## Closed
 
