@@ -392,6 +392,15 @@ what its `plan` phase reports against the authoritative store.
   or `deps` value — **and every persistent constituent's recorded hash is the
   one its recorded name maps to.**
 
+  "Nowhere" is the headline, not the letter, and the gate as implemented says
+  so: a `locale_uk` or `deps` entry whose *target theory* was itself dropped
+  has nowhere to point, so it dangles either way and its stale prefix is
+  reported in a separate bucket rather than counted as a failure. Measured on
+  the migrated store, that bucket holds **3 `locale_uk` references**, all in
+  `Restriction_Spaces-HOLCF` type-class instance records pointing at locale
+  records dropped under D4. They cannot mis-resolve — G2 proves the new and old
+  hash sets are disjoint — and re-interpreting that theory rewrites them.
+
   `template_uk` is **not** in that list, and an earlier revision wrongly put it
   there. It is a full universal key whose 16-byte prefix is an XOR of
   constituent hashes, not any one theory's hash, so "does it contain an old
@@ -612,7 +621,15 @@ construction — the one property `fsck` actually checks:
 
 The vector store is streamed key by key through the **old-key → new-key map**,
 not the theory table; entries whose key has no image are dropped; values —
-including the 8,908 empty-value tombstones — are copied verbatim. The 723
+including the 8,908 empty-value tombstones — are copied verbatim.
+
+**It also holds one entry that is not a universal key at all**:
+`\x00__vector_format__` = `q15/v1`, the Q1.15 provenance stamp written by
+`migrate_float32_to_q15.py`. It has no image in the key map, so the first run
+of this migration dropped it silently — the `semantics.lmdb` counter was
+handled by hand and nobody asked the same question of the vector store. Such
+entries are now copied verbatim and reported, and both the count gate and the
+vector-key gate know they have no record by design. The 723
 sixteen-byte embed-status keys ride that same map: they are theory hashes, and
 every one of them is present as a theory-status key in `semantics.lmdb`
 (measured, 723 of 723), so the map already covers them — and routing them
