@@ -453,6 +453,39 @@ the numbers argue for deletion: deleting removes `Theory_Data`, the constructor,
 the table as well, and costs 0.26 ms per theory end. Deciding that is D16's business, not
 this section's; until it is decided, D14 stands as the design to build if a cache is kept.
 
+**A second measurement, on a real population, flips the sign.** Run 2026-08-13 over
+**every static fact of `Complex_Main`** — 30,340 thms, **27,959 distinct propositions
+(92.15 %)** — comparing `thm_constituents` in a theory that carries a cache against one that
+reads `No_Cache`, 15 interleaved rounds:
+
+- **without the cache: 228 ms / 7.53 µs per thm** (range 205-302 ms);
+- **with the cache: 251 ms / 8.29 µs per thm** (range 228-377 ms).
+
+**The cache makes one sweep about 10 % slower.** The population explains it exactly: only
+7.85 % of calls can hit, and every call pays the machinery. A second pass over a cache
+already full costs 35 ms / 1.17 µs — 6.4× faster — so the cache pays on **re-reads across
+sweeps**, never within one.
+
+That gives the break-even directly: the machinery costs 1.17 µs on every call and a hit
+saves ~7.5 µs, so a cache pays only above **≈16 % duplicate propositions**. Measured rates
+are 7.85 % (`Complex_Main`'s facts), 6.30 % (a bulk `update_thm_cache` delta), 21.05 % (one
+definition-heavy delta), 0 % (a theory of 30 hand-written lemmas). **Most real populations
+are below break-even**, which is why the earlier figures above, which counted the saving on
+hits without charging the misses, came out positive.
+
+The measurement's own caveats, kept: the A-vs-C spread puts the noise floor near 7 % and the
+A/B gap is only a little above it — what makes it believable is the paired sign (B slower in
+12 of 15 rounds, p ≈ 0.035) and a cost model that predicts +0.58 µs against +0.76 µs
+observed. Both regimes agreed on the answer for **all** 30,340 thms, with `skipped = 0` and
+`empty_name_fallback = 0`. `Term_Digest.thm128`'s own cache was warmed before timing, so the
+"with cache" figure is charged only the warm digest cost.
+
+**So the live recommendation is to delete the constituents cache**, superseding D14 rather
+than building it: within a sweep it is a net loss, its only profit is on re-reads, and
+`update_thm_cache`'s steady-state delta — measured empty — is where those re-reads would
+have to come from. Deleting also removes `claim_cache_scope`, the suspected cause of the
+extra `apply_wrappers` pass below.
+
 **And the hook's real cost is somewhere else entirely.** `t0` is taken *after*
 `Facts.dest_static`, so the printed milliseconds exclude the scan that dominates: 18.4 ms at
 43,437 facts, **95.7 ms at `MathBench_Prover`'s 98,710**. `Theory.apply_wrappers` was also
