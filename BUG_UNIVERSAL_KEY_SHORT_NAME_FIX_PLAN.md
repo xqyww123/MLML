@@ -874,8 +874,13 @@ once. The test has no discriminating power.
 whose stating theory no sweep logged gives **25,317 records across 733 theories**, and
 it splits in two:
 
-- **5,778 records across 14 theories that ARE in the image** and were simply absent
-  from the previous target list — `Example_PIL` 1,476, `Example_SOL` 1,129,
+- **5,778 records across 14 theories.** **Correction, 2026-08-14: they are NOT in the
+  image.** Each of the 14 was probed individually against `AFP-ALL-4` and
+  `Thy_Info.get_theory` fails on every one; they were in the superseded 10,614-line
+  target list and are among the 23 names §B.2 item 7 records as absent. So they are D7
+  abandonments, not recoveries, and adopting the heap list buys nothing here. The
+  original (wrong) reading follows, kept because the per-theory counts are still the
+  measured record counts — `Example_PIL` 1,476, `Example_SOL` 1,129,
   `Substitution_Lifting_Example` 1,105, `Amortized_Examples` 842,
   `Example_Bounded_FOL` 787, `Path_Model_Example` 186, `Master_Theorem_Examples` 129,
   `ASC_Example` 68, `Andrew_Monotone_Chain_Examples` 38, and five smaller. Adopting the
@@ -896,6 +901,44 @@ it splits in two:
 
 Four sweeps have run in total, logging **10,572** distinct theories (96 / 219 / 9,955 /
 2,137 per log). Only **44** heap theories were never enumerated by any of them.
+
+### B.0a What the dump costs, measured against the live store (2026-08-14)
+
+The dump's 1,337,025 keys against the store's **1,367,542 entity records**, matched the
+way §B.6 will match them. This is the loss accounting; the join's own partition will
+refine it but cannot move these totals.
+
+| records | share | |
+|---|---|---|
+| **1,199,222** | 87.7 % | the new key is byte-identical to the old one — copied verbatim |
+| **128,409** | 9.4 % | the prefix moved but the tail is shared — **this is the population the migration exists to rescue**, and §B.6 decides each one |
+| **39,911** | 2.9 % | no dump entry at all |
+
+**Of the 39,911, one block is not a loss:** **6,861 experience records**, which the dump
+never sees by construction and §B.10's own pass carries (6,768 after D15 drops the 93
+WIP ones). This is exactly why §B.7's Partition gate needed a fourth category.
+
+**Genuine loss: 33,050 records, 2.4 % of the store**, attributed:
+
+| records | cause |
+|---|---|
+| 15,435 | legacy 6- or 7-field records that name no theory at all, so nothing can attribute them — pre-filter fossils |
+| 9,885 | theorem-alike naming a theory absent from the image (D7) |
+| 6,305 | name-addressed, their theory not dumped |
+| 1,425 | every constituent available, but no key matches — the entity is simply no longer enumerated (filter changes since collection, or AFP drift) |
+
+The theories that cost the most, from the constituent lists: `Phi_BI.Phi_BI` 3,047,
+`Phi_System.Phi_Types` 2,020, `Phi_Logic_Programming_Reasoner.PLPR` 1,465,
+`Phi_BI.Algebras` 1,267, `Phi_System.Phi_Type` 986, `Phi_BI.Phi_Preliminary` 686,
+`Phi_Semantics_Framework.Phi_Semantics_Framework` 608 — this project's own
+`phi-system`, never in `AFP-ALL-4` — together with the Example theories §B.0's
+correction covers: `Example_PIL` 1,262, `Example_SOL` 965, `Example_Bounded_FOL` 659,
+`Amortized_Examples` 674. 40 distinct absent theories in all.
+
+**§B.0's prediction was low.** It expected roughly 26,900 abandoned records (19,539 not
+in the image, ~5,800 Example theories, ~923 `HOL-Decision_Procs`, 635 drift); the
+measured 33,050 exceeds it by about 6,000, which is the name-addressed block — §B.0's
+analysis ranged over theorem-alike records and never counted it.
 
 ### B.1 The shared tails, and why the join must not guess
 
@@ -956,14 +999,25 @@ that collapsed. This is why §B.6's matching rule must be one-to-one in both dir
 6. **`isabelle build` is not run at all**, and `-c` is never passed anywhere. The
    `AFP-ALL-4` image cost 60 hours.
 7. **The target list must be the right file, and nothing downstream can tell.**
-   `afp_all4_roots.heap.txt` is 10,614 names; `tools/Build_AFP_Image/afp_all4_theories.txt`
-   is a **strict subset** of it, 9,331 names, every one of which resolves — so pointing
-   the dump at it succeeds, is internally consistent, and silently abandons ~659
-   theories' records under D10. The heap list is not in the repository. Record its path
-   on `cslh19`, its line count and its sha256 here before the run, and check them; the
-   copy this plan was written against is 10,614 lines,
-   `df31f638a52851091b1763acb7b64500c4c50882de9b1ff2635feb952ed42795`. The driver
-   echoes the file it was given and its line count into the run log.
+   `tools/Build_AFP_Image/afp_all4_theories.txt` is a **strict subset** of the heap
+   list, 9,331 names, every one of which resolves — so pointing the dump at it succeeds,
+   is internally consistent, and silently abandons ~659 theories' records under D10. The
+   driver echoes the file it was given and its line count into the run log.
+
+   **The list, settled 2026-08-14 by regenerating it from the image**, on `cslh19` at
+   `~/Current/MLML/tools/Build_AFP_Image/afp_all4_roots.heap.txt`: **10,591 names**,
+   sha256 `cd4344da2cf66bb07c0d706dd7ab66baaca70a32354e68b9c288bc2dad7a90cf`, and all
+   10,591 verified to resolve via `Thy_Info.get_theory` in the `AFP-ALL-4` image.
+
+   **The 10,614-line file this plan was written against was over-inclusive and is
+   superseded.** Regenerating from the image (`isabelle ML_process -l AFP-ALL-4`, asking
+   `Thy_Info.get_names ()`) gives 10,598 names; the two agree on 10,591. The old file's
+   23 extra names are **not in the image at all** — each was probed individually and
+   `Thy_Info.get_theory` fails on every one — and the regenerated file's 7 extras are
+   Pure-level bootstrap theories (`Pure`, `ML_Bootstrap`, `Tools.Code_Generator`,
+   `Pure-ex.*`, `Pure.Sessions`) that no store record comes from. The intersection is
+   therefore exactly "what the image holds, minus the bootstrap", and it is what the run
+   uses.
 8. **The RPC host must be able to read Isabelle's symbol table.** The dump stores
    `name` and `prop` in Unicode, converting them with `pretty_unicode` exactly as the
    collection path does; that reads `$ISABELLE_HOME/etc/symbols` and refuses to fall
@@ -1110,12 +1164,34 @@ both, and count them; such keys are ambiguous for the join.
   ASCII symbol notation landing as Unicode with the position left alone, and a renamed
   directory detected on the next batch.
 
+#### The run (2026-08-14, `cslh19`)
+
+Driver `dump_universal_keys.py --theory-file …/afp_all4_roots.heap.txt`, against the
+REPL restarted the same day on `AFP-ALL-4` with `-o threads=12` and no
+`INTERPRETATION_DRIVER`. About 72 minutes; exit 0; the log is
+`evidence/universal-key/dump_run_20260814.log.gz`.
+
+- **10,570 theories dumped, 0 skipped, 0 with untrustworthy positions.** 22 of the
+  10,591 roots were excluded from the cone and named in the log: the 21
+  `HOL-Decision_Procs.*` theories and `HOL.Code_Evaluation`.
+- **1,362,294 entities enumerated, 1,362,294 written**, on **1,337,025 distinct keys**;
+  **16,356 keys were claimed by more than one theory** (25,269 records beyond the first).
+  Against the previous full sweep's 1,303,856 over 9,955 theories, this is the expected
+  shape.
+- **§B.7's skipped-name gate passes: 0 names with no name-space entry, 0 propositions
+  falling back to the context's own theory.**
+- Positions: 17,768 entities with none, 2 unreadable files, **0 line mismatches**.
+- 1.1 GB, 27 % of the 4 GiB ceiling — as predicted.
+
 ### B.4 The cone the dump must cover
 
-**The target list is `afp_all4_roots.heap.txt` (10,614 names)** — what the image
-actually holds, as opposed to what any list says it should. Every name in it resolves
-by construction, so the failure mode that killed the previous run (one unresolvable
-name aborts the whole `load_theory`) cannot occur, and it is maximal.
+**The target list is `afp_all4_roots.heap.txt`** — what the image actually holds, as
+opposed to what any list says it should. **Not the 10,614-line file this section was
+first written against**: that one was over-inclusive, and the claim made here for it —
+"every name in it resolves by construction, so the failure mode that killed the previous
+run cannot occur" — was false of it. Regenerating the list from the image on 2026-08-14
+settled it at **10,591 names, every one verified to resolve**; §B.2 item 7 carries the
+path, the count and the sha256, and what the two versions differed by.
 
 Two weaker sources were rejected. `afp_all4_theories.txt` is a hand-generated *wanted*
 list whose session qualifiers came from AFP entry **directory** names, which is wrong
