@@ -663,8 +663,11 @@ dropped records with their full content** and stays the backup.
 **Can re-interpretation put them back?** For all but one record, yes — and for
 one class it is the only way. Interpretation is what mints an entity record, so
 running the collection pipeline (`Semantic_Collection_App`) over a theory
-regenerates its records under whatever hash that theory has at the time. Per
-class:
+regenerates its records under whatever hash that theory has at the time.
+
+**The working list is `THEORY_HASH_REKEY_REINTERPRET_LIST.md`**, which names
+every affected theory with a status column; keep that current rather than
+re-deriving this from the numbers below. Per class:
 
 - the **52 standing on a shared hash** must be re-interpreted; nothing else can
   bring them back, because the information saying which of the two theories a
