@@ -1159,9 +1159,12 @@ cause.
 
 ### B.10 The experience migration (D8)
 
-**6,862 records**, 6,769 persistent and 93 WIP; all are 8-field. A separate pass:
+**6,861 records**, 6,768 persistent and 93 WIP; all are 8-field. A separate pass:
 experiences are agent-written, never enumerated from a theory, so the dump never sees
-them and §B.4's cone is irrelevant to them.
+them and §B.4's cone is irrelevant to them. (6,862 was the pre-re-key count; the re-key
+dropped one, `llist_admissibility_ball_lset_imp_filter_eq_via_Bex_and_mcont`, because it
+named `Minilang.Minilang`, which the `AFP-ALL-4` image does not hold. It is the only
+EXPERIENCE key in that run's 1,534-row drop list.)
 
 Their keys are built by `Universal_Key.compute_constituents` over the goal patterns
 (`Isabelle_RPC/Tools/context.ML:1089-1091`), so the fix moves them. Worse than for
@@ -1169,12 +1172,13 @@ theorem records, the stored constituent list is **also the availability predicat
 retrieval time — `all(h in loaded for _, h in rec.theory_constituents)`
 (`semantics.py:1917-1922`), with `Experience_Index.candidates` bucketed on the same
 hashes — so a wrongly-resolved entry silently withholds the experience from every proof
-that does not load the misnamed theory. **That damage exists today**: 71 records (65
-persistent, 6 WIP) name a constituent long name the reached population never resolves
-to, spread over 11 theories (`Berlekamp_Zassenhaus.Unique_Factorization_Poly` 13,
-`HOL-Algebra.FiniteProduct` 12, `Triangle.Angles` 11, `HOL-Library.Interval` 10, and
-seven more). That is 1.0 %, and it is a lower bound — a record that stored the *winner*
-while its patterns needed the loser looks clean to the test.
+that does not load the misnamed theory. **That damage existed before the re-key**: 71 records (65
+persistent, 6 WIP) named a constituent long name the reached population never resolved
+to. **The re-key's D5 by-name re-pointing repaired all of them** — measured 2026-08-13,
+all 403 distinct theory long names named anywhere in the corpus now resolve. The lower-
+bound caveat survives the repair, though: a record that stored the *winner* while its
+patterns needed the loser still looks clean to any test that only asks whether the name
+resolves.
 
 **The pass is circular unless the context is named explicitly, and that must be
 confronted rather than coded around.** Recomputing an experience's constituents means
@@ -1190,9 +1194,44 @@ pure record content, recomputable offline. **Only the 16-byte prefix needs a con
 
 So: add a `static_context_unpacker`-based variant of the `Experience.constituents`
 callback; build the context by merging the theories the *old* constituent list names;
-and treat **any pattern that fails to parse, or whose recomputed constituent set names a
-theory outside that merge, as a refusal to be reported for the user to adjudicate — never
-a silent skip.** Move the key, then `Experience_Index.rebuild` (the index holds 405
+and treat **any pattern that fails to parse as a refusal to be reported for the user to
+adjudicate — never a silent skip.**
+
+**The merge step is feasible for every record**, which was not obvious and is now
+measured: all **403** distinct theory long names named anywhere in the corpus were
+simultaneously loaded in one `AFP-ALL-4` image, and coexisting in one image *is*
+mergeability. The two ways the step could have been impossible are both empty — no
+record names two theories sharing a base name (the 403 names have 403 distinct base
+names, so `Context.eq_thy_consistent` cannot fire), and no record names a theory that
+does not exist (119 AFP theories all in `afp_all4_theories.txt`, 284 distribution
+theories, all 403 files on disk). Stored hashes agree with the current ones for 384 of
+403; the 19 that differ are exactly the WIP names, whose hash is FNV-1a-128 of the name
+by design, and they account for exactly the 93 WIP records. **Guaranteed refusals: 0.**
+The residue that only a real parse can settle is 6,857, and nothing in it looks
+unparseable lexically — 0 non-ASCII, 0 empty, 0 unbalanced patterns over 16,125.
+
+**Two questions the criterion left open, to settle before the dry run.**
+
+*What the second refusal criterion means.* An earlier revision also refused a record
+"whose recomputed constituent set names a theory outside that merge". That is ambiguous
+and neither reading is usable as written: if "outside the merge" means outside the merged
+theory's **cone**, it can never fire, because every constant of a term parsed in a context
+is declared in that context's cone by construction; if it means outside the **literally
+named list**, it fires on records that are perfectly fine, because
+`experience_constituents` keeps a minimal antichain (`context.ML:1094-1100`) and the
+antichain legitimately moves when the context differs. Worse, neither reading catches the
+hazard the criterion was reaching for: a pattern whose true theory is absent from the
+merged context can still parse there and resolve to a *different* constant that happens to
+be in the cone — silently, with a plausible new prefix. If that hazard is to be caught it
+needs its own check, comparing the recomputed set against the old one for divergence, and
+that check has to be designed rather than inherited from this sentence.
+
+*What happens to the 93 WIP records.* Recomputing their prefixes in a heap-loaded context
+flips them from WIP to persistent, because `Resources.loaded_theory` is true there for the
+19 theories they name. A WIP record is a disposable cache that `clean_wip` deletes; a
+persistent one is not. Migrating them therefore changes what they are, and the three
+options — flip, skip, or preserve WIP-ness by keeping the FNV hashes — have not been
+weighed. Move the key, then `Experience_Index.rebuild` (the index holds 405
 16-byte keys, not one per experience). Also record the writing context's theory long
 names on the record at write time, so the next migration is not circular.
 
