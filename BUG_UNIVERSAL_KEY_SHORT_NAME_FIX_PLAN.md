@@ -1,7 +1,7 @@
 # Fix plan for BUG_UNIVERSAL_KEY_SHORT_NAME
 
-Status: **reviewed (three rounds), revised, ready to execute. Nothing implemented
-yet.** Drafted and revised 2026-08-12.
+Status: **Part A is implemented, tested and committed. Part B has not started.**
+Drafted 2026-08-12, revised 2026-08-13 after a fourth review round.
 
 This document is meant to be executable on its own, without the conversation that
 produced it. Part A repairs the key computation in `contrib/Isabelle_RPC`; Part B
@@ -11,10 +11,27 @@ this one is the response. The position work that surfaced it is
 `contrib/Semantic_Embedding/ENTITY_POSITION_PLAN.md` (§18 records the sweep whose
 17 % shortfall started this).
 
-**Execution order** (§E gives the detail): Part A, then its acceptance measurements,
-then the dump, then the join, then the gap list, then the swap. Every write on
-`cslh19` — including the scratch dump — needs the user's approval for that specific
-run (D6).
+**A companion change landed after this plan was written**: the persistent theory
+hash now folds in the theory's long name (`Isabelle_RPC` `e234b74`), so two
+theories sharing a base name no longer share an identity. Its own migration is
+`THEORY_HASH_REKEY_PLAN.md`, and per that document's §7 it **runs before Part B**.
+Part B's join is by `key[16:]`, which holds no theory hash and is unaffected; what
+changes is that name-addressed records can no longer be copied untouched (§B.6).
+
+**Part A, as shipped** (`Isabelle_RPC` `79e581a`, `c579556`, `7776d76`;
+`Semantic_Embedding` `2ff0460`):
+
+- `compute_constituents` reads the defining theory off the `Name_Space` entry
+  (§A.2), with `Theory_Hash.hash_of_long` replacing `hash_of_short` (§A.3) and a
+  per-call report of skipped names and empty-name fallbacks (§A.4).
+- The constituents cache is scoped by **cone** (§A.6).
+- §A.7's query-filter reorder was **reverted** (D12).
+- Tests and the two re-derived measurements are in
+  `contrib/Isabelle_RPC/test/` (§A.9).
+
+**Execution order** (§E gives the detail): the theory-hash re-key, then the dump,
+then the join, then the gap list, then the swap. Every write on `cslh19` —
+including the scratch dump — needs the user's approval for that specific run (D6).
 
 ---
 
@@ -62,6 +79,15 @@ From the user. Not open for review; recorded so the plan's assumptions are visib
   record of what was dropped.
 - **D11.** The 5 % acceptance gate of §A.6 is not argued further until there is a
   real measurement on a real cone.
+- **D12.** §A.7's query-filter reorder is **rejected and reverted**;
+  `Isabelle_RPC/Tools/context.ML` is byte-identical to its pre-fix text. It was a
+  performance change to a path this defect does not touch, and it changed results
+  (§A.7 records how). Keeping the blast radius small wins over the latency.
+- **D13.** The persistent theory hash folds in the theory's long name. That change
+  and its whole-store migration belong to `THEORY_HASH_REKEY_PLAN.md`, which runs
+  **before** Part B. Consequences here: §A.9's "name-addressed keys are
+  byte-identical before and after" is false by design, and §B.6 can no longer copy
+  name-addressed records untouched.
 
 ---
 
@@ -84,8 +110,9 @@ with no synonyms.
   introduction (`0x12`), elimination (`0x22`), induction (`0x32`), case-split
   (`0x42`) rules.
 - **name-addressed** — constant, type, class, locale, theorem collection, method.
-  Their keys go through `key_of_ns_entity`, are unaffected by the defect and
-  unchanged by the fix.
+  Their keys go through `key_of_ns_entity` and are unaffected by *this* defect.
+  They are not unchanged overall: D13's theory hash moves every one of them, and
+  `THEORY_HASH_REKEY_PLAN.md` re-keys them before Part B runs.
 - **constituent theory** — a theory declaring some constant or type constructor
   occurring in a proposition. Not the theory that states the fact.
 - **stating theory** — the theory that states a fact. **Only the dump knows it
@@ -308,18 +335,38 @@ byte-identical `record ('a, 'b) lens = lens_get … lens_put …` under the shar
 identical `kind`, identical `name` and **byte-identical `expr`**, differing in their
 constituent theory and their interpretation text.
 
-#### The design: scope the cache to a population with no base-name collision
+#### The design: scope the cache to a population whose CONES have no base-name collision
 
 Rather than delete the cache, bind its scope to the range over which name resolution
 cannot change. The `Theory_Data` value is
 
 ```sml
-datatype T = No_Cache | Cache of {cache: …, claims: string Symtab.table} Synchronized.var
+type shared_pair = {id : int, var : cache_and_claims Synchronized.var}
+datatype cache_scope = No_Cache | Cache of shared_pair
 ```
 
 — a **shared mutable pair** of the constituents cache and a map **theory base name →
-theory long name** recording who has claimed each base name under this cache. Four
-rules, and nothing else:
+theory long name** recording who has claimed each base name under this cache, plus a
+`serial ()` identity so a fork is observable (`Synchronized.var` admits no equality).
+
+**The invariant is over cones, not over the theories that ran the hook**: for every
+theory `T` sharing the pair and every theory `A` in `T`'s cone,
+`claims[base A] = long A`. Two members whose cones each hold a theory of base name
+`b` must then hold the *same* one, so both resolve the internal names it qualifies
+identically — which is exactly what a digest key cannot distinguish.
+
+An earlier revision maintained only "every theory that *ran the hook* has a distinct
+base name". That is not enough, and the gap is not hypothetical: `Context.merge_data`
+skips a data kind's merge function entirely when just one parent carries it
+(`Pure/context.ML:454`), so a theory inherits the pair from one parent while dragging
+in the cones of its others, none of which ever runs the hook. Reachable in an
+Isa-REPL process whose `additional_libs` pull in `Minilang_AoA` (the AoA/PutnamBench
+configuration, `tools/aoa_putnam_eval/start_servers.sh`): two user theories importing
+`Optics.Lens_Laws` and `Clean.Lens_Laws` share one cache, nobody claims the base name
+`Lens_Laws`, no fork fires, and the second cone reads the first's constituent list
+back. Not reachable in Part B's dump, where every swept theory reads `No_Cache`.
+
+Four rules, and nothing else:
 
 1. **`empty = No_Cache`, and `thm_constituents` bypasses the cache entirely on
    `No_Cache`.** This is not cosmetic. `THEORY_DATA'_ARGS`' `empty` is a *value*,
@@ -329,95 +376,72 @@ rules, and nothing else:
    unpartitioned cache shared by all 10,614 theories of a pre-built image** — the
    original defect, reproduced inside the dump. `No_Cache` is what makes "a heap built
    before this code carries no cache" true rather than catastrophically false.
-2. **merge reconciles the parents.** If every data-carrying parent yields the *same*
-   pair reference, inherit it. Otherwise allocate a fresh pair: empty cache, claims =
-   the union of the parents' maps. **Allocate and union only on that branch** — the
-   common case must be allocation-free, and a claims map can hold one entry per theory
-   begun under the pair, so unconditional unioning would cost a five-figure `Symtab`
-   merge per theory begin.
+2. **merge takes any parent's pair.** It cannot do better: the beginning theory is not
+   among its arguments, and `merge_data`'s single-carrier shortcut means merge is not
+   even called in the case that matters. Rule 3's cone check subsumes what an earlier
+   revision tried to do here (fresh pair plus union of the parents' claims maps).
+3. **`at_begin` accounts for the whole cone, and forks on collision.** On `No_Cache`,
+   allocate a `Cache` whose claims map is this cone's. Otherwise walk
+   `Theory.nodes_of thy` and, per ancestor,
+   - claims maps its base name to its own long name → already accounted for;
+   - **absent** → record it. Not a collision: the theory that allocates a pair brings
+     thousands of never-claimed ancestors, none of which collides with anything;
+   - maps to a **different** long name → collect the base name as colliding.
 
-   Merge is the right place: it is where the parents' data is combined, it receives the
-   full `(theory * T) list` (`context.ML:410`, called from `merge_data` at `:447-449`,
-   `:525`, `:549`), and it runs before the `at_begin` wrappers (`begin_thy` merges at
-   `:539`; `Theory.begin_theory` applies wrappers after, `theory.ML:181-190`). The
-   objection that merge cannot see parents without data (`map_filter` at `:447`)
-   dissolves under rule 1 plus rule 3: every theory begun after this lands has data, and
-   the only data-less parents are pre-code heap theories, which carry no claims to lose.
+   With no collision the theory value does not change, so the hook returns `NONE`.
+   With collisions it forks:
+   `Digest_Tab.make (filter (fn (_, (_, cs, _)) => not (exists (fn (n, _) => Symtab.defined clashing (Long_Name.base_name n)) cs)) (Digest_Tab.dest cache))`,
+   and claims = the old map with this cone's answers written over it.
 
-   *Reconciling the parents is all merge can do* — the new theory is not among its
-   arguments, so the self-check below cannot move here.
-3. **`at_begin` claims, and forks on collision.** On `No_Cache`, allocate a `Cache`.
-   Then look up the beginning theory's own base name in the claims map:
-   - it maps to **this theory's own long name** → this is a re-application of the hook,
-     not a collision. Change nothing and return `NONE`. **This is load-bearing**:
-     `Theory.apply_wrappers` re-runs the whole wrapper list until every wrapper returns
-     `NONE` (`theory.ML:83` → `perhaps_loop`, `library.ML:334-340`), and a fork must
-     `put` and therefore return `SOME`, so without an "it is me" test the hook forks,
-     re-runs, forks again, forever — inside a `Synchronized` critical section. A second
-     wrapper already forces the extra pass unconditionally: `update_thm_cache` returns
-     `SOME` whenever its fact delta is non-empty (`semantic_store.ML:2148`, hooked at
-     `:2155`). This is why the claims structure is a **map to the long name** and not a
-     set of base names.
-   - it maps to a **different** long name → fork:
-     `make (filter (fn (_, cs) => not (exists (fn (n, _) => Long_Name.base_name n = b) cs)) (dest t))`,
-     plus a copy of the claims map. One pass, no secondary index.
-   - it is absent → inherit the pair unchanged.
+   `Theory.nodes_of` costs one `Symtab` lookup per ancestor, not a graph traversal:
+   `Context.ancestors_of` is `#ancestors o ancestry_of` (`Pure/context.ML:323`), a
+   materialised field.
 
-   Then record `base name ↦ own long name` and return `SOME`.
+   **Termination is load-bearing**: `Theory.apply_wrappers` re-runs the whole wrapper
+   list until every wrapper returns `NONE` (`theory.ML:83` → `perhaps_loop`,
+   `library.ML:334-340`), and a fork must `put` and therefore return `SOME`. The
+   re-application finds the whole cone accounted for and returns `NONE`, which is what
+   stops the fork repeating forever inside a `Synchronized` critical section. A second
+   wrapper already forces the extra pass: `update_thm_cache` returns `SOME` whenever its
+   fact delta is non-empty (`semantic_store.ML:2148`, hooked at `:2155`).
 4. **Do not write the cache when the empty-name fallback fired.** `default_thy_long_name
    context ""` (`Universal_Key.ML:417-419`) records *the reading context's own theory*
    for entities whose `Name_Space` entry carries no theory name — proof-local and
    `global_naming` declarations (`name_space.ML:487`). Two theories with textually
-   identical local statements produce the same `thm128` (which hashes only internal names
-   and types, `Term_Digest.ML:100-104`) and would otherwise share a cache entry naming
-   whichever theory computed it first — **with no base-name collision anywhere, so no
-   fork fires and no purge runs**. `compute_constituents` must report whether the
-   fallback fired, alongside §A.4's skip count, and `thm_constituents` must not cache
-   the result when it did.
-
-**The invariant:** within the population sharing one cache, every theory base name is
-claimed by at most one theory. Since an internal name is qualified by its declaring
-theory's base name, two members of the population resolve `Lens_Laws.lens_get`
-identically. Same reference ⇒ same claims map ⇒ a collision is visible at `at_begin`;
-different reference ⇒ no shared entries. Rule 2 is what keeps the third case — a theory
-adopting one parent's pair while its cone absorbs another parent's theories — from
-opening a hole.
+   identical local statements produce the same `thm128` and would otherwise share a cache
+   entry naming whichever theory computed it first — **with no base-name collision
+   anywhere, so no fork fires and no purge runs**. A refutation round found no producer
+   of such an entry anywhere in the distribution, the AFP or this repository (measured:
+   0 constants and 0 types with an empty theory name over 710 loaded theories), so this
+   rule is belt-and-braces rather than load-bearing.
 
 **Why purging is complete.** A cached entry keyed on digest *d* was computed from a
 proposition whose internal names are fixed by *d*. If that proposition mentions a
 constant declared by some `*.B` in the forking theory's cone, then in the computing cone
 the same internal name `B.c` resolved to that cone's `*.B`, so the entry's stored
-constituent list names a theory of base name `B` and the filter drops it. Two gaps, both
-closed elsewhere: a constant **skipped** in the computing cone (§A.4) names no `*.B` and
-survives with a short constituent set — §A.4's "skipped = 0" gate is the second reason
-that gate must be enforced; and the empty-name fallback, closed by rule 4.
+constituent list names a theory of base name `B` and the filter drops it. One gap
+remains: a constant **skipped** in the computing cone (§A.4) names no `*.B` and survives
+with a short constituent set — §A.4's "skipped = 0" gate is the second reason that gate
+must be enforced. Rule 4 closes the other.
 
-**Atomicity.** The pair lives behind one `Synchronized.var`, and the membership test, the
-fork and the claim all happen inside a single `Synchronized.change_result`. That var must
-also become the lock for **all** cache reads and writes, replacing `constituents_lock`
-(`Universal_Key.ML:445`) for that purpose — otherwise a fork's `dest` walks a table being
-rehashed in place by a concurrent writer holding the *other* lock
-(`Performant_Isabelle_ML/library/hash_table.ML:59-60`). `constituents_registry` (`:458`)
-stays global and keeps a lock of its own.
+**Atomicity.** The pair lives behind one `Synchronized.var`, and the cone check, the
+fork and the claims all happen inside a single `Synchronized.change_result`. That var is
+also the lock for **all** cache reads and writes — otherwise a fork's `dest` walks a
+table being rehashed in place by a concurrent writer
+(`Performant_Isabelle_ML/library/hash_table.ML:59-60`). `constituents_registry` keeps a
+lock of its own, and no path holds both.
 
 **Recorded costs, since they are real and were argued over.** A fork is
 O(cache size) — `Hash_Table` has no copy primitive, only `dest`/`make`
 (`hash_table.ML:20-47`) — and the AFP has 1,652 − 608 = **1,044** forking theories, each
-retaining its filtered copy for as long as its theory value lives. The alternative of
-forking to an *empty* cache is O(1), retains nothing, and would make the purge argument
-above unnecessary; it was rejected in favour of keeping the surviving entries. The
-measured ceiling on what any such cache can save is **9.14 %** of propositions (22,545
-theorems over 20,484 distinct digests) at 12.03 µs a hit — about **25 ms** per
-image-scale pass.
-
-**An open question.** "Maps to my own long name ⇒ it is me" is what terminates the
-wrapper loop, but it also fires when the *same* theory is re-executed after an edit, in
-which case the inherited entries were computed against the previous content and its old
-hash. For a WIP theory this is harmless — its hash is FNV of the long name and does not
-move with content (`theory_hash.ML:191-209`). For a reloaded persistent theory it is
-not. No identifier is both stable across the wrapper loop (`Context.theory_identifier`
-changes at every `put`) and distinct across reloads, so this needs an answer before the
-interactive path can be trusted.
+retaining its filtered copy for as long as its theory value lives. Re-beginning a
+colliding theory re-forks, because the fork deliberately does not record its claim in
+the *old* pair: doing so would send the next begin of that theory down the "it is me"
+branch and have it adopt the other claimant's entries unpurged. The cone walk adds one
+`Symtab` lookup per ancestor per theory begin, on theories descending from
+`Remote_Procedure_Calling` only. The measured ceiling on what any such cache can save is
+**9.14 %** of propositions (22,545 theorems over 20,484 distinct digests) at 12.03 µs a
+hit — about **25 ms** per image-scale pass, none of which the dump collects (see below).
 
 #### What this does and does not cover
 
@@ -453,11 +477,10 @@ and this design covers one of them.
   entities against the 264 ms simulated. The real regression is well under 1 %.
 - **The semantic query path** (`Isabelle_RPC/Tools/context.ML:1521`, `:1311`) computes a
   key per candidate per query with no cache; on a heap-loaded session the data is
-  `No_Cache` there too. §A.7 reorders that filter chain instead — not computing beats
-  computing and caching. Note that on a query with no name filter, no term pattern and no
-  target type all three promoted filters are the identity (`:879-880`, `:927`, `:968`),
-  so the reorder saves nothing on that shape; the live candidate set is the rule
-  callbacks' Source-1 nets, about 1,127 thms, i.e. a few ms per query either way.
+  `No_Cache` there too, and per D12 the filter chain is left alone. So this path simply
+  pays the higher per-candidate cost: `scope_ok` stays second in the chain and its
+  `thm_constituents` goes from ~0.7 µs to ~14.9 µs. The live candidate set is the rule
+  callbacks' Source-1 nets, about 1,127 thms — a few ms per query.
 
 #### The call sites are repaired regardless
 
@@ -513,7 +536,8 @@ exactly the list stored.
    path before and after. Accept if elapsed rises by less than 5 %. The sweep gets no
    cache under this design, so this measures the name-space route plus the call-site
    repair.
-2. **Interactive.** One theorem-query timing, because §A.7 changes that path too.
+2. **Interactive.** One theorem-query timing: D12 leaves the filter chain alone, so
+   this path pays the full ~20x rise in `thm_constituents` per candidate.
 3. **Theory begin.** A traced session load, comparing `update_thm_cache`'s own
    `vtracing_global` totals before and after — the number this design exists to improve,
    and the one nobody has. Read two things off the trace: how many `Thm_Cache updated`
@@ -521,13 +545,9 @@ exactly the list stored.
    milliseconds.
 4. **Work volume.** Instrument `compute_constituents` with a call counter for one theory
    and assert `calls ≤ theorem entities + rule entities` — one walk per entity, not two.
-5. **Fork behaviour.** In the §A.9 fixture, two same-base-name theories in one process:
-   the second must fork; the filtered copy must retain exactly the entries that name no
-   theory of the colliding base name; the two theories must produce different keys for
-   their analogous facts; and the hook must terminate — assert it is applied more than
-   once (`update_thm_cache` forces that) and returns `NONE` on the later passes.
-6. **No cache on a pre-built heap.** Assert that a theory loaded from the `AFP-ALL-4`
-   image reads `No_Cache`, so the dump provably runs uncached.
+5. **Fork behaviour** — covered by `test/Test_Universal_Key.thy` and
+   `test/Test_Cache_Scope.thy`; see §A.9.
+6. **No cache on a pre-built heap** — covered by `test/Test_Name_Spaces.thy`.
 
 **What the existing benchmarks do and do not say.** They ran against a **stubbed**
 `Theory_Hash.hash_of` on HOL-scale populations, and the code benchmarked as "post-fix" is
@@ -541,14 +561,32 @@ rate is 9.14 %. The one cost they do bound is the name-space route itself:
 proposition, ~6 s across a 1.1 M-proposition sweep). Per D11 the gate is not re-argued
 until there is a real measurement. The archives are at `~/archive/claude-scratchpad/`.
 
-### A.7 The interactive query path must be reordered in the same commit
+### A.7 The interactive query path: REJECTED, do not re-raise (D12)
 
 `Isabelle_RPC/Tools/context.ML:1261` calls `Universal_Key.thm_constituents` per live
-candidate as the **second** filter in a chain whose comment three lines above
-(`:1257-1258`) claims cheap-to-expensive ordering. With the cache gone that call goes
-from ~0.7 µs to ~14.9 µs per candidate — a ~20× increase on a path the batch gate does
-not touch. Move `scope_ok` after `filter_opt`, `prop_matches` and `target_type_filter`,
-and fix the comment.
+candidate as the **second** filter in a chain whose comment three lines above claims
+cheap-to-expensive ordering. With the cache gone that call goes from ~0.7 µs to
+~14.9 µs per candidate — a ~20x increase. An earlier revision therefore moved
+`scope_ok` behind `filter_opt`, `prop_matches` and `target_type_filter`. **That is
+reverted**, for two reasons.
+
+It is a performance change to a path this defect does not touch, so it widens the
+blast radius for no correctness gain. And it is not a pure reordering:
+`prop_matches` is not a predicate but a stateful matcher. `mk_prop_pattern_matcher`
+closes over `val budget = Unsynchronized.ref 200` (`context.ML:894`) and the
+decrement sits *before* the match inside an `andalso` chain (`:898-902`), so a
+candidate that clears the cheap name-subset pre-filter spends a unit whether or not
+it matches; once the budget reaches zero the matcher answers **false** for every
+later candidate. One matcher is built per query (`:1235`) and shared by the live
+pass (`:1264`) and the cached pass (`:1287`), and the cached pass keeps `scope_ok`
+first (`:1285`). Moving `scope_ok` last therefore let out-of-scope live candidates
+drain the budget that in-scope ones used to get, silently shrinking the result set.
+
+The window is narrow — `scope_ok` is the identity unless `the_theory_only` is set or
+`theories_include` is non-empty, and the one production caller passing
+`the_theory_only` supplies no term patterns — but "narrow" is not "absent", and the
+agent can send `term_patterns` and `theories_include` together
+(`Isa-Mini/IsaMini/AoA/retrieval.py:560,562`).
 
 ### A.8 Comments that state the false assumption and must go
 
@@ -561,37 +599,58 @@ and fix the comment.
 - `theory_hash.ML:217-221`: goes with `by_short_cache`.
 - `semantic_digest.ML:282-283`: see §A.5.
 
-### A.9 Tests, and the measurements that must be re-run
+### A.9 Tests, as shipped
 
-**There is no Universal_Key test theory today.** `contrib/Isabelle_RPC` holds
-`test_protocol.thy`, `test_callback.ML`, `test_multiplexed.ML` and five Python test
-files, all wire-protocol tests. One must be created, and it needs a **running
-Isabelle_RPC host**, because `Theory_Hash.hash_of` RPCs to Python for any loaded
-theory (`theory_hash.ML:147`, `:178`).
+Session `Isabelle_RPC_Test` in `contrib/Isabelle_RPC/ROOT`, sources in
+`contrib/Isabelle_RPC/test/`. Run it with
+`isabelle build -d contrib -d . Isabelle_RPC_Test`. **Nothing runs it
+automatically** — see §C.
 
-The fixture: two sibling sessions in one ROOT, each containing a `Foo.thy` that
-declares a constant, plus a third session importing both by long name. Seconds to
-build against the existing `Pure`/`HOL` heaps.
+The fixture begins sibling theories programmatically with `Theory.begin_theory`, so
+one process holds several theories of base name `Foo` in separate cones. Two
+same-base-name theories cannot share a cone at all (§A.2), so separate cones is the
+only shape available.
 
-1. **Regression.** With the shared base name pinned to `A.Foo` first, key a
-   proposition over `B.Foo`'s constant. Must **fail before and pass after** — a test
-   that passes both ways proves nothing.
-2. **Order independence**: same theorem, two contexts with the same ancestor set,
-   resolved in both orders, same key. (Two same-base-name theories cannot share a cone at
-   all — §A.2 — so the two contexts here are two *cones*, and the fixture's two sessions
-   must be imported separately, never together.)
-3. **Name-addressed keys unchanged**, byte-identical before and after. Load-bearing
-   for Part B, which copies those records untouched.
-4. **Provenance shape unchanged**: `xor_theory_prefix` of the stored list still equals
-   the key prefix.
-5. **No skipped names**: §A.4's counter is zero over the fixture, and the empty-name
-   fallback counter of §A.6 rule 4 is likewise zero.
-6. **The §A.6 fork**, per that section's acceptance item 5.
+`Test_Universal_Key.thy` — RPC-free, because its theories are WIP and their hashes
+are FNV of their long names:
 
-Two figures quoted in this plan were produced by scripts that no longer exist and must
-be re-derived here rather than trusted: the 99/99 agreement of the two resolution
-routes over `Main`'s cone (§A.3), and the four names shared between the constant and
-type spaces of `HOL-Library.Multiset` (§A.2).
+1. **Regression.** A's cone is read first; B's constituents must still name B. Under
+   the old code the first read pinned `Foo` for the process and B came back naming A.
+   Verified capable of failing: inverting the assertion produces exactly the old
+   code's answer.
+2. **Distinct prefixes** for the two theories' analogous facts.
+3. **The answer comes from the name space, not the reading context.** Every check
+   above has the reading theory BE the declaring theory, where the empty-name
+   fallback would return the same string; a third theory that merely imports A reads
+   A's constant and the two answers part.
+4. **Order independence** over two untouched cones read youngest-first.
+5. **Exactness**: §A.4's skip counter and §A.6 rule 4's fallback flag are both clear.
+6. **Cache scope**: A joins the enclosing theory's pair, B forks off it, and a
+   theory that collides with nothing does not fork.
+
+`Test_Cache_Scope.thy` — the only test that writes a cache entry, hence the only one
+covering the fork's purge. It **needs the Python RPC host**: the cache is written only
+by `thm_constituents`, which needs a `thm`; a proposition has type `prop`, declared in
+Pure; and `hash_of` takes its RPC branch for any loaded theory. No proposition avoids
+Pure. Measured: the attached host starts by itself under `isabelle build`, and the
+test asserts `Theory_Hash.is_persistent (hash_of Pure)` so it fails loudly if it ever
+stops covering the branch every AFP theory takes. Verified capable of failing:
+disabling the purge produces "B read A's cached constituents back".
+
+`Test_Name_Spaces.thy` — the two figures that had to be re-derived rather than
+trusted, both pinned as assertions because `isabelle build` does not show `writeln`:
+the two resolution routes agree over all **99** theories of `Main`'s cone (§A.3), and
+exactly **4** internal names are carried by both the constant and the type space of
+`HOL-Library.Multiset` (§A.2) — `Quickcheck_Exhaustive.unknown`, `Product_Type.prod`,
+`Sum_Type.sum`, `Int.int`, which is why `compute_constituents` keeps one `seen` table
+per name space. Also asserts that a theory from the pre-built heap reads `No_Cache`.
+
+**Not covered, deliberately.** "Name-addressed keys are byte-identical before and
+after" was §A.9's third test and is now **false by design**: D13 changed the theory
+hash. Its purpose — assuring Part B that those records could be copied untouched — is
+gone with it; `THEORY_HASH_REKEY_PLAN.md` re-keys them instead. "`xor_theory_prefix`
+of the stored list equals the key prefix" has no ML counterpart either; that function
+is Python-side and the check belongs to the migration's gates.
 
 After editing any `.ML`, **restart the REPL**; do not rebuild a heap and do not chase
 heap timestamps.
@@ -860,9 +919,12 @@ the decisive ambiguity is only visible globally.
 
 **Phase 1, for every dump entry:**
 
-1. **Name-addressed keys are unchanged.** Assert it — every such key must already exist
-   in the old store or be a genuinely new entity — and mark it for verbatim copy. A
-   violation means Part A broke something it should not have touched; stop.
+1. **Name-addressed keys are unchanged *by Part A*.** The theory-hash re-key has
+   already moved them (D13), so by the time Part B runs the store is keyed the new
+   way: assert that every such key already exists in the re-keyed store or is a
+   genuinely new entity, and mark it for verbatim copy. A violation means either Part
+   A touched something it should not have, or the re-key missed a theory; stop and
+   find out which before writing anything.
 2. **Theorem-alike:** collect candidates. First the exact new key if the old store has
    it; otherwise the old records sharing the new key's **tail**.
 3. Record the claim: `new key → {candidate old keys}`.
@@ -1081,17 +1143,45 @@ memories cannot be regenerated this way at all.
 
 # Part C — open questions
 
-1. **When Part A lands**, the REPL on `cslh19` must be restarted to pick up the edited
-   `.ML` — user approval for that specific restart (D6).
-2. **§A.6's reload question**: "the claims map points at my own long name, so it is me"
-   is what terminates the wrapper loop, but it also fires when the same theory is
-   re-executed after an edit, leaving entries computed against the previous content hash.
-   Harmless for WIP theories (their hash is FNV of the name) and not for reloaded
-   persistent ones. No identifier is both stable across the wrapper loop and distinct
-   across reloads. Needs an answer before the interactive path is trusted.
-3. **§A.5's second copy of the defect** (`semantic_digest.ML:282-283`): make its
-   fallback the same counted skip as §A.4, or justify leaving it.
-4. **§B.10's refusals** — the experience records whose patterns cannot be re-parsed in
+1. **§A.6's reload question**: "the whole cone is already accounted for, so nothing to
+   do" is what terminates the wrapper loop, but it also holds when the same theory is
+   re-executed after an edit, leaving cache entries computed against the previous
+   content. Harmless for WIP theories (their hash is FNV of the long name) and not for
+   reloaded persistent ones. No identifier is both stable across the wrapper loop and
+   distinct across reloads. Needs an answer before the interactive path is trusted.
+2. **`semantic_digest.ML`'s leading-component fallback** (§A.5). Its comment has been
+   corrected once and is **still wrong**: it blames two theories sharing a base name,
+   which cannot happen there — both compared names come from one cone, where
+   `eq_thy_consistent` makes base names unique. The real hazard is that a leading
+   component need not be a theory base name at all; `typerep_itself_inst` is the
+   counterexample, printed eight lines below in the same comment, and
+   `Code.type_interpretation` (`Pure/Isar/code.ML:1358-1366`) resets the naming path to
+   the *type's* declaring theory, which is the one proven mechanism for a false "same
+   theory". Two things to decide: the comment's wording, and whether to take the
+   separately-proposed fix of looking the axiom side up in `Theory.axiom_space` rather
+   than `Facts.space_of` — the `_raw` definitional axioms live in the former, so the
+   fallback is today the *primary* path for `definition`-introduced constants rather
+   than a rare corner.
+3. **`Theory_Hash.hash_of_long`'s comment** over-claims: it says `hash_of` reads only
+   the name plus file content and parent hashes, but the master directory and the
+   parents are read off the theory *value*. The code is not shown wrong — the loader
+   removes a theory's name from `Thy_Info` before re-evaluating it
+   (`thy_info.ML:372`), so the two routes are never in competition — only the comment.
+4. **The backfill's constituent-name gate** (§A.4) is not a gate: `backfill_cone`
+   prints process-absolute totals, and prints them *after* the `error` that fires on
+   exactly the run that needs them. It should snapshot at entry, report the delta, and
+   sit before the `error` — and the gate's real home is the Part B dump app.
+5. **The registry read** (§A.6, "the call sites are repaired regardless") assumed a
+   universal key determines its constituent long names. Before D13 that was false: the
+   theory hash held no name, so seven byte-identical same-base-name theory pairs shared
+   a hash and hence a key. **D13 dissolves this** — the long name is now in the digest.
+   Nothing to do; recorded so it is not re-derived.
+6. **The test session is not wired to anything.** `Isabelle_RPC_Test` appears exactly
+   once in the tree, in its own declaration, and no CI job or Makefile builds it. It is
+   also declared in the `ROOT` the conda recipe ships (`conda/recipe.yaml:69`) while
+   `test/` is not packaged, which `contrib/Semantic_Embedding/Test/ROOT:1-12` states as
+   the convention to avoid. Move it to `test/ROOT` and give it a runner.
+7. **§B.10's refusals** — the experience records whose patterns cannot be re-parsed in
    the reconstructed context — are reported for adjudication. Who adjudicates, and on
    what basis, is undecided.
 
@@ -1132,29 +1222,62 @@ memories cannot be regenerated this way at all.
 
 # Part E — execution order
 
-1. **Part A** in `contrib/Isabelle_RPC` (§A.2–A.8), plus the `semantic_store.ML` call
-   sites and `context.ML`'s filter reorder. Restart the REPL; no heap rebuild.
-2. **§A.9's fixture and tests**, including the two measurements that must be re-derived
-   and the open question of §A.2.
-3. **The acceptance measurements** of §A.6 on a real cone. Report; do not argue the gate
-   in advance (D11).
-4. **The dump app and its Python handler** (§B.3), then the dump run on `cslh19` — user
-   approval for that specific run.
-5. **The join** (`contrib/Semantic_Embedding/migrate_universal_keys.py`, §B.5–B.7),
+Part A is done: `Isabelle_RPC` `79e581a`, `c579556`, `7776d76`; `Semantic_Embedding`
+`2ff0460`. Its tests are in `contrib/Isabelle_RPC/test/` (§A.9). The REPL on `cslh19`
+was restarted on the new code, and both submodules there are fast-forwarded.
+
+1. **The theory-hash re-key**, per `THEORY_HASH_REKEY_PLAN.md`. It runs first (that
+   plan's §7).
+2. **The acceptance measurements** of §A.6 on a real cone. Report; do not argue the
+   gate in advance (D11).
+3. **The dump app and its Python handler** (§B.3), then the dump run on `cslh19` —
+   user approval for that specific run.
+4. **The join** (`contrib/Semantic_Embedding/migrate_universal_keys.py`, §B.5–B.7),
    producing `semantics.lmdb.building` and the gap list. No writes to the live store.
-6. **The gap list's count and cost estimate** to the user; approval; `collect` over the
+5. **The gap list's count and cost estimate** to the user; approval; `collect` over the
    gap theories; chained embed.
-7. **The experience pass** (§B.10), including its refusal report.
-8. **The gates** (§B.7), then promotion and the four-directory swap (§B.9), then
+6. **The experience pass** (§B.10), including its refusal report.
+7. **The gates** (§B.7), then promotion and the four-directory swap (§B.9), then
    `rebuild_experience_index`.
 
 ---
 
 # Part F — review record
 
-Three adversarial rounds: five reviewers by lens, then three refuters, then a narrower
-pair over the parts rewritten in between (the join mechanism, and every number).
-Findings were folded into the text above. Recorded here so they are not raised again:
+Four adversarial rounds on the plan: five reviewers by lens, then three refuters, then
+a narrower pair over the parts rewritten in between (the join mechanism, and every
+number), then two lenses on §A.6 alone. A fifth round reviewed the **shipped code** —
+four reviewers by lens, then three refuters. Findings were folded into the text above.
+Recorded here so they are not raised again:
+
+**From the code review, confirmed and acted on.**
+
+- *The cache scoping's invariant was over the wrong set* — over theories that ran the
+  hook, not over their cones. Fixed in `7776d76`; §A.6 states the cone invariant and
+  why `merge_data`'s single-carrier shortcut is what opens the gap.
+- *§A.7's reorder changed results through `prop_matches`' shared budget.* Reverted
+  (D12); §A.7 records the mechanism.
+
+**From the code review, confirmed and NOT acted on, with the reason.**
+
+- *The registry read can serve one twin theory's constituent names to the other.*
+  Dissolved by D13 — see §C item 5.
+- *The fork does not record its claim in the old pair, so re-beginning a colliding
+  theory re-forks.* True and required: recording it would send the next begin down the
+  "it is me" branch and have it adopt the other claimant's entries unpurged. Recorded
+  as a cost in §A.6.
+
+**From the code review, refuted.**
+
+- *Two concurrent Isa-REPL sessions can begin two different theories with one long name
+  and share a cache.* Premises true, conclusion empty: one long name forces one WIP
+  theory hash, so the suppressed fork would have purged nothing key-relevant.
+- *The empty-name fallback still emits a context-dependent key.* Mechanism real,
+  producer absent: measured 0 constants and 0 types with an empty theory name over 710
+  loaded theories, and a proof-local abbreviation — the one entry kind that carries one
+  — is rejected by `Thm.cterm_of`, which certifies against the *theory's* consts.
+
+Older rounds, on the plan:
 
 **Refuted outright.**
 
