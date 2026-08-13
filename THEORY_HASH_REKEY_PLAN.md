@@ -300,9 +300,22 @@ Part B. Nothing here blocks the migration; the field has no reader today.
 
 ## 6. Gates
 
-Run against the staged store before the swap. `SEMANTIC_DB_DIR=<staging>` moves
-the whole database set together (`_paths.py`), which is what lets the
-cross-store checks run before anything irreversible happens.
+Run against the staged store before the swap — **all of them, G7 included**.
+That is what the staging build is for, and nothing forces G7 to wait: an
+earlier revision of §9.6 put it after the swap, contradicting this sentence for
+no reason.
+
+`SEMANTIC_DB_DIR=<staging>` moves the semantic databases together
+(`_paths.py`), which is what lets the cross-store checks run before anything
+irreversible happens — but **it does not move `theory_hash.lmdb`**. That store
+lives under a different platformdirs root (`Isabelle_Theory_Hash`) with no
+environment override at all, so anything reading it through the library reads
+the live one. The migration takes `--src-theory-hash` and writes its successor
+into `--dest` for exactly that reason, and the gates are told where the staged
+copy is rather than inferring it.
+
+Implemented in `migrate_theory_hash_rekey.py`; the numbers quoted below are
+what its `plan` phase reports against the authoritative store.
 
 - **G1.** Recompute today's hashes from a fresh table; for every theory the
   store references and the image holds, the recomputed hash must be among the
@@ -330,9 +343,22 @@ cross-store checks run before anything irreversible happens.
   old hashes still in use. (Both hold on the current data: 0 collisions, 0
   overlap.)
 - **G3.** Record counts: migrated + dropped = 1,380,494, the dropped set equal to
-  the explicit key list produced before the run, and the destination store's
-  entry count equal to the migrated count — the last catches two old keys
-  silently overwriting one new key.
+  the explicit key list produced before the run, and **the destination stores'
+  entry counts equal to what the classification says they should be**.
+
+  That last clause is the one the whole `gates` subcommand rests on, and it is
+  worth more than the "two old keys overwriting one new key" case it was
+  written for — that case is already stopped twice, by `overwrite=False` at
+  write time and by the collision check before any write. Its real work is that
+  **every other check over the destination is a predicate on whatever keys
+  happen to be there**, not a comparison against the intended set. `semantics.lmdb`
+  is built in a single transaction, so a kill leaves it empty; the vector store
+  is not, committing every 200,000 entries across an hours-long run, so a kill
+  leaves a valid, self-consistent, truncated store — and a subset test over one
+  only looks cleaner the more data is missing. The counts are the only thing
+  that sees it. `apply` additionally refuses a non-empty `--dest`, which is the
+  other route to two generations of records sitting side by side, each
+  self-consistent, with every downstream gate passing.
 - **G4.** Live-code agreement: run the new code in Isabelle and require the
   hashes it mints to equal the ones the migration script computed. This is the
   only check that the two implementations agree. Two halves, and they cost very
@@ -365,23 +391,60 @@ cross-store checks run before anything irreversible happens.
   Additionally: every key in the migrated vector store must equal a key in the
   migrated record store.
 - **G5.** No old hash survives anywhere in the new store — not as a key prefix,
-  not as a 16-byte key, and not inside any `theory_constituents`, `locale_uk`,
-  `deps` or `template_uk` value. **This is the only gate that inspects the
-  rewritten value fields at all**: G1–G4 never open a record, G3 counts them,
-  and `fsck`'s one relevant check ties the key to `theory_constituents` alone,
-  by recomputing from the value the migration itself wrote. One cursor walk
-  catches a truncated run, a skipped record class, a forgotten field, and a
-  partially-rewritten field. The 55,679 deliberately-untouched `template_uk`
-  values are the one exemption, and must be listed as such rather than passing
-  silently.
-- **G6.** Dangling-reference counts must not grow: `locale_uk` 0 before and 0
-  after, `deps` at most the 40,036 that dangle today, `template_uk` at most the
-  55,679 that dangle today. G5 proves nothing stale survived; G6 proves nothing
-  was pointed somewhere new and wrong.
-- **G7.** `isabelle-semantics reindex`, then `fsck` clean. In that order — all
-  6,862 experience records move, so running `fsck` first would report 6,862
-  missing plus 6,862 stale index entries and exit 1 on a perfectly correct
-  migration. Read `fsck`'s orphan-vector line rather than its exit code (§2).
+  not as a 16-byte key, and not inside any `theory_constituents`, `locale_uk`
+  or `deps` value — **and every persistent constituent's recorded hash is the
+  one its recorded name maps to.**
+
+  `template_uk` is **not** in that list, and an earlier revision wrongly put it
+  there. It is a full universal key whose 16-byte prefix is an XOR of
+  constituent hashes, not any one theory's hash, so "does it contain an old
+  hash" is not a question that can be asked of it. The only staleness test that
+  exists for an XOR-shaped pointer is whether it resolves to a live record, and
+  that is G6's job. The 55,679 deliberately-untouched dangling values are
+  listed rather than passing silently.
+
+  The name-cross-examines-hash clause is the only non-circular check here, and
+  it was added after the review. Recomputing the XOR prefix from the constituent
+  list proves nothing on its own: the list and the key come out of the same
+  `_map_hash` calls, so they agree even when the hash is wrong — and `_map_hash`
+  resolves through the hash, discarding the name the record carries. Since
+  constituents are stored as (long name, hash) pairs, `h == tab.new[n]` costs
+  nothing and catches exactly the case key/value agreement cannot: a record
+  whose key and value are mutually consistent and both name the wrong theory.
+
+  This is otherwise **the only gate that inspects the rewritten value fields**:
+  G1–G4 never open a record, G3 counts them, and `fsck`'s one relevant check
+  ties the key to `theory_constituents` alone, by recomputing from the value the
+  migration itself wrote. One cursor walk catches a skipped record class, a
+  forgotten field, and a partially-rewritten field.
+- **G6.** Dangling-reference counts must not grow **beyond what dropping records
+  forces**. The bound for each of `locale_uk`, `deps` and `template_uk` is the
+  source store's own count **plus the number of references whose target is in
+  the drop set**, both measured in the same run rather than quoted from this
+  document.
+
+  An earlier revision gave the bound as the source count alone — `locale_uk` 0,
+  `deps` 40,036, `template_uk` 55,679 — and that is wrong: a reference pointing
+  into one of the 1,534 dropped records necessarily dangles afterwards, so a
+  correct run must exceed those numbers. Implementing the bound as written
+  would have produced a gate that fails every correct migration.
+
+  G5 proves nothing stale survived; G6 proves nothing was pointed somewhere new
+  and wrong.
+- **G7.** `isabelle-semantics reindex`, then `fsck` clean, **against the staging
+  directory, before the swap** — `experience_index.lmdb` lives under
+  `SEMANTIC_DB_DIR`, so nothing forces this to wait, and running it first means
+  the swap moves a set that already includes a freshly built index.
+
+  `reindex` before `fsck`, in that order: all 6,862 experience records move, so
+  running `fsck` first would report 6,862 missing plus 6,862 stale index entries
+  and exit 1 on a perfectly correct migration.
+
+  Confirm that **no orphan-vector alarm appears**, rather than reading a line
+  for a number. Per §2 that count is report-only by design and stays out of the
+  exit code; below the threshold nothing is printed at all, so the absence of
+  the alarm is the success signal. The migration carries its own vector gate
+  (G3's counts) and does not lean on `fsck` for this.
 
 Disk: the old pair (1.8 GB + 16 GB) plus the new pair is **~35.6 GB against 87 GB
 free**. Rollback is Part B §B.9's procedure: move all four environments back
@@ -552,10 +615,23 @@ construction — the one property `fsck` actually checks:
 
 The vector store is streamed key by key through the **old-key → new-key map**,
 not the theory table; entries whose key has no image are dropped; values —
-including the 8,908 empty-value tombstones — are copied verbatim; the 723
-sixteen-byte embed-status keys go through the theory table. `theory_hash.lmdb`
-is re-keyed with the theory table, reporting the 10 collapsed groups whose
-single entry can only follow one of the two successors.
+including the 8,908 empty-value tombstones — are copied verbatim. The 723
+sixteen-byte embed-status keys ride that same map: they are theory hashes, and
+every one of them is present as a theory-status key in `semantics.lmdb`
+(measured, 723 of 723), so the map already covers them — and routing them
+through the theory table instead would resurrect a key whose record was
+dropped, manufacturing exactly the orphan the vector gate exists to catch.
+
+More than one `vector_*.lmdb` is refused rather than half-migrated: the package
+supports several models, and silently leaving one keyed to the old scheme would
+orphan all of its entries after the swap. The authoritative machine has one.
+
+`theory_hash.lmdb` is re-keyed with the theory table. Two kinds of merge happen
+there and both are counted rather than left silent: the 10 collapsed groups,
+whose single entry can only follow one of the two successors, and — much larger
+— several content generations of one name, which now all key to that name's one
+new hash. Over a quarter of the store merges this way, so the run must report
+what it wrote rather than what it attempted.
 
 ### 9.6 Order of operations
 
@@ -564,11 +640,37 @@ single entry can only follow one of the two successors.
 2. Dump `deps.tsv` (§9.1) and build the tables (§9.2). Run **G1** and **G2**.
 3. Build the new `semantics.lmdb`, then the new vector store, then the new
    `theory_hash.lmdb`, all in a staging directory. Run **G3**, **G4**, **G5**,
-   **G6** against it with `SEMANTIC_DB_DIR=<staging>`.
-4. Swap all four directories together. Run `reindex`, then `fsck` (**G7**).
+   **G6** against it with `SEMANTIC_DB_DIR=<staging>` and `--src-theory-hash`
+   pointing at the live theory-hash cache (that one is not staged by the
+   environment variable — see the head of §6). Then **G7**: `reindex` and
+   `fsck` against the staging directory, still before the swap.
+4. Swap all four directories together.
 5. Restart every REPL and RPC host, since ML memoizes hashes per process.
 
 Steps 3 and 4 are the writes that need per-run approval under D11.
+
+### 9.7 What is kept of the dropped records
+
+`--drop-list FILE` writes every dropped key and the reason it died. Pass it on
+the run that matters; it is the record of what the migration decided, and the
+input to any later top-up.
+
+The records themselves are not lost by the migration and do not need to be
+copied anywhere: per D7 the source stores are opened read-only and the whole
+directory is swapped at the end, so **the untouched original holds all 1,534
+dropped records with their full content** and stays the backup. What can be
+done with them later depends on why each died:
+
+- the **733 out of scope** are recoverable at any time by dumping a dependency
+  table from an image that does hold their theories (`MathBench_Prover`,
+  `NTP4Verif`) and re-running the same classification for those keys alone.
+  D6 declined to do that now; nothing about it expires.
+- the **52 standing on a shared hash** cannot be recovered by any re-run. The
+  information that would say which of the two theories a record belongs to does
+  not exist anywhere — that is what makes them a re-interpretation job
+  (`THEORY_HASH_REKEY_REINTERPRET_LIST.md`), not a migration job.
+- the **13 superseded theory-status records** and the **736 duplicates** have
+  nothing to recover: the current generation's record is already in the store.
 
 ## 10. To verify before §5(a) is scheduled
 
