@@ -29,9 +29,10 @@ changes is that name-addressed records can no longer be copied untouched (§B.6)
 - Tests and the two re-derived measurements are in
   `contrib/Isabelle_RPC/test/` (§A.9).
 
-**Execution order** (§E gives the detail): the theory-hash re-key, then the dump,
-then the join, then the gap list, then the swap. Every write on `cslh19` —
-including the scratch dump — needs the user's approval for that specific run (D6).
+**Execution order** (§E gives the detail): Part A and the theory-hash re-key are
+**done**; next are the acceptance measurements, the dump, the join, the gap list and
+the swap. Every write on `cslh19` — including the scratch dump — needs the user's
+approval for that specific run (D6).
 
 ---
 
@@ -730,6 +731,15 @@ heap timestamps.
 
 ### B.0 What we are rescuing, measured
 
+**These figures predate the theory-hash re-key** (Part E step 2, run 2026-08-13). Every
+key in the store has moved since, and the migration dropped a small number of records;
+`THEORY_HASH_REKEY_PLAN.md` is the record of which. What survives unchanged is what this
+section is actually for: the *population* being rescued — which records carry no
+interpretation, which stating theories were never swept, how tails are shared — none of
+which the re-key touches, because it rewrote prefixes and left `key[16:]` alone. Re-take
+any figure before using it as a gate; the pre-re-key store is still on disk as
+`semantics.lmdb.pre-rekey-20260813-170504` if a number needs to be reconciled.
+
 All store figures are from read-only full-cursor walks of
 `cslh19:~/.cache/Isabelle_Semantic_Embedding/semantics.lmdb` on 2026-08-12; the store
 was last written at 19:04 and the final audit scans (20:05–20:21) saw one consistent
@@ -1333,22 +1343,34 @@ made in one commit whenever the code is next touched.
 
 # Part E — execution order
 
-Part A is done: `Isabelle_RPC` `79e581a`, `c579556`, `7776d76`; `Semantic_Embedding`
-`2ff0460`. Its tests are in `contrib/Isabelle_RPC/test/` (§A.9). The REPL on `cslh19`
-was restarted on the new code, and both submodules there are fast-forwarded.
+**Steps 1 and 2 are done.**
 
-1. **The theory-hash re-key**, per `THEORY_HASH_REKEY_PLAN.md`. It runs first (that
-   plan's §7).
-2. **The acceptance measurements** of §A.6 on a real cone. Report; do not argue the
+1. ~~**Part A**~~ — `Isabelle_RPC` `79e581a`, `c579556`, `7776d76`; `Semantic_Embedding`
+   `2ff0460`. Tests in `contrib/Isabelle_RPC/test/` (§A.9).
+2. ~~**The theory-hash re-key**~~ — `THEORY_HASH_REKEY_PLAN.md`, run on `cslh19`
+   2026-08-13. The four stores were swapped at 17:05:04 and the previous ones kept as
+   `*.pre-rekey-20260813-170504` (`semantics.lmdb`, `experience_index.lmdb`, the
+   `Qwen3-Embedding-8B` vector store). That plan is the record of what it decided and
+   dropped; do not restate its figures here.
+
+   State to rely on, verified 2026-08-13: `cslh19`'s `contrib/Isabelle_RPC` is at
+   `a72e5cb`, which carries the new theory hash, and the REPL on `:6666` was restarted
+   at 17:06:39 — **after** both the code change and the store swap — so the live process
+   and the store agree on the key scheme. One drift worth knowing: `cslh19`'s
+   `contrib/Semantic_Embedding` is at `2ff0460`, five commits behind, and does not
+   contain the migration script; the migration was run from elsewhere. The five missing
+   commits are Python-side, so the ML that the REPL loaded is current.
+
+3. **The acceptance measurements** of §A.6 on a real cone. Report; do not argue the
    gate in advance (D11).
-3. **The dump app and its Python handler** (§B.3), then the dump run on `cslh19` —
+4. **The dump app and its Python handler** (§B.3), then the dump run on `cslh19` —
    user approval for that specific run.
-4. **The join** (`contrib/Semantic_Embedding/migrate_universal_keys.py`, §B.5–B.7),
+5. **The join** (`contrib/Semantic_Embedding/migrate_universal_keys.py`, §B.5–B.7),
    producing `semantics.lmdb.building` and the gap list. No writes to the live store.
-5. **The gap list's count and cost estimate** to the user; approval; `collect` over the
+6. **The gap list's count and cost estimate** to the user; approval; `collect` over the
    gap theories; chained embed.
-6. **The experience pass** (§B.10), including its refusal report.
-7. **The gates** (§B.7), then promotion and the four-directory swap (§B.9), then
+7. **The experience pass** (§B.10), including its refusal report.
+8. **The gates** (§B.7), then promotion and the four-directory swap (§B.9), then
    `rebuild_experience_index`.
 
 ---
