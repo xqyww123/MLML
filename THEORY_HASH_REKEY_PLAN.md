@@ -658,19 +658,40 @@ input to any later top-up.
 The records themselves are not lost by the migration and do not need to be
 copied anywhere: per D7 the source stores are opened read-only and the whole
 directory is swapped at the end, so **the untouched original holds all 1,534
-dropped records with their full content** and stays the backup. What can be
-done with them later depends on why each died:
+dropped records with their full content** and stays the backup.
 
-- the **733 out of scope** are recoverable at any time by dumping a dependency
-  table from an image that does hold their theories (`MathBench_Prover`,
-  `NTP4Verif`) and re-running the same classification for those keys alone.
-  D6 declined to do that now; nothing about it expires.
-- the **52 standing on a shared hash** cannot be recovered by any re-run. The
-  information that would say which of the two theories a record belongs to does
-  not exist anywhere — that is what makes them a re-interpretation job
-  (`THEORY_HASH_REKEY_REINTERPRET_LIST.md`), not a migration job.
-- the **13 superseded theory-status records** and the **736 duplicates** have
-  nothing to recover: the current generation's record is already in the store.
+**Can re-interpretation put them back?** For all but one record, yes — and for
+one class it is the only way. Interpretation is what mints an entity record, so
+running the collection pipeline (`Semantic_Collection_App`) over a theory
+regenerates its records under whatever hash that theory has at the time. Per
+class:
+
+- the **52 standing on a shared hash** must be re-interpreted; nothing else can
+  bring them back, because the information saying which of the two theories a
+  record belongs to does not exist anywhere in the store. This is what
+  `THEORY_HASH_REKEY_REINTERPRET_LIST.md` is a list of, and what makes D4 a
+  drop-and-re-interpret decision rather than a guess. It is cheap: after the
+  migration each name has its own hash, the 20 theories are small, and the
+  whole population is 42 entity records plus 10 theory-status records. Their
+  theory-status records are among the dropped, so the next collection covering
+  them re-enumerates without being told to.
+- the **733 out of scope** can be re-interpreted too, but only under a session
+  that holds those theories — `AFP-ALL-4` does not, which is why they dropped.
+  For these, re-interpretation is the *expensive* path and not the first
+  choice: their records still exist in the original store, so dumping a
+  dependency table from an image that does hold them (`MathBench_Prover`,
+  `NTP4Verif`) and re-running the same classification for those keys alone
+  brings them across for no LLM spend at all. D6 declined to do that now;
+  nothing about it expires.
+- the **13 superseded theory-status records** and the **736 duplicates** need
+  nothing: the current generation's record is already in the store.
+
+**The one exception is a single EXPERIENCE record**, the one naming
+`Minilang.Minilang`. Experiences are agent-authored — written during proof
+search, not by theory interpretation — so no collection run recreates them,
+which is the whole reason D5 exists. It is the only entry in the drop set that
+no re-run of any kind can restore, and the only reason it is dropped at all is
+that its constituent theory is out of scope.
 
 ## 10. To verify before §5(a) is scheduled
 
