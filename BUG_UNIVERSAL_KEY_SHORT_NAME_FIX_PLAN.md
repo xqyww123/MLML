@@ -429,10 +429,39 @@ fork and purge. Those tests are replaced by one that two same-base-name theories
 each other's entries, which under this design is a property of the type rather than of a
 mechanism.
 
-**Still conditional on one measurement.** D11's acceptance item 3 — what `update_thm_cache`
-actually costs, and whether its fact delta is empty in the steady state — is running. If the
-delta is empty, the choice becomes this design versus deleting the cache outright, not this
-design versus what is in the tree; both beat what is in the tree.
+**The measurement it was conditional on has landed, and it points at deletion.** D11's
+acceptance item 3, run 2026-08-13 (`update_thm_cache_timing.md`):
+
+- **`at_begin`'s delta is empty in the steady state**, as §A.6 suspected. Over 10 identical
+  9-theory session builds — 90 theory begins — exactly 10 produced a delta, all of them the
+  same theory joining a cone that had never run the hook. Every other begin returned `NONE`.
+- **The shipping heap is already past the bulk pass**: `MathBench_Prover`'s heap carries
+  `Semantic_Embedding` in its cone (706 ancestors, 98,710 static facts) and a fresh
+  `Theory.begin_theory` on it costs 246 ms, not the seconds a cold keying of 90k
+  propositions would.
+- **`at_end` is the recurring delta, which §A.6 never mentioned** — the theory's own new
+  facts, 39 ms median (25-52, n=25) for 152 entries.
+- **What a cache can save there**: `compute_constituents` is 9.58 µs (bulk) / 8.41 µs
+  (steady) and a hit costs 1.40 / 0.39 µs, against a duplicate-`thm128` rate within one
+  delta of 6.30 % (bulk), 21.05 % (a definition-heavy end), 0 % (a theory of hand-written
+  lemmas). That is **10.1 ms of the 1,026 ms bulk pass (1.0 %)**, **0.26 ms of a 39 ms
+  steady `at_end` (0.7 %)**, and **0 ms at a steady `at_begin`**.
+
+So the cache is worth about a quarter of a millisecond per theory and ten milliseconds once
+per session. **The live choice is now this design versus deleting the cache outright**, and
+the numbers argue for deletion: deleting removes `Theory_Data`, the constructor, the var and
+the table as well, and costs 0.26 ms per theory end. Deciding that is D16's business, not
+this section's; until it is decided, D14 stands as the design to build if a cache is kept.
+
+**And the hook's real cost is somewhere else entirely.** `t0` is taken *after*
+`Facts.dest_static`, so the printed milliseconds exclude the scan that dominates: 18.4 ms at
+43,437 facts, **95.7 ms at `MathBench_Prover`'s 98,710**. `Theory.apply_wrappers` was also
+counted running the wrapper list **twice at every begin and every end**, so a theory pays
+four such walks — roughly **0.38 s per theory** on the shipping heap. No digest cache touches
+any of it. Which wrapper returns `SOME` and forces the second pass was not established; if it
+is `claim_cache_scope`, removing it saves ~96 ms per begin, which is two orders of magnitude
+more than the cache it exists to protect ever saves. That is a cheap follow-up measurement
+and it should be taken before either D14 or deletion is implemented.
 #### What this does and does not cover
 
 `compute_constituents` is reached from three places, with very different frequencies,
