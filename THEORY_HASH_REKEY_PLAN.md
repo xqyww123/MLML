@@ -380,13 +380,10 @@ what its `plan` phase reports against the authoritative store.
     image anywhere has it frozen in. Nothing needs a 60-hour rebuild, and
     restarting the REPL is the whole of the deployment.
 
-    G4 is therefore its own wrapper session on the same pattern —
-    `HASHDUMP = AFP-ALL-4 + sessions Isabelle_RPC`, whose one theory imports
-    `Isabelle_RPC.Remote_Procedure_Calling` and runs the §9.1 walk with
-    `Theory_Hash.hash_of` in place of the dump's own path/parent columns,
-    writing `HASH<tab>long name<tab>hex` to a file. That is the live code, over
-    all 10,598 theories, for the cost of one small heap.
-    `migrate_theory_hash_rekey.py verify-live --hashes FILE` consumes it.
+    G4 is therefore its own wrapper session on the same pattern, written out in
+    §9.8 so it can be rebuilt from nothing. That is the live code, over all
+    10,598 theories, for the cost of one small heap.
+    `migrate_theory_hash_rekey.py verify-live --hashes FILE` consumes its dump.
 
   Additionally: every key in the migrated vector store must equal a key in the
   migrated record store.
@@ -704,3 +701,68 @@ class's own instance is a registration of locale `L` qualified
 through registration morphisms, so the machinery probably exists — but that is
 an inference from reading, and §5(a) should not be scheduled until it has been
 run.
+
+### 9.8 The G4 dump session
+
+Two files, kept here rather than in the tree for the same reason as §9.1: they
+are throwaway inputs to a gate, and nothing outside this repository is durable.
+Materialise them into a scratch directory on the machine holding the store.
+
+`ROOT`:
+
+```
+session HASHDUMP = "AFP-ALL-4" +
+  sessions Isabelle_RPC
+  theories Hash_Dump
+```
+
+`AFP-ALL-4` is the parent, so its 10,598 theories come from the built heap.
+`Isabelle_RPC` is named under `sessions` rather than as the parent, which loads
+it **from source** — that is what puts the new `theory_hash.ML` in front of the
+walk without rebuilding anything.
+
+`Hash_Dump.thy`:
+
+```isabelle
+theory Hash_Dump
+  imports Isabelle_RPC.Remote_Procedure_Calling
+begin
+
+ML \<open>
+fun addthy thy (seen, acc) =
+  let val n = Context.theory_long_name thy in
+    if Symtab.defined seen n then (seen, acc)
+    else
+      let val (seen2, acc2) =
+        fold addthy (Theory.parents_of thy) (Symtab.update (n, ()) seen, acc)
+      in (seen2, (n, thy) :: acc2) end
+  end;
+
+val roots = map Thy_Info.get_theory (Thy_Info.get_names ());
+val all_thys = #2 (fold addthy roots (Symtab.empty, []));
+
+fun line (n, thy) =
+  "HASH\t" ^ n ^ "\t" ^
+  \<^try>\<open>Theory_Hash.to_hex (Theory_Hash.hash_of thy) catch _ => "CANNOT_HASH"\<close>;
+
+val _ = File.write (Path.explode (getenv "HASH_OUT"))
+  (cat_lines (map line all_thys) ^ "\nHASHCOUNT " ^
+   string_of_int (length all_thys) ^ "\n");
+\<close>
+
+end
+```
+
+The parent closure in `addthy` is there for the same reason as in §9.1:
+`Thy_Info.get_names ()` omits `Pure`, a constituent of 99.4% of theorem
+records. Run with
+
+```
+HASH_OUT=<file> isabelle build -d <MLML> -d <scratch> -o quick_and_dirty=true HASHDUMP
+```
+
+and feed `<file>` to `verify-live`. The dump necessarily contains a few
+theories the dependency table does not — `Performant_Isabelle_ML`,
+`Remote_Procedure_Calling`, `Hash_Dump` itself — because they come with
+`Isabelle_RPC` and `AFP-ALL-4` does not hold them. `verify-live` reports that
+count and does not fail on it; a mismatch or a missing theory does fail.
