@@ -430,7 +430,7 @@ each other's entries, which under this design is a property of the type rather t
 mechanism.
 
 **The measurement it was conditional on has landed, and it points at deletion.** D11's
-acceptance item 3, run 2026-08-13 (`update_thm_cache_timing.md`):
+acceptance item 3, run 2026-08-13 (`evidence/universal-key/update_thm_cache_timing.md`):
 
 - **`at_begin`'s delta is empty in the steady state**, as §A.6 suspected. Over 10 identical
   9-theory session builds — 90 theory begins — exactly 10 produced a delta, all of them the
@@ -480,11 +480,33 @@ observed. Both regimes agreed on the answer for **all** 30,340 thms, with `skipp
 `empty_name_fallback = 0`. `Term_Digest.thm128`'s own cache was warmed before timing, so the
 "with cache" figure is charged only the warm digest cost.
 
-**So the live recommendation is to delete the constituents cache**, superseding D14 rather
-than building it: within a sweep it is a net loss, its only profit is on re-reads, and
-`update_thm_cache`'s steady-state delta — measured empty — is where those re-reads would
-have to come from. Deleting also removes `claim_cache_scope`, the suspected cause of the
-extra `apply_wrappers` pass below.
+**A deletion recommendation was made on those numbers and then WITHDRAWN**, because both
+measurements are of the same shape — one sweep over a population of mostly distinct
+propositions — and the interactive AoA path is the opposite shape. Reading the code
+(`agent_server.ML:1707` calls `Semantic_Store.make_entity_callbacks` **once per AoA
+invocation**) turns up three populations whose constituents are recomputed on *every* call,
+so their hit rate is near 100 % from the second call onward, far above the 16 % break-even:
+
+1. **The static delta** (`semantic_store.ML:1186-1191`).
+   `uncached_facts = Facts.dest_static false [cached_facts] current_facts`, where
+   `cached_facts` is the `Thm_Cache` snapshot taken at the theory's `at_begin` and not
+   refreshed until `at_end` — so this is every fact declared in the current theory since it
+   began, plus proof-local facts, and it grows as the session proves lemmas.
+2. **Every dynamic-collection member** (`:1200-1201`).
+   `process_dynamic_facts_into_cache … only_new = false`, and the comment at `:1197` states
+   these "never enter the persistent `Thm_Cache`" — so all of them are re-processed at every
+   AoA call, by design, because a dynamic collection's content depends on the context.
+   Each member gets a key built, hence one `thm_constituents` call.
+3. **Each semantic query's live pass** (`context.ML:1266`). `scope_ok` calls
+   `thm_constituents` per live candidate and sits second in the filter chain, so with no
+   name filter nearly every candidate pays. For the four rule kinds the live set is the
+   Source-1 net.
+
+**The counts are being measured on `MathBench_ProverBase`** — how many thms each population
+is, and each one's cost with and without the cache, first call versus steady state. Until
+that lands, keep versus delete is undecided; the absolute saving is on the order of
+milliseconds per AoA call against an invocation that makes LLM round trips, so the decision
+is about whether the machinery earns its keep, not about latency the user can feel.
 
 **And the hook's real cost is somewhere else entirely.** `t0` is taken *after*
 `Facts.dest_static`, so the printed milliseconds exclude the scan that dominates: 18.4 ms at
@@ -528,11 +550,13 @@ and this design covers one of them.
   `mk_prop_str` alone is 378 µs per entity (`semantic_store.ML:852`), ~9.1 s over 24,049
   entities against the 264 ms simulated. The real regression is well under 1 %.
 - **The semantic query path** (`Isabelle_RPC/Tools/context.ML:1521`, `:1311`) computes a
-  key per candidate per query with no cache; on a heap-loaded session the data is
-  `No_Cache` there too, and per D12 the filter chain is left alone. So this path simply
-  pays the higher per-candidate cost: `scope_ok` stays second in the chain and its
-  `thm_constituents` goes from ~0.7 µs to ~14.9 µs. The live candidate set is the rule
-  callbacks' Source-1 nets, about 1,127 thms — a few ms per query.
+  key per candidate per query. An earlier revision said the data is `No_Cache` there too on
+  a heap-loaded session; **that is wrong**. AoA's reading context is the scratch theory the
+  REPL begins, which is begun under the `at_begin` hook and therefore carries a cache — this
+  path is one of the three re-read populations above, not a cache-free one. It is
+  cache-free only when the query names a target theory that resolves to a heap theory.
+  Per D12 the filter chain is left alone, so `scope_ok` stays second and nearly every live
+  candidate pays; the live set for the four rule kinds is the Source-1 net.
 
 #### The call sites are repaired regardless
 
@@ -1382,7 +1406,7 @@ the code is next touched.
   does not do, and the requirement is that they are not done. They are documented in
   `contrib/Isabelle_RPC/Tools/theory_hash.ML`'s header (`3d44fea`) with a file:line for
   each, so the next reader does not re-derive them. The probe is
-  `persistent_reload_probe.md`.
+  `evidence/universal-key/persistent_reload_probe.md`.
 
   The three, in one line each. **A theory of the session being built, reloaded with
   different content**: `Thy_Info.remove` errors only for a name `Thy_Info`'s graph holds as
@@ -1406,9 +1430,20 @@ the code is next touched.
   (`Universal_Key.ML:362`), whose order-dependence is the second situation's most direct
   consequence and which is therefore accepted with it; and the reload staleness of the
   constituents cache. **Part B is not exposed either way** — the dump reads one theory per
-  long name out of a heap image. Whether the data already in the store bears any mark of
-  this is being measured separately (`split_theory_hash_forensics.md`), and a positive
-  result there would reopen the disposition.
+  long name out of a heap image. Whether the data already in the store bore any mark of this
+  was measured (`evidence/universal-key/split_theory_hash_forensics.md`) and the answer does
+  not reopen the disposition: over the pre-re-key store, **21 theory long names carry two or
+  more persistent hashes with records on both, covering 791 of 1,380,494 records
+  (0.057 %)**; the 13 AFP names among them are provably content-change-across-runs (the
+  superseded hash of all 12 non-root theories reproduces byte for byte on the single
+  hypothesis that only `Rank_Nullity_Theorem/Miscellaneous.thy`'s bytes differed), and the
+  other 8 are this project's own tooling theories. 749 of the re-key's 1,534 dropped rows
+  carry the signature, of which 736 duplicated a record the current generation already
+  holds and 13 were superseded status flags whose counterpart migrated — **genuine loss:
+  zero records**. The current store has zero names with two persistent hashes. What the
+  store cannot decide, stated rather than rounded away: the in-process failure with
+  *identical* file bytes is structurally invisible, because the pre-re-key digest was a
+  function of bytes alone.
 
 ## Closed
 
@@ -1458,6 +1493,27 @@ the code is next touched.
 - `build_thm_key` is at `Universal_Key.ML:533`; `cached_thm_key`, which takes the
   `thm_uk_cache option`, is at `:362`.
 - The redundant-call figure is **19,982** removable calls of 40,700, from one measurement.
+- **The measurement reports are in `evidence/universal-key/`**, copied out of the session
+  scratchpad so the citations above resolve: `persistent_reload_probe.md`,
+  `split_theory_hash_forensics.md`, `experience_refusal_census.md`,
+  `update_thm_cache_timing.md`, `complex_main_constituents_timing.md`,
+  `table_vs_hashtable.md`. The plan inlines every figure it relies on, so the reports are
+  corroboration rather than a dependency. The `Theory_Data` merge audit that came out of
+  the same round is committed separately as `THEORY_DATA_MERGE_AUDIT.md`.
+- **How to run an ML measurement without `isabelle build`**, learned the hard way and worth
+  not re-deriving: `isabelle process_theories -l <existing heap>` from a shell that exports
+  `ISABELLE_RPC_PYTHON` pointing at the repo venv. Under `isabelle-mcp` the attached Python
+  RPC host **cannot start** — `Tools/RPC.ML` discovers its interpreter with
+  `command -v python3` under a bash that inherits the MCP server's environment, which finds
+  `/usr/bin/python3` with no `Isabelle_RPC_Host` wheel, and Isabelle/ML's `getenv` reads the
+  real OS environment (`Pure/library.ML:1119`) so the variable cannot be injected from
+  inside the session. Without the host, `Theory_Hash.hash_of` cannot take its persistent
+  branch. **Assert `Theory_Hash.is_persistent (Theory_Hash.hash_of @{theory Pure})` before
+  trusting any timing.**
+- Heaps: this checkout's real heaps are the ~5.8 G under
+  `contrib/Isabelle2025-2/heaps/` (the distribution's own directory), and Isabelle reads
+  both that and `$ISABELLE_HOME_USER/heaps`. **Do not pass `-o system_heaps`** — it changes
+  where a build *writes* and would overwrite the shared ones.
 - The §A.6 timings: two micro-benchmarks run 2026-08-12 on HOL-scale populations with
   `Theory_Hash.hash_of` stubbed, archived at `~/archive/claude-scratchpad/`. They size the
   change; §A.6's acceptance criterion decides it.
@@ -1488,6 +1544,15 @@ the code is next touched.
    gate in advance (D11).
 4. **The dump app and its Python handler** (§B.3), then the dump run on `cslh19` —
    user approval for that specific run.
+   **Review cadence, decided 2026-08-13.** No further *plan* review before this step: §B.3
+   went through all four adversarial rounds and has not changed since, the re-key does not
+   affect it (the dump computes fresh keys and reads no old hash), and it is read-only with
+   a scratch LMDB for output, so a mistake is cheap to find and re-run. What should be
+   reviewed is (a) the dump app's **code**, once written, since its output is the join's
+   only source of truth, and (b) the **join's plan** (§B.5–B.7) once the dump has produced
+   real data — that is where the irreversible decisions live, and where the re-key changed
+   the preconditions most (§B.6 step 1).
+
 5. **The join** (`contrib/Semantic_Embedding/migrate_universal_keys.py`, §B.5–B.7),
    producing `semantics.lmdb.building` and the gap list. No writes to the live store.
 6. **The gap list's count and cost estimate** to the user; approval; `collect` over the
