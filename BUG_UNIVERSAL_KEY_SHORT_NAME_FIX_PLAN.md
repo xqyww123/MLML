@@ -1141,49 +1141,79 @@ memories cannot be regenerated this way at all.
 
 ---
 
-# Part C — open questions
+# Part C — loose ends
 
-1. **§A.6's reload question**: "the whole cone is already accounted for, so nothing to
+## Settled, not yet applied
+
+Four corrections, all decided 2026-08-13, none of them a design change. They can be
+made in one commit whenever the code is next touched.
+
+1. **`semantic_digest.ML`'s leading-component comment is wrong** (§A.5). It blames two
+   theories sharing a base name, which cannot happen there: both compared names come
+   from one cone, and `Context.eq_thy_consistent` makes base names unique inside a
+   cone. Rewrite it to name the real hazards — a leading component need not be a theory
+   base name at all (`typerep_itself_inst`, the counterexample printed eight lines below
+   in the same comment), and `Code.type_interpretation`
+   (`Pure/Isar/code.ML:1358-1366`) resets the naming path to the *type's* declaring
+   theory, which is the one proven mechanism for a false "same theory". Comment only;
+   the code is not touched here (see the open item below).
+2. **`Theory_Hash.hash_of_long`'s comment over-claims.** It says `hash_of` reads only
+   the name plus file content and parent hashes; the master directory
+   (`theory_hash.ML:124-132`) and the parents (`:177`) are read off the theory *value*.
+   Add the missing clause. The code is not shown wrong: the loader removes a theory's
+   name from `Thy_Info` before re-evaluating it (`thy_info.ML:372`), so the two routes
+   are never in competition.
+3. **The backfill's constituent-name report is not a gate** (§A.4). `backfill_cone`
+   prints process-absolute totals, and prints them *after* the `error` that fires on
+   exactly the run that needs them. Snapshot `constituents_totals ()` at entry, report
+   the delta, and put it before the `error`. The gate proper — refuse on a non-zero skip
+   count — belongs to the Part B dump app and is written there, not retrofitted here.
+   Note also that the path which actually mints and stores keys
+   (`interpret_with_parallel` / `collect`) reports nothing; leave that until the dump
+   app exists, then do both with one mechanism.
+4. **The test session sits in the shipped `ROOT`.** `conda/recipe.yaml:69` copies
+   `ROOT` verbatim into the package while `test/` is not packaged, which
+   `contrib/Semantic_Embedding/Test/ROOT:1-12` states as the convention to avoid. Move
+   the `Isabelle_RPC_Test` declaration into `test/ROOT`.
+
+## Still open
+
+1. **§A.6's reload question.** "The whole cone is already accounted for, so nothing to
    do" is what terminates the wrapper loop, but it also holds when the same theory is
    re-executed after an edit, leaving cache entries computed against the previous
    content. Harmless for WIP theories (their hash is FNV of the long name) and not for
    reloaded persistent ones. No identifier is both stable across the wrapper loop and
    distinct across reloads. Needs an answer before the interactive path is trusted.
-2. **`semantic_digest.ML`'s leading-component fallback** (§A.5). Its comment has been
-   corrected once and is **still wrong**: it blames two theories sharing a base name,
-   which cannot happen there — both compared names come from one cone, where
-   `eq_thy_consistent` makes base names unique. The real hazard is that a leading
-   component need not be a theory base name at all; `typerep_itself_inst` is the
-   counterexample, printed eight lines below in the same comment, and
-   `Code.type_interpretation` (`Pure/Isar/code.ML:1358-1366`) resets the naming path to
-   the *type's* declaring theory, which is the one proven mechanism for a false "same
-   theory". Two things to decide: the comment's wording, and whether to take the
-   separately-proposed fix of looking the axiom side up in `Theory.axiom_space` rather
-   than `Facts.space_of` — the `_raw` definitional axioms live in the former, so the
-   fallback is today the *primary* path for `definition`-introduced constants rather
-   than a rare corner.
-3. **`Theory_Hash.hash_of_long`'s comment** over-claims: it says `hash_of` reads only
-   the name plus file content and parent hashes, but the master directory and the
-   parents are read off the theory *value*. The code is not shown wrong — the loader
-   removes a theory's name from `Thy_Info` before re-evaluating it
-   (`thy_info.ML:372`), so the two routes are never in competition — only the comment.
-4. **The backfill's constituent-name gate** (§A.4) is not a gate: `backfill_cone`
-   prints process-absolute totals, and prints them *after* the `error` that fires on
-   exactly the run that needs them. It should snapshot at entry, report the delta, and
-   sit before the `error` — and the gate's real home is the Part B dump app.
-5. **The registry read** (§A.6, "the call sites are repaired regardless") assumed a
-   universal key determines its constituent long names. Before D13 that was false: the
-   theory hash held no name, so seven byte-identical same-base-name theory pairs shared
-   a hash and hence a key. **D13 dissolves this** — the long name is now in the digest.
-   Nothing to do; recorded so it is not re-derived.
-6. **The test session is not wired to anything.** `Isabelle_RPC_Test` appears exactly
-   once in the tree, in its own declaration, and no CI job or Makefile builds it. It is
-   also declared in the `ROOT` the conda recipe ships (`conda/recipe.yaml:69`) while
-   `test/` is not packaged, which `contrib/Semantic_Embedding/Test/ROOT:1-12` states as
-   the convention to avoid. Move it to `test/ROOT` and give it a runner.
-7. **§B.10's refusals** — the experience records whose patterns cannot be re-parsed in
+2. **`semantic_digest.ML`'s axiom-side lookup — measure before proposing.** A review
+   argued that the `_raw` definitional axioms live in `Theory.axiom_space`, not in
+   `Facts.space_of (Global_Theory.facts_of thy)` where `same_theory` looks them up
+   (`semantic_digest.ML:310`), so the leading-component fallback is today the *primary*
+   path for `definition`-introduced constants rather than a rare corner. **Unverified
+   here.** If true, switching the lookup would give many constants their real definition
+   content for the first time and move their digests — a large deliberate invalidation.
+   The measurement to take first: over `Main`'s cone, how many constants reach the
+   fallback today, and how many of their digests would move. Separate item; do not fold
+   it into any other commit.
+3. **Nothing runs the test session.** `Isabelle_RPC_Test` appears exactly once in the
+   tree, in its own declaration; no CI job or Makefile builds it. Three options, and the
+   choice is not made: attach it to `contrib/Isabelle_RPC`'s existing conda release
+   workflow, which already builds `Isabelle_RPC` (but `Test_Cache_Scope` needs a Python
+   environment carrying the `Isabelle_RPC_Host` wheel to start the attached host, and
+   whether CI has one is unverified); give it a CI job of its own; or add no runner and
+   document the invocation in `test/ROOT`, which is what
+   `contrib/Semantic_Embedding/Test/ROOT` does and which at least stops the tree
+   implying a coverage it does not have.
+4. **§B.10's refusals** — the experience records whose patterns cannot be re-parsed in
    the reconstructed context — are reported for adjudication. Who adjudicates, and on
    what basis, is undecided.
+
+## Closed
+
+- **The registry read** (§A.6, "the call sites are repaired regardless") assumed a
+  universal key determines its constituent long names. Before D13 that was false: the
+  theory hash held no name, so seven byte-identical same-base-name theory pairs shared a
+  hash and hence a key. D13 puts the long name in the digest, so the assumption now
+  holds. Recorded so it is not re-derived.
 
 ---
 
