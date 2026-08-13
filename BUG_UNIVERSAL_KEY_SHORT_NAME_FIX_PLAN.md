@@ -501,6 +501,75 @@ or not a cache is present:
 memo here whose key determines its value, since the key embeds the XOR and the WIP OR of
 exactly the list stored.
 
+#### Proposed replacement: one pure table per theory — NOT IMPLEMENTED
+
+Everything above describes the code as shipped. This subsection is a proposal under review; no
+code has been written for it. It is on the table because
+`contrib/Performant_Isabelle_ML/library/theory_data_with_constructor.ML` (its own spec:
+`THEORY_DATA_WITH_CONSTRUCTOR_PLAN.md`) now provides what stock `Theory_Data` does not — a value
+**recomputed from the parents at every `begin_theory`** rather than inherited through
+`merge_data`'s shortcuts.
+
+The value becomes a **pure** red-black tree (`functor Table`,
+`Isabelle2025-2/src/Pure/General/table.ML:74`) inside a `Synchronized.var`, one var per theory:
+
+```sml
+structure Digest_Tab = Table(
+  type key = Term_Digest.digest128            (* = Word64.word * Word64.word *)
+  val ord = prod_ord Word64.compare Word64.compare
+)
+
+structure Cache = Theory_Data_With_Constructor(
+  type T = entry Digest_Tab.table Synchronized.var option
+  val empty = NONE
+  fun construct _ = SOME (Synchronized.var "Universal_Key.constituents" Digest_Tab.empty)
+)
+```
+
+**Why it is sound, in two steps.** `construct` runs at every in-scope begin and returns a *fresh*
+var, so each theory owns its own cell and no two cones can write into one table — the
+`Lens_Laws` failure that motivated the cone check becomes unconstructible rather than prevented.
+And because the table is pure, "inheriting" a parent's entries is a snapshot, not sharing: later
+writes on either side are invisible to the other, and the snapshot costs nothing, since
+persistent structures share.
+
+That removes the entire mechanism above — the claims map, the cone walk, the fork, the purge,
+`cache_scope_id`, and the `Theory.at_begin` registration — roughly a hundred lines net.
+
+**`empty` must stay an option.** `THEORY_DATA_WITH_CONSTRUCTOR_ARGS`' `empty` is still a *value*
+evaluated once and read by every out-of-scope theory, so a bare var there would be one cache for
+all 10,614 theories of a heap image — the same trap `No_Cache` exists to avoid today.
+
+**The open choice: what `construct` seeds with.**
+
+- *Empty.* O(1), no reuse across theories, and — decisively — **no inherited staleness**: nothing
+  crosses a theory boundary, and within one theory the world does not change, so §C item 1
+  disappears for this cache. Reuse survives exactly where the design was aimed: inside one
+  `update_thm_cache` invocation.
+- *The union of the parents' tables.* More reuse, inherits the parents' staleness, and pays a
+  `Table.merge` at every theory begin against the functor's "`construct` must be cheap (<= ~1 ms)"
+  contract.
+
+  The union is **sound, and never has to choose on a conflict** — record the argument so it is not
+  re-derived. A parent's entry was computed in that parent's cone, which is contained in the
+  child's; base names are unique within a cone (`Context.eq_thy_consistent`), so every internal
+  name resolves in the child exactly as it did in the parent. Two parents disagreeing on one
+  digest would require two same-base-name theories in the child's cone, which `begin_thy` rejects
+  outright — so the child cannot exist. `Table.join` also short-circuits on an empty first table
+  (`table.ML:539-548`), which makes the single-parent case O(1) for free.
+
+**Deciding it.** A measurement is in flight: `Table` versus `Hash_Table` at populations 256 /
+1,000 / 20,000 / 200,000, for hit, miss, insert, the `Synchronized.var` round trip that both
+designs pay, `Table.merge`, and var allocation — each expressed against the ~12-15 µs a cache
+miss costs. Seeded empty, the per-theory table is one theory's working set (hundreds of entries),
+where O(log n) is unlikely to be measurable; seeded from the parents it reaches the full ~20,000
+and `construct` must stay inside its budget. That measurement plus D11's still-unrun acceptance
+item 3 (what `update_thm_cache` actually costs) decide both the seeding choice and whether the
+cache is worth keeping at all.
+
+**What it does not fix.** The reload question (§C item 1) only for the *empty* seeding; and
+nothing at all about `Universal_Key.cache` (§C item 8), which is a different table.
+
 #### Designs considered and rejected
 
 - **Deleting the cache outright.** Sound, simple, and — on the corrected reading of the
@@ -1203,7 +1272,19 @@ made in one commit whenever the code is next touched.
    document the invocation in `test/ROOT`, which is what
    `contrib/Semantic_Embedding/Test/ROOT` does and which at least stops the tree
    implying a coverage it does not have.
-4. **§B.10's refusals** — the experience records whose patterns cannot be re-parsed in
+4. **`Universal_Key.cache` is process-global and never invalidated**
+   (`Universal_Key.ML:362`). Keyed by `(entity, theory long name)`, its value is a full
+   universal key with that theory's content hash inside it, and its only caller is
+   `key_of_ns_entity` — so it decides every name-addressed key. The memo's key carries no
+   content, so when a theory's content changes it keeps returning the old universal key:
+   item 1's staleness again, process-wide rather than per-population, on the other half of
+   the entity space. **Scoping the constituents cache buys no staleness-freedom while this
+   sits next to it**, which is why the two must be decided together. The fix looks cheap
+   and local — put the theory hash into the memo key, `(entity, long name, hash)` —
+   because `key_of_ns_entity` computes that hash on the next line anyway. Not done, and it
+   inherits item 1's unanswered question: whether a persistent theory's content can change
+   within one process at all.
+5. **§B.10's refusals** — the experience records whose patterns cannot be re-parsed in
    the reconstructed context — are reported for adjudication. Who adjudicates, and on
    what basis, is undecided.
 
