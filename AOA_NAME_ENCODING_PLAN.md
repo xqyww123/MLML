@@ -27,7 +27,28 @@ ASCII 记法,导致凡是名字里带 Isabelle 符号的实体一律解析失败
 
 ## §0 执行须知(先读这一节)
 
-**当前状态:代码一行未动。** 三轮对抗评审已结束,所有设计决策已由用户拍板并记录在 §10;
+> **执行记录(2026-08-13 傍晚)**:本计划的第 1–7 步**已全部落地并提交**
+> ——`Isa-Mini` 的 `3a3d4de`、`b349d18`,`Isabelle_RPC` 的 `594626d`、`a72e5cb`,
+> 主仓的 `f33d9ec`、`5d85344`。两处 golden 已按批准更新。新增用例 `SymbolicFactName`
+> (自带 fixture)覆盖 §8 的单元层与 §6.1 判据。**只剩 §8 的端到端那一步没跑**
+> (会烧 AoA 额度,按 §0 的规矩要先问用户)。
+>
+> 落地时发现的两件操作事实,写在这里免得下次再踩:
+> 1. **改任何 Python 也必须重启 REPL**。AoA 的 Python 跑在 REPL 启动时派生的
+>    attached host 进程里,它在启动那一刻 import 完就不再重读。项目规矩只写了 `.ML`
+>    要重启,Python 同样要——我为此白跑了三轮"改了没反应"的测试。
+> 2. 全量回归跑了 273 个用例才被 REPL 崩溃(Broken pipe)截断。崩溃点**之前**只有 7 个
+>    失败,全部是语义检索类(`SemanticKNN_patterns`、`SemanticKNN_induction_rule`、
+>    `QueryNullFields`、`QueryScalarStringField`、`QuerySearchSummary`、`AbbrevQuery`、
+>    `UnfoldSyntax`):向量库返回的近邻和相似度整个变了(0.806/0.800 → 0.300/0.300),
+>    与另一位 agent 的 theory-hash 重键工作同源,本计划不碰打分。崩溃点**之后**的 33 个
+>    全是管道断裂的连锁噪声。
+> 3. `contrib/auto_sledgehammer/Auto_Sledgehammer.proof-store` 在 15:42 被清成 0 字节
+>    (REPL 进程被杀,写到一半)。受影响的是 `Obvious_partial_solve`:它依赖缓存里那条
+>    `log 2 8 = 3` 的证明,现在 30 秒内找不到,于是失败。**已确认与本计划无关**
+>    ——把 `model.py` 换回改动前的版本,同一个失败一模一样地复现。
+
+**执行前的状态:代码一行未动。** 三轮对抗评审已结束,所有设计决策已由用户拍板并记录在 §10;
 被否决的意见在 §10.5,被删除的评审意见在 §12。**不要重新评审,不要重开已决议题**
 ——若觉得某条决定可疑,先去 §10 / §10.5 / §12 查是不是已经审过并定案。
 
