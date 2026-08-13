@@ -1171,21 +1171,41 @@ by design, and they account for exactly the 93 WIP records. **Guaranteed refusal
 The residue that only a real parse can settle is 6,857, and nothing in it looks
 unparseable lexically — 0 non-ASCII, 0 empty, 0 unbalanced patterns over 16,125.
 
-**Two questions the criterion left open, to settle before the dry run.**
+**The refusal criterion, settled 2026-08-13.** Only criterion 1 survives: **a pattern that
+fails to parse in the merged context is a refusal**, reported for adjudication, never a
+silent skip.
 
-*What the second refusal criterion means.* An earlier revision also refused a record
-"whose recomputed constituent set names a theory outside that merge". That is ambiguous
-and neither reading is usable as written: if "outside the merge" means outside the merged
-theory's **cone**, it can never fire, because every constant of a term parsed in a context
-is declared in that context's cone by construction; if it means outside the **literally
-named list**, it fires on records that are perfectly fine, because
-`experience_constituents` keeps a minimal antichain (`context.ML:1094-1100`) and the
-antichain legitimately moves when the context differs. Worse, neither reading catches the
-hazard the criterion was reaching for: a pattern whose true theory is absent from the
-merged context can still parse there and resolve to a *different* constant that happens to
-be in the cone — silently, with a plausible new prefix. If that hazard is to be caught it
-needs its own check, comparing the recomputed set against the old one for divergence, and
-that check has to be designed rather than inherited from this sentence.
+An earlier revision added a second criterion — refuse a record "whose recomputed
+constituent set names a theory outside that merge". It is deleted, and the reasoning is
+recorded so it is not reproposed. Read as "outside the merged theory's **cone**" it can
+never fire: every constant of a term parsed in a context is declared in that context's cone
+by construction, so `compute_constituents` can only ever report theories from it. Read as
+"outside the **literally named list**" it is very nearly as empty: if the old list is right,
+re-parsing in `merge(old list)` meets the same constants, resolves them to the same
+theories, and yields the same antichain. (A review claimed this reading would misfire often
+because "the antichain can move to an ancestor". It cannot: `experience_constituents`'
+filter keeps the **maximal** theories — `is_max ti` holds when no other `tj` has
+`Context.subthy (ti, tj)` — so a listed theory is never displaced by one of its own
+ancestors.)
+
+Neither reading catches the hazard the criterion was reaching for, which is the reason to
+stop looking for a third. If the old list names the wrong theory — `Clean.Lens_Laws` where
+the patterns meant `Optics.Lens_Laws`, a pair whose `record ('a, 'b) lens = lens_get …
+lens_put …` is textually identical — then `merge(old list)` contains Clean's, the pattern
+parses there, resolves to Clean's constant, and the recomputed set equals the old list.
+Nothing fires; a new and still-wrong prefix is written.
+
+**What is accepted:** such a record migrates silently to a new prefix that is as wrong as
+its old one, which is **no worse than today** — it is unfindable now and stays unfindable.
+Repairing it needs a per-record judgement of which theories the experience is really about,
+which is a separate piece of work and not part of this migration. The bug report's "this is
+a lower bound" caveat is the same observation.
+
+**One diagnostic, not a refusal.** Compare each recomputed constituent hash against the one
+stored on the record. After the re-key they should agree exactly — measured, 384 of 403
+names agree and the other 19 are WIP names whose hash is FNV of the name by design. This is
+the only signal available that does not presuppose the old list is right, so report the
+count; it should be zero.
 
 *The 93 WIP records are dropped (D15).* Their WIP bit was an artefact of how the writing
 AoA session was configured rather than a property of the experience — all 93 touch one of
