@@ -84,6 +84,13 @@ From the user. Not open for review; recorded so the plan's assumptions are visib
   `Isabelle_RPC/Tools/context.ML` is byte-identical to its pre-fix text. It was a
   performance change to a path this defect does not touch, and it changed results
   (§A.7 records how). Keeping the blast radius small wins over the latency.
+- **D15.** The **93 WIP experience records are dropped, not migrated** (§B.10). They do
+  not enter the new store; the pre-swap backup is where they survive. This is what the
+  system already says happens to a WIP record — `clean_wip` may delete one at any time —
+  and it removes the cost that made the alternative awkward: with no WIP record to carry,
+  the migration's context can be built from a heap image with no special case for the 19
+  theories they name. The loss is real and accepted: experiences are the one record class
+  that cannot be regenerated.
 - **D14.** The constituents cache becomes **one pure `Table` per theory** inside a
   `Synchronized.var`, carried by `Theory_Data_With_Constructor`, seeded **empty**
   (§A.6). Decided 2026-08-13 on the measurement recorded there; the cone-scoped shared
@@ -1080,7 +1087,8 @@ cause.
 
 ### B.10 The experience migration (D8)
 
-**6,861 records**, 6,768 persistent and 93 WIP; all are 8-field. A separate pass:
+**6,861 records**, 6,768 persistent and 93 WIP; all are 8-field. **Only the 6,768
+persistent ones are migrated** — D15 drops the 93. A separate pass:
 experiences are agent-written, never enumerated from a theory, so the dump never sees
 them and §B.4's cone is irrelevant to them. (6,862 was the pre-re-key count; the re-key
 dropped one, `llist_admissibility_ball_lset_imp_filter_eq_via_Bex_and_mcont`, because it
@@ -1147,23 +1155,20 @@ be in the cone — silently, with a plausible new prefix. If that hazard is to b
 needs its own check, comparing the recomputed set against the old one for divergence, and
 that check has to be designed rather than inherited from this sentence.
 
-*What happens to the 93 WIP records.* Their WIP bit is an artefact of how the writing AoA
-session was configured, not a property of the experience. All 93 touch one of 19 theories —
-the whole of `Abstract-Rewriting.*` (7) and `Affine_Arithmetic.*` (11), plus
-`Algebraic_Numbers.Interval_Arithmetic` — ordinary AFP theories that that session happened
-to load from source rather than from a heap, so `Resources.loaded_theory` was false and
-their hash is FNV-1a-128 of the long name (verified: all 19 stored hashes reproduce
-exactly). 41 of the 93 mix a WIP constituent with a persistent one; the prefix's LSB is the
-OR, so one WIP constituent colours the whole record.
+*The 93 WIP records are dropped (D15).* Their WIP bit was an artefact of how the writing
+AoA session was configured rather than a property of the experience — all 93 touch one of
+19 theories, the whole of `Abstract-Rewriting.*` (7) and `Affine_Arithmetic.*` (11) plus
+`Algebraic_Numbers.Interval_Arithmetic`, ordinary AFP theories that that session loaded
+from source instead of from a heap, so `Resources.loaded_theory` was false and their hash
+is FNV-1a-128 of the long name (verified: all 19 stored hashes reproduce exactly). 41 of
+the 93 mix a WIP constituent with a persistent one; the prefix's LSB is the OR, so one WIP
+constituent colours the whole record.
 
-Recomputing their prefixes in a heap-loaded context flips them to persistent. Two things
-argue for letting it: `clean_wip` may delete a WIP record at any time, and these are as
-unregenerable as the other 6,768; and a WIP hash is content-independent, so a WIP-keyed
-record never invalidates when the theory it talks about changes — flipping puts these 93
-under real content-addressed invalidation for the first time. Against it: the CI export
-filter treats persistent records as publishable, so flipping publishes them. Not flipping
-is expensive — reproducing the WIP hashes needs the migration's context built from source
-rather than from a heap, or a special case for those 19 names. Move the key, then `Experience_Index.rebuild` (the index holds 405
+They are not carried into the new store. Nothing is actively deleted — the pass simply
+skips them, and `semantics.lmdb.pre-swap-*` keeps them. **The pass therefore handles 6,768
+records, all persistent**, and its context can be built from a heap image with no special
+case. The undecidable residue of §B.10's census drops with them, from 6,857 to 6,764; the
+four empty-constituent GLOBAL records are all persistent and stay. Move the key, then `Experience_Index.rebuild` (the index holds 405
 16-byte keys, not one per experience). Also record the writing context's theory long
 names on the record at write time, so the next migration is not circular.
 
