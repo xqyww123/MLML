@@ -123,8 +123,12 @@ From the user. Not open for review; recorded so the plan's assumptions are visib
   succeed. The two earlier framings each let a measured population through — D19-first
   mis-copied §B.1a's 25 `Term` groups, and discriminator-first over *contested records*
   could not see §B.6's 2,388 uncontested-but-mis-bound ones. **Safety over cost, by the
-  user's instruction: where the tail cannot be justified, it is refused, and the data is
-  regenerated or written off.**
+  user's instruction of 2026-08-14: this repairs one fixed corpus, not any corpus, so the
+  join FILLS and records what it could not decide on evidence as a suspect list, which is
+  worked through afterwards by targeted passes. Nothing is finally lost: a suspect row is
+  either confirmed or re-interpreted.** D19's copy case survives as §B.6's Case B.3 and its
+  allow list is no longer a gate on the run — it becomes a reason to put a tail on the
+  suspect list.
   This reverses §B.1's "the join must not guess" for the one case where the guard can be
   checked, and it is the difference between 20,862 entities needing paid
   re-interpretation and 2,476. Decided 2026-08-14 on three independent verifications
@@ -1366,222 +1370,125 @@ None`** and stops if a system layer is configured.
 
 ### B.6 Step 2 — the matching rule
 
-**The unit of decision is the TAIL, not the key and not the record.** This is the third
-framing of this section and the first that is not known to be wrong; the two before it
-decided per contested old record and per contested new key, and review demonstrated that
-each leaves a population the other cannot see. A tail is `key[16:]` — the kind byte plus
-the content payload — and it is what the fix leaves untouched, so it is the only thing
-that identifies "the same fact" across the repair. Everything below is per tail.
+**Scope, decided 2026-08-14 and overriding the two drafts before it.** This migration
+repairs **one fixed corpus that is already on disk**. It is not a general algorithm and it
+does not have to be one: there is no future input, so every population that could be
+mishandled can be *enumerated today*. The rule below therefore aims at the bulk, **fills
+rather than refuses**, and records everything it could not decide on evidence as a
+**suspect list** — a list, not a loss. Suspect entries are adjudicated afterwards by
+targeted passes, one population at a time, against a store that is already in place.
 
-**Safety over cost, by the user's instruction of 2026-08-14: where a binding cannot be
-positively justified, the whole tail goes to the gap list.** Losing an interpretation
-costs money to regenerate and is counted; binding it to the wrong fact is silent,
-permanent, and makes retrieval answer with someone else's English. When the two trade
-off, refuse.
+The two earlier drafts each grew a general principle out of a review finding — first a
+copy rule, then a refuse-the-tail rule — and the second was measured at three to four
+thousand theories of paid re-interpretation to protect a few thousand identifiable
+records. That trade is wrong for a one-off repair.
 
-#### Phase 1 — build the tail table before anything is written
+**The unit is the TAIL**, `key[16:]` — the kind byte plus the content payload, which the
+fix leaves untouched and which is therefore the only thing that identifies "the same fact"
+across the repair. Name-addressed keys (§B.6a) and EXPERIENCE keys (§B.10) are outside it.
+Theorem-alike means `len(key) == 32 and key[16] in {0x02, 0x12, 0x22, 0x32, 0x42}`;
+`is_xor_prefixed_key` also admits `0x08` and must not be used here.
 
-For every tail that occurs in either store, collect both sides:
+#### Phase 1 — build the tail table
 
-- **`OLD(t)`** — every record in the old store whose key ends in `t`, with its
-  `interpretation`, `name`, `expr`, `position` and full key.
-- **`NEW(t)`** — every key the dump produced ending in `t`, and for each key **every**
-  dump record on it (a key may carry several, one per producing theory — §B.3), with
-  that record's `name`, `position`, `prop`, `constituents` and stating theory.
+For each tail, collect every old record on it (with `interpretation`, `name`, `expr`,
+`position`) and every new dump key on it (with **every** dump record on that key: `name`,
+`position`, `prop`, `constituents`, stating theory). Write nothing yet.
 
-Two populations are excluded from the tail machinery entirely and handled in §B.6a:
-name-addressed keys, and EXPERIENCE keys (kind byte `0x08`), which §B.10's own pass owns.
-Theorem-alike here means `len(key) == 32 and key[16] in {0x02, 0x12, 0x22, 0x32, 0x42}` —
-written out because the obvious in-repo predicate `is_xor_prefixed_key`
-(`universal_key.py:109-123`) also admits `0x08` and must not be used.
+#### Phase 2 — fill, and record what was not forced
 
-Nothing is written in phase 1. The decisive ambiguity is only visible once both sides of
-a tail are in hand, and that is precisely what the earlier framings did not have.
+**Case A — one old record, one new key, one dump record.** Fill. Not suspect. This is the
+overwhelming majority.
 
-#### Phase 2 — decide, one tail at a time
+**Case B — anything else: fill by the first of these that applies, and put the tail on the
+suspect list with the reason.**
 
-**Case A — `|OLD| == 1` and `|NEW| == 1`, and that one new key carries one dump record.**
-Fill it. This is the overwhelming majority and the only case with no ambiguity of any
-kind: one fact, one text, one destination.
+1. **Positional match.** A claimant whose stored old position equals, in file *and* line,
+   the position the dump enumerated for it, *and* whose name matches, takes that record.
+   Where this resolves the whole tail, mark the tail `matched` — recorded for audit, but
+   the weakest suspicion.
+2. **Only-candidate.** A new key with exactly one old record still unclaimed takes it.
+3. **One text, several keys.** When the tail carries one old record and several new keys,
+   every key takes it. Mark `copied`.
+4. **Several texts, no positional evidence.** Assign in a stated deterministic order —
+   old records sorted by key, new keys sorted by key — so the outcome is reproducible
+   rather than dependent on thread scheduling, and mark `arbitrary`.
 
-**Every other tail is contested, and every binding on it must be positively justified.**
-The three justifications below are tried in order; if none disposes of the whole tail,
-the whole tail is refused.
+**Case C — a new key with no old record on its tail** is a new entity. Collect it; it has
+no source and belongs in §B.8's count. Not suspect. Measured: 91, all name-addressed, none
+theorem-alike.
 
-**Case B — the positional matching.** Build a matching between the new keys' claimants
-and the old records: claimant `c` may be bound to old record `o` when `o`'s stored
-position equals, in **both file and line**, the position the dump freshly enumerated for
-`c`, **and** `o`'s `name` equals `c`'s dumped name. Accept the matching only if it is
-**perfect and total** — every new key on the tail is matched, every old record is used at
-most once, and no claimant matches two records. Anything less refuses the tail; a partial
-matching is not a licence to fill the part that matched, because the unmatched remainder
-is evidence that the tail is not understood.
+**Nothing is refused for ambiguity alone.** The gap list holds only keys with no source at
+all. Ambiguity produces a suspect entry, not a gap entry.
 
-Both halves of the test are load-bearing and both were measured. *File alone is not
-enough*: `Recursion_Thms.fld_restrict_mono`, stated in `Forcing.Recursion_Thms`, carries a
-stored position pointing at its same-base-name sibling's file. *Position alone is not
-enough*: `backfill_positions` (`semantics.py:774-816`) writes **only** the position onto
-whatever record already holds the key, while `write_answer`
-(`semantic_interpretation.py:372-378`) wrote name, `expr`, interpretation and position
-together — so the position witnesses which sibling the *position sweep* reached last, not
-whose interpretation is stored. On the previous framing that mismatch was measurable on
-295 of 10,855 awards, 287 of them naming a different claimant outright.
+#### The suspect list
 
-*And neither is sufficient on its own account.* §B.6 does not claim the matching is
-correct — it claims it is the only positive evidence the store contains. Where the store
-holds no such evidence, Case C decides, and where Case C also declines, the tail is
-refused.
+One row per suspect tail, written beside `semantics.lmdb.building` as a machine-readable
+file: the tail, the old keys and their names/positions/interpretation digests, the new keys
+with their claimants, which record went where, and the mark (`matched` / `copied` /
+`arbitrary`). That is everything a later pass needs to revisit a decision **without
+re-running the join**, which is the point: the store is usable immediately, and the
+suspect rows are worked through afterwards.
 
-**Case C — interchangeability.** The texts on a tail may be copied freely only when there
-is nothing to get wrong, which is exactly two situations:
+**Seed populations, already enumerated, to be checked first** (they overlap; counts are
+from the measurements recorded in Part F):
 
-- **`|OLD| == 1`.** One text, several new keys. Copying it to all of them cannot bind the
-  wrong text to a fact — there is only one text — but it can attach a description written
-  for one entity to a genuinely different one, which is the hazard §B.1a proves is real.
-  So this fires only under D19's guard: byte-identical proposition across every claimant,
-  a single name across every dump record of every claimant *and* the old record, and the
-  claimants' session set on the adjudicated allow list.
-- **`|OLD| > 1` and every old record's `interpretation` is byte-identical.** Then the
-  records are literally interchangeable and any assignment is the same store. Cheap to
-  test, and it catches the harmless duplicates without reasoning about them.
+| ~count | population | why it is suspect |
+|---|---|---|
+| 2,106 | stored position names a file belonging to another claimant of the same tail | the store's own evidence says the binding is wrong |
+| 6,500 | multi-record tails with no position anywhere | no evidence either way |
+| 295 | positional match whose claimant name differs from the old record's | two witnesses disagree |
+| 293 | position matches no claimant — points at a third theory | evidence contradicts every option |
+| ~572 | claimants whose printed propositions differ | one of them is not the fact the text describes |
+| 25 | `HOL-Induct.Term` ↔ `First_Order_Terms.Term` | proven wrong text, §B.1a; small enough to fix by hand |
+| 21 | positional match whose old `expr` matches a *different* claimant | the one mechanically detectable wrong award |
 
-**`|OLD| > 1` with differing texts is NOT interchangeable, whatever the names and
-propositions say.** This is the correction the red-team review forced: on the tail shared
-by `Slicing.Com` and `HRB-Slicing.Com` the two records carry the identical entity name
-`Com.num_inner_nodes.simps(5)` and, by construction, the identical proposition — and two
-genuinely different interpretations, one of which mentions the loop's implicit `Skip`
-node and the other of which does not. Name and proposition agreement is not evidence of
-interchangeability on a multi-text tail; it is the defect's signature.
+None of these is a reason to hold up the migration. All of them are reasons to keep the
+list.
 
-**Case D — refuse.** Every new key on the tail goes to the gap list, and every old record
-on it is a pruned leftover, reported as its own category. This is the default, and it is
-where "safety over cost" is spent.
+**The suspect list is a re-interpretation work list, and that is why nothing is finally
+lost.** The user's standing position, 2026-08-14: whatever ends up doubtful will be
+re-interpreted rather than written off. So a suspect row has exactly two outcomes — a
+later pass confirms the binding and clears it, or it does not and the entity is
+re-interpreted at §B.8's rates. Neither outcome is a lost record. This is what makes
+"fill now, check later" the right shape here rather than a shortcut: the cost of being
+wrong is bounded by re-interpretation, and re-interpretation is available for every
+theorem-alike entity in the corpus. It is **not** available for EXPERIENCE records
+(§B.10), which is why they stay outside this rule and keep their own refusal discipline.
 
-#### Why the unit had to change
+#### What is written in a filled theorem-alike case
 
-The framing that decided per *contested old record* could not see this, and review
-measured the population at **2,388 records**: two siblings whose facts share a tail, whose
-buggy keys happened to coincide with their repaired keys, so each new key is a byte-
-identical exact hit with exactly one candidate — *uncontested* under that framing — while
-the store's own position field says the record belongs to the other claimant. 2,106 of
-them have a stored position naming a file belonging to another claimant of the same tail,
-2,073 of those sharing the file's base name, the defect's exact signature; the largest
-pairs are `PSemigroupsConvolution.Quantales` ↔ `Quantales.Quantales` (447),
-`HOL-Data_Structures.Tree234_Set` ↔ `Zip_Benchmarks.Tree234_Set` (442), `HOL.Filter` ↔
-`Zip_Benchmarks.Filter` (277), `Slicing.Com` ↔ `HRB-Slicing.Com` (156), `Clean.Lens_Laws`
-↔ `Optics.Lens_Laws` (109).
+The record takes the dump's `name`, **entity position** and **corrected constituents**;
+`interpretation` and the remaining fields come from the chosen old record. Say
+*theorem-alike*: read as covering §B.6a's verbatim copies it would write the dump's `[]`
+into 198,953 name-addressed records whose `theory_constituents` is documented as `None`.
 
-Every stated gate passed on them — one-to-one, partition, no-lost-interpretation, prefix,
-vectors — and **the position-coverage gate is what erased the evidence**, because the fill
-overwrites the stored position with the dump's. The `expr` divergence counter fired on 13
-of 10,703, since a shared tail *is* a shared proposition digest; the name check was blind
-on 2,038 of the 2,106, since Isabelle qualifies facts by the theory's *base* name and the
-siblings share it. Afterwards each record is internally perfect and possibly carries
-another theory's English, with a vector inheriting the same permutation.
+When a key carries several dump records, take the one whose stating theory appears in the
+key's own constituent list if exactly one does; otherwise the first in sorted-by-theory-name
+order, and mark the tail `arbitrary`. Do not leave it to thread order.
 
-A corroborating measurement, and the reason the position field is worth anything at all:
-across all 2,982 tails carrying two old records on two keys, **exactly one record has a
-position and the other has none — not one tail where both do**. That is the position
-backfill writing through whichever pinning its own process had.
+**`expr` and `name` divergence.** Where the dump's proposition differs from the chosen old
+record's `expr`, or the dump's `name` from its `name`, carry the dump's and **drop that
+key's vector** — both, not `expr` alone, because the embedded document is
+`pretty_print + interpretation` and `pretty_print` contains the name (`document_text.py`),
+and `_auto_embed` fires only on *absent* vectors, so a stale one is never refreshed.
+Count both. **Do not quote the count as a leak detector**: 91.8 % of it comes from keys
+with several dump records, and on shared tails it fires on 13 of 10,703 because a shared
+tail *is* a shared proposition digest.
 
-#### What this framing subsumes
-
-Four separately-drafted rules collapse into it, which is the argument that it is the right
-unit: the contested old record (previously D19's trigger), the contested new key
-(previously the discriminator's), the **mirror** case of one new key produced by several
-theories — whose dump records were measured to carry **byte-identical constituent lists in
-16,356 of 16,356 keys**, so they are one entity by the store's own definition and their
-only open question is which `name` and `position` to record — and the 2,388 above. All
-four are "a tail with more than one record on one side or the other".
+**Legacy shapes.** Test `theory_constituents is None`, never the field count. The codec is
+positional with the field at index 5 of every record; the 205,442 records whose value is
+`None` are exactly the name-addressed ones and **zero theorem-alike records have it
+`None`**. Field count matters only for `position`: an 8-field or shorter record has no
+slot for one, so it can never take Case B.1.
 
 #### The gap list
 
-Grouped by **every** theory that claimed any refused key, not by one of them: a dump key's
-record order is scheduling-dependent (§B.3), so taking the first is taking an arbitrary
-one, and §B.8's bill is driven by the theory count. Measured on the previous framing the
-difference was 601 theories against 399, and 540 against 337.
+Only Case C. Grouped by **every** theory that claimed the key, not by one of them — a
+key's dump-record order is scheduling-dependent (§B.3) and §B.8's bill is theory-driven.
+**The cost must be re-measured against this rule before any spend is put to the user**;
+the figures in §B.8 predate it.
 
-**The cost of this framing has not been measured.** The previous framing's $87–95 rests on
-a rule this section no longer states, and two independent reviews could not reproduce even
-that. §B.8's estimate must be re-taken against the rule as it now stands, before any spend
-is put to the user.
-
-**In every filled theorem-alike case** the record takes the dump's `name`, the dump's
-**entity position** and the dump's **corrected constituents**; `interpretation` and the
-remaining fields come from the chosen old record. Say *theorem-alike* explicitly: read as
-covering §B.6a's verbatim copies it would write the dump's `[]` into 198,953
-name-addressed records whose `theory_constituents` is documented as `None`.
-
-**Which dump record supplies them, when the key carries several.** A key produced by
-several theories has several records, and their order is scheduling-dependent (§B.3), so
-"the first" is not an answer. Choose in this order: the record whose stating theory is the
-**one claiming theory that appears in the key's own constituent list**; failing that, the
-record whose `name` equals the chosen old record's `name`, narrowed by (file, line) if the
-old record has a position; failing that, refuse the tail. The first step is a heuristic —
-it reads the declaring site off the constituent list — and it is the one part of this
-section that guesses in D5's sense, so it needs the user's explicit sign-off before the
-join is written. Without a rule here the value written is decided by thread interleaving,
-which contradicts both §B.3 and `rekey_dump.py`'s own docstring ("such a key is ambiguous
-and the join must not fill from it").
-
-**`expr` and `name` divergence.** Compare the dump's proposition against the chosen old
-record's `expr`, **and** the dump's `name` against its `name`; where either differs, carry
-the dump's and **drop that key's vector**. Both, not `expr` alone: the embedded document
-is `pretty_print + interpretation` and `pretty_print` contains the name
-(`document_text.py`), so a rewritten name invalidates the vector exactly as a rewritten
-`expr` does — measured, 677 fills rewrite the name while keeping a vector `_auto_embed`
-will never refresh, because it fires only on *absent* vectors. Count both divergences
-separately.
-
-**The divergence count is not a leak detector and must not be quoted as one.** Measured:
-91.8 % of it comes from keys with several dump records, where whether a divergence is seen
-at all depends on which record the join compares against; on the population it was aimed
-at — shared tails — it fires on 13 of 10,703, because a shared tail *is* a shared
-proposition digest. It is a vector-invalidation trigger; nothing more.
-
-**Legacy shapes.** Test `theory_constituents is None`, **never the field count**. The
-clause that stood here said 6- and 7-field records lack the field and cannot be
-tail-joined; both halves are false. The codec is positional with `theory_constituents` at
-index 5 of every record and a minimum on-disk length of 6, and the 205,442 records whose
-value is `None` are **exactly** the name-addressed ones — **zero theorem-alike records
-have it `None`**, so the population the old clause warned about does not exist. Field
-count matters for one thing only: an 8-field or shorter record has no `position` slot
-(`_decode` pads with `None`), so Case B's matching can never bind it and it falls to Case
-C or D. 515 contested records are 8- or 6-field.
-
-**Leftovers** — old records no dump entry maps — are **pruned** (D10), counted by
-category, and listed in the run report. "Pruned" means **not copied into
-`semantics.lmdb.building`**; nothing is deleted from the old store, which stays live and
-untouched until §B.9's swap (D1).
-
-**EXPERIENCE-kind records are not leftovers.** The dump never sees them (§B.10) and
-§B.10's own pass carries them, at Part E step 7 — after this join and before the swap.
-Recognise them by `key[16] == int(EntityKind.EXPERIENCE)`, the same test
-`check_consistency` already uses (`semantics.py:904`), and count them as their own
-category rather than folding them into the leftover count, which would otherwise be
-uninterpretable by 6,768.
-
-**Theory-status records and the counter** (keys ≤ 16 bytes) are copied — their keys are
-real theory hashes, unaffected — with one edit, addressed **only by the 16-byte hash the
-dump emitted**:
-
-- a theory **in the target list** with gap-list entries: **clear `finished`**, keep the
-  cost and token fields. This is what makes the gap list runnable, since
-  `plan_interpretation` (`semantic_store.ML:1947-1948`) filters the cone on
-  `is_thy_interpreted` (`semantics.py:717`, flag read at `:740`) and a plain re-run
-  would report nothing to do.
-- a theory **outside the dump's cone**: **leave `finished` alone.** D7 abandoned those
-  records and D10 prunes them; clearing the flag would silently arm a full-price
-  re-interpretation of the whole theory the next time anyone collects it — 3,349
-  entities for `Geo_Real2` alone — outside the metered, approved spend of §B.8.
-
-**Vectors.** One decision per new key: the record and the vector come from the **same**
-chosen old key, driven by the explicit `new key → the one old key used` map — never
-independently, because the vector-layer self-sufficiency invariant deliberately removed
-the read-side backstop (`semantic_embedding.py:1306`). A new key with no source gets **no
-vector**. The **16-byte theory embed-status records in each vector store are copied
-verbatim** — losing them makes `is_thy_embedded` false across the board and discards the
-`total_tokens` ledger (`semantics.py:1199-1201`).
 
 ### B.6a Name-addressed keys
 
