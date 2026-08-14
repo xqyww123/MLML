@@ -3335,6 +3335,17 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
    Phi_System → Phi_Semantics → Phi_Test`，而 `Phi_Examples` 挂在另一支
    （`PhiStd → Phi_Examples`），建 `Phi_Test` 不会把它拉起来。第 6 步的"建满"
    验收同此范围。
+   **全栈重建部分已完成（2026-08-14）**：闭闸（未设 `AOA_ALLOW_NONINTERACTIVE`）跑完整条链，
+   `HOL-Library` / `Phi_System_Base` / `Phi_Semantics_Framework` / `Phi_System` /
+   `Phi_Semantics` / `Phi_Test` **全绿**，总耗时约 22 分钟＋一次 3 分钟重跑。
+   阶段 5 此前记录的四个批构建拦路者（`Phi_Types.thy` 的 `:2712`、`:2529`、`:2591/:2594`、
+   `:3843`）**一个都没有再挡路**。本步剩下的是 jEdit 里手工制造义务那半（AoA 被叫起、
+   落库、二次构建纯 ML 重放），仍待做。
+   ⚠️ **验收纪律（本次调查得出）**：`Phi_Test` 首跑曾报
+   `Undefined fact: "List.ToA_mapper_sep"`，未改一字重跑即转绿；同一症状 08-13 也自愈过一次。
+   根因是 `\<phi>LPR.rule_gen.timeout`（默认 100 毫秒挂钟）超时后规则生成被静默放弃，
+   详见根目录 `RULE_GEN_TIMEOUT_SILENT_FACT_LOSS.md`（修法待作者讨论）。
+   **因此本阶段与第 6 步的建满验收：任何一次红都必须复跑确认，不得凭单次运行判定回归。**
 4. **两个 method 的失败面回归**：`by aoa` 与 `by hammer_or_aoa` 各跑一遍五类退出原因，
    确认**五类全覆盖**、两者文案与 phi 侧同源；`aoa_repl_app.ML` 仍按结构化异常消费
    （核心层未被拍成 `error`）。
