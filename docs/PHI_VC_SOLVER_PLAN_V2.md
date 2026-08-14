@@ -3335,7 +3335,7 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
    Phi_System → Phi_Semantics → Phi_Test`，而 `Phi_Examples` 挂在另一支
    （`PhiStd → Phi_Examples`），建 `Phi_Test` 不会把它拉起来。第 6 步的"建满"
    验收同此范围。
-   **全栈重建部分已完成（2026-08-14）**：闭闸（未设 `AOA_ALLOW_NONINTERACTIVE`）跑完整条链，
+   **全栈重建部分已完成（2026-08-14）**：跑完整条链，
    `HOL-Library` / `Phi_System_Base` / `Phi_Semantics_Framework` / `Phi_System` /
    `Phi_Semantics` / `Phi_Test` **全绿**，总耗时约 22 分钟＋一次 3 分钟重跑。
    阶段 5 此前记录的四个批构建拦路者（`Phi_Types.thy` 的 `:2712`、`:2529`、`:2591/:2594`、
@@ -3474,8 +3474,16 @@ proof text 里引用 `the_\<phi>`，就说明冻结语境被 fork 闭包完整�
 
 **四、重放侧：已完成，5b 通过（2026-08-14 16:42–16:50，作者当场授权 `isabelle build`）。**
 
-作者裁决"直接建"。跑的是闸门关闭的批构建（`Build_Job` 被 `frontend_identity` 判为
-非交互，故全程零 LLM 花费；`AOA_ALLOW_NONINTERACTIVE` 未设）：
+作者裁决"直接建"。跑的是批构建：
+
+⚠️ **本段原写"闸门关闭的批构建……全程零 LLM 花费"，那句是错的，2026-08-14 17:40 更正**：
+这台机器的 `~/.isabelle/Isabelle2025-2/etc/settings` 里有一行
+`AOA_ALLOW_NONINTERACTIVE=yes`，它是 **Isabelle 自己的全局设置**，每个 Isabelle 进程
+（含每一次 `isabelle build`）都加载，所以**本机批构建的闸门一直是开的**。
+当时我查的是 `env | grep AOA`（shell 环境），查不到——那个检查无效。
+**但本步的结论不受影响**：判据是"store 字节不变"，而字节不变就说明没有任何一条义务
+进过 MISS 路径，AoA 连被叫起的机会都没有。错的只是"为什么没花钱"这句解释
+（真实原因是"没触发"，不是"闸门拦住了"）。详见下面"闸门一直开着"一节。
 
 ```
 isabelle build -b -d contrib/phi-system -d contrib/Isa-Mini -d contrib/auto_sledgehammer \
@@ -3538,14 +3546,50 @@ id 形状 703）：**每个 store 里每把键都只有一条活记录**，压�
 但混装本身是正常的（有 id 的义务用 id，没有的用全目标哈希）。要判定得看**新证**义务，
 而本次 `Phi_System` 链重跑是零新增 PUT。**故 ④ 的后半挂在"哪一次会真正新证义务"上。**
 
-**①②③ 与 ⑤ 卡在范围裁决上，等作者。** ① 的四个文件（`Binary_Trees.thy` /
-`Quicksort.thy` / `Bucket_Hash.thy` / `Matrix_Oprs.thy`）**全部**在 `Phi_Examples`；
-② 就是 `Phi_Examples` 完整双跑；③ 要的 `try0 = false` 声明全仓库只出现在
-`Phi_Examples/Quicksort.thy:8` 与 `Binary_Trees.thy:278` 两处。而作者 2026-08-14 定的范围是
-"只建到 `Phi_Test`，`Phi_Examples` 排除在外"——两者直接冲突，须作者裁决（见 §9）。
-⑤（关块行为变化：造一条快攻打不动的义务，确认走完整求解路径）需要一次活跑，而活跑
-只有 isabelle-mcp 这条路，它的闸门是开的（`.mcp.json` 的 `AOA_ALLOW_NONINTERACTIVE=yes`），
-万一引擎也搜不出来就会真叫 AoA 花钱——**要花钱就得先有 §9 第 1 项的授权。**
+**①②③ 的范围冲突已由作者裁决（2026-08-14）：破例把 `Phi_Examples` 纳进来跑。**
+① 的四个文件（`Binary_Trees.thy` / `Quicksort.thy` / `Bucket_Hash.thy` /
+`Matrix_Oprs.thy`）全部在 `Phi_Examples`；② 就是 `Phi_Examples` 完整双跑；③ 要的
+`try0 = false` 声明全仓库只出现在 `Phi_Examples/Quicksort.thy:8` 与
+`Binary_Trees.thy:278` 两处——三条都绕不开该会话，故与"只建到 `Phi_Test`"的原范围冲突，
+作者选择破例。**注意 `Bucket_Hash.thy` 不在 `Phi_Examples/ROOT` 的理论清单里**，
+一次会话构建带不起它，要单独跑。
+⑤（关块行为变化）需要一次活跑；作者裁决"现在就跑，接受可能花钱"。
+用例已备好：`proc probe_closed_block`（照 `PhiSem_Play_Ground.thy` 的 `proc YYY2` 写），
+输出规格 `\<val> x \<Ztypecolon> \<nat> \<subj> x. even x`、块体算 `$a * ($a + 1)`，
+使关块处的规格 cast 产生一条快攻打不动的义务。理论放在仓库之外，自带独立 store。
+
+#### 闸门一直开着——本机环境事实与由此产生的更正（2026-08-14 17:40）
+
+**事实**：`~/.isabelle/Isabelle2025-2/etc/settings` 有一行 `AOA_ALLOW_NONINTERACTIVE=yes`。
+它是 Isabelle 的**全局设置文件**，每一个 Isabelle 进程启动都加载，因此**本机上每一次
+`isabelle build` 的 AoA 闸门都是开的**——`Build_Job` 被 `frontend_identity` 判为非交互
+这件事本身没错，但 `aoa_allowed ()` 是 `frontend orelse getenv`，环境变量那一支直接放行。
+用 `env | grep AOA` 查不出来：变量不经 shell，由 Isabelle 自己注入。
+**验证方法**：`isabelle getenv AOA_ALLOW_NONINTERACTIVE`。
+
+**因此更正三处旧记录**：阶段 5 第 3 步的"闭闸跑完整条链"、5b 执行记录里的"闸门关闭的
+批构建、零 LLM 花费"、以及 5c 里"选批构建而不选 isabelle-mcp 是因为前者闭闸"这条理由。
+两处构建的**结论都不受影响**（store 字节不变 ⇒ 没进过 MISS 路径 ⇒ AoA 无从被叫起），
+受影响的只是"为什么没花钱"的解释。
+
+**代价是真的**：2026-08-14 17:04–17:41 那次 `Phi_Examples` 构建就是在开闸下跑的，
+经 L1 数据库时间戳与进程链核实，**真跑了 5 次 agent**（`local.DynArr/Abstract_Domain/0`、
+`Binary_Search.generalized_binary_search/2/8/7/2`、`Matrix_Oprs.zero_mat/2/3/4/2/15`、
+`e779b9fbd5f16842`、`Quicksort.qsort/2/8/13/2`），被我掐断时还有 2 个 agent 进程在跑
+（进程链：build java → `bash_process` → `Isabelle_RPC_Host` python → `claude_agent_sdk` 的
+claude）。按计划自记的单条 $0.1–1 量级，约 $0.5–7。
+
+**这暴露了一个方法论问题，比花掉的钱重要**：闸门开着时，一条重放失败会被引擎或 agent
+**悄悄修好**，构建照样绿——于是"绿"不再区分"原来的证明还能过"和"AoA 又替我们补了一条"。
+R27 想暴露的失败模式正好被这条路径掩盖。**故凡是要观察重放是否成立的验收，闸门必须关。**
+作者 2026-08-14 授权：必要时可直接注释掉 `etc/settings` 的那一行（机器级，用完即恢复）。
+
+**同一次构建里抓到的重放失败（源码一字未改，这是 5c ① 要找的东西）**：四条录制证明
+重放失败、被打墓碑后重新求解——`Matrix_Oprs` 的 `copy_mat/2/7` 与 `add_mat/2/7`
+（原为 AoA blob，改由引擎的经典证明救回，耗时从 1274 / 253 毫秒变成 8631 / 9520 毫秒）、
+`Matrix_Oprs.zero_mat/2/3/4/2/15`（重跑 agent 录了一条新 blob）、
+`Dynamic_Array.pop_dynarr/2/9/7/2`。**R27 的失败模式不是假想，一小时内连发四次。**
+作者裁决：被改写的五个 `Phi_Examples` store **保留现状**（构建前备份留在会话 scratchpad）。
 
 **顺带核对（无须新跑）**：阶段 2 实施记录第 4 条已记「`\<phi>async_proof` 默认 true、
 declare 生效」与「`auto_sledgehammer_params` declare 写活槽位（D38 语义）」两项**已验**，
@@ -3943,12 +3987,14 @@ conditions do not hold and this assumption can cause reasoning failure"并按"gu
    义务，看 AoA 被叫起、落库、二次构建纯 ML 重放）与第 6 步的建满验收，都必须
    `AOA_ALLOW_NONINTERACTIVE=yes` 开闸，会真调 LLM。此前同类实测的量级：单条义务
    $0.1–1，五类矩阵一轮 ≈ $3.4。**需要一句授权与花费上限。**
-1a. **5c 的 ①②③ 与"排除 `Phi_Examples`"的范围裁决冲突，怎么办**（2026-08-14 新增）。
-   5c ① 的四个 R10 文件全在 `Phi_Examples`，② 就是 `Phi_Examples` 双跑，③ 要的
-   `try0 = false` 声明全仓库只在 `Phi_Examples/Quicksort.thy:8` 与
-   `Binary_Trees.thy:278`。三条要么破例把 `Phi_Examples` 纳进来跑，要么判定作废/降级
-   （例如 ③ 改在自造的 scratch 理论里验同一机制——阶段 2 已验过其语义部分）。
-   **这不是我能替作者决定的取舍。**
+1a. ~~**5c 的 ①②③ 与"排除 `Phi_Examples`"的范围裁决冲突**~~——**作者 2026-08-14 裁决：
+   破例把 `Phi_Examples` 纳进来跑。** 同日另两项裁决一并记此：⑤ 立刻跑、接受可能花钱；
+   被开闸构建改写的五个 `Phi_Examples` store 保留现状。
+1b. **`AOA_ALLOW_NONINTERACTIVE=yes` 长期留在 `~/.isabelle/Isabelle2025-2/etc/settings`
+   合不合适**（2026-08-14 新增，尚未裁决）。它使本机每一次 `isabelle build` 都开闸，
+   已实际造成一次未预期的 5 次 agent 花费，并会掩盖重放失败（见 5c 记录"闸门一直开着"
+   一节）。作者已授权"必须关闸时直接注释掉那一行、用完恢复"，但**该行是否应当默认关闭、
+   仅在需要时打开**，是个未裁决的取舍。注意第 6 步"换身份"验收要求它必须不生效。
 2. **第 5 步评测冒烟的基准与案例选择**（计划原文即写"待作者给定"）。没有它这一步推不动。
 3. **`\<phi>LPR.rule_gen.timeout` 的修法**（作者 2026-08-14：「这个我们之后再讨论」）。
    证据与两个决定性实验见根目录 `RULE_GEN_TIMEOUT_SILENT_FACT_LOSS.md`。
