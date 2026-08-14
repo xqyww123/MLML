@@ -1,0 +1,1596 @@
+{
+ "Complx.Language|Simpl.Language": {
+  "theories": [
+   "Complx.Language",
+   "Simpl.Language"
+  ],
+  "tails": 405,
+  "new_keys": 810,
+  "store_records": 813,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Simpl/Language.thy",
+    "line": 22,
+    "declaration": "datatype (dead 's,'p,'f) com = Skip | Basic | Spec | Seq | Cond | While | Call | DynCom | Guard | Throw | Catch"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Complx/Language.thy",
+    "line": 26,
+    "declaration": "datatype ('s,'p,'f) com = Skip | Basic | Spec | Seq | Cond | While | Call | DynCom | Guard | Throw | Catch | Parallel | Await"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Simpl/SmallStep.thy",
+    "line": 17,
+    "declaration": "primrec redex (11 equations)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Complx/SmallStep.thy",
+    "line": 29,
+    "declaration": "primrec redex (13 equations, same 11 plus Await/Parallel)"
+   }
+  ],
+  "reasoning": "Complx/Language.thy is a verbatim fork of the SIMPL core (its own text says it inherits the derived constructs from SIMPL) with two extra constructors, Parallel and Await. The 11 shared constructors have identical argument types and roles, and every derived definition that appears on these tails (raise, bind, bseq, condCatch, guards, switch, while/whileAnno*/specAnno, guaranteeStrip*, lem, if_rel) has a byte-identical signature and body in the two files; redex is the same primrec extended by two equations. Every colliding fact is about the shared part, so one description is correct for both. No text in the group claims a constructor count or an exhaustiveness property that would differ.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "CoCon.System_Specification|CoSMeDis.System_Specification|CoSMed.System_Specification": {
+  "theories": [
+   "CoCon.System_Specification",
+   "CoSMeDis.System_Specification",
+   "CoSMed.System_Specification"
+  ],
+  "tails": 190,
+  "new_keys": 570,
+  "store_records": 586,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoCon/Safety_Properties.thy",
+    "line": 14,
+    "declaration": "interpretation IO_Automaton where istate = istate and step = step"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoSMed/Safety_Properties.thy",
+    "line": 7,
+    "declaration": "interpretation IO_Automaton (same locale, same parameters)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Bounded_Deducibility_Security/IO_Automaton.thy",
+    "line": null,
+    "declaration": "locale IO_Automaton — source of validTrans/sstep/traceOf/valid/valid2/reach/reachFrom"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoCon/System_Specification.thy",
+    "line": 860,
+    "declaration": "datatype out = outOK | outErr | outBool bool | ... (conference outputs)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoSMed/System_Specification.thy",
+    "line": 368,
+    "declaration": "datatype out = outOK | outErr | outBool bool | ... (social-media outputs)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoSMeDis/System_Specification.thy",
+    "line": 783,
+    "declaration": "datatype out = outOK | outErr | outBool bool | ..."
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoCon/System_Specification.thy",
+    "line": 18,
+    "declaration": "record state = ... userIDs :: userID list, pass, user, ..."
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoSMed/System_Specification.thy",
+    "line": 14,
+    "declaration": "record state = admin, ..., userIDs :: userID list, user, pass, ..."
+   }
+  ],
+  "reasoning": "Almost every colliding fact is a locale-interpretation instance: all three entries interpret the same IO_Automaton locale from Bounded_Deducibility_Security at their own istate/step, so validTrans, sstep, traceOf, valid, valid2, reach, reachFrom facts are literally the same generic statements and their stored English is system-neutral. The remaining facts concern out constructors (outOK, outErr, outBool) and state fields (userIDs, user, pass, more) that exist with the same role in all three records. A keyword sweep over all 190 tails found no copied text mentioning paper/review/conference/post/friend/api, i.e. nothing system-specific that could be false of another claimant. Note that CoCon prints natural-number 0 as noPH (abbreviation noPH == (0::nat), CoCon/Prelim.thy:16), which is why some tails carry two different printed props for the same fact.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "CCS.Agent|Pi_Calculus.Agent": {
+  "theories": [
+   "CCS.Agent",
+   "Pi_Calculus.Agent"
+  ],
+  "tails": 82,
+  "new_keys": 164,
+  "store_records": 164,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CCS/Agent.thy",
+    "line": 9,
+    "declaration": "atom_decl name"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Pi_Calculus/Agent.thy",
+    "line": 37,
+    "declaration": "atom_decl name"
+   }
+  ],
+  "reasoning": "Every entity on these 82 tails is Nominal-package boilerplate for the atom type name declared by atom_decl in both theories (name.induct/inject/rec/case*/split*, name_injection, name_infinite, pt_name_class.axioms, pt_name_inst, fs_name_inst, calc_atm, swap_simps, perm_*, fresh_*, abs_fresh, abs_supp, *_eqvt, typerep/narrowing/partial_term_of). atom_decl generates the same infinite atom type in both entries; the CCS ccs datatype and the pi-calculus pi datatype never appear on these tails. All stored texts speak only about atoms and their natural-number index.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "HOL-IMP.Compiler|IMP_Compiler.Compiler|IMP_Compiler_Reuse.Compiler": {
+  "theories": [
+   "HOL-IMP.Compiler",
+   "IMP_Compiler.Compiler",
+   "IMP_Compiler_Reuse.Compiler"
+  ],
+  "tails": 60,
+  "new_keys": 180,
+  "store_records": 180,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/IMP/Compiler.thy",
+    "line": 46,
+    "declaration": "datatype instr = LOADI int | LOAD vname | ADD | STORE vname | JMP int | JMPLESS int | JMPGE int"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/IMP_Compiler/Compiler.thy",
+    "line": 114,
+    "declaration": "datatype instr = LOADI | LOAD | ADD | STORE | JMP | JMPLESS | JMPGE | JMPND int"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/IMP_Compiler_Reuse/Compiler.thy",
+    "line": 131,
+    "declaration": "datatype instr = LOADI | LOAD | ADD | STORE | JMP | JMPLESS | JMPGE"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/IMP_Compiler/Compiler2.thy",
+    "line": 43,
+    "declaration": "inductive execl (P |= cfs) / apred / bpred"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/IMP_Compiler_Reuse/Compiler2.thy",
+    "line": 87,
+    "declaration": "inductive execl (P |= cfs) / apred / bpred — same definitions"
+   }
+  ],
+  "reasoning": "These are three formalisations of the same Concrete-Semantics stack machine and IMP compiler; IMP_Compiler and IMP_Compiler_Reuse are Noce's reworkings of the HOL-IMP development. LOADI/LOAD/ADD/STORE/JMP/JMPLESS/JMPGE mean the same in all three (IMP_Compiler adds a nondeterministic jump JMPND, which cannot collide because it prints differently), and acomp/bcomp/ccomp/exec/inth/execl/apred/bpred are the same concepts with the same defining equations. I checked every text in the three groups for constructor-count or exhaustiveness claims: the only ones ('all seven instruction constructors', 'seven exhaustive constructor cases') occur in the HOL-IMP <-> IMP_Compiler_Reuse group, where both datatypes do have exactly seven constructors, so they are true of both claimants.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "HOL-IMP.Compiler|IMP_Compiler_Reuse.Compiler": {
+  "theories": [
+   "HOL-IMP.Compiler",
+   "IMP_Compiler_Reuse.Compiler"
+  ],
+  "tails": 43,
+  "new_keys": 86,
+  "store_records": 86,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/IMP/Compiler.thy",
+    "line": 46,
+    "declaration": "datatype instr = LOADI int | LOAD vname | ADD | STORE vname | JMP int | JMPLESS int | JMPGE int"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/IMP_Compiler/Compiler.thy",
+    "line": 114,
+    "declaration": "datatype instr = LOADI | LOAD | ADD | STORE | JMP | JMPLESS | JMPGE | JMPND int"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/IMP_Compiler_Reuse/Compiler.thy",
+    "line": 131,
+    "declaration": "datatype instr = LOADI | LOAD | ADD | STORE | JMP | JMPLESS | JMPGE"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/IMP_Compiler/Compiler2.thy",
+    "line": 43,
+    "declaration": "inductive execl (P |= cfs) / apred / bpred"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/IMP_Compiler_Reuse/Compiler2.thy",
+    "line": 87,
+    "declaration": "inductive execl (P |= cfs) / apred / bpred — same definitions"
+   }
+  ],
+  "reasoning": "These are three formalisations of the same Concrete-Semantics stack machine and IMP compiler; IMP_Compiler and IMP_Compiler_Reuse are Noce's reworkings of the HOL-IMP development. LOADI/LOAD/ADD/STORE/JMP/JMPLESS/JMPGE mean the same in all three (IMP_Compiler adds a nondeterministic jump JMPND, which cannot collide because it prints differently), and acomp/bcomp/ccomp/exec/inth/execl/apred/bpred are the same concepts with the same defining equations. I checked every text in the three groups for constructor-count or exhaustiveness claims: the only ones ('all seven instruction constructors', 'seven exhaustive constructor cases') occur in the HOL-IMP <-> IMP_Compiler_Reuse group, where both datatypes do have exactly seven constructors, so they are true of both claimants.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "IMP_Compiler.Compiler|IMP_Compiler_Reuse.Compiler": {
+  "theories": [
+   "IMP_Compiler.Compiler",
+   "IMP_Compiler_Reuse.Compiler"
+  ],
+  "tails": 35,
+  "new_keys": 70,
+  "store_records": 70,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/IMP/Compiler.thy",
+    "line": 46,
+    "declaration": "datatype instr = LOADI int | LOAD vname | ADD | STORE vname | JMP int | JMPLESS int | JMPGE int"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/IMP_Compiler/Compiler.thy",
+    "line": 114,
+    "declaration": "datatype instr = LOADI | LOAD | ADD | STORE | JMP | JMPLESS | JMPGE | JMPND int"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/IMP_Compiler_Reuse/Compiler.thy",
+    "line": 131,
+    "declaration": "datatype instr = LOADI | LOAD | ADD | STORE | JMP | JMPLESS | JMPGE"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/IMP_Compiler/Compiler2.thy",
+    "line": 43,
+    "declaration": "inductive execl (P |= cfs) / apred / bpred"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/IMP_Compiler_Reuse/Compiler2.thy",
+    "line": 87,
+    "declaration": "inductive execl (P |= cfs) / apred / bpred — same definitions"
+   }
+  ],
+  "reasoning": "These are three formalisations of the same Concrete-Semantics stack machine and IMP compiler; IMP_Compiler and IMP_Compiler_Reuse are Noce's reworkings of the HOL-IMP development. LOADI/LOAD/ADD/STORE/JMP/JMPLESS/JMPGE mean the same in all three (IMP_Compiler adds a nondeterministic jump JMPND, which cannot collide because it prints differently), and acomp/bcomp/ccomp/exec/inth/execl/apred/bpred are the same concepts with the same defining equations. I checked every text in the three groups for constructor-count or exhaustiveness claims: the only ones ('all seven instruction constructors', 'seven exhaustive constructor cases') occur in the HOL-IMP <-> IMP_Compiler_Reuse group, where both datatypes do have exactly seven constructors, so they are true of both claimants.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "Bounded_Deducibility_Security.Transition_System|Relative_Security.Transition_System": {
+  "theories": [
+   "Bounded_Deducibility_Security.Transition_System",
+   "Relative_Security.Transition_System"
+  ],
+  "tails": 56,
+  "new_keys": 112,
+  "store_records": 112,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Bounded_Deducibility_Security/Transition_System.thy",
+    "line": 17,
+    "declaration": "locale Transition_System fixes istate :: 'state, validTrans, srcOf, tgtOf"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Relative_Security/Preliminaries/Transition_System.thy",
+    "line": 17,
+    "declaration": "locale Transition_System fixes istate :: 'state => bool, validTrans, srcOf, tgtOf"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Bounded_Deducibility_Security/Transition_System.thy",
+    "line": 63,
+    "declaration": "inductive valid2 (Singl / Rcons)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Relative_Security/Preliminaries/Transition_System.thy",
+    "line": 123,
+    "declaration": "inductive valid2 — byte-identical"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Bounded_Deducibility_Security/Transition_System.thy",
+    "line": 205,
+    "declaration": "inductive reachFrom (Refl / Step)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Relative_Security/Preliminaries/Transition_System.thy",
+    "line": 75,
+    "declaration": "inductive reachFrom — byte-identical"
+   }
+  ],
+  "reasoning": "Relative_Security's Transition_System.thy is a copy of the Bounded_Deducibility_Security locale, extended with Simple_Transition_System / System_Mod. The one real difference is the type of the locale parameter istate (a single initial state vs a predicate on states), but no fact on these 56 tails mentions istate or reach: they are all valid / valid2 / validFrom / reachFrom / srcOfTr / tgtOfTr facts whose definitions are byte-identical in the two files.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "Buchi_Complementation.Formula|MSO_Regex_Equivalence.Formula": {
+  "theories": [
+   "Buchi_Complementation.Formula",
+   "MSO_Regex_Equivalence.Formula"
+  ],
+  "tails": 42,
+  "new_keys": 84,
+  "store_records": 84,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Buchi_Complementation/Formula.thy",
+    "line": 7,
+    "declaration": "datatype 'a formula = False | True | Variable 'a | Negation | Conjunction | Disjunction  ('a = propositional variable)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/MSO_Regex_Equivalence/Formula.thy",
+    "line": 21,
+    "declaration": "datatype 'a formula = FQ 'a nat | FLess nat nat | FIn nat nat | FNot | FOr | FAnd | FExists | FEXISTS  ('a = alphabet letter; variables are the nat indices)"
+   }
+  ],
+  "reasoning": "Two unrelated datatypes both named formula. In Buchi_Complementation it is a propositional Boolean formula and the type parameter is the propositional variable, so set_formula collects variables. In MSO_Regex_Equivalence it is a monadic-second-order formula and the type parameter is an alphabet letter (used in FQ a m, 'position m carries letter a'); its first- and second-order variables are nat indices and are NOT the BNF parameter, so set_formula collects letters, not variables. The colliding facts are the BNF boilerplate for map_formula / rel_formula / pred_formula / set_formula, which print identically. No copying happens here: all 42 tails carry two records whose new keys equal their old keys (exact matches), so each key keeps its own text. The Buchi texts say 'variable label' (correct for Buchi, would be wrong for MSO) and the MSO texts say only 'label' (correct for MSO). I read all 84 texts: none is wrong for its own claimant.",
+  "english_misbound_keys": 0,
+  "affected_tails": [
+   {
+    "tail": "all 42 (no copy occurs)",
+    "note": "each key's stored English describes its own claimant correctly; the risk is latent, not realised"
+   }
+  ],
+  "needs_reinterpretation": false
+ },
+ "HOL-Library.Tree|Tree-Automata.Tree": {
+  "theories": [
+   "HOL-Library.Tree",
+   "Tree-Automata.Tree"
+  ],
+  "tails": 41,
+  "new_keys": 82,
+  "store_records": 82,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Library/Tree.thy",
+    "line": 10,
+    "declaration": "datatype 'a tree = Leaf | Node ('a tree) ('value': 'a) ('a tree)  — non-empty-node binary tree, values only at inner nodes"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Tree-Automata/Tree.thy",
+    "line": 15,
+    "declaration": "datatype 'l tree = NODE 'l \"'l tree list\"  — ranked/rose tree, a label at every node, no empty tree"
+   }
+  ],
+  "reasoning": "Two different datatypes named tree: a binary search-tree shape with an empty Leaf, versus a rose tree where every node carries a label and a list of children. They share the BNF-generated names map_tree, rel_tree, pred_tree, set_tree, so 41 tails collide and the migration copies HOL-Library's text onto the Tree-Automata key on every one of them (mark 'copied', all took HOL-Library's record). I read all 41 texts: 40 are shape-neutral ('the values stored in a tree') and remain true of a rose tree; exactly one asserts the shape and is false for Tree-Automata.",
+  "english_misbound_keys": 1,
+  "affected_tails": [
+   {
+    "tail": "02709cfa4e6618c642052a2b00f63ddf",
+    "entity": "Tree.Tree.tree.set_finite",
+    "key": "(Tree-Automata.Tree claimant)",
+    "claimant": "Tree-Automata.Tree",
+    "mark": "copied",
+    "english_describes": "HOL-Library.Tree",
+    "note": "stored text: 'The set of values stored in any binary tree is finite.' — Tree-Automata's tree is not binary"
+   }
+  ],
+  "needs_reinterpretation": true,
+  "note": "The other 40 tails carry HOL-Library-authored text on the Tree-Automata key; it is shape-neutral and remains true, but it was written about the other type."
+ },
+ "HOL-Data_Structures.Tree23|HOL-ex.Tree23": {
+  "theories": [
+   "HOL-Data_Structures.Tree23",
+   "HOL-ex.Tree23"
+  ],
+  "tails": 41,
+  "new_keys": 82,
+  "store_records": 82,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Data_Structures/Tree23.thy",
+    "line": 12,
+    "declaration": "datatype 'a tree23 = Leaf | Node2 ('a tree23) 'a ('a tree23) | Node3 ...  — 'a is the stored element"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/ex/Tree23.thy",
+    "line": 28,
+    "declaration": "datatype 'a tree23 = Empty | Branch2 ('a tree23) \"key * 'a\" ('a tree23) | Branch3 ...  with type_synonym key = int — 'a is the value of an int-keyed entry"
+   }
+  ],
+  "reasoning": "Both are 2-3 trees, but not the same type: HOL-Data_Structures stores a bare element per separator, HOL-ex stores an (int key, value) pair, so the BNF parameter means 'element' in one and 'value of a keyed entry' in the other, and the constructor names differ (Leaf/Node2/Node3 vs Empty/Branch2/Branch3). Only the BNF boilerplate (map_tree23/rel_tree23/pred_tree23/set_tree23) collides. No copying occurs: on all 41 tails the new key set equals the old key set, so each key keeps its own text, and the HOL-ex texts correctly speak of 'payloads' and 'integer keys' while the HOL-Data_Structures texts speak of 'elements'.",
+  "english_misbound_keys": 0,
+  "affected_tails": [
+   {
+    "tail": "all 41 (no copy occurs)",
+    "note": "each key keeps its own, correct text"
+   }
+  ],
+  "needs_reinterpretation": false
+ },
+ "ConcurrentHOL.Heap|HOL-Hoare.Heap|HOL-Imperative_HOL.Heap": {
+  "theories": [
+   "ConcurrentHOL.Heap",
+   "HOL-Hoare.Heap",
+   "HOL-Imperative_HOL.Heap"
+  ],
+  "tails": 41,
+  "new_keys": 123,
+  "store_records": 123,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Hoare/Heap.thy",
+    "line": 16,
+    "declaration": "datatype 'a ref = Null | Ref 'a  — an optional pointer that CARRIES a value of type 'a; set_ref (Ref a) = {a}"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Imperative_HOL/Heap.thy",
+    "line": 59,
+    "declaration": "datatype 'a ref = Ref addr  (addr = nat) — a typed address; 'a is a phantom parameter, so set_ref is always {}"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/ConcurrentHOL/CImperativeHOL/Heap.thy",
+    "line": 312,
+    "declaration": "datatype 'a ref = Ref (addr_of: heap.addr)  (heap.addr = nat) — same as Imperative_HOL (the file names it as its source)"
+   }
+  ],
+  "reasoning": "HOL-Hoare's ref is a two-constructor optional pointer holding a value, so its BNF parameter is live and carries data. ConcurrentHOL's and HOL-Imperative_HOL's ref is a one-constructor wrapper around a nat address with a phantom parameter, so set_ref is always empty and map_ref is a coercion. The BNF facts print identically, and the migration pairs the two surviving old texts across the three claimants by 'arbitrary' / 'matched' picks. The result is cross-attributed on 29 of the 41 tails: ConcurrentHOL and HOL-Imperative_HOL keys receive text that talks about Null and stored payloads, and HOL-Hoare keys receive text that asserts the element set is always empty because the parameter is a phantom.",
+  "english_misbound_keys": 31,
+  "affected_tails": [
+   {
+    "tail": "023e5807cd07a123ae3e3232463a38a2",
+    "key": "08b61cffb7943d14afa92d9e86cfe314023e5807cd07a123ae3e3232463a38a2",
+    "entity": "Heap.Heap.ref.rel_refl",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "025dc0efeb2ff6b8ccd5803cc09cf005",
+    "key": "08b61cffb7943d14afa92d9e86cfe314025dc0efeb2ff6b8ccd5803cc09cf005",
+    "entity": "Heap.Heap.ref.rel_map(2)",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "0260e8f1ec679ccaaf82c684854444cf",
+    "key": "08b61cffb7943d14afa92d9e86cfe3140260e8f1ec679ccaaf82c684854444cf",
+    "entity": "Heap.Heap.ref.rel_map(1)",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "028cf243fa76c7b84bc7a3e74d51f61e",
+    "key": "08b61cffb7943d14afa92d9e86cfe314028cf243fa76c7b84bc7a3e74d51f61e",
+    "entity": "Heap.Heap.ref.map_ident",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02a11ba4a6db6672c824c819651b1954",
+    "key": "08b61cffb7943d14afa92d9e86cfe31402a11ba4a6db6672c824c819651b1954",
+    "entity": "Heap.Heap.ref.rel_eq",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02ab67051d66ee00db1bb1d28fcf83e6",
+    "key": "08b61cffb7943d14afa92d9e86cfe31402ab67051d66ee00db1bb1d28fcf83e6",
+    "entity": "Heap.Heap.ref.map_cong_pred",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02b4ee7c89b78d0096e94e56b177ac80",
+    "key": "08b61cffb7943d14afa92d9e86cfe31402b4ee7c89b78d0096e94e56b177ac80",
+    "entity": "Heap.Heap.ref.pred_True",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02b4ee7c89b78d0096e94e56b177ac80",
+    "key": "0edcc613e2a8ff2bde90cee7751d1bda02b4ee7c89b78d0096e94e56b177ac80",
+    "entity": "Heap.Heap.ref.pred_True",
+    "claimant": "HOL-Hoare.Heap",
+    "mark": "matched",
+    "english_describes": "ConcurrentHOL.Heap / HOL-Imperative_HOL.Heap (the one-constructor Ref addr with phantom 'a)"
+   },
+   {
+    "tail": "020d890e42fe06e1c9d81aae55019f76",
+    "key": "142777f391c1d9af7b229ef896da48cf020d890e42fe06e1c9d81aae55019f76",
+    "entity": "Heap.Heap.ref.pred_mono_strong",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "021f94f859f66d6c9f05ba29dac0dcb3",
+    "key": "142777f391c1d9af7b229ef896da48cf021f94f859f66d6c9f05ba29dac0dcb3",
+    "entity": "Heap.Heap.ref.map_cong_simp",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "023327a4af93a3e702459a24e54b7473",
+    "key": "124dad1fc4fd1b900a1b7d816508b001023327a4af93a3e702459a24e54b7473",
+    "entity": "Heap.Heap.ref.rel_refl_strong",
+    "claimant": "HOL-Hoare.Heap",
+    "mark": "matched",
+    "english_describes": "ConcurrentHOL.Heap / HOL-Imperative_HOL.Heap (the one-constructor Ref addr with phantom 'a)"
+   },
+   {
+    "tail": "025551a6dff9b8f573608fc9e59da8f5",
+    "key": "142777f391c1d9af7b229ef896da48cf025551a6dff9b8f573608fc9e59da8f5",
+    "entity": "Heap.Heap.ref.pred_cong_simp",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "0263f237962e6935f82a071154cd9b81",
+    "key": "124dad1fc4fd1b900a1b7d816508b0010263f237962e6935f82a071154cd9b81",
+    "entity": "Heap.Heap.ref.inj_map_strong",
+    "claimant": "HOL-Hoare.Heap",
+    "mark": "matched",
+    "english_describes": "ConcurrentHOL.Heap / HOL-Imperative_HOL.Heap (the one-constructor Ref addr with phantom 'a)"
+   },
+   {
+    "tail": "0263f237962e6935f82a071154cd9b81",
+    "key": "142777f391c1d9af7b229ef896da48cf0263f237962e6935f82a071154cd9b81",
+    "entity": "Heap.Heap.ref.inj_map_strong",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02acf033f20225818baf3797174817f4",
+    "key": "142777f391c1d9af7b229ef896da48cf02acf033f20225818baf3797174817f4",
+    "entity": "Heap.Heap.ref.set_map",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02c1f624931243ee65b51dc80f510747",
+    "key": "142777f391c1d9af7b229ef896da48cf02c1f624931243ee65b51dc80f510747",
+    "entity": "Heap.Heap.ref.rel_mono_strong",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02c2b8bbd5424c6af3b1db9a53423c91",
+    "key": "142777f391c1d9af7b229ef896da48cf02c2b8bbd5424c6af3b1db9a53423c91",
+    "entity": "Heap.Heap.ref.rel_cong_simp",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02c3539abc183ad421b4ca3cb240780b",
+    "key": "142777f391c1d9af7b229ef896da48cf02c3539abc183ad421b4ca3cb240780b",
+    "entity": "Heap.Heap.ref.pred_cong",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02d9024c28a7fed847f3b51aee67dc04",
+    "key": "142777f391c1d9af7b229ef896da48cf02d9024c28a7fed847f3b51aee67dc04",
+    "entity": "Heap.Heap.ref.rel_cong",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02da361fb6c1df40f912e538dffc465d",
+    "key": "124dad1fc4fd1b900a1b7d816508b00102da361fb6c1df40f912e538dffc465d",
+    "entity": "Heap.Heap.ref.map_ident_strong",
+    "claimant": "HOL-Hoare.Heap",
+    "mark": "matched",
+    "english_describes": "ConcurrentHOL.Heap / HOL-Imperative_HOL.Heap (the one-constructor Ref addr with phantom 'a)"
+   },
+   {
+    "tail": "02de905669cae47fcecf6ebbfeef2ecd",
+    "key": "142777f391c1d9af7b229ef896da48cf02de905669cae47fcecf6ebbfeef2ecd",
+    "entity": "Heap.Heap.ref.pred_set",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02e5cb1dfd484c151daf1160c0a364a4",
+    "key": "142777f391c1d9af7b229ef896da48cf02e5cb1dfd484c151daf1160c0a364a4",
+    "entity": "Heap.Heap.ref.map_cong",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02fba4107b796f2f53673b485c43a94c",
+    "key": "142777f391c1d9af7b229ef896da48cf02fba4107b796f2f53673b485c43a94c",
+    "entity": "Heap.Heap.ref.map_cong0",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "0289dbe1ab1f2da9e830894417c598b8",
+    "key": "2ad8f923073d42700e65dfc3f4cc7d740289dbe1ab1f2da9e830894417c598b8",
+    "entity": "Heap.Heap.ref.in_rel",
+    "claimant": "HOL-Imperative_HOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02ad7ea0941671d319ffa0141b89866b",
+    "key": "44613323facdb391469445f9433cdfe102ad7ea0941671d319ffa0141b89866b",
+    "entity": "Heap.Heap.ref.rel_mono",
+    "claimant": "HOL-Imperative_HOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02218b242041402be4ac7d7313d105c2",
+    "key": "48403e82c7e184f529503e46ff0a68c602218b242041402be4ac7d7313d105c2",
+    "entity": "Heap.ref.left_unique_rel",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "0252b59668dbdd04c0145d104723c46e",
+    "key": "48403e82c7e184f529503e46ff0a68c60252b59668dbdd04c0145d104723c46e",
+    "entity": "Heap.ref.right_unique_rel",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02e4d85750acd0942f79d7c20de65bce",
+    "key": "48403e82c7e184f529503e46ff0a68c602e4d85750acd0942f79d7c20de65bce",
+    "entity": "Heap.Heap.ref.rel_flip",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02e7fb683df776c9517b15e8e7ed0b10",
+    "key": "48403e82c7e184f529503e46ff0a68c602e7fb683df776c9517b15e8e7ed0b10",
+    "entity": "Heap.ref.Domainp_rel",
+    "claimant": "ConcurrentHOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "021f479e04dc1cce8b07292936007a9f",
+    "key": "5a2705fe207ef6022b6765d49f807637021f479e04dc1cce8b07292936007a9f",
+    "entity": "Heap.Heap.ref.map_id0",
+    "claimant": "HOL-Imperative_HOL.Heap",
+    "mark": "arbitrary",
+    "english_describes": "HOL-Hoare.Heap (the two-constructor Null | Ref 'a)"
+   },
+   {
+    "tail": "02c63d1dfed99408ec8f1c5fd16ea3bc",
+    "key": "d4c304a6aec12be18458f7832cbe5eeb02c63d1dfed99408ec8f1c5fd16ea3bc",
+    "entity": "Heap.Heap.ref.set_finite",
+    "claimant": "HOL-Hoare.Heap",
+    "mark": "matched",
+    "english_describes": "ConcurrentHOL.Heap / HOL-Imperative_HOL.Heap (the one-constructor Ref addr with phantom 'a)"
+   }
+  ],
+  "needs_reinterpretation": true,
+  "worked_example": "tail 02da361fb6c1df40f912e538dffc465d, Heap.Heap.ref.map_ident_strong. The HOL-Hoare key is given '...Because the element set of a reference is always empty, the premise holds trivially.' — false for 'a ref = Null | Ref 'a, where set_ref (Ref a) = {a}. In the same group, tail 028cf243fa76c7b84bc7a3e74d51f61e, Heap.Heap.ref.map_ident: the ConcurrentHOL key is given '...Thus neither Null nor a payload inside Ref is altered.' — ConcurrentHOL's ref has no Null constructor and no payload."
+ },
+ "ConcurrentHOL.Heap|HOL-Imperative_HOL.Heap": {
+  "theories": [
+   "ConcurrentHOL.Heap",
+   "HOL-Imperative_HOL.Heap"
+  ],
+  "tails": 28,
+  "new_keys": 56,
+  "store_records": 56,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Imperative_HOL/Heap.thy",
+    "line": 59,
+    "declaration": "datatype 'a ref = Ref addr  (addr = nat), 'a phantom"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/ConcurrentHOL/CImperativeHOL/Heap.thy",
+    "line": 312,
+    "declaration": "datatype 'a ref = Ref (addr_of: heap.addr)  (heap.addr = nat), 'a phantom"
+   }
+  ],
+  "reasoning": "The same declaration modulo a selector name; ConcurrentHOL/CImperativeHOL/Heap.thy names $ISABELLE_HOME/src/HOL/Imperative_HOL/Heap.thy as its source. All 56 texts in this group describe the phantom-address reference (empty element set, sole constructor Ref applied to an address); none mentions a Null constructor or a payload.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "CoCon.System_Specification|CoSMed.System_Specification": {
+  "theories": [
+   "CoCon.System_Specification",
+   "CoSMed.System_Specification"
+  ],
+  "tails": 34,
+  "new_keys": 68,
+  "store_records": 409,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoCon/Paper_Aut.thy",
+    "line": null,
+    "declaration": "interpretation of BD_Security_IO (defines O = Filtermap.filtermap gamma g)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoSMed/Post.thy",
+    "line": null,
+    "declaration": "interpretation of BD_Security_IO — same locale, same generic facts"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Bounded_Deducibility_Security/BD_Security_IO.thy",
+    "line": null,
+    "declaration": "locale BD_Security_IO — source of O, length_O, O_Cons_unfold, O_simps, O_eq_RCons, never, sstep_eq_singleiff"
+   }
+  ],
+  "reasoning": "Every tail is a BD_Security_IO locale-interpretation fact (O = filtermap gamma g and its consequences) shared by CoCon's and CoSMed's security setups. The statements are the generic locale statements and the copied English is phrased entirely in the locale vocabulary (transition, observation, gamma, g); the keyword sweep found nothing system-specific.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "CoreC++.Expr|Jinja.Expr|JinjaDCI.Expr": {
+  "theories": [
+   "CoreC++.Expr",
+   "Jinja.Expr",
+   "JinjaDCI.Expr"
+  ],
+  "tails": 29,
+  "new_keys": 87,
+  "store_records": 87,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Jinja/J/Expr.thy",
+    "line": 12,
+    "declaration": "datatype bop = Eq | Add"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/JinjaDCI/J/Expr.thy",
+    "line": 14,
+    "declaration": "datatype bop = Eq | Add"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoreC++/Expr.thy",
+    "line": 14,
+    "declaration": "datatype bop = Eq | Add"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Jinja/J/Expr.thy",
+    "line": 40,
+    "declaration": "fun binop :: bop * val * val => val option (three equations)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoreC++/Expr.thy",
+    "line": 51,
+    "declaration": "fun binop — same three equations"
+   }
+  ],
+  "reasoning": "All colliding entities are bop and binop. CoreC++ and JinjaDCI are forks of Jinja and declare bop and binop with identical constructors and identical defining equations.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "HOL-TLA-Inc.Inc|TLA.Inc": {
+  "theories": [
+   "HOL-TLA-Inc.Inc",
+   "TLA.Inc"
+  ],
+  "tails": 28,
+  "new_keys": 56,
+  "store_records": 56,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/TLA/Inc/Inc.thy",
+    "line": 11,
+    "declaration": "datatype pcount = a | b | g"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/TLA/Inc.thy",
+    "line": 19,
+    "declaration": "datatype pcount = a | b | g"
+   }
+  ],
+  "reasoning": "Both files formalise Lamport's Inc example and declare the same three-value program counter with the same constructor names and roles (the AFP entry re-does the example inside locales instead of axiomatically). Every one of the 28 tails is a pcount fact. No copying: the new key set equals the old key set on every tail.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "First_Order_Terms.Term|HOL-Induct.Term": {
+  "theories": [
+   "First_Order_Terms.Term",
+   "HOL-Induct.Term"
+  ],
+  "tails": 25,
+  "new_keys": 50,
+  "store_records": 50,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Induct/Term.thy",
+    "line": 11,
+    "declaration": "datatype ('a,'b) term = Var 'a | App 'b \"('a,'b) term list\"  — FIRST parameter is the variable alphabet"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/First_Order_Terms/Term.thy",
+    "line": 14,
+    "declaration": "datatype ('f,'v) term = Var 'v | Fun 'f \"('f,'v) term list\"  — FIRST parameter is the function symbols"
+   }
+  ],
+  "reasoning": "The two type parameters have opposite roles, so map_term's first function argument acts on variables in HOL-Induct and on function symbols in First_Order_Terms, and likewise for rel_term / pred_term. The BNF facts print identically, hence the 25 collisions. I traced all 25 tails through the migration: each carries exactly two old records, one whose text says first-argument-is-function-symbols and one whose text says first-argument-is-variables. On every tail the First_Order_Terms new key equals an old key (mark 'exact') and takes the function-symbols text, and the leftover record — the variables text — is forced onto the HOL-Induct key. So all 50 post-migration bindings are correct.",
+  "english_misbound_keys": 0,
+  "affected_tails": [
+   {
+    "tail": "all 25",
+    "note": "pairing verified correct on every tail; see caveat"
+   }
+  ],
+  "needs_reinterpretation": false,
+  "caveat": "The pre-existing defect is in the position field, not the interpretation: the old record that carries the First_Order_Terms text has position ~~/src/HOL/Induct/Term.thy:11 stored in it (that is the 'proven wrong binding'), and because its key is unchanged by the re-key, the record keeps that wrong position while its claimant is First_Order_Terms.Term. Example: tail 0210d91b5eb0be762d614c662e7e494f, key 64bf38cc...0210d91b..., Term.Term.term.rel_map(2)."
+ },
+ "CoCon.Prelim|CoSMeDis.Prelim|CoSMed.Prelim": {
+  "theories": [
+   "CoCon.Prelim",
+   "CoSMeDis.Prelim",
+   "CoSMed.Prelim"
+  ],
+  "tails": 20,
+  "new_keys": 60,
+  "store_records": 62,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoCon/Prelim.thy",
+    "line": 90,
+    "declaration": "datatype password = Password string"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoSMed/Prelim.thy",
+    "line": 71,
+    "declaration": "datatype password = Psw String.literal"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoCon/Prelim.thy",
+    "line": 98,
+    "declaration": "datatype userID = UserID string"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoSMed/Prelim.thy",
+    "line": 81,
+    "declaration": "datatype userID = Uid String.literal"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoSMed/Prelim.thy",
+    "line": 91,
+    "declaration": "definition getFreshUserID / lemma getFreshUserID"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoSMed/System_Specification.thy",
+    "line": 331,
+    "declaration": "definition listAllUsers s uID p == userIDs s"
+   }
+  ],
+  "reasoning": "password and userID are one-constructor wrappers around a string in all three entries, and the colliding facts are the case-congruence / case-distribution / typerep / partial_term_of boilerplate plus emptyStr, getFreshUserID and listAllUsers, which have the same definitions. Two of the 20 tails carry text that spells the constructor with CoCon's name (`Password`, `UserID`) while CoSMed/CoSMeDis spell them Psw and Uid; that is a naming inaccuracy in a backticked identifier, not a wrong statement, so I did not count it as a misbinding.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false,
+  "note": "Naming nit on tails 0289353457897523ce623105bb98e87a (password.case_distrib) and 02d8107dc658f4d8188b20c5ab58fadd (userID.case_distrib): the copied text names the branch `Password` / `UserID`, which are CoCon's constructor names; CoSMed and CoSMeDis call them Psw and Uid."
+ },
+ "CoreC++.Execute|FeatherweightJava.Execute|POPLmark-deBruijn.Execute|VolpanoSmith.Execute": {
+  "theories": [
+   "CoreC++.Execute",
+   "FeatherweightJava.Execute",
+   "POPLmark-deBruijn.Execute",
+   "VolpanoSmith.Execute"
+  ],
+  "tails": 19,
+  "new_keys": 76,
+  "store_records": 76,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoreC++/Execute.thy",
+    "line": null,
+    "declaration": "code_pred on equality — generates eq_i_o / eq_o_i / eq_i_i and their intro/elim/equation rules"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/FeatherweightJava/Execute.thy",
+    "line": null,
+    "declaration": "same code_pred setup"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/VolpanoSmith/Execute.thy",
+    "line": null,
+    "declaration": "same code_pred setup"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/POPLmark-deBruijn/Execute.thy",
+    "line": null,
+    "declaration": "same code_pred setup"
+   }
+  ],
+  "reasoning": "The colliding entities are only the predicate-compiler artefacts of the polymorphic equality predicate Predicate.eq (eq.equation, eq_i_o*, eq_o_i*, eq_i_i*, and their _def equations). These are generated from the same HOL constant in all four entries and mean exactly the same thing. Each key that has a text has its own correct one; the POPLmark-deBruijn keys are unfilled and will be interpreted fresh anyway.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "CoreC++.Auxiliary|Jinja.Auxiliary|JinjaDCI.Auxiliary|JinjaThreads.Auxiliary": {
+  "theories": [
+   "CoreC++.Auxiliary",
+   "Jinja.Auxiliary",
+   "JinjaDCI.Auxiliary",
+   "JinjaThreads.Auxiliary"
+  ],
+  "tails": 16,
+  "new_keys": 64,
+  "store_records": 64,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Jinja/Common/Auxiliary.thy",
+    "line": 35,
+    "declaration": "definition distinct_fst"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Jinja/Common/Auxiliary.thy",
+    "line": 68,
+    "declaration": "definition fun_of S == %x y. (x,y) : S"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/JinjaDCI/Common/Auxiliary.thy",
+    "line": 64,
+    "declaration": "definition fun_of — identical (\"Based on the Jinja theory Common/Auxiliary.thy\")"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoreC++/Auxiliary.thy",
+    "line": 142,
+    "declaration": "definition fun_of — identical"
+   }
+  ],
+  "reasoning": "CoreC++, JinjaDCI and JinjaThreads all copy Jinja's Common/Auxiliary.thy (JinjaDCI's header says so explicitly); diffing the files shows only header/whitespace differences around the colliding definitions. The colliding entities (fun_of_def, fun_of_simp, distinct_fst_*, map_of_SomeI, rel_list_all2*) are the same definitions and the same lemmas.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "Jinja.Auxiliary|JinjaDCI.Auxiliary|JinjaThreads.Auxiliary": {
+  "theories": [
+   "Jinja.Auxiliary",
+   "JinjaDCI.Auxiliary",
+   "JinjaThreads.Auxiliary"
+  ],
+  "tails": 1,
+  "new_keys": 3,
+  "store_records": 3,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Jinja/Common/Auxiliary.thy",
+    "line": 35,
+    "declaration": "definition distinct_fst"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Jinja/Common/Auxiliary.thy",
+    "line": 68,
+    "declaration": "definition fun_of S == %x y. (x,y) : S"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/JinjaDCI/Common/Auxiliary.thy",
+    "line": 64,
+    "declaration": "definition fun_of — identical (\"Based on the Jinja theory Common/Auxiliary.thy\")"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/CoreC++/Auxiliary.thy",
+    "line": 142,
+    "declaration": "definition fun_of — identical"
+   }
+  ],
+  "reasoning": "CoreC++, JinjaDCI and JinjaThreads all copy Jinja's Common/Auxiliary.thy (JinjaDCI's header says so explicitly); diffing the files shows only header/whitespace differences around the colliding definitions. The colliding entities (fun_of_def, fun_of_simp, distinct_fst_*, map_of_SomeI, rel_list_all2*) are the same definitions and the same lemmas. The single tail here is TypeComp.fun_of_simp.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "Automatic_Refinement.Misc|Program-Conflict-Analysis.Misc": {
+  "theories": [
+   "Automatic_Refinement.Misc",
+   "Program-Conflict-Analysis.Misc"
+  ],
+  "tails": 12,
+  "new_keys": 24,
+  "store_records": 24,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Program-Conflict-Analysis/Misc.thy",
+    "line": 29,
+    "declaration": "locale su_rel_fun fixes F and f, assumes unique / surjective / f_def"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Automatic_Refinement/Lib/Misc.thy",
+    "line": 291,
+    "declaration": "locale su_rel_fun — byte-identical"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Program-Conflict-Analysis/Misc.thy",
+    "line": 20,
+    "declaration": "locale AC fixes f, assumes commute and assoc"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Automatic_Refinement/Lib/Misc.thy",
+    "line": 282,
+    "declaration": "locale AC = Assoc + assumes commute (same two axioms, one inherited)"
+   }
+  ],
+  "reasoning": "su_rel_fun is character-for-character the same locale in both files, with the same derived lemmas (repr1, repr2, repr, unique, surjective, f_def). AC fixes a commutative associative binary operation in both; Automatic_Refinement just factors associativity into a parent locale Assoc. The stored texts talk only about 'a binary operation f' and 'a surjective unique relation', which is right for both.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "Auto2_Imperative_HOL.Union_Find|Separation_Logic_Imperative_HOL.Union_Find": {
+  "theories": [
+   "Auto2_Imperative_HOL.Union_Find",
+   "Separation_Logic_Imperative_HOL.Union_Find"
+  ],
+  "tails": 8,
+  "new_keys": 16,
+  "store_records": 16,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Separation_Logic_Imperative_HOL/Examples/Union_Find.thy",
+    "line": 35,
+    "declaration": "definition ufa_invar l == ALL i<length l. rep_of_dom (l,i) & l!i<length l"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Auto2_Imperative_HOL/Functional/Union_Find.thy",
+    "line": 26,
+    "declaration": "definition ufa_invar l = (ALL i<length l. rep_of_dom (l,i) & l!i < length l)"
+   }
+  ],
+  "reasoning": "Both encode union-find as a parent-array nat list with the same rep_of function and the same ufa_invar; Auto2's functional Union_Find is a re-derivation of Lammich's with auto2 proofs. rep_of_iff, rep_of_idx, rep_of_min, rep_of_bound, rep_of_idem, ufa_init_invar, ufa_alpha_refl and ufa_compress_correct are the same statements about the same representation.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "HOL-Bali.Term|HOL-MicroJava.Term": {
+  "theories": [
+   "HOL-Bali.Term",
+   "HOL-MicroJava.Term"
+  ],
+  "tails": 6,
+  "new_keys": 12,
+  "store_records": 12,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Bali/Term.thy",
+    "line": 200,
+    "declaration": "... and stmt = Skip | Expr expr | Lab | Comp | If' | Loop | Jmp | Throw | TryC | Fin | FinA"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/MicroJava/J/Term.thy",
+    "line": 26,
+    "declaration": "datatype stmt = Skip | Expr expr | Comp | Cond | Loop"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/NanoJava/Term.thy",
+    "line": 26,
+    "declaration": "datatype stmt = Skip | Comp | Cond | Loop | LAss | FAss | Meth | Impl (no Expr constructor)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Bali/Term.thy",
+    "line": 113,
+    "declaration": "datatype binop = Mul | Div | Mod | Plus | ... | Eq | Neq | ... (22 constructors)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/MicroJava/J/Term.thy",
+    "line": 9,
+    "declaration": "datatype binop = Eq | Add"
+   }
+  ],
+  "reasoning": "The enclosing datatypes are different Java-subset languages, but every colliding fact names only constructors that exist in both (all three) with the same role: Skip is the empty statement everywhere, Expr e is the expression statement in Bali and MicroJava, and Eq is the equality binary-operation code in Bali and MicroJava. The facts are stmt.distinct(1)/(2), stmt.inject(1), stmt.size(Skip), binop.size(Eq) and the typerep / partial_term_of boilerplate; each copied text ('an expression statement Expr e is never equal to the empty statement Skip', 'the nullary binary-operation code Eq, representing equality comparison') is true and appropriate for every claimant.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false,
+  "note": "The datatypes themselves differ in their other constructors; only the shared constructors collide."
+ },
+ "HOL-Bali.Term|HOL-MicroJava.Term|HOL-NanoJava.Term": {
+  "theories": [
+   "HOL-Bali.Term",
+   "HOL-MicroJava.Term",
+   "HOL-NanoJava.Term"
+  ],
+  "tails": 5,
+  "new_keys": 15,
+  "store_records": 15,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Bali/Term.thy",
+    "line": 200,
+    "declaration": "... and stmt = Skip | Expr expr | Lab | Comp | If' | Loop | Jmp | Throw | TryC | Fin | FinA"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/MicroJava/J/Term.thy",
+    "line": 26,
+    "declaration": "datatype stmt = Skip | Expr expr | Comp | Cond | Loop"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/NanoJava/Term.thy",
+    "line": 26,
+    "declaration": "datatype stmt = Skip | Comp | Cond | Loop | LAss | FAss | Meth | Impl (no Expr constructor)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Bali/Term.thy",
+    "line": 113,
+    "declaration": "datatype binop = Mul | Div | Mod | Plus | ... | Eq | Neq | ... (22 constructors)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/MicroJava/J/Term.thy",
+    "line": 9,
+    "declaration": "datatype binop = Eq | Add"
+   }
+  ],
+  "reasoning": "The enclosing datatypes are different Java-subset languages, but every colliding fact names only constructors that exist in both (all three) with the same role: Skip is the empty statement everywhere, Expr e is the expression statement in Bali and MicroJava, and Eq is the equality binary-operation code in Bali and MicroJava. The facts are stmt.distinct(1)/(2), stmt.inject(1), stmt.size(Skip), binop.size(Eq) and the typerep / partial_term_of boilerplate; each copied text ('an expression statement Expr e is never equal to the empty statement Skip', 'the nullary binary-operation code Eq, representing equality comparison') is true and appropriate for every claimant. In the three-way group only Skip and the type-level boilerplate collide, which is what NanoJava shares.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "Bounded_Deducibility_Security.Trivia|Relative_Security.Trivia": {
+  "theories": [
+   "Bounded_Deducibility_Security.Trivia",
+   "Relative_Security.Trivia"
+  ],
+  "tails": 6,
+  "new_keys": 12,
+  "store_records": 12,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Bounded_Deducibility_Security/Trivia.thy",
+    "line": null,
+    "declaration": "primrec these on lists of options"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Relative_Security/Preliminaries/Trivia.thy",
+    "line": null,
+    "declaration": "primrec these — same definition (the file is a copy of the BDS one)"
+   }
+  ],
+  "reasoning": "The colliding entities are these.simps(1..3), these.elims and these_map_Some: extracting the present values from a list of options. Both files define it identically and both stored texts describe exactly that. No copying: the new key set equals the old key set on all 6 tails.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "Quasi_Borel_Spaces.StandardBorel|Standard_Borel_Spaces.StandardBorel": {
+  "theories": [
+   "Quasi_Borel_Spaces.StandardBorel",
+   "Standard_Borel_Spaces.StandardBorel"
+  ],
+  "tails": 4,
+  "new_keys": 8,
+  "store_records": 8,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Standard_Borel_Spaces/StandardBorel.thy",
+    "line": 11,
+    "declaration": "locale standard_borel fixes M assumes Polish_space: EX S. Polish_space S & sets M = sets (borel_of S)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Quasi_Borel_Spaces/StandardBorel.thy",
+    "line": 20,
+    "declaration": "locale standard_borel fixes M assumes exist_fg: EX f : M ->M real_borel. EX g : real_borel ->M M. ALL x : space M. (g o f) x = x"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/S_Finite_Measure_Monad/ROOT",
+    "line": 3,
+    "declaration": "session S_Finite_Measure_Monad = Standard_Borel_Spaces + ... (so its standard_borel is the Polish-space one)"
+   }
+  ],
+  "reasoning": "Two different formal definitions of standard_borel: 'the sigma-algebra of M is the Borel sigma-algebra of some Polish space' versus 'M has a measurable encoding into the reals with a measurable left inverse'. They are not interchangeable (the encoding version excludes the empty space, since it demands a measurable g : real_borel ->M M). Three of the four tails carry text that only asserts the shared consequence and is true under either definition; one tail's copied text spells out the definition, and spells out the wrong one for one of its claimants.",
+  "english_misbound_keys": 1,
+  "affected_tails": [
+   {
+    "tail": "0232857f37f4ce465114f42c9eb90bba",
+    "entity": "Measure_QuasiBorel_Adjunction.standard_borel.lr_sets_ident (claimant S_Finite_Measure_Monad.Measure_QuasiBorel_Adjunction)",
+    "claimant": "S_Finite_Measure_Monad (built on Standard_Borel_Spaces)",
+    "mark": "copied",
+    "english_describes": "Quasi_Borel_Spaces.StandardBorel",
+    "note": "copied text glosses standard Borel as 'M admits a measurable encoding into the Borel real numbers together with a measurable decoding that recovers every point of its carrier', which is Quasi_Borel_Spaces' definition, not the Polish-space definition that S_Finite_Measure_Monad uses"
+   }
+  ],
+  "needs_reinterpretation": true
+ },
+ "HOL-NanoJava.State|HotelKeyCards.State|X86_Semantics.State": {
+  "theories": [
+   "HOL-NanoJava.State",
+   "HotelKeyCards.State",
+   "X86_Semantics.State"
+  ],
+  "tails": 3,
+  "new_keys": 9,
+  "store_records": 9,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/NanoJava/State.thy",
+    "line": null,
+    "declaration": "record state (NanoJava heap/locals)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/HotelKeyCards/State.thy",
+    "line": null,
+    "declaration": "record state (hotel-protocol state)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/X86_Semantics/State.thy",
+    "line": null,
+    "declaration": "record state (x86 machine state)"
+   }
+  ],
+  "reasoning": "Three unrelated state records, but the only colliding entities are the record package's congruence rules for the polymorphic extension slot (state.fold_congs / state.unfold_congs on more and more_update) and state.partial_term_of_state_ext_triv. Those are generic to every extensible record and say nothing about the fields. All three stored texts are phrased generically ('a record's extension component', 'an extensible state's additional-value slot'), and where a text does name its system ('the extensible NanoJava state record type', 'an extensible x86 state') it sits on that system's own key.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "HOL-IMP.Com|HOL-IMPP.Com|HOL-Induct.Com|Hoare_Time.Com": {
+  "theories": [
+   "HOL-IMP.Com",
+   "HOL-IMPP.Com",
+   "HOL-Induct.Com",
+   "Hoare_Time.Com"
+  ],
+  "tails": 3,
+  "new_keys": 12,
+  "store_records": 12,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/IMP/Com.thy",
+    "line": 5,
+    "declaration": "datatype com = SKIP | Assign | Seq | If | While"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/IMPP/Com.thy",
+    "line": 34,
+    "declaration": "datatype com = SKIP | Ass | Local | Semi | Cond | While | BODY | Call"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Induct/Com.thy",
+    "line": 21,
+    "declaration": "... and com = SKIP | Assign | Semi | Cond | While"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Hoare_Time/Com.thy",
+    "line": 5,
+    "declaration": "datatype com = SKIP | Assign | Seq | If | While  (identical to HOL-IMP's)"
+   }
+  ],
+  "reasoning": "Four IMP-like command languages. The only colliding entities are typerep_com_def, partial_term_of_com_triv and com.size(SKIP), and SKIP is the empty/no-op command in all four with the same meaning; the type-level facts say only that com is a parameter-free datatype named Com.com. Every text is true of every claimant (two of the twelve keys are unfilled and will be interpreted fresh).",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false,
+  "note": "The four com datatypes differ in their remaining constructors; those do not collide."
+ },
+ "LambdaMu.Syntax|Q0_Metatheory.Syntax": {
+  "theories": [
+   "LambdaMu.Syntax",
+   "Q0_Metatheory.Syntax"
+  ],
+  "tails": 2,
+  "new_keys": 4,
+  "store_records": 4,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/LambdaMu/Syntax.thy",
+    "line": 12,
+    "declaration": "datatype type = Iota | Fun type type"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Q0_Metatheory/Syntax.thy",
+    "line": 11,
+    "declaration": "datatype type = TInd (i) | TBool (o) | TFun type type"
+   }
+  ],
+  "reasoning": "Different datatypes both named Syntax.type: the simple types of the lambda-mu calculus over one base type, versus Church's Q0 types with an individual type i and a truth-value type o. Only two entities collide and both are type-level code-generation boilerplate (typerep_type_def, partial_term_of_type_triv); each key has its own text and both texts say only that Syntax.type is a parameter-free datatype whose partial_term_of is undefined, which is true of both.",
+  "english_misbound_keys": 0,
+  "affected_tails": [
+   {
+    "tail": "both tails",
+    "note": "texts are type-level boilerplate, correct for either claimant"
+   }
+  ],
+  "needs_reinterpretation": false
+ },
+ "Differential_Game_Logic.Syntax|LambdaMu.Syntax": {
+  "theories": [
+   "Differential_Game_Logic.Syntax",
+   "LambdaMu.Syntax"
+  ],
+  "tails": 2,
+  "new_keys": 4,
+  "store_records": 4,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Differential_Game_Logic/Syntax.thy",
+    "line": 28,
+    "declaration": "datatype trm = Var variable | Number lit | Const ident | Func ident trm | Plus | Times | Differential"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/LambdaMu/Syntax.thy",
+    "line": 22,
+    "declaration": "datatype trm = LVar nat | Lbd type trm | App trm trm | Mu type cmd"
+   }
+  ],
+  "reasoning": "Different datatypes both named Syntax.trm: real-arithmetic terms of differential game logic versus lambda-mu terms. Only typerep_trm_def and partial_term_of_trm_triv collide; both are type-level boilerplate and each key keeps a text that is true of either claimant.",
+  "english_misbound_keys": 0,
+  "affected_tails": [
+   {
+    "tail": "both tails",
+    "note": "texts are type-level boilerplate"
+   }
+  ],
+  "needs_reinterpretation": false
+ },
+ "Constructive_Cryptography.Resource|ProcessComposition.Resource": {
+  "theories": [
+   "Constructive_Cryptography.Resource",
+   "ProcessComposition.Resource"
+  ],
+  "tails": 2,
+  "new_keys": 4,
+  "store_records": 4,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Constructive_Cryptography/Resource.thy",
+    "line": 9,
+    "declaration": "codatatype ('a,'b) resource = Resource (run_resource: 'a => ('b * ('a,'b) resource) spmf)  — an interactive oracle, 'a queries, 'b responses"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/ProcessComposition/Resource.thy",
+    "line": 32,
+    "declaration": "quotient_type ('a,'b) resource = ('a,'b) res_term / res_term_equiv  — linear-logic resources modulo equivalence"
+   }
+  ],
+  "reasoning": "A probabilistic interactive oracle codatatype versus a quotient of resource terms; nothing in common beyond the name and the arity. Only typerep_resource_def and partial_term_of_resource_triv collide, and no copy occurs (new key set equals old key set on both tails). The Constructive_Cryptography text calls the parameters 'input type' and 'output type' (right for it), the ProcessComposition text says only 'parameter types'.",
+  "english_misbound_keys": 0,
+  "affected_tails": [
+   {
+    "tail": "both tails",
+    "note": "no copy; each text correct for its own key"
+   }
+  ],
+  "needs_reinterpretation": false
+ },
+ "HOL-Bali.Decl|HOL-NanoJava.Decl": {
+  "theories": [
+   "HOL-Bali.Decl",
+   "HOL-NanoJava.Decl"
+  ],
+  "tails": 2,
+  "new_keys": 4,
+  "store_records": 4,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Bali/Decl.thy",
+    "line": 182,
+    "declaration": "record methd = mhead + mbody::mbody  (and record \"class\" with its own fields)"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/NanoJava/Decl.thy",
+    "line": 18,
+    "declaration": "record methd = par::ty res::ty lcl::(vname*ty) list bdy::stmt"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/NanoJava/Decl.thy",
+    "line": 28,
+    "declaration": "record \"class\" = super::cname flds::fdecl list methods::mdecl list"
+   }
+  ],
+  "reasoning": "Different record types with the same names. Only the extension-slot code-generation facts collide (methd.partial_term_of_methd_ext_triv, class.partial_term_of_class_ext_triv), whose content is that partial_term_of is undefined for the record's extension fragment. Both stored texts stay at that level ('the extensible method-record type', 'method-extension-fragment value'), so both are true of either claimant.",
+  "english_misbound_keys": 0,
+  "affected_tails": [
+   {
+    "tail": "both tails",
+    "note": "texts are record-extension boilerplate"
+   }
+  ],
+  "needs_reinterpretation": false
+ },
+ "Completeness.Formula|MFODL_Monitor_Optimized.Formula": {
+  "theories": [
+   "Completeness.Formula",
+   "MFODL_Monitor_Optimized.Formula"
+  ],
+  "tails": 2,
+  "new_keys": 4,
+  "store_records": 4,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Completeness/Formula.thy",
+    "line": null,
+    "declaration": "datatype formula — first-order formulas for the sequent-calculus completeness proof"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/MFODL_Monitor_Optimized/Formula.thy",
+    "line": null,
+    "declaration": "datatype formula — metric first-order dynamic logic formulas"
+   }
+  ],
+  "reasoning": "Two unrelated formula datatypes. Only typerep_formula_def and partial_term_of_formula_triv collide, no copy occurs (new key set equals old key set on both tails), and each text says only that Formula.formula is a parameter-free datatype with an undefined partial_term_of.",
+  "english_misbound_keys": 0,
+  "affected_tails": [
+   {
+    "tail": "both tails",
+    "note": "no copy; type-level boilerplate"
+   }
+  ],
+  "needs_reinterpretation": false
+ },
+ "CoreC++.Type|HOL-Bali.Type|HOL-MicroJava.Type|Jinja.Type|JinjaDCI.Type|JinjaThreads.Type": {
+  "theories": [
+   "CoreC++.Type",
+   "HOL-Bali.Type",
+   "HOL-MicroJava.Type",
+   "Jinja.Type",
+   "JinjaDCI.Type",
+   "JinjaThreads.Type"
+  ],
+  "tails": 2,
+  "new_keys": 12,
+  "store_records": 12,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Jinja/Common/Type.thy",
+    "line": 24,
+    "declaration": "datatype ty = Void | Boolean | Integer | NT | Class cname"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Bali/Type.thy",
+    "line": 29,
+    "declaration": "... and ty = PrimT prim_ty | RefT ref_ty"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/MicroJava/J/Type.thy",
+    "line": 147,
+    "declaration": "datatype ty = PrimT prim_ty | RefT ref_ty"
+   }
+  ],
+  "reasoning": "Two different shapes of Java type datatype share the name Type.ty: the flat Jinja-family one (Void/Boolean/Integer/NT/Class, also in JinjaDCI, JinjaThreads and CoreC++) and the layered Bali/MicroJava one (PrimT/RefT over prim_ty and ref_ty). Only typerep_ty_def and partial_term_of_ty_triv collide, i.e. the facts that Type.ty is a parameter-free datatype and that its partial_term_of is undefined; every stored text stays at that level. Six of the twelve keys are unfilled and will be interpreted fresh.",
+  "english_misbound_keys": 0,
+  "affected_tails": [
+   {
+    "tail": "both tails",
+    "note": "type-level boilerplate only"
+   }
+  ],
+  "needs_reinterpretation": false
+ },
+ "HRB-Slicing.JVMCFG|Slicing.JVMCFG": {
+  "theories": [
+   "HRB-Slicing.JVMCFG",
+   "Slicing.JVMCFG"
+  ],
+  "tails": 2,
+  "new_keys": 4,
+  "store_records": 4,
+  "verdict": "same",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Slicing/JinjaVM/JVMCFG.thy",
+    "line": 17,
+    "declaration": "definition \"wf_jvmprog = {(P, Phi). wf_jvm_prog_Phi P}\" ; typedef wf_jvmprog"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/HRB-Slicing/JinjaVM_Inter/JVMCFG.thy",
+    "line": 14,
+    "declaration": "definition \"wf_jvmprog = {(P, Phi). wf_jvm_prog_Phi P}\" ; typedef wf_jvmprog — identical"
+   }
+  ],
+  "reasoning": "HRB-Slicing's JinjaVM instantiation is a copy of Slicing's; the definition and the typedef of wf_jvmprog are character-for-character the same, and the two colliding entities are exactly that definition and its typerep.",
+  "english_misbound_keys": 0,
+  "affected_tails": [],
+  "needs_reinterpretation": false
+ },
+ "Auto2_Imperative_HOL.Interval|HOL-Library.Interval": {
+  "theories": [
+   "Auto2_Imperative_HOL.Interval",
+   "HOL-Library.Interval"
+  ],
+  "tails": 1,
+  "new_keys": 2,
+  "store_records": 2,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/Isabelle2025-2/src/HOL/Library/Interval.thy",
+    "line": 15,
+    "declaration": "typedef (overloaded) 'a interval = {(a::'a::preorder, b). a <= b}  morphisms bounds_of_interval Interval"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Auto2_Imperative_HOL/Functional/Interval.thy",
+    "line": 16,
+    "declaration": "datatype 'a interval = Interval (low: 'a) (high: 'a)  — a plain pair, no order constraint"
+   }
+  ],
+  "reasoning": "HOL-Library's interval is a typedef of ordered pairs (non-empty closed intervals over a preorder, with Interval as the abstraction morphism); Auto2's is a free datatype of two endpoints with no constraint. The one colliding entity is typerep_interval_def, whose text says only that the runtime type representation of 'a interval is the node Interval.interval applied to the representation of 'a — true of both. HOL-Library's text is copied onto the Auto2 key, without introducing a false statement.",
+  "english_misbound_keys": 0,
+  "affected_tails": [
+   {
+    "tail": "02cedea66d2487eb28ee99a0187a4123",
+    "entity": "Interval.typerep_interval_def",
+    "claimant": "Auto2_Imperative_HOL.Interval",
+    "mark": "copied",
+    "english_describes": "HOL-Library.Interval",
+    "note": "text is type-level only and stays true of the Auto2 datatype"
+   }
+  ],
+  "needs_reinterpretation": false
+ },
+ "JiveDataStoreModel.Value|Launchbury.Value": {
+  "theories": [
+   "JiveDataStoreModel.Value",
+   "Launchbury.Value"
+  ],
+  "tails": 1,
+  "new_keys": 2,
+  "store_records": 2,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/JiveDataStoreModel/Isabelle/Value.thy",
+    "line": 37,
+    "declaration": "datatype Value = boolV | intgV | shortV | byteV | objV | arrV | nullV  — Java values"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Launchbury/Value.thy",
+    "line": 7,
+    "declaration": "domain Value = Fn (lazy \"Value -> Value\") | B (lazy \"bool discr\")  — a HOLCF domain of denotations"
+   }
+  ],
+  "reasoning": "A Java value datatype and a HOLCF domain of semantic values, sharing only the name Value.Value. The single colliding entity is typerep_Value_def and both texts say only that Value is recorded as a nullary named type.",
+  "english_misbound_keys": 0,
+  "affected_tails": [
+   {
+    "tail": "02c8112e87b7db6739feb01ef517aa7e",
+    "note": "type-level boilerplate; each key keeps its own text"
+   }
+  ],
+  "needs_reinterpretation": false
+ },
+ "HyperCTL.Prelim|Syntax_Independent_Logic.Prelim": {
+  "theories": [
+   "HyperCTL.Prelim",
+   "Syntax_Independent_Logic.Prelim"
+  ],
+  "tails": 1,
+  "new_keys": 2,
+  "store_records": 2,
+  "verdict": "different",
+  "declarations": [
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/HyperCTL/Prelim.thy",
+    "line": 23,
+    "declaration": "definition asList A == SOME as. distinct as & set as = A"
+   },
+   {
+    "file": "/home/qiyuan/Current/MLML/contrib/afp-2026-05-13/thys/Syntax_Independent_Logic/Prelim.thy",
+    "line": 73,
+    "declaration": "definition asList A == SOME as. set as = A  (no distinctness)"
+   }
+  ],
+  "reasoning": "The two asList definitions differ: HyperCTL's chosen list is required to be distinct, Syntax_Independent_Logic's is not. The one colliding fact is finite A ==> set (asList A) = A, which is the same statement in both, no copy occurs, and neither stored text mentions distinctness, so neither is wrong. I record the verdict as different because the underlying definitions genuinely differ.",
+  "english_misbound_keys": 0,
+  "affected_tails": [
+   {
+    "tail": "0283265ea9690b1fe0d1ef3793e23086",
+    "note": "no copy; both texts correct for the shared statement"
+   }
+  ],
+  "needs_reinterpretation": false
+ }
+}

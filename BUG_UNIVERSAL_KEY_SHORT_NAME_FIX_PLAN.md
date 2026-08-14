@@ -1843,6 +1843,46 @@ boilerplate but not read one by one; 6 `unfilled` tails whose only candidate sou
 different fact name for the same proposition; and 2 CoSMed picks between two dynamic-bundle
 indices, where the in-cone one is the better of two poor options.
 
+#### The repairs, applied to the staging store (2026-08-14)
+
+`contrib/Semantic_Embedding/patch_staging_store.py`, run against
+`~/rekey-staging-final/` **before** §B.9 promotes it, so the whole correction lands in one
+generation rather than as an after-the-fact edit to a live store. `~/rekey-staging-20260814`
+— the join's first, byte-identical output — is the untouched twin to fall back on.
+Deliberately **not** a change to §B.6's rules, and the join was not re-run: each of these is
+a named, enumerated population, and a rule general enough to catch them would have to be
+sound about semantic divergence, which the two `PosRat.thy` files disprove.
+
+```
+fill    274 records, 274 vectors      swap    56 records, 56 vectors
+delete   61 records + vectors          rename   1 record, its vector dropped
+finished cleared on 6 theories         gap list 371/33 -> 158/20
+```
+
+**The 61 are deleted, not blanked.** `interpret_file` treats a key as cached iff a record
+exists *and* its `interpretation` is not None (`semantic_interpretation.py:1052`), so
+blanking would also force re-interpretation — but **zero** records in either store have
+`interpretation is None`, so blanking mints a shape the corpus has never held, while "no
+record at this key" is what every un-interpreted entity already looks like.
+
+**`finished` is cleared on all 6 claiming theories, verified by enumeration** — `CommCSL.PosRat`
+28 keys, `ConcurrentHOL.Heap` 23, `HOL-Hoare.Heap` 5, `HOL-Imperative_HOL.Heap` 3,
+`Tree-Automata.Tree` 1, `S_Finite_Measure_Monad.Measure_QuasiBorel_Adjunction` 1. Checked
+because a missed flag is exactly the defect the join's review found: the theory reads
+"finished", so §B.8's collection never revisits it and those entities have no path back. Note
+the `Heap` misbinding runs **both ways** — 23 keys took `HOL-Hoare`'s payload-carrying text
+and 8 took the phantom-parameter text.
+
+**The patched store re-verified independently of any arithmetic**: 0 zero-length values, 0
+records with `interpretation is None`, 867 WIP keys and all of them theory-status, prefix
+check 0 mismatches over 1,137,914 theorem-alike keys, the 16-byte key set still byte-identical
+to the old store (11,418) with the counter present, and **0 entity-shaped vector keys with no
+record**. 1,336,867 entity records, 1,334,067 vector keys, 3,493 records carrying no vector,
+14,124 with no position.
+
+Evidence under `evidence/universal-key/`: `suspect_patchlist.json` is what was applied, and
+`suspect_audit_{groups,small,forced,copied}.json` are the four teams' verdicts.
+
 **The class blind spot is closed.** `Term_Digest.hash_typ` **does** fold the sorts of `TVar`
 and `TFree`, so a sort difference always splits the tail. A collision needs identical sort
 *strings* denoting different classes, i.e. two same-base-named theories in disjoint cones —
