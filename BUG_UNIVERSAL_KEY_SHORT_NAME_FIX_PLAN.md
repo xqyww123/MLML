@@ -1113,7 +1113,38 @@ are 57 more groups that the "~97 % tied to a documented port or copy" figure mus
    `Isabelle_Theory_Hash/theory_hash.lmdb` that `resolve_roots` writes via
    `store_theory_hash` (`theory_hash.ML:235-240`). That one is a rebuildable hash→name
    cache and needs no backup; it is named so that "any write" is literally true.
-2. **No process holds any of the four environments**: `semantics.lmdb`, each
+2. **The RPC host process is dead, verified by PID — not by `fuser`.** The environments
+   open **lazily**: measured 2026-08-14, the attached host PID 2123182 held
+   `semantics.lmdb`, `theory_hash.lmdb` and the dump open read-write while showing **no**
+   holder on `experience_index.lmdb` or the vector store, because this REPL had never
+   queried them. So a clean `fuser` result proves nothing while the host lives — it will
+   open whichever environment it next needs, including into a directory that has been
+   renamed aside. `_Semantic_DB._env` and `_Experience_Index._env` cache on the class for
+   the process lifetime and have no inode re-check (the scratch dump module has one;
+   these do not). Killing the host is not enough either: it is a child of `poly`, which
+   forks a fresh one on the next RPC call. **Stop the REPL server**, then confirm the PID
+   is gone. Liveness is checked with `ss` only — never by connecting to :6666, which kills
+   the server. Note also that the REPL binds `0.0.0.0:6666`, so anything on the network can
+   re-open the store between the check and the rename.
+2a. **A backup of the CURRENT store exists before anything is written.** §B.9's rollback
+   refers to "the §B.2 backup" and no step created one. Measured 2026-08-14: every backup
+   on `cslh19` — five `semantics.lmdb.bak-*`, `semantics.lmdb.pre-rekey-20260813-170504`,
+   the vector and experience `pre-rekey` copies — **predates the 2026-08-13 17:05:04
+   theory-hash re-key**, so restoring any of them puts back prefixes the live
+   `Isabelle_RPC` can no longer address. **The live directory is the only copy of the
+   post-re-key corpus.** `/home` is btrfs, so make copy-on-write clones, which are
+   near-instant and initially free:
+
+   ```
+   TS=$(date +%Y%m%d-%H%M%S); C=~/.cache/Isabelle_Semantic_Embedding
+   cp -a --reflink=always $C/semantics.lmdb                       $C/semantics.lmdb.pre-swap-$TS
+   cp -a --reflink=always $C/vector_Qwen__Qwen3-Embedding-8B.lmdb $C/vector_….lmdb.pre-swap-$TS
+   cp -a --reflink=always $C/experience_index.lmdb                $C/experience_index.lmdb.pre-swap-$TS
+   ```
+
+   Record the three paths in the run log and check they exist in the run script's
+   preflight. §B.9's rollback restores *these*, not a renamed live directory.
+2b. **No process holds any of the environments**: `semantics.lmdb`, each
    `vector_*.lmdb`, **`experience_index.lmdb`** (`_Experience_Index._env` is cached on
    the class for the process lifetime, `experience_index.py:61-77`, exactly like
    `_Semantic_DB._env`, `semantics.py:186`, `:285-303`), and `theory_hash.lmdb`. POSIX
@@ -1130,7 +1161,17 @@ are 57 more groups that the "~97 % tied to a documented port or copy" figure mus
    at 20:20 showed 20 GiB available and 38 GiB free swap — but because `poly` held
    32.1 GiB swapped out and the build wrapper 31.4 GiB resident on a 62 GiB box, so a
    sweep faults that back in. These figures are volatile; re-check at run time.
-5. **Disk.** The run holds simultaneously: the old store (1.8 G), fresh backups of it
+5. **Disk**, re-measured 2026-08-14: `/home` is 720 G with **72 G available at 91 % used**,
+   not the 92.9 G below, and the kept old copies are **≈26.8 GiB**, not 8.6 G (five
+   `semantics.lmdb.bak-*` ≈8.5 G, `semantics.lmdb.pre-rekey-*` 1.8 G,
+   `vector_*.pre-rekey-*` 16 G, experience copies 0.5 G). The simultaneous peak is roughly
+   1.7 (old store) + 17.7 (the reflink backups above, ≈0 on btrfs) + 1.2 (dump, already
+   there) + 2 (new store) + 16 (new vector store) ≈ **38.6 G against 72 G** — feasible,
+   with 33 G of margin rather than the 55 G the old figures implied. Put a `df` check with
+   a hard floor of 45 G in the run script; never trust the number written here. The
+   original paragraph, whose arithmetic is superseded, follows.
+
+   The run holds simultaneously: the old store (1.8 G), fresh backups of it
    and of the vector store (1.8 G + 15.7 G), the dump (~1 G), the new store (~2 G) and
    the new vector store (~15.7 G) — about **38 GiB** against 92.9 GiB free on a btrfs
    `/home` at 90.8 % data usage, on top of the 8.6 G of kept backups (D9). Feasible
@@ -1683,12 +1724,27 @@ Build into `semantics.lmdb.building`; rename to `semantics.lmdb.new` **only afte
 `install_system_db`'s temp-dir-then-rename with crash heal
 (`snapshot_sync.py:584-650`).
 
-Then, with §B.2 item 2 verified, move the old directories to `.bak-<timestamp>` and the
-new ones into place — **all four environments together**, including
-`experience_index.lmdb`, which otherwise survives the swap pointing at pre-migration
-experience keys and makes every experience silently unavailable to AoA
-(`_experience_hits` drops candidates whose `Semantic_DB[uk]` is `None`,
-`semantics.py:1917-1919`). Run `rebuild_experience_index` before the store is exercised.
+Then, with §B.2 item 2 verified, swap. **"All four environments together" was wrong, and
+it is two directories, not four** (measured 2026-08-14):
+
+- `semantics.lmdb` — **moves**; the join produces a new one.
+- `vector_Qwen__Qwen3-Embedding-8B.lmdb` — **moves**; the join produces a new one. It is
+  the only vector store on the machine.
+- `experience_index.lmdb` — **renamed aside and rebuilt**, not moved: the join produces no
+  new version, and §B.9 already says to run `rebuild_experience_index`. It must not simply
+  be rebuilt in place, or a rollback leaves a post-migration index over a pre-migration
+  store and `_experience_hits` drops every candidate (`semantics.py:1917-1919`).
+- `theory_hash.lmdb` — **not touched.** It lives under a different parent
+  (`~/.cache/Isabelle_Theory_Hash/`), Part B does not re-key theory hashes — §B.7 gate 2
+  proves it, 10,550 dump theory keys byte-identical to store keys — and §B.2 item 1 already
+  calls it a rebuildable cache. It belongs in the no-holder list, not the swap.
+
+There is **no atomic step and no crash heal across two directories.** §B.9 cites
+`install_system_db`, which heals exactly one, via a single `.old` name checked at the next
+run. An interruption between the two renames leaves new records addressing old vectors:
+every key gathers as missing, `_auto_embed` is handed the whole domain, and 16 GiB of paid
+vectors are silently re-computed. Write both renames into one script, and check for the
+half-swapped state at its start.
 
 Rollback is the same moves reversed, using the §B.2 backup rather than a renamed live
 directory. Keep the dump until the new store has been exercised.
@@ -2105,8 +2161,16 @@ the code is next touched.
 
 5. **The join** (`contrib/Semantic_Embedding/migrate_universal_keys.py`, §B.5–B.7),
    producing `semantics.lmdb.building` and the gap list. No writes to the live store.
-6. **The gap list's count and cost estimate** to the user; approval; `collect` over the
-   gap theories; chained embed.
+6. **The gap list's spend — AFTER the swap, not before.** Reordered 2026-08-14: `collect`
+   writes through `Semantic_DB`, which opens `semantic_DB_dir()/semantics.lmdb` and caches
+   it for the process lifetime (`semantics.py:285-303`), so it cannot be aimed at
+   `semantics.lmdb.building`; and `plan_interpretation` reads `finished` from that same
+   live store, so with §B.6's flag-clearing done inside `.building` the run would first
+   report nothing to do, and anything forced through would land in the directory step 8
+   renames to `.bak`. So: swap first, then clear `finished` on the gap theories **in the
+   promoted store**, then `collect`, then the chained embed. The spend is small enough that
+   the old ordering's protection is not worth its risk — 87 entities over 11 theories,
+   about $2.50 at the store's own measured rates.
 7. **The experience pass** (§B.10), including its refusal report.
 8. **The gates** (§B.7), then promotion and the four-directory swap (§B.9), then
    `rebuild_experience_index`.
