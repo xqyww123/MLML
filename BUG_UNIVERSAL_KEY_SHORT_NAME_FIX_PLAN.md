@@ -2511,20 +2511,40 @@ availability, trading a list that may well be right for a candidate set that is 
 wider. Where the recomputed list **differs** from the stored one, that is a detected repair
 and is reported per record.
 
-#### What is left to build
+#### What is built (2026-08-14), and what remains to run
 
-1. A `static_context_unpacker`-based variant of the `Experience.constituents` callback
-   (`Isabelle_RPC/Tools/context.ML:1085-1091`), which today raises if any pattern fails to
-   parse and whose only caller passes an AoA proof-state context
-   (`mcp_http_server.py:2279-2285`). The variant must build its context by merging the
-   theories the record's own old constituent list names, and must **report** a parse failure
-   rather than raising through the batch.
-2. A pass that copies the 5,926 unmoved records and their vectors verbatim, sends the 842 to
-   the callback, writes the repaired or cleared records, and emits a per-record report:
-   repaired (list changed), unchanged, cleared (with the failing pattern), and the count of
-   recomputed-versus-stored hash disagreements, which should be zero.
-3. `Experience_Index.rebuild` afterwards — **only** afterwards; §B.9 records why running it
-   before this pass yields an empty index.
+The three build items are done and committed (Isabelle_RPC `a7b1b98`,
+Semantic_Embedding `97cf265`):
+
+1. **The recomputation lives in a new Isa-REPL app**,
+   `Semantic_Store.migrate_experience_constituents`
+   (`Tools/semantic_interpretation_app.ML`), not in an RPC callback: unlike the dump,
+   nothing here writes from ML, so no RPC host is involved at all — the input records
+   arrive over the app's own socket and the results stream back on it as hex-armoured
+   `EXPMIG` lines. Per record it merges the theories the record's old constituent list
+   names into one scratch context (`Theory.begin_theory`) and re-runs the **existing**
+   `experience_constituents` (now exported from `CONTEXT_CALLBACKS`) under
+   `Exn.capture`, so a parse failure or an unresolvable theory becomes a per-record
+   FAIL result rather than an exception through the batch.
+2. **The driver is `migrate_experience_keys.py`.** It reproduces the partition above
+   from the dump's theory census as fixed gates, sends the recompute class to the app,
+   and writes records and vectors into the promoted store — cleared records get `[]`
+   and never `None`. One-shot: it refuses if the target holds any EXPERIENCE key.
+   `--dry-run` does everything except the write phase.
+   `test_migrate_experience_keys.py` covers everything but the app itself on a
+   synthetic corpus (30 checks, all passing). The app was compile-checked and probed
+   live on a local REPL (HOL-Library heap, theory chain loaded from source):
+   single-theory OK, two-theory merge (the antichain filter correctly dropped the
+   ancestor), parse failure with the positioned diagnostic, and unknown theory
+   (`Theory loader: undefined entry`) all behave as the driver expects.
+3. `Experience_Index.rebuild` runs afterwards — **only** afterwards
+   (`isabelle-semantics reindex`; §B.9 records why running it before this pass yields
+   an empty index); then the `NEEDS_rebuild_experience_index` marker comes off.
+
+Still to run, on `cslh19`, each step with the user's say-so: restart the REPL (the
+running server predates the app and does not reload edited `.ML`), the dry run, the
+real run, the reindex. Before the real run, confirm nothing is writing experiences
+(no AoA session).
 
 ### B.11 What downstream users lose, for the release note
 
@@ -2555,7 +2575,17 @@ shared working tree — and comes back out when it has done its job. History kee
   and its import line in `Isabelle_Semantic_Embedding/__init__.py`.
 - `contrib/Semantic_Embedding/dump_universal_keys.py` — whole file.
 - `contrib/Semantic_Embedding/migrate_universal_keys.py` (the join, §B.5–B.7) — whole
-  file, once written.
+  file, with its test `test_migrate_universal_keys.py`.
+- `contrib/Semantic_Embedding/patch_staging_store.py` and
+  `contrib/Semantic_Embedding/promote_rekey.py` (§B.6's surgical repairs and the §B.9
+  swap) — whole files.
+- `contrib/Semantic_Embedding/migrate_experience_keys.py` (the experience pass, §B.10)
+  — whole file, with its test `test_migrate_experience_keys.py`; and in
+  `Tools/semantic_interpretation_app.ML`, the
+  `Semantic_Store.migrate_experience_constituents` app.
+- **Keep** the `experience_constituents` export in `CONTEXT_CALLBACKS`
+  (`Isabelle_RPC/Tools/context.ML`): like the two exports kept below, it names
+  something the module already computed.
 - In `Tools/semantic_store.ML`: `dump_entities_cmd`, `dump_preflight_cmd`,
   `dump_scan_cmd`, `dump_report` and its helpers, `dump_theory`, `dump_cone`, and their
   signature entries.
@@ -2824,7 +2854,10 @@ the code is next touched.
    **371 entities over 33 theories**, roughly **$8–16** — 371 × $0.0073–0.0104 marginal
    plus 33 one-batch fixed costs, whose per-theory constant is the weak part of §B.8's
    model (the recorded ledger gives $0.16–0.22; §B.8's $0.40 has no provenance).
-7. **The experience pass** (§B.10), including its refusal report.
+7. **The experience pass** (§B.10), including its refusal report. **Built and tested
+   2026-08-14** (the app, the driver, its synthetic test, and a live probe on a local
+   REPL — see "What is built" in §B.10); still to run on `cslh19`: REPL restart, dry
+   run, real run, reindex, each with the user's say-so.
 8. ~~**Promotion** (§B.9)~~ — done 2026-08-14 15:20:23. Two directories moved,
    `experience_index.lmdb` was renamed aside, `theory_hash.lmdb` untouched; the REPL was
    stopped and restarted with the user's approval; `fsck` passes on the promoted store.
