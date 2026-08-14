@@ -114,6 +114,35 @@ From the user. Not open for review; recorded so the plan's assumptions are visib
   completion record, and a filter over the cone), and it is sound by construction —
   a theory's entities and its completion record share one transaction, so "has a
   completion record" and "is completely dumped" are the same statement.
+- **D19.** **One old record may fill several new keys**, when a three-part guard holds.
+  This reverses §B.1's "the join must not guess" for the one case where the guard can be
+  checked, and it is the difference between 20,862 entities needing paid
+  re-interpretation and 2,476. Decided 2026-08-14 on three independent verifications
+  (Part F). The guard, at the **strictest** reading of each part, by the user's
+  instruction to take the safest:
+  1. every claimant carries a **byte-identical proposition**;
+  2. the **union of every alias name on every claimant, together with the old record's
+     own name, is a single name** — not "the first name of each key agrees", which is
+     ~1,200 keys looser. The 13 records this refuses are benign aliases
+     (`List.lists.intros(1)` against `List.lists.Nil`); paying for them is the price of
+     the strict reading;
+  3. the claimants' **session tuple is on an explicit allow list**. Not a source-overlap
+     threshold: this migration runs once over a corpus that is already fully enumerated,
+     so there is nothing to generalise to, and a threshold is strictly weaker than
+     deciding each case. **The whole population is 47 session tuples** covering all
+     11,598 rule-firing groups; each is adjudicated once, by hand, against the sources,
+     and anything not on the list does not fire. Two are already refused —
+     `HOL-Library` ↔ `Tree-Automata` (41 groups, a binary tree against a ranked term
+     tree, one interpretation saying "binary tree" which is false of the other) and
+     `Auto2_Imperative_HOL` ↔ `HOL-Library` on `Interval` (1 group, unrelated notions).
+     Three more are unfinished and must be settled before the join runs, because the
+     verification that classified them said in writing that it had not: `HOL-Bali` ↔
+     `HOL-MicroJava` (60 groups — only `prim_ty` was opened, while `Type`, `Value` and
+     `Term` also collide), `IOA-ABP` ↔ `IOA-NTP` (130 groups — the file locator could
+     not attribute each `Action.thy` to its session, so the judgement rests on the
+     interpretations' wording), and the mid-band tuples at 0.25–0.90 content overlap
+     generally, whose classification rests on provenance and sampling rather than on
+     reading every group.
 - **D18.** The **`HOL-Decision_Procs` legacy records are abandoned**, under D10 like any
   other leftover. `is_infra_session` (`infra_filter.ML:26`) excludes that whole session
   from `collect_cone`, so the dump cannot cover it and the join maps none of its
@@ -940,6 +969,31 @@ in the image, ~5,800 Example theories, ~923 `HOL-Decision_Procs`, 635 drift); th
 measured 33,050 exceeds it by about 6,000, which is the name-addressed block — §B.0's
 analysis ranged over theorem-alike records and never counted it.
 
+**Whose material is lost.** Almost none of it is the AFP corpus:
+
+| records | origin |
+|---|---|
+| 19,628 | theories outside the image: `Geo_Real2` 3,073 and the long tail of Why3-generated verification-condition theories — **this project's own work** |
+| 6,753 | `phi-system` and this project's tooling |
+| 5,788 | **AFP**: the theories genuinely absent from the image (the Example theories of §B.2 item 7's 23) |
+| 878 | `HOL-Decision_Procs`, the infrastructure session (D18) |
+| 3 | an AFP theory the dump does cover, whose entity no longer enumerates |
+
+**So the AFP corpus loses about 6,700 records, 0.49 % of the store**; the other 26,381
+are our own non-AFP material, which D7 abandoned knowingly.
+
+Two independent cross-checks say the attribution is sound: §B.0's exact figure for the
+not-in-the-image population was 19,539 and the measurement gives 19,628, and its figure
+for the Example theories was 5,778 against a measured 5,788 — both inside 0.5 %.
+
+**The limit of the attribution, stated rather than rounded away.** Only 9,885 of the
+33,050 carry a field naming a theory (a constituent list); the other 23,165 are legacy
+or name-addressed records that name none, and for those the table above attributes by
+the **leading component of the entity's name** — a theory *base* name, which is exactly
+the inference this whole plan exists to remove. It is serviceable here because it
+decides no writes and because the two cross-checks above are independent of it, but no
+row of this table may be used as a gate.
+
 ### B.1 The shared tails, and why the join must not guess
 
 **1,156,153** theorem-alike records including WIP (persistent only: 1,133,194) sit on
@@ -948,9 +1002,27 @@ more than one record, covering 22,053 records** — 10,113 tails by 2 records, 5
 21 by 4. Persistent only: 9,180 tails, 18,983 records.
 
 An earlier draft claimed these were verbatim AFP copies whose content was
-interchangeable, so the join could copy freely. **That is false and was disproved
-directly.** The two records named `Lens_Laws.lens.defs(2)` have identical `kind`,
-identical `name` and byte-identical `expr` — and **different interpretation text**.
+interchangeable, so the join could copy freely. **The disproof offered here does not
+hold, and D19 partially reverses the conclusion — read this paragraph and the next
+together.** The stated evidence was the two records named `Lens_Laws.lens.defs(2)`,
+which have identical `kind`, identical `name` and byte-identical `expr` — and
+**different interpretation text**.
+
+**Both texts were printed and read, 2026-08-14, and they say the same thing.** A: "The
+`fields` constructor is definitionally equal to the closed record literal containing its
+supplied getter and putter." B: the same claim in near-identical words, plus one clause
+— "this base record has no inherited fields … the extension slot closed by the unit
+value" — which is a general fact about any base `record` declaration and equally true of
+the other; the two `record ('a, 'b) lens = lens_get … lens_put …` declarations are
+byte-identical and both parentless. Swapping either text onto the other key yields a
+correct description. What differs is verbosity, i.e. the model is not deterministic.
+**And structurally the example is not drawn from the population it was used to
+legislate about**: that tail carries *two* old records, so each new key takes its own and
+the join never copies anything there. The claim the paragraph needs — that a stored
+interpretation is theory-specific — is measured false: over all 12,762 single-record
+contested tails, **zero** interpretations name a claimant's theory long name and **zero**
+name a session; exactly one is genuinely tied to one claimant's setting, and D19's name
+guard already refuses it.
 Nor are the sources verbatim copies: `Clean/src/Lens_Laws.thy` is a 331-line excerpt
 of `Optics/Lens_Laws.thy`'s 484 lines, with different imports. And the flagship example
 of the *other* reading was also wrong: `LambdaAuth/Syntax.thy` declares no `b_raw` at
@@ -1245,19 +1317,62 @@ the decisive ambiguity is only visible globally.
 
 **Phase 2 decides, with the whole map in hand:**
 
-- An old record claimed by **more than one** new key is **not a fill source at all**.
-  Every claimant goes on the gap list. This is the rule that catches the defect's own
-  signature case, and an exact-key hit is **not** exempt from it: when the memo pinned
-  `Optics`, the *Clean* fact's buggy old key is byte-identical to the *Optics* fact's
-  correct new key, so the winner takes the exact-hit path while the loser takes the tail
-  path, and both would otherwise be filled from one record holding one fact's text.
+- **Candidates are collected by tail only for theorem-alike keys.** A name-addressed key
+  goes through step 1 and nowhere else; letting one fall through to the tail path is a
+  cross-theory match on a name, which is the inference this plan exists to remove.
+  Measured: the unrestricted version fires on 4 keys, the constants
+  `Relations.equivalence` and `Relations.preorder` across
+  `Types_Tableaus_and_Goedels_God` and `Lowe_Ontological_Argument`.
+- **A new key with no candidate at all is a new entity, not a loss.** Measured: 87 of
+  them, **every one name-addressed, none theorem-alike** — so on the theorem-alike side
+  the join has complete tail coverage. 80 carry a name that appears nowhere in the old
+  store. They need interpreting and belong in the cost, but calling them a gap conflates
+  a new entity with a lost record; step 1 already says to mark them for verbatim copy of
+  nothing, i.e. to collect them.
+- An old record claimed by **more than one** new key is **not a fill source at all**,
+  **unless D19's guard holds** (below). Every other claimant goes on the gap list. This
+  is the rule that catches the defect's own signature case, and an exact-key hit is
+  **not** exempt from it: when the memo pinned `Optics`, the *Clean* fact's buggy old key
+  is byte-identical to the *Optics* fact's correct new key, so the winner takes the
+  exact-hit path while the loser takes the tail path, and both would otherwise be filled
+  from one record holding one fact's text.
+- **D19's exception: one record fills every claimant** when all three parts hold — one
+  byte-identical proposition across the claimants; one name across every alias of every
+  claimant *and* the old record; and the claimants' session tuple on the adjudicated
+  allow list. Measured effect: 18,386 of the 20,862 gap entities are rescued, leaving
+  2,476 over 172 theories. Its largest single contribution is the population with no
+  position at all, which the discriminator below cannot touch: 4,392 old records, 93 %
+  of them the never-swept population §B.0 describes, **all carrying an interpretation**,
+  of whose 7,051 claimants the guard rescues 82.8 %.
+
+  **What the guard is and is not.** It is a *printing* test, and both its limits are
+  measured. It does not fire on 462 claimants (219 groups, 207 of them same-base-name
+  siblings) that are the same fact printed under different notation — `#+` against
+  `+⇩ω`, `nat` against `ω`, `real_borel` against `borel`; those simply stay in the gap
+  list, which is safe and merely costs money. And it offers no protection against the
+  hazard §B.1 names, two genuinely distinct entities whose printed proposition, name and
+  kind all agree — it fires on exactly that shape. What makes it safe is not the test but
+  the population: verification tied ~97 % of the firing groups to a documented port or
+  copy (`Zip_Benchmarks/Deriv.thy` says in its own text that it is "an adjusted copy of
+  HOL.Deriv"; 78 of 5,048 lines differ and every one is a proof method, never a
+  statement), and in **all** firing groups the claimant theories share one theory base
+  name without exception. The residual is the allow list's business.
 - A new key with exactly one candidate, claimed by no one else, is filled from it.
 - A new key with several candidates is filled only if the **position discriminator**
-  identifies one: the old record's stored position file equals the dump's
-  `File.symbolic_path (get_theory_path thy)` for the theory being enumerated. Compare
-  the recorded strings; never reconstruct a path from a name, and never compare base
-  names. A position whose file is a `.ML` file never discriminates, and 269,488 records
-  have no position at all — so this saves money, it does not carry correctness.
+  identifies one: the old record's stored position must equal, in **both file and line**,
+  the position the dump freshly enumerated for that claimant. File alone is not enough —
+  `Recursion_Thms.fld_restrict_mono`, stated in `Forcing.Recursion_Thms`, carries a
+  stored position pointing at its same-base-name sibling's file
+  `$AFP/Transitive_Models/Recursion_Thms.thy`, so a file-only test would award it to the
+  wrong claimant with nothing to notice. The line half costs nothing today: over the
+  10,704 contested groups with a unique file-based winner and a dumped position, file and
+  line agree **10,704 times with zero mismatches**. Compare the recorded strings; never
+  reconstruct a path from a name, and never compare base names. A position whose file is
+  a `.ML` file never discriminates — 6,898 records in the store have one, though no
+  contested record does — and the records with no position at all are the population D19
+  exists for. **This discriminator applies to the several-candidates case as well as to
+  the contested-single-candidate case**; applying it to both, as written here, moves 313
+  further keys into filled and shrinks the several-candidates bucket from 2,616 to 33.
 - **Tombstones are an ambiguity signal, not a non-entity.** If any old key on a tail
   holds a tombstone, no new key on that tail may be filled by tail match; all go on the
   gap list. (Excluding tombstones from the candidate set is what would make the
@@ -1270,6 +1385,13 @@ the decisive ambiguity is only visible globally.
   an empty value, since `b""` is the deletion marker (`semantics.py:79`) and would
   permanently shadow the key in any future system layer. The entity goes on the gap list
   with its long stating theory, name and kind.
+- **The gap list groups by EVERY theory that claimed the key, not by one of them.** A
+  dump key contested by two theories carries two records and their order is
+  scheduling-dependent (§B.3 says so); taking the first is taking an arbitrary one.
+  Measured, the difference is not marginal: 601 theories against 399 before the
+  discriminator, 540 against 337 after. §B.8 says the bill is driven by the theory count,
+  so the arbitrary reading **understates it by about 60 %** — and §B.6's own
+  `finished`-clearing would miss every theory it did not pick.
 
 **In every filled case** the record takes the dump's `name`, the dump's **entity
 position** and the dump's **corrected constituents**; `interpretation` and the remaining
@@ -1377,6 +1499,14 @@ uncached-input rate). From the only per-entity figures the repo records
 $1.7736 ($0.0073 each), `ClaudeCode.claude-opus-4-8[1m]` 36 for $0.3733 ($0.0104 each).
 So 20,000 gap entries cost **$145–210 if dense** and **$1,000–1,200 if spread over ~3,000
 theories**. The gap list is by construction thin and wide.
+
+**Measured 2026-08-14, after the dump.** Under §B.6 as it now stands — the position
+discriminator on (file, line), applied to both contested cases, plus D19 — the gap list
+is **2,476 entities over 172 theories**, or 3,095 over 200 if every dump entry rather
+than the first is read. At the rates below that is **$87–95**. Without D19 it is 20,862
+over 337 (540 counting every claiming theory), i.e. **$287–352**, and on the more
+realistic one-batch-per-20-entries floor $493 against $97. So D19 is worth **$200–400**,
+and the ~$390–490 figure quoted before the theory-count correction was itself low.
 
 Therefore the join must report **the gap list's theory count alongside its entity
 count**, and the estimate presented to the user is
@@ -1827,6 +1957,32 @@ the code is next touched.
 ---
 
 # Part F — review record
+
+**The D19 verification, 2026-08-14.** Not a review of a plan but three independent
+verifications of one proposed rule change, run because the plan was about to be rewritten
+and reviewing a plan that is about to change is wasted work. All three read only.
+
+- *Would copying the text mislead?* Sampled 30 firing groups and judged all 30 correct if
+  copied, 0 misleading; measured over the whole contested population that no
+  interpretation names a claimant's session or theory long name and exactly one is
+  theory-tied (refused by the name guard); printed both `Lens_Laws.lens.defs(2)` texts and
+  showed §B.1's disproof does not hold. Added the caveat that the name guard must include
+  the **old record's** name.
+- *Are the contested pairs the same content?* Tied ~97 % of firing groups to a documented
+  port or copy against the actual AFP sources, tabulated all 47 session tuples, and found
+  exactly two unsafe — which became D19's deny list. Confirmed the mechanism behind the
+  objection is real (the interpretation prompt hands the agent the theory's source and
+  tells it to use the surrounding context) and that only the empirical distribution makes
+  the rule safe.
+- *Do the numbers hold?* Reproduced every figure to the digit and found no arithmetic
+  error, then found five method errors, three of which changed decisions: the local
+  `semantics.lmdb` is a **pre-re-key store, not a copy** (1,362,343 records, 180
+  experiences, and only 868 of its 11,469 theory keys present on `cslh19`), so any
+  measurement taken against it is void; the gap list's theory count must range over every
+  claiming theory, which understated the bill by ~60 %; and the position discriminator
+  must compare (file, line), with a live instance of the file-only hazard named.
+
+All three findings are folded into §B.1, §B.6, §B.8 and D19 above.
 
 **The dump app's code, reviewed 2026-08-14** (the review Part E step 4 called for): four
 reviewers by lens — ML correctness, join fitness, Python/LMDB operations, silent-failure
