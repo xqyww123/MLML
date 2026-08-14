@@ -1568,43 +1568,75 @@ is what the store already holds.
 
 ### B.7 Verification gates, before any swap
 
-Reported either way; the join refuses to promote a store that fails one.
+Rewritten 2026-08-14 after measurement, and the shape changed with §B.6's. Half the
+previous gates measured a property the fill-and-record rule deliberately violates, and
+several could not fire on any input. **A gate is kept only if it is computed from the
+join's own four artefacts — the new store, the gap list, the suspect list, the per-tail
+table — and compares against a number fixed before the run.** Anything that reduces to
+"report a count and look at it" is not a gate and is not listed here.
 
-- **Dump completeness**: the dump's theory set equals the target list.
-- **One-to-one**: the count of old records that fed more than one new key is **zero**.
-  Not reported — required.
-- **Partition**: every old entity record is in exactly one category — fill source (with
-  the one new key it fed), pruned leftover, **carried by the §B.10 experience pass**, or
-  carried tombstone — and every new key has either exactly one source or a gap-list
-  entry. Reported as counts per category, not as a single balancing equation. The
-  experience category exists because those 6,768 records are migrated by a separate pass
-  and would otherwise have to be miscounted as leftovers for the partition to balance.
-- **No WIP keys in the dump**: the count of dumped keys whose `key[0]` LSB is set is
-  zero. One expression over a dump the join already scans end to end. It cannot be
-  non-zero in an `AFP-ALL-4` run — every theory and its whole cone come from the heap —
-  which is exactly why a non-zero value means something is wrong with the run rather
-  than with the corpus.
-- **No lost interpretation**: no old record's interpretation disappears without either
-  feeding a new key or being deliberately pruned as a leftover.
-- **Prefix check**: for every theorem-alike record in the new store,
-  `xor_theory_prefix([h for _, h in rec.theory_constituents]) == key[:16]`. Reuse
-  `check_consistency`'s scan (`semantics.py:893-930`); do not re-implement the fold.
-  Note the fold must include the WIP OR, or every XOR-prefixed WIP record reads as a
-  mismatch — 23,052 of them at the pre-re-key count, which per §B.0 must be re-taken
-  before it is used as a gate.
-- **Skipped names** (§A.4) total zero across the dump.
-- **No stray empty values**: no zero-length value in the new store except those copied
-  from old tombstones.
-- **Position coverage** per kind. Expect roughly **228,700** of the previously
-  unreachable records to gain positions (memo-signature plus absent-base, §B.0), with a
-  residue of about **5,100** — the never-swept and drift populations — which is correct,
-  not a failure. Only a residue materially above that is a stop condition. (An earlier
-  draft's 229,267 was the bug report's pre-revision figure and would have mis-set this
-  gate.)
-- **Vectors**: every old vector key has at least one image, and no new key that had a
-  vector loses it. Not a count-preservation check — fan-out raises the count and
-  drift-collapse lowers it.
-- **Experience count** matches §B.10's own reconciliation.
+**The constants below marked (†) must be re-taken after §B.6's exact-key step**, which was
+added the same day and moves the contested populations; the others are properties of the
+store and the dump and are stable.
+
+1. **Dump theory set.** The dump's 10,570 theory names equal a frozen expected list
+   checked in beside this plan with its sha256. Not "equals the target list": the target
+   list has 10,591 names, and the difference is the 21 `HOL-Decision_Procs.*` theories plus
+   `HOL.Code_Evaluation` that `collect_cone` excludes (D18), less `Pure-ex.Guess`, which
+   cone expansion pulled in and which enumerated 0 entities.
+2. **The theory hash did not move.** The dump's theory-key set intersected with the store's
+   16-byte keyspace has exactly **10,550** members. This is also the proof that copying all
+   11,417 theory-status records verbatim is the correct behaviour.
+3. **Record counts.** The new store holds exactly **1,343,702** entity records,
+   **11,417** theory-status records and the counter — **1,355,120** in total. (†)
+4. **Pruned records are recoverable.** The join writes the pruned keys to a file; its
+   length is exactly **37,316** and every key in it is present in
+   `semantics.lmdb.pre-swap-*`. (†) This replaces "no lost interpretation", which was a
+   logical identity — leftover is *defined* as the complement of "fed a new key", so the
+   old predicate was true whatever happened while 37,316 interpreted records were pruned.
+5. **Fill accounting.** Fill sources **1,323,365**, fan-out copies **13,569**. (†) This
+   replaces the **one-to-one** gate, which is deleted: §B.6's Case B.3 exists precisely to
+   let one record feed several keys and does so 13,004 times with a maximum fan-out of 4,
+   so the old gate forbade the rule's own behaviour and no relaxation of it could fire on
+   anything the code did not already branch on.
+6. **Theory-status records.** The new store's 16-byte key set is byte-identical to the old
+   one; `finished` is true on 10,550 minus the gap theories cleared; the counter key is
+   present. Gated because nothing gated it before: a `len(key) > 16` filter — the most
+   natural way to write the entity loop — drops all 11,417 and every other gate still
+   passes, after which `is_thy_interpreted` reads false everywhere and the next `collect`
+   re-interprets the whole corpus at full price.
+7. **No WIP keys.** No key in the new store has `key[0] & 1` set, except the 867 WIP
+   theory-status records. The dump produced zero WIP keys, so this is exact.
+8. **Prefix check.** `xor_theory_prefix(stored constituents) == key[:16]` for all
+   **1,137,981** theorem-alike keys, and for the 6,768 experiences once §B.10 has run.
+   Understood as a join-implementation check, not a corpus check: it is satisfied by
+   construction if the join wrote the dump's constituents, and it fires precisely when the
+   join wrote the *old* record's list instead — expected yield on that failure, the 128,225
+   records whose prefix moved. **The WIP-OR clause is dropped**: the new store carries zero
+   WIP entity records, so the 23,052 false mismatches it guarded against cannot arise.
+9. **Positions.** Exactly **20,890** entity records have `position is None`, and that set
+   equals the union of the 14,120 theorem-alike dump keys the dump reports without a
+   position, the 2 name-addressed ones, and the 6,768 experiences. Set equality, not a
+   tolerance band. This replaces the "~228,700 recoveries, residue ~5,100" gate, whose
+   denominator was never stated and three of whose readings stop a correct run.
+10. **No zero-length values.** Exactly zero. The store holds no tombstones, so the old
+    exception clause is dead.
+11. **Vectors.** The set of new keys with no vector equals, key for key, the divergence-drop
+    list the join emits. And the **693** vector keys that already have no entity record are
+    not carried forward, or `topk` keeps materialising placeholder records for them. This
+    replaces both halves of the old vector gate, which were false on a correct run.
+12. **Experiences.** Exactly 6,768 EXPERIENCE records, none WIP, zero refusals, the
+    multiset of their 15-byte tails equal to the old one, and 6,768 experience vectors
+    present under the new keys. §B.10's own checks are in §B.10; this is the count that
+    must hold at the swap.
+13. **Gap list.** Exactly the 87 name-addressed keys with no old key on their tail, plus
+    §B.6a's 4 moved ones, over 11 claiming theories — reported with its theory count as
+    §B.8 requires.
+
+**Skipped constituent names are not gated here.** The counter is process-global and
+recoverable from none of the four artefacts; §B.3 already snapshots it around the dump and
+raises on a non-zero delta. Its one remaining home is the experience pass, where it is the
+only detector available and the records cannot be regenerated — see §B.10.
 
 ### B.8 The gap list, and what filling it costs
 
