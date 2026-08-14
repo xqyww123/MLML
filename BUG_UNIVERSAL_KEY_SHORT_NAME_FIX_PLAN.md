@@ -1843,6 +1843,47 @@ boilerplate but not read one by one; 6 `unfilled` tails whose only candidate sou
 different fact name for the same proposition; and 2 CoSMed picks between two dynamic-bundle
 indices, where the in-cone one is the better of two poor options.
 
+#### The residue's adjudication — the second team, 2026-08-14
+
+A 13-auditor team read the whole residue row by row, re-derived from the artefacts rather
+than from the narrative above: **A** = 278 `copied` tails with every claimant positionless
+(the criterion reproduces the 278 exactly: "all claimants positionless" among
+copied-minus-Forcing); **B** = 245 tails whose claimants touch the 15 verified-divergent
+theory groups (a constructive enumeration; the "326 of 355" above was the first audit's
+different counting of the same intent and was not reproducible from the artefacts); **C** =
+775 Forcing/Independence_CH/Transitive_Models rows; **D** = the 10 rows the first audit
+could not decide. 1,308 rows, every one adjudicated, none sampled, 0 undecided remain.
+
+**Verdicts: 1,252 right, 56 wrong (58 keys, all in B).** A: 278/278 right — four
+session-copy families (Zippy's declared copies of HOL.Deriv/Limits,
+Incompleteness→Goedel_HFSet_Semanticless with every named constant's declaration compared,
+VerifyThis2018/2019, VTcomp), verified at declaration level. C: 775/775 right — the family
+relationship was verified three ways (Transitive_Models vendors ZF-Constructible verbatim
+up to notation; Independence_CH+Transitive_Models refactor Forcing; all
+claimant-name-mismatch rows are `lemmas` aliases, port renames, or locale-index shifts, each
+read). D: 10/10 right, with recommendations recorded per row (the 6 `unfilled` are alias
+facts fillable free from their alternative records; the 2 CoSMed picks are name aliasing —
+`obs_defs(n)` = `r_defs(n)` — optionally renamable). One measurement worth keeping:
+`prop_digest` hashes the notation-dependent printed form, so digest disagreement between
+claimants of one key is NOT evidence of semantic difference (35 Forcing rows show it on
+ported identical lemmas).
+
+**The 56 wrong are two shapes, both old copied texts** (0 of the 58 keys overlap the §B.8
+gap list, so none is a fresh interpretation): 17 rows where English written about
+HOL-Hoare's two-constructor `ref` (`Null | Ref 'a`, mentions Null/payload) sits on
+HOL-Imperative_HOL/ConcurrentHOL keys whose `ref` is the single-constructor phantom-typed
+address; and 39 rows where session-misattributing text sits on the wrong Jinja-family
+member ("CoreC++ type ..." on JinjaDCI keys, "Jinja ..." on CoreC++ keys — "Jinja" on
+JinjaDCI keys was accepted, JinjaDCI being a Jinja formalization). Two rows re-verified
+end-to-end by the coordinating session, texts confirmed false of the landed entities. The
+first audit's "not one names a session" measurement was of the `copied` population and does
+not extend to B, where 49 of 58 wrong texts name a setting. Verdicts:
+`evidence/universal-key/suspect_round2_verdicts.json`; the repair list (58 keys over
+exactly 4 claiming theories — JinjaDCI.Type 29, HOL-Imperative_HOL.Heap 16, CoreC++.Type
+10, ConcurrentHOL.Heap 3): `suspect_round2_patchlist.json`. The repair is §B.8's pipeline
+again: delete the 58 records+vectors, clear `finished` on the 4 theories, `collect`, embed
+— estimated $1.1–1.5.
+
 #### The repairs, applied to the staging store (2026-08-14)
 
 `contrib/Semantic_Embedding/patch_staging_store.py`, run against
@@ -2926,7 +2967,11 @@ the code is next touched.
 9. **The suspect list's adjudication** (§B.6) — 16,935 rows, worked through afterwards
    against a store that is already in place. Not a precondition for anything above: a
    suspect row's two outcomes are "a later pass confirms the binding" and "the entity is
-   re-interpreted at §B.8's rates", and neither loses a record.
+   re-interpreted at §B.8's rates", and neither loses a record. **The residue was
+   adjudicated 2026-08-14 by a 13-auditor second team** — 1,308 rows read one by one,
+   1,252 right, 56 wrong (58 keys over 4 theories), 0 undecided; see "The residue's
+   adjudication" in §B.6. Left to run: the 58-key repair round (delete + collect + embed,
+   ~$1.1–1.5), awaiting the user's approval.
 
 ---
 
