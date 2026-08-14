@@ -2283,7 +2283,29 @@ made as `*.pre-swap-20260814-152014` at **zero** disk cost, and the swap moved
 `semantics.lmdb` and the vector store while renaming `experience_index.lmdb` aside.
 
 To restart the server: `./contrib/Isa-REPL/repl_server.sh 0.0.0.0:6666 AFP-ALL-4
-/tmp/repl_outputs -o threads=12 -o document=false`.
+/tmp/repl_outputs -o threads=12 -o document=false`, with
+`PATH=$HOME/Current/MLML/contrib/Isabelle2025-2/bin:$PATH` — `isabelle` is not on the PATH
+of a non-interactive ssh session. Restarted with the user's approval; listening after 135 s.
+
+**Checked against the promoted store afterwards.** The repo's own `isabelle-semantics fsck`:
+*All checks passed* — 1,336,867 records, **0** XOR-prefix-versus-constituents disagreements,
+0 legacy XOR records, 0 tombstones, 1571.6 MiB of the 4 GiB map. `cslh19`'s
+`contrib/Isabelle_RPC` is at `a4a65e5` and carries all three Part A commits (`79e581a`,
+`c579556`, `7776d76`), and the REPL was restarted after that, so the live Isabelle computes
+the repaired constituents and agrees with the promoted keys by construction rather than by
+luck. Spot-checked through `Semantic_DB` itself, not raw LMDB: the deleted `CommCSL.PosRat`
+key is absent, both halves of a swapped Jinja/JinjaDCI pair now carry a name matching their
+own text, `Set.subset_refl` has its name back, and one of the 274 filled keys carries the
+text that was already on its tail.
+
+`fsck` also reports `experience_index : 0 keys` — **the index now exists and is empty**,
+created on first open exactly as the quiet-failure note above predicts. Harmless, and it
+does not change the order: §B.10 first, then `reindex`.
+
+One observation, not a defect: the restored `Set.subset_refl` record's English begins "Every
+set `A` is a subset of itself. In this theory the elements of `A` may in particular be
+nonempty finite paths…" — written in some graph-theory setting. The name is canonical now;
+the text still bears the marks of where it was written. Not false, just narrow.
 
 **Verified on the promoted store, 16 checks, 0 problems**: 1,336,867 entity records, 11,417
 theory-status records plus the counter, 0 zero-length values, 0 records with
@@ -2730,10 +2752,13 @@ the code is next touched.
    plus 33 one-batch fixed costs, whose per-theory constant is the weak part of §B.8's
    model (the recorded ledger gives $0.16–0.22; §B.8's $0.40 has no provenance).
 7. **The experience pass** (§B.10), including its refusal report.
-8. **Promotion** (§B.9) — two directories move, one is renamed aside and rebuilt, one is
-   not touched — then `rebuild_experience_index`. §B.7's gates no longer belong here: the
-   join evaluates all sixteen itself and exits non-zero on any failure, so promotion's
-   precondition is "the join exited 0", not a separate pass.
+8. ~~**Promotion** (§B.9)~~ — done 2026-08-14 15:20:23. Two directories moved,
+   `experience_index.lmdb` was renamed aside, `theory_hash.lmdb` untouched; the REPL was
+   stopped and restarted with the user's approval; `fsck` passes on the promoted store.
+   §B.7's gates do not belong here: the join evaluates all sixteen itself and exits non-zero
+   on any failure, so promotion's precondition was "the join exited 0". **`reindex` is NOT
+   part of this step** — it waits for §B.10, since the promoted store holds no experiences
+   yet.
 
 9. **The suspect list's adjudication** (§B.6) — 16,935 rows, worked through afterwards
    against a store that is already in place. Not a precondition for anything above: a
