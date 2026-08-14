@@ -1395,6 +1395,19 @@ For each tail, collect every old record on it (with `interpretation`, `name`, `e
 `position`) and every new dump key on it (with **every** dump record on that key: `name`,
 `position`, `prop`, `constituents`, stating theory). Write nothing yet.
 
+**WIP old records do not enter the tail table.** A WIP record and the persistent record of
+the same fact share a tail — the WIP bit lives in `key[0]`, inside the prefix — so without
+this exclusion they arrive as claimants. Measured: **1,515 tails** would be Case A but for
+a WIP record, on 1,514 of them the WIP interpretation differs from the persistent one, and
+under Case B.4's ordering **804 new persistent keys would be filled from the WIP record**,
+**578 of those dragging in `semantic_digest` / `deps` / `version` / `interpreted_at`** —
+four fields a content-addressed persistent key must never carry, and which make
+`check_outdate` misjudge. The exclusion costs nothing: the dump produced **0** WIP keys, so
+no WIP key can exist in the new store and no WIP record can be the intended source of
+anything; all 29,265 are pruned by D10 regardless. It also removes 1,515 rows of pure noise
+from the suspect list. The matching gate is one expression: **no key in the new store has
+`key[0] & 1` set, except the 867 WIP theory-status records.**
+
 #### Phase 2 — fill, and record what was not forced
 
 **Case A — one old record, one new key, one dump record.** Fill. Not suspect. This is the
