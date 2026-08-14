@@ -2481,7 +2481,7 @@ the code is next touched.
 
 # Part E — execution order
 
-**Steps 1 and 2 are done.**
+**Steps 1 to 5 are done.**
 
 1. ~~**Part A**~~ — `Isabelle_RPC` `79e581a`, `c579556`, `7776d76`; `Semantic_Embedding`
    `2ff0460`. Tests in `contrib/Isabelle_RPC/test/` (§A.9).
@@ -2502,9 +2502,9 @@ the code is next touched.
 3. ~~**The acceptance measurements** of §A.6 on a real cone~~ — taken; §A.6 carries the
    numbers and D16 keeps the cache on them. The D14 pure-table redesign is still unbuilt
    and undecided.
-4. **The dump app and its Python handler** (§B.3) — **written 2026-08-13**, see "As
-   written" there; then the dump run on `cslh19`, needing user approval for that
-   specific run.
+4. ~~**The dump app and its Python handler** (§B.3), and the dump run~~ — written
+   2026-08-13, reviewed, run on `cslh19` 2026-08-14: 10,570 theories, 1,362,294 entity
+   records on 1,337,025 keys. See "The run" in §B.3.
    **Review cadence, decided 2026-08-13.** No further *plan* review before this step: §B.3
    went through all four adversarial rounds and has not changed since, the re-key does not
    affect it (the dump computes fresh keys and reads no old hash), and it is read-only with
@@ -2514,8 +2514,11 @@ the code is next touched.
    real data — that is where the irreversible decisions live, and where the re-key changed
    the preconditions most (§B.6 step 1).
 
-5. **The join** (`contrib/Semantic_Embedding/migrate_universal_keys.py`, §B.5–B.7),
-   producing `semantics.lmdb.building` and the gap list. No writes to the live store.
+5. ~~**The join**~~ — `contrib/Semantic_Embedding/migrate_universal_keys.py`, written
+   2026-08-14, reviewed by three teams (Part F), run on `cslh19`. Output is a **staging
+   directory** holding `semantics.lmdb` and the vector store under their final names, not
+   a `.building` suffix — `_store_dirs` only sees names ending `.lmdb`. All sixteen checks
+   green; see "The run" in §B.7. Nothing was written to the live store.
 6. **The gap list's spend — AFTER the swap, not before.** Reordered 2026-08-14: `collect`
    writes through `Semantic_DB`, which opens `semantic_DB_dir()/semantics.lmdb` and caches
    it for the process lifetime (`semantics.py:285-303`), so it cannot be aimed at
@@ -2524,11 +2527,20 @@ the code is next touched.
    report nothing to do, and anything forced through would land in the directory step 8
    renames to `.bak`. So: swap first, then clear `finished` on the gap theories **in the
    promoted store**, then `collect`, then the chained embed. The spend is small enough that
-   the old ordering's protection is not worth its risk — 87 entities over 11 theories,
-   about $2.50 at the store's own measured rates.
+   the old ordering's protection is not worth its risk. Measured against the actual run:
+   **371 entities over 33 theories**, roughly **$8–16** — 371 × $0.0073–0.0104 marginal
+   plus 33 one-batch fixed costs, whose per-theory constant is the weak part of §B.8's
+   model (the recorded ledger gives $0.16–0.22; §B.8's $0.40 has no provenance).
 7. **The experience pass** (§B.10), including its refusal report.
-8. **The gates** (§B.7), then promotion and the four-directory swap (§B.9), then
-   `rebuild_experience_index`.
+8. **Promotion** (§B.9) — two directories move, one is renamed aside and rebuilt, one is
+   not touched — then `rebuild_experience_index`. §B.7's gates no longer belong here: the
+   join evaluates all sixteen itself and exits non-zero on any failure, so promotion's
+   precondition is "the join exited 0", not a separate pass.
+
+9. **The suspect list's adjudication** (§B.6) — 16,935 rows, worked through afterwards
+   against a store that is already in place. Not a precondition for anything above: a
+   suspect row's two outcomes are "a later pass confirms the binding" and "the entity is
+   re-interpreted at §B.8's rates", and neither loses a record.
 
 ---
 
