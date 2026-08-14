@@ -3330,6 +3330,11 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
    `Agent_Give_Up`。
 3. 全栈重建；jEdit 里手工制造一条 sledgehammer 打不动的义务，确认 AoA 被叫起来、
    证明以 `aoa_replay "…"` 落进 `.proof-store`、第二次构建从 store 纯 ML 重放。
+   **范围（作者 2026-08-14 定）：只建到 `Phi_Test`，`Phi_Examples` 排除在外。**
+   依赖图上这正好是一条命令的事——`Phi_System_Base → Phi_Semantics_Framework →
+   Phi_System → Phi_Semantics → Phi_Test`，而 `Phi_Examples` 挂在另一支
+   （`PhiStd → Phi_Examples`），建 `Phi_Test` 不会把它拉起来。第 6 步的"建满"
+   验收同此范围。
 4. **两个 method 的失败面回归**：`by aoa` 与 `by hammer_or_aoa` 各跑一遍五类退出原因，
    确认**五类全覆盖**、两者文案与 phi 侧同源；`aoa_repl_app.ML` 仍按结构化异常消费
    （核心层未被拍成 `error`）。
