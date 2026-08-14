@@ -2541,10 +2541,43 @@ Semantic_Embedding `97cf265`):
    (`isabelle-semantics reindex`; §B.9 records why running it before this pass yields
    an empty index); then the `NEEDS_rebuild_experience_index` marker comes off.
 
-Still to run, on `cslh19`, each step with the user's say-so: restart the REPL (the
-running server predates the app and does not reload edited `.ML`), the dry run, the
-real run, the reindex. Before the real run, confirm nothing is writing experiences
-(no AoA session).
+#### The run (2026-08-14, all steps user-approved in one grant)
+
+Done, in order: cslh19's two submodules fast-forwarded (`97cf265`/`a7b1b98`; two
+untracked scp-era copies of `patch_staging_store.py`/`promote_rekey.py` blocked the
+merge, verified byte-identical to the committed versions and removed); the REPL
+stopped and restarted **with `RPC_Host=127.0.0.1:27182`** — which §B.8's `--driver`
+needs anyway, but which also means an external RPC host must be LISTENING before any
+theory whose load path touches RPC can load (the first dry run died exactly there;
+`fork_and_launch__` at 127.0.0.1:27182 fixed it, and that host must stay up for the
+REPL's lifetime); one driver fix (`load_theory` of `Semantic_Collection_App` before
+`run_app` — the local probe had loaded it explicitly, masking the omission;
+`7360a41`); dry run; real run; `reindex`; marker removed; `fsck` passes.
+
+**Both runs, byte-identically: all six population gates exact** (6,861 / 93 / 6,768 /
+5,922 / 4 / 842), and the recompute class came back **752 unchanged / 10 repaired /
+80 cleared**, hash disagreements **0** (the "10 expected" guess in the driver's
+message was wrong in the right direction: the Pure/Approximation names never survive
+into a recomputed list, so they can never be counted). The write: **6,768 records
+written, the target then held exactly 6,768 EXPERIENCE keys, 6,768 vectors copied,
+0 missing** — every experience had its vector. The index rebuilt from 6,768 records.
+
+The 80 cleared are two shapes, both the settled criterion firing correctly: patterns
+referencing an **implicit structure** (HOL-Algebra locale syntax — parseable only
+inside a context fixing a structure, so top-level re-parse cannot succeed), and
+patterns whose **old constituent list is itself the misresolution** (e.g. `INF`/`SUP`
+syntax stored under `HOL.Set`, which does not carry it) — the context built from the
+wrong list cannot parse them, which is §B.10's accepted blind spot surfacing visibly
+instead of silently. All 80 are now GLOBAL experiences: retrievable everywhere,
+patterns still stored. The 10 repaired moved onto sharper antichains (e.g.
+`HOL-Library.Multiset` → `HOL.List`, `HOL-Analysis.Sigma_Algebra` →
+`HOL.Complete_Lattices`). Per-record detail:
+`evidence/universal-key/experience_migration_report.json` (also
+`cslh19:~/expmig-20260814-real/`).
+
+**Loss accounting: 0 records destroyed.** 93 WIP dropped by design (D15, still in
+both pre-swap copies), 1 record lost by the earlier re-key (`Minilang.Minilang`,
+outside the image), 80 widened to global availability, 0 vectors lost.
 
 ### B.11 What downstream users lose, for the release note
 
@@ -2854,10 +2887,10 @@ the code is next touched.
    **371 entities over 33 theories**, roughly **$8–16** — 371 × $0.0073–0.0104 marginal
    plus 33 one-batch fixed costs, whose per-theory constant is the weak part of §B.8's
    model (the recorded ledger gives $0.16–0.22; §B.8's $0.40 has no provenance).
-7. **The experience pass** (§B.10), including its refusal report. **Built and tested
-   2026-08-14** (the app, the driver, its synthetic test, and a live probe on a local
-   REPL — see "What is built" in §B.10); still to run on `cslh19`: REPL restart, dry
-   run, real run, reindex, each with the user's say-so.
+7. ~~**The experience pass** (§B.10)~~ — done 2026-08-14, dry run and real run
+   byte-identical: 6,768 written (5,926 verbatim + 752 unchanged + 10 repaired + 80
+   cleared-to-global), 6,768 vectors, 0 missing, 0 records destroyed; index rebuilt,
+   marker removed, `fsck` passes. See "The run" in §B.10.
 8. ~~**Promotion** (§B.9)~~ — done 2026-08-14 15:20:23. Two directories moved,
    `experience_index.lmdb` was renamed aside, `theory_hash.lmdb` untouched; the REPL was
    stopped and restarted with the user's approval; `fsck` passes on the promoted store.
