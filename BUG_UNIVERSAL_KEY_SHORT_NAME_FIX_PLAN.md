@@ -2207,6 +2207,28 @@ estimate.**
 Sequence: **dump → join → the join's own count and estimate → the user approves →
 `collect` over the gap theories → chained embed.**
 
+**Final, after the join and the suspect list's repairs (2026-08-14): 158 entities over 20
+theories.** That is 371 less the 274 keys the patch filled from a byte-identical text on
+their own tail, plus the 61 whose English the adjudication found false of where it landed.
+At the rates above: 158 × $0.0073–0.0104 ≈ $1.2–1.6, plus 20 one-batch fixed costs at the
+ledger's $0.16–0.22 — roughly **$4–10** all in, and about $8 more if §B.8's unsourced $0.40
+per theory is the right constant instead.
+
+The list is the adjudication's direct projection: `CommCSL.PosRat` 28 and the three `Heap`
+theories 31 are the deleted wrong-English records; `HOL.Real_Vector_Spaces` 7 are §B.6a's
+constants whose gap attribution the join originally lost; the `Relations` / `ListExtras` /
+`Testing_Utils` / `Core_DOM_Basic_Datatypes` pairs are §B.6a's new and moved name-addressed
+keys; and `Restriction_Spaces-HOLCF` appears twice, 16 keys each, because one file is
+enumerated under two theory long names.
+
+**Three things this figure does not cover, and must not be read as covering.** The
+populations the adjudication left undecided are outside it and would enlarge it if a later
+pass condemns them (278 `copied` tails with no position, 326 of the 355 genuinely-different-
+object tails, the `synthesize`-generated `Forcing` families, 6 `unfilled` tails, 2 CoSMed
+picks). The 8,144 pruned records cannot be recovered by re-running any theory at all — their
+entities do not exist in today's image. And EXPERIENCE records cannot be re-interpreted by
+any amount of collection (§B.10).
+
 ### B.9 Promotion, and getting back
 
 Build into `semantics.lmdb.building`; rename to `semantics.lmdb.new` **only after every
@@ -2238,6 +2260,25 @@ half-swapped state at its start.
 
 Rollback is the same moves reversed, using the §B.2 backup rather than a renamed live
 directory. Keep the dump until the new store has been exercised.
+
+**Written as `contrib/Semantic_Embedding/promote_rekey.py`** (2026-08-14), with
+`preflight` / `backup` / `swap`. Both renames are in the one `swap`, guarded by a
+`SWAP_IN_PROGRESS` marker that records what was intended and that `preflight` refuses to
+run past, so the half-swapped state is detectable rather than silent. `swap` also leaves a
+`NEEDS_rebuild_experience_index` marker, because an absent `experience_index.lmdb` is
+created **empty** on first open and then silently returns no experience hits — the failure
+mode is quiet, so the reminder has to be loud. `backup` makes btrfs reflink clones and
+refuses to continue if one fails.
+
+**Preflight run 2026-08-14: five blockers, all one cause.** Something is listening on
+:6666; `repl_server.sh` is alive (PID 2120741); `semantics.lmdb` and `theory_hash.lmdb` are
+held by PID 2123182; and that PID is an attached `Isabelle_RPC_Host.run_attached__`. The
+last check exists because the first four can all read clean while the swap is still
+unsafe: the environments open lazily, so a host that has not yet queried the vector store
+shows no holder on it and will open it — into a directory that has been renamed aside —
+the moment it needs it. Disk 51.9 GiB against the 45 GiB floor. **The one action the plan
+does not let this script take is stopping the REPL** (§B.2 item 3: the user's say-so, each
+time), so that is where promotion waits.
 
 Note for anyone merging afterwards: `merge_snapshot.py:218-223` aborts when a migrated
 snapshot meets a locally-collected pre-migration store, and its message names the wrong
