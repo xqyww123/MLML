@@ -1095,16 +1095,28 @@ byte-identically and hash to one `thm128` tail. The only thing in the store that
 them is the constituent prefix — the thing the repaired keys got right and the thing D19
 discards when it decides whose text to copy.
 
-All 24 stored interpretations were printed. Every one says the first argument acts on
-function symbols and the second on variables: *"If a function `f1` on function symbols is
-injective … and a function `f2` on variables is injective …"*. True of
-`First_Order_Terms.Term`, **false of `HOL-Induct.Term`**, where `map_term f1 f2` applies
-`f1` to variables. This is a wrong statement, not the verbosity difference §B.1's
-`Lens_Laws` pair turned out to be.
+**The paragraph that stood here was factually wrong, and the correction matters because
+this section is the plan's headline counterexample.** It claimed all 24 stored
+interpretations say the first argument acts on function symbols, so that copying one onto
+the `HOL-Induct` key writes a false statement. Verified against the live store 2026-08-14:
+**each of the 25 tails carries TWO old records with two different texts**, one written in
+each theory's convention — 22 of the 50 speak only of variables and labels, which is
+`HOL-Induct`'s convention. The claim, and the "the position discriminator blocks all 24"
+that followed from it, were taken from an earlier reviewer's assertion and never checked.
 
-The store contradicts itself here, which is what makes it decidable: the old record's
-stored position is `~~/src/HOL/Induct/Term.thy:11` while its interpretation uses
-`First_Order_Terms`' convention. The position discriminator, run first, blocks all 24.
+**Under §B.6 as it now stands the `Term` case is not a hazard at all**, and the reason is
+B.0 rather than the position discriminator. All 25 tails are `forced-pairing`: two old
+records, two new keys, one new key byte-identical to an old key. B.0 gives that key its own
+record — nothing moved, so nothing is being decided — and the remaining record is then
+forced onto the other key. There is exactly one way to complete the pairing, so both texts
+land on the side they were written for. **Audited: 0 of the 50 post-migration bindings
+carry the wrong English.**
+
+One pre-existing defect does survive, in the `position` field rather than the
+interpretation: the record carrying the `First_Order_Terms` text has
+`~~/src/HOL/Induct/Term.thy:11` stored as its position, and because its key is unchanged it
+keeps that wrong position. Example: tail `0210d91b…`, `Term.Term.term.rel_map(2)`. Nothing
+reads `position` at runtime (§B.6), so this is a blemish, not a loss.
 
 **Where this can and cannot happen, settled 2026-08-14.** A theorem-alike key is
 `XOR(constituent hashes) ++ tag ++ thm128[0:15]`. Two dump records **on one key** therefore
@@ -1755,6 +1767,89 @@ of the list.
 
 None of these is a reason to hold up the migration. All of them are reasons to keep the
 list.
+
+#### The adjudication (2026-08-14): 16,935 rows worked through by four teams
+
+Ran against the join's own `suspect_list.jsonl`, after the store was built and before it was
+promoted. **90 keys need a surgical fix and 61 of them need re-interpretation**; the rest of
+the list is sound. Full verdicts under the session's `suspect-audit/`.
+
+**Confirmed wrong English — 61 keys, four mechanisms, all found by reading declarations
+rather than by any filter.**
+
+| keys | the two declarations |
+|---|---|
+| 31 | `'a ref`: `HOL-Hoare.Heap:16` is `Null \| Ref 'a`, an optional pointer *carrying* a value, so `set_ref (Ref a) = {a}`; `HOL-Imperative_HOL.Heap:59` and `ConcurrentHOL.Heap:312` are `Ref addr` over a **phantom** parameter, so `set_ref` is always `{}`. The BNF facts print identically; the texts are cross-attributed, each asserting the other's shape. |
+| 28 | `prat`: `Combinable_Wands/PosRat.thy` is `{r::rat. r ≥ 0}`, **non-negative**; `CommCSL/PosRat.thy` is `{r::rat. r > 0}`, **strictly positive**. All 29 tails were interpreted from the Combinable_Wands side and 28 of the texts say "non-negative rationals" in so many words. |
+| 1 | `'a tree`: `HOL-Library.Tree:10` is a binary tree with an empty `Leaf`; `Tree-Automata.Tree:15` is a rose tree, `NODE 'l "'l tree list"`. 40 of the 41 texts are shape-neutral and stay true; `tree.set_finite`'s says "any **binary** tree". |
+| 1 | `standard_borel`: `Quasi_Borel_Spaces` fixes it as "the σ-algebra of `M` is the Borel σ-algebra of some Polish space"; `Standard_Borel_Spaces` as "`M` has a measurable encoding into the reals with a measurable left inverse". Not interchangeable — the encoding version excludes the empty space. Three of four texts assert only the shared consequence; one spells out the wrong definition. |
+
+**Crossed bindings, English not false — 28 tails.** Jinja ↔ JinjaDCI, one mechanism. Within
+a tail both texts describe the *same* proposition, so nothing became false; what is crossed
+is the name/text pairing and the dropped vector. Two independent discriminators agree on all
+33 tails where both apply: the old record's `name` (12 tails, verified against the AFP
+sources' equation numbering — JinjaDCI inserts static-field, static-call, INIT and RI
+equations, so Jinja's `ℬ.simps` 7/8/9/11/12/13/14/15 are JinjaDCI's 8/9/11/14/15/16/17/18),
+and the old constituent signature (16 further tails; calibrated on 567 records of the family
+where the name does decide — a Jinja record is never purely `JinjaThreads`-qualified, 0/288).
+One tail carries independent textual proof: `J1WellForm.ℬ.simps(6)`, whose text says "a
+**non-static** field access", a JinjaDCI-only distinction, went to `Jinja.J1WellForm`. Fix:
+swap the two `took` values.
+
+**One name to restore.** `?A ⊆ ?A` — the key's own constituents are `HOL.HOL, HOL.Orderings,
+HOL.Set, Pure` and `HOL.Set` is a claimant naming it `Set.subset_refl`, but sort order wrote
+`Relators.relator_props(29)` from `Automatic_Refinement.Relators`, an `(n)`-indexed dynamic
+collection member. The name enters the embedded document, so retrieval is affected.
+
+**The filter that selected the dangerous groups is unsound, and PosRat is the proof.** It
+required the two theories' source files to be dissimilar (token-set Jaccard below 0.30). The
+two `PosRat.thy` files score **0.645** — they genuinely are nearly the same library and the
+divergence is **one character**. Semantic divergence is not proportional to textual
+divergence. Line-level structural similarity separates better on the cases the token metric
+missed (`CSP_RefTK|HOL-CSPM DiningPhilosophers` 0.094, `HRB-Slicing|Slicing
+JVMPostdomination` 0.083, `HOL-Bali|HOL-MicroJava Type` 0.113 — all with token Jaccard
+≥ 0.30, 373 tails over 15 pairs), but nothing makes either metric sound.
+
+**Why the population is nonetheless mostly safe, structurally.** A shared tail requires a
+byte-identical printed proposition, so two genuinely different datatypes can only collide on
+**constructor-agnostic boilerplate** — `rel_refl`, `set_finite`, `pred_mono`, `rel_map`,
+`in_rel`, `map_id0`, `size`, `distinct`, `exhaust`, `typerep` — whose English is generic and
+true of both. Of the 15 theory groups whose declarations genuinely differ (209 tails), only
+3 groups and 33 keys carry misbound English; the other 23 groups (1,091 tails) are the same
+object. Independently: a 40-tail random sample of the unflagged `copied` population read
+end-to-end found **39/40 one fact and 40/40 with English true of the entity it landed on**,
+and **10,404 of 12,230 (85 %)** state the fact byte-identically in both places.
+
+**Two hypotheses that turned out empty, with the reason.** No `copied` tail has claimants
+with different theory base names (0 of 12,230) — a tail requires an identical printed
+proposition, which forces the differing constituent to be a same-base-name duplicate. And no
+stored interpretation names a token identifying exactly one claimant: 367 mention a claimant
+theory token but always the *shared base name*, and **not one names a session**. The
+deformalizer writes about the proposition, never about where it lives, so "the text gives
+itself away" has no purchase.
+
+**Clean populations.** `matched` 56/56 right — and the position witness turned out unable to
+matter there, since B.0 consumes one pair and the rest is forced. `forced-pairing`: the pick
+is name-faithful in 3,763/3,764, and in **none** of the 1,862 contested keys did it leave a
+real-declaration name unused; exactly one entity ends up indexing a *dynamic* collection
+(`Heap_Monad.effect_elims(22)`), where both claimants carry that same name. 123 of the 126
+sort-order picks right.
+
+**Left undecided, and enumerable.** 278 `copied` tails with no stored position, so no textual
+check was possible; the `Forcing`/`Independence_CH`/`Transitive_Models` families' `synthesize`-
+generated formulas (`frecR_fm` and kin); 326 of the 355 genuinely-different-object tails,
+where the theory pairs were verified to diverge and the surviving facts spot-checked as
+boilerplate but not read one by one; 6 `unfilled` tails whose only candidate source states a
+different fact name for the same proposition; and 2 CoSMed picks between two dynamic-bundle
+indices, where the in-cone one is the better of two poor options.
+
+**The class blind spot is closed.** `Term_Digest.hash_typ` **does** fold the sorts of `TVar`
+and `TFree`, so a sort difference always splits the tail. A collision needs identical sort
+*strings* denoting different classes, i.e. two same-base-named theories in disjoint cones —
+and then both facts are in the dump and appear as two claimants, so enumerating the
+disjoint-cone keys is a complete test. 45 class internal names are declared in more than one
+file corpus-wide; the 22 `forced-pairing` keys touching them are all single-claimant
+`Hoare_Time.Vars` facts, monomorphic over `com`/`aexp`. Not in play.
 
 **The suspect list is a re-interpretation work list, and that is why nothing is finally
 lost.** The user's standing position, 2026-08-14: whatever ends up doubtful will be
