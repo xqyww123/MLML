@@ -2010,6 +2010,30 @@ shape is **three old records and four new keys**: B.0 claims all three, and the 
 has no text on that tail to inherit. Three texts for four keys with no basis for choosing
 is exactly what the gap list is for.
 
+#### The run (2026-08-14, `cslh19`)
+
+**1 m 41 s, 18.3 GiB peak RSS, all sixteen checks green, exit 0.** Output in
+`~/rekey-staging-final/`: `semantics.lmdb` with **1,348,072** records and the vector store
+with **1,333,828** keys. The store is built but **not promoted** — §B.9 is a separate step.
+
+The peak RSS is the vector copy touching the whole 16 GiB mapping, which is inherent to
+copying it and is clean file-backed pages; the decision phases peak at 3.7 GiB.
+
+Three of the checks are ones the review found were absent or vacuous, and all three fired
+for the first time here:
+
+- **the 16-byte key set is byte-identical to the old store** (11,418) — previously only its
+  size was compared, which passes even if one theory's status record replaced another's;
+- **the prefix check reports the denominator it actually used** — 1,137,701 theorem-alike
+  keys, not the store's record count;
+- **the vector gate** — the keys with no vector are *exactly* the 3,519 divergence drops,
+  over 1,333,828 vector keys. Before this, the 16 GiB half of the output was ungated and a
+  truncated vector store would have passed everything else.
+
+**The run was made twice** (once before the gate constants were fixed, once after) and the
+four artefacts are **byte-identical across both**, as are the record counts. That is the
+reproducibility §B.6's Case B.4 asks for, tested rather than asserted.
+
 ### B.8 The gap list, and what filling it costs
 
 Group the gap list by **long** stating theory and run collection over those theories.
