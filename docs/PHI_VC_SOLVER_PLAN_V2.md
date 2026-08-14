@@ -3392,13 +3392,10 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 
 **未完成，按可立即开工的顺序**：
 
-- **5b（冻结快照 × 异步重放）——录制侧已证实，重放侧待一次闸门关闭的批构建。**
+- **5b（冻结快照 × 异步重放）——已完成，通过（2026-08-14 16:50）。**
   详见下面"5b 执行记录（2026-08-14）"：录制侧的 10 条含具名快照的记录已逐条点出
-  （`Phi_Type` 8 条、`Phi_Types` 2 条，此前写的"11 / 6"是 grep 行数之误）；重放侧的三条
-  可行路径（纯 ML 会话、isabelle-mcp、批构建）现在只剩批构建一条，且它需要作者批准
-  `isabelle build`。**注意 2026-08-14 16:00 另一会话提交的 `Isabelle_RPC/Tools/context.ML`
-  已使 `Phi_System_Base` / `Phi_Semantics_Framework` / `Phi_System` 三个 heap 失效**，
-  下面所有"heap 现成"的说法自那一刻起不再成立。
+  （`Phi_Type` 8 条、`Phi_Types` 2 条，此前写的"11 / 6"是 grep 行数之误）；重放侧经一次
+  闸门关闭的批构建验收——全绿、五个 store 逐字节不变、零新增墓碑。
 - **5c（阶段 2 递延验证批）**：多为构建与重放类，`Phi_System` 已可建，可紧接 5b 做。
 - **5a ②**（批构建 theory 收尾与迟到 fork / store compact 的竞争）：前置条件
   「`Phi_System` 可建」现已满足，可做。
@@ -3474,17 +3471,45 @@ proof text 里引用 `the_\<phi>`，就说明冻结语境被 fork 闭包完整�
    `isabelle.Build_Job` 判为 `interactive = SOME false`，闸门天然关闭，零花钱风险，
    而重放失败会以 §6.1 硬报错暴露出来。
 
-**四、5b 剩下的唯一动作，以及它需要的授权。**
+**四、重放侧：已完成，5b 通过（2026-08-14 16:42–16:50，作者当场授权 `isabelle build`）。**
 
-在**闸门关闭的批构建**里让 `Phi_Type.thy` / `Phi_Types.thy` 从源码重跑一遍，然后从构建
-数据库里读 `[eval_prf_str] replaying:` 与 `FAILED on`，核对上面 10 个键都被重放且零墓碑，
-再核对 `git status` 里五个 store 一个字节没变。需要作者批准两件事：
+作者裁决"直接建"。跑的是闸门关闭的批构建（`Build_Job` 被 `frontend_identity` 判为
+非交互，故全程零 LLM 花费；`AOA_ALLOW_NONINTERACTIVE` 未设）：
 
-- **运行 `isabelle build`**（§9 之外的新增项）。注意代价与风险：Isabelle 会**先删目标 heap
-  再重建**，而这次重建会把另一会话 16:00 那笔 `context.ML` 一起编进去；若它编不过，
-  我们会连现有的 `Phi_System` heap 一起失去，波及所有在用的会话。整条链约 20 分钟起。
-- **是否先与那个会话协调**（改 `Isabelle_RPC/Tools/context.ML` 与 `Phi_System/ROOT`
-  调试器插桩的那一方）。
+```
+isabelle build -b -d contrib/phi-system -d contrib/Isa-Mini -d contrib/auto_sledgehammer \
+               -d contrib/Isabelle_RPC -d contrib/Performant_Isabelle_ML \
+               -d contrib/Semantic_Embedding Phi_System
+```
+
+结果全绿：`Phi_System_Base` 1:15、`Phi_Semantics_Framework` 1:21、`Phi_System` **5:03**，
+合计 8:01。三个 heap 恢复为最新（事后 `-n` 干跑无事可做），isabelle-mcp 与 5c / 5a ②
+的前置条件随之解除。
+
+**判据读数（这才是 5b 的验收）**：
+
+- 五个 store 在构建中确实被重新打开并 compact（`IDE_CP_Reasoning2` 16:46、
+  `Phi_Type` 16:47、`IDE_CP_App2` 与 `Phi_Types` 16:49 各被重写一次），
+- 而重写后 **md5 与构建前逐字节相同**，`git status` 里一个都没变；
+- 重新解码核对：记录条数 110 / 69 / 6 / 1 / 4 全部不变，**新增墓碑 0 条**，
+  无新增键、无删除键、无任何一条证明文本被改写，引用具名快照的仍是 8 条与 2 条。
+
+**为什么"字节没变"就是判据**：重放失败会做两件留痕的事——写墓碑
+（`store_hit_replay` 里 `invalidate_proof_cache true`）并落到 MISS 路径重新搜索，
+搜到了就 PUT 回去。两者都会改文件（前者多一条 TOMB 记录，后者改写该键的文本与毫秒数）。
+所以"零墓碑 + 零新 PUT + 文本一字未改"同时排除了这两种坏情况：**这一百多条义务全部是从
+store 重放解出的，没有一条失败**，其中就包括引用 `the_\<phi>` / `the_\<phi>lemmata`
+的那十条。链路闭合，5b 的两半都成立。
+
+**如实说明本次证据的形态**：批构建**不回显 theory 的 tracing**，所以拿不到逐条的
+`[eval_prf_str] replaying: …` 正向日志（`isabelle build_log` 读出来是空的——带协议 marker
+的消息在 `build_job.scala:582` 被 `filterNot(Protocol_Message.Marker.test)` 滤掉了，
+落盘的 `.gz` 只有 20 字节）。因此上面的推断链里还剩一个环节靠论证而非打点：
+"这些义务确实又走到了 store 查表这一步"。论证是——`hammer_or_AoA` 做的第一件事就是
+level-0 查表，而它是 `hammer_obligation_solver` 解义务的唯一出口；早于它的只有确定性的
+预处理段。既然这些条目当初是**经同一条路**被录进去的，源码又一字未改，它们就会再次走到。
+若日后要逐条打点，唯一的办法是让重放侧自己留痕（例如把重放计数写进 store 或 export），
+批构建这条路上没有现成通道。
 
 **实施记录（2026-08-10，进行中）**：第 1 步代码半已落（`phi-system dc35fba2`）——
 战术位换接照 §2.3 签名（`proof_id = id`、`async`/`read_store`/`write_store` 透传、
@@ -3870,14 +3895,9 @@ conditions do not hold and this assumption can cause reasoning failure"并按"gu
 
 **（2026-08-14 二次更新，九项。）** 前五项挡着阶段 5 的推进，后四项是并行的旧账。
 
-0. **跑一次 `isabelle build` 的授权**（本会话新增，5b 卡在这里）。2026-08-14 16:00
-   另一会话提交的 `Isabelle_RPC/Tools/context.ML` 已让 `Phi_System_Base` /
-   `Phi_Semantics_Framework` / `Phi_System` 三个 heap 失效，isabelle-mcp 因此拒绝启动，
-   而纯 ML 会话跑不了 `by`（没有 bash server）。**5b 的重放侧、5c、5a ② 三项现在都要
-   先重建 heap。** 代价与风险：Isabelle 先删目标 heap 再重建，这次会把那笔 `context.ML`
-   一起编进去，若它编不过则连现有 heap 一并失去；整条链约 20 分钟起。
-   要不要先与那个会话协调，也请一并示下。（作者 2026-08-14 曾对上一个会话给过一次性
-   特许，本会话是 compact 之后的新会话，按仓库规矩重新请示。）
+0. ~~**跑一次 `isabelle build` 的授权**~~——**作者 2026-08-14 已裁决"直接建，我授权
+   isabelle build"**，当场建完（8:01 全绿，三个 heap 恢复最新）。留此条只为记录裁决：
+   该授权是**对这一次重建**给的，后续再要 `isabelle build` 仍按仓库规矩逐次请示。
 1. **开闸运行的授权与预算**。阶段 5 第 3 步剩余那半（手工制造一条 sledgehammer 打不动的
    义务，看 AoA 被叫起、落库、二次构建纯 ML 重放）与第 6 步的建满验收，都必须
    `AOA_ALLOW_NONINTERACTIVE=yes` 开闸，会真调 LLM。此前同类实测的量级：单条义务
