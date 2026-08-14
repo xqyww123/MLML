@@ -1983,6 +1983,33 @@ recoverable from none of the four artefacts; §B.3 already snapshots it around t
 raises on a non-zero delta. Its one remaining home is the experience pass, where it is the
 only detector available and the records cannot be regenerated — see §B.10.
 
+#### The dry run (2026-08-14, `cslh19`)
+
+`--dry-run` against the real dump, store and vector store: **17 s wall, 3.7 GiB peak RSS,
+0 gate problems**, artefacts in `~/rekey-dryrun-20260814/`. It writes no store and opens
+every input `readonly=True, lock=False`.
+
+```
+1,082,045 Case A tails      16,935 suspect tails       371 gap keys / 33 theories
+1,137,701 theorem-alike filled + 198,953 name-addressed verbatim + 371 gap = 1,337,025
+37,316 pruned              1,323,365 fill sources      13,289 fan-out copies
+marks: exact 36,617  copied 14,325  forced-pairing 3,764  matched 670  arbitrary 280
+1,567 name + 2,008 expression divergences -> 3,519 vectors dropped
+1,593 dump-record picks fell to sorted order
+```
+
+**Two of these are a genuine cross-check, not the code restating itself.** `pruned_keys`
+37,316 and `fill_sources` 1,323,365 were written into §B.7 before the join existed, by a
+separate route, and the join reproduced both to the digit. The rest are reconstructions
+that three reviewers agreed on independently; they gate the wet run against the dry run and
+no further, which is all they can do.
+
+`mark_arbitrary` and `mark_unfilled` are both 280 and that is a coincidence — only 92 of
+the 244 tails carrying an unfilled key also carry an arbitrary one. The dominant unfilled
+shape is **three old records and four new keys**: B.0 claims all three, and the fourth key
+has no text on that tail to inherit. Three texts for four keys with no basis for choosing
+is exactly what the gap list is for.
+
 ### B.8 The gap list, and what filling it costs
 
 Group the gap list by **long** stating theory and run collection over those theories.
