@@ -1416,6 +1416,13 @@ overwhelming majority.
 **Case B — anything else: fill by the first of these that applies, and put the tail on the
 suspect list with the reason.**
 
+0. **An unchanged key keeps its own record.** A new key byte-identical to an old key on
+   the tail takes *that* record, before anything else is tried. Its key did not move, so
+   there is nothing to migrate and no evidence stronger than this exists. Omitting the step
+   was measured to hand **7,711** such keys another record's interpretation, and adding it
+   cuts the suspect list from 37,754 tails to **16,783**, `arbitrary` assignments from
+   4,194 keys to **111**, and the worst-case re-interpretation bill by about 60 %. It
+   leaves **188** new keys with no source, which take the next branch that applies.
 1. **Positional match.** A claimant whose stored old position equals, in file *and* line,
    the position the dump enumerated for it, *and* whose name matches, takes that record.
    Where this resolves the whole tail, mark the tail `matched` — recorded for audit, but
