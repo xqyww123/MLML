@@ -2883,10 +2883,28 @@ the code is next touched.
    report nothing to do, and anything forced through would land in the directory step 8
    renames to `.bak`. So: swap first, then clear `finished` on the gap theories **in the
    promoted store**, then `collect`, then the chained embed. The spend is small enough that
-   the old ordering's protection is not worth its risk. Measured against the actual run:
-   **371 entities over 33 theories**, roughly **$8–16** — 371 × $0.0073–0.0104 marginal
-   plus 33 one-batch fixed costs, whose per-theory constant is the weak part of §B.8's
-   model (the recorded ledger gives $0.16–0.22; §B.8's $0.40 has no provenance).
+   the old ordering's protection is not worth its risk. The join's raw gap list was **371
+   keys over 33 claiming theories** ($8–16 by the model whose per-theory constant is its
+   weak part: the recorded ledger gives $0.16–0.22, §B.8's $0.40 has no provenance) — but
+   that figure predates the surgical patch, which filled 274 of the 371 from byte-identical
+   texts on their own tails. **The bill actually due is §B.8's final: 158 entities over 20
+   theories, roughly $4–10.** Approved by the user 2026-08-14.
+
+   **Run 2026-08-14, interpretation complete, embed blocked on credentials.** Pre-launch
+   check: all 20 theories were already collectable (11 `finished=False`, 9 with no status
+   record at all), and all 158 keys were absent — no flag-clearing was needed. `collect`
+   over the 20 names (both `Restriction_Spaces-HOLCF` long names resolve as distinct
+   theories, verified before spending) asked the LLM for exactly the missing entities per
+   theory and cost **$5.83**, inside the estimate. Verified after: **158 present, 0
+   absent, 0 without interpretation.** `--driver` was deliberately NOT passed: the
+   override is delivered in-process, and with the RPC host running externally (started
+   for §B.10) it would never reach the host — the default chain resolves to ClaudeCode in
+   the host itself, which is what ran. The chained embed then failed: Fireworks returns
+   **401 Unauthorized**, and `EMBEDDING_API_KEY` is set on neither machine (the local
+   `~/.zshrc` line is commented out). Nothing is lost: the **3,654** pending vectors (the
+   join's 3,519 divergence drops plus this run's new records) sit over stored
+   interpretations, so `isabelle-semantics embed` — or lazy `_auto_embed` at query time —
+   fills them the moment a valid key exists. The key decision is the user's.
 7. ~~**The experience pass** (§B.10)~~ — done 2026-08-14, dry run and real run
    byte-identical: 6,768 written (5,926 verbatim + 752 unchanged + 10 repaired + 80
    cleared-to-global), 6,768 vectors, 0 missing, 0 records destroyed; index rebuilt,
