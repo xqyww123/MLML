@@ -114,7 +114,13 @@ From the user. Not open for review; recorded so the plan's assumptions are visib
   completion record, and a filter over the cone), and it is sound by construction —
   a theory's entities and its completion record share one transaction, so "has a
   completion record" and "is completely dumped" are the same statement.
-- **D19.** **One old record may fill several new keys**, when a three-part guard holds.
+- **D19.** **One old record may fill several new keys**, when the position discriminator
+  is silent about it *and* a three-part guard holds. **The ordering is part of the
+  decision**, added 2026-08-14 after review: the discriminator runs first, and D19 only
+  sees records for which the store holds no positional evidence about which claimant the
+  interpretation was written for. Without that ordering D19 fired on 13,930 groups, 70.8 %
+  of which the discriminator could already have decided, and it demonstrably mis-copied
+  (§B.1a). With it, D19 fires on 4,067.
   This reverses §B.1's "the join must not guess" for the one case where the guard can be
   checked, and it is the difference between 20,862 entities needing paid
   re-interpretation and 2,476. Decided 2026-08-14 on three independent verifications
@@ -142,7 +148,22 @@ From the user. Not open for review; recorded so the plan's assumptions are visib
      not attribute each `Action.thy` to its session, so the judgement rests on the
      interpretations' wording), and the mid-band tuples at 0.25–0.90 content overlap
      generally, whose classification rests on provenance and sampling rather than on
-     reading every group.
+     reading every group. **`First_Order_Terms` ↔ `HOL-Induct` is refused** (§B.1a).
+
+  **The list as written does not describe the population, and this is open.** Deriving
+  the session from the theory long name's qualifier — the derivation that reproduces the
+  47-tuple table's own counts of 41, 130 and 1 exactly — the firing population is **83
+  session tuples over 13,930 groups**, not 47 over 11,598, and it is 67 pairs, 12 triples
+  and 4 quadruples: **514 groups sit on tuples of three or four sessions**, which a list
+  written as pairs cannot express. Three alternative derivations were tried and none
+  recovers 47/11,598, so 2,332 groups are unaccounted for. And **the 47 adjudications are
+  written down nowhere** — this plan names two refusals and three unfinished cases; the
+  other 42 exist only in a subagent's report. Before the join runs: the list must be
+  computed by the join itself and committed here in full, keyed on the *set* of claimant
+  sessions, with a tuple refused if **any pair inside it** is refused or unfinished, and
+  the join must abort on a tuple the list does not carry rather than assume it complete.
+  Note that the position-first ordering shrinks what this list must cover from 13,930
+  groups to 4,067.
 - **D18.** The **`HOL-Decision_Procs` legacy records are abandoned**, under D10 like any
   other leftover. `is_infra_session` (`infra_filter.ML:26`) excludes that whole session
   from `collect_cone`, so the dump cannot cover it and the join maps none of its
@@ -1036,6 +1057,47 @@ two belong, and the second collection overwrote the first. No scan of the store 
 see that; the 22,053 shared-tail records are the pairs that *survived*, not the ones
 that collapsed. This is why §B.6's matching rule must be one-to-one in both directions.
 
+### B.1a The proven mis-copy: `HOL-Induct.Term` against `First_Order_Terms.Term`
+
+Found 2026-08-14 by a review asked to *break* D19 rather than confirm it, and the reason
+the position discriminator now runs first. It is the counterexample three earlier
+verifications looked for and did not find, because it cannot be seen in the stored fields
+— only by reading the two datatypes.
+
+24 groups pair these two stating theories. The datatypes:
+
+```
+~~/src/HOL/Induct/Term.thy:11        datatype ('a,'b) term = Var 'a | App 'b "… list"
+$AFP/First_Order_Terms/Term.thy:14   datatype ('f,'v) term = Var 'v | Fun 'f "… list"
+```
+
+**The two type parameters have opposite roles.** In `HOL-Induct` the first is the variable
+alphabet; in `First_Order_Terms` the first is the function symbols. Both theories are
+named `Term`, and Isabelle qualifies constants by the theory's *base* name, so both
+produce `Term.map_term`, `Term.rel_term`, `Term.pred_term`; the BNF-generated facts print
+byte-identically and hash to one `thm128` tail. The only thing in the store that separates
+them is the constituent prefix — the thing the repaired keys got right and the thing D19
+discards when it decides whose text to copy.
+
+All 24 stored interpretations were printed. Every one says the first argument acts on
+function symbols and the second on variables: *"If a function `f1` on function symbols is
+injective … and a function `f2` on variables is injective …"*. True of
+`First_Order_Terms.Term`, **false of `HOL-Induct.Term`**, where `map_term f1 f2` applies
+`f1` to variables. This is a wrong statement, not the verbosity difference §B.1's
+`Lens_Laws` pair turned out to be.
+
+The store contradicts itself here, which is what makes it decidable: the old record's
+stored position is `~~/src/HOL/Induct/Term.thy:11` while its interpretation uses
+`First_Order_Terms`' convention. The position discriminator, run first, blocks all 24.
+
+Two corollaries worth keeping. **"All firing claimants share a theory base name" is true
+and is not evidence of safety** — it is a restatement of the collision mechanism, since
+sharing a base name is the only way to fire at all. And the tuples
+`POPLmark-deBruijn ↔ VolpanoSmith`, `FeatherweightJava ↔ POPLmark-deBruijn`,
+`CoreC++ ↔ POPLmark-deBruijn` (19 groups each) pair four unrelated AFP entries that each
+happen to contain an `Execute.thy` invoking `code_pred`; no harm was shown there, but they
+are 57 more groups that the "~97 % tied to a documented port or copy" figure must absorb.
+
 ### B.2 Preconditions
 
 1. **The user's approval for this specific run** (D6), for every write anywhere on
@@ -1329,50 +1391,81 @@ the decisive ambiguity is only visible globally.
   store. They need interpreting and belong in the cost, but calling them a gap conflates
   a new entity with a lost record; step 1 already says to mark them for verbatim copy of
   nothing, i.e. to collect them.
-- An old record claimed by **more than one** new key is **not a fill source at all**,
-  **unless D19's guard holds** (below). Every other claimant goes on the gap list. This
-  is the rule that catches the defect's own signature case, and an exact-key hit is
-  **not** exempt from it: when the memo pinned `Optics`, the *Clean* fact's buggy old key
-  is byte-identical to the *Optics* fact's correct new key, so the winner takes the
-  exact-hit path while the loser takes the tail path, and both would otherwise be filled
-  from one record holding one fact's text.
-- **D19's exception: one record fills every claimant** when all three parts hold — one
-  byte-identical proposition across the claimants; one name across every alias of every
-  claimant *and* the old record; and the claimants' session tuple on the adjudicated
-  allow list. Measured effect: 18,386 of the 20,862 gap entities are rescued, leaving
-  2,476 over 172 theories. Its largest single contribution is the population with no
-  position at all, which the discriminator below cannot touch: 4,392 old records, 93 %
-  of them the never-swept population §B.0 describes, **all carrying an interpretation**,
-  of whose 7,051 claimants the guard rescues 82.8 %.
-
-  **What the guard is and is not.** It is a *printing* test, and both its limits are
-  measured. It does not fire on 462 claimants (219 groups, 207 of them same-base-name
-  siblings) that are the same fact printed under different notation — `#+` against
-  `+⇩ω`, `nat` against `ω`, `real_borel` against `borel`; those simply stay in the gap
-  list, which is safe and merely costs money. And it offers no protection against the
-  hazard §B.1 names, two genuinely distinct entities whose printed proposition, name and
-  kind all agree — it fires on exactly that shape. What makes it safe is not the test but
-  the population: verification tied ~97 % of the firing groups to a documented port or
-  copy (`Zip_Benchmarks/Deriv.thy` says in its own text that it is "an adjusted copy of
-  HOL.Deriv"; 78 of 5,048 lines differ and every one is a proof method, never a
-  statement), and in **all** firing groups the claimant theories share one theory base
-  name without exception. The residual is the allow list's business.
 - A new key with exactly one candidate, claimed by no one else, is filled from it.
-- A new key with several candidates is filled only if the **position discriminator**
-  identifies one: the old record's stored position must equal, in **both file and line**,
-  the position the dump freshly enumerated for that claimant. File alone is not enough —
-  `Recursion_Thms.fld_restrict_mono`, stated in `Forcing.Recursion_Thms`, carries a
-  stored position pointing at its same-base-name sibling's file
-  `$AFP/Transitive_Models/Recursion_Thms.thy`, so a file-only test would award it to the
-  wrong claimant with nothing to notice. The line half costs nothing today: over the
-  10,704 contested groups with a unique file-based winner and a dumped position, file and
-  line agree **10,704 times with zero mismatches**. Compare the recorded strings; never
-  reconstruct a path from a name, and never compare base names. A position whose file is
-  a `.ML` file never discriminates — 6,898 records in the store have one, though no
-  contested record does — and the records with no position at all are the population D19
-  exists for. **This discriminator applies to the several-candidates case as well as to
-  the contested-single-candidate case**; applying it to both, as written here, moves 313
-  further keys into filled and shrinks the several-candidates bucket from 2,616 to 33.
+- **A contested old record — one claimed by more than one new key — is decided by the
+  position discriminator FIRST, and only by D19 where the discriminator is silent.**
+  This ordering was forced by review on 2026-08-14 and is the load-bearing decision of
+  the whole section; the earlier draft let D19 fire first and was wrong. Measured over
+  the 13,930 groups D19's guard would otherwise fire on, the old record's stored position
+  sits like this:
+
+  | groups | the old record's position, against the claimants' freshly dumped ones |
+  |---|---|
+  | **9,863 (70.8 %)** | matches **exactly one** claimant and differs from the rest |
+  | 278 | matches **none** |
+  | 3,789 (27.2 %) | **absent** |
+  | **0** | matches them all |
+
+  There is not one group in which the positional evidence is *consistent* with copying:
+  either it names a single owner or it says nothing. Letting D19 go first therefore
+  copied one fact's English onto 10,172 claimants declared at a different file and a
+  different line — including the case in §B.1a that proves the copy can be flatly wrong.
+
+- **The position discriminator.** A contested new key is filled from a candidate when
+  that candidate's stored position equals, in **both file and line**, the position the
+  dump freshly enumerated for that claimant, **and the old record's `name` equals that
+  claimant's dumped name**. Every other claimant of that record goes on the gap list.
+
+  Both halves are needed and both were measured. *File alone is not enough*:
+  `Recursion_Thms.fld_restrict_mono`, stated in `Forcing.Recursion_Thms`, carries a stored
+  position pointing at its same-base-name sibling's file
+  `$AFP/Transitive_Models/Recursion_Thms.thy`, so a file-only test awards it to the wrong
+  claimant with nothing to notice; the line half costs nothing, agreeing in **10,855 of
+  10,855** contested groups with a unique file-based winner. *Position alone is not
+  enough either*, and this is the subtler one: `backfill_positions`
+  (`semantics.py:774-816`) writes **only** the position onto whatever record already holds
+  the key — `rec._replace(position=position)`, interpretation untouched — while
+  `write_answer` (`semantic_interpretation.py:372-378`) wrote name, `expr`, interpretation
+  and position together. So on a key the defect shared between siblings, the position
+  records which sibling the *position backfill* enumerated last, which is not
+  necessarily the sibling whose *interpretation* is stored. Measured: of 10,855 awarded
+  groups, **295** award a claimant whose dumped name differs from the old record's name,
+  and in **287** of those the old record's name is byte-equal to a *different* claimant's
+  — e.g. the record `More_Word.p2len`, positioned in
+  `$AFP/Zippy/…/Benchmarks/Word.thy:112`, would be awarded to `Zip_Benchmarks.Word`'s
+  `word_exp_length_eq_0` while `Word_Lib.More_Word` carries the very name the record
+  holds. Requiring the names to agree moves at most 295 of 10,855 groups to the gap list
+  and stops that. The residual blindness is stated, not hidden: 10,531 awarded groups have
+  claimants that all share one name, where the same composite-record hazard exists and no
+  stored field can reveal it.
+
+  Compare the recorded strings; never reconstruct a path from a name, and never compare
+  base names. A position whose file is a `.ML` file never discriminates — 6,898 store
+  records carry one, though **no contested record does**. 293 contested groups carry a
+  position matching no claimant at all; they fall through to "do not guess" and are gap
+  entries nobody has budgeted.
+
+- **D19's exception, on the residue only: one record fills every claimant** when the
+  discriminator was silent for it — the old record has **no position**, or its position
+  matches **no** claimant — and all three parts of D19's guard hold. Under this ordering
+  D19 fires on **4,067** groups instead of 13,930 and makes **4,286** copies instead of
+  14,458, which is precisely the population §B.6 always claimed it was for: 3,789 groups
+  with no position at all, 93 % of them the never-swept records §B.0 describes, **every
+  one carrying an interpretation** and no other evidence in existence about which
+  claimant it belongs to.
+
+  **What the guard is and is not.** It is a *printing* test. It does not fire on 462
+  claimants (219 groups, 207 of them same-base-name siblings) that are the same fact
+  printed under different notation — `#+` against `+⇩ω`, `nat` against `ω`, `real_borel`
+  against `borel`; those stay in the gap list, which is safe and merely costs money. And
+  it offers **no** protection against the hazard §B.1 names, two genuinely distinct
+  entities whose printed proposition, name and kind all agree — it fires on exactly that
+  shape, and §B.1a is a proven instance. Its name part has almost no discriminating power
+  and must not be leaned on: D19 only fires when the claimant theories share a theory base
+  name (measured, 13,930 of 13,930 with zero exceptions), and Isabelle qualifies fact
+  names *by the theory's base name*, so corresponding facts in two same-base-named
+  theories carry identical qualified names **by construction**. What is left carrying the
+  safety is the allow list and the ordering above.
 - **Tombstones are an ambiguity signal, not a non-entity.** If any old key on a tail
   holds a tombstone, no new key on that tail may be filled by tail match; all go on the
   gap list. (Excluding tombstones from the candidate set is what would make the
