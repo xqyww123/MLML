@@ -1409,6 +1409,133 @@ defeating `purge_vectors_without_a_user_record`. Importing `semantics` does not 
 environment, so the direct open is safe. The script **asserts `validated_system_db() is
 None`** and stops if a system layer is configured.
 
+### B.5a The join, as a program
+
+Written 2026-08-14 so that the code can be produced from this plan alone. `§B.6` says what
+to decide; this says how to build the thing that decides it.
+
+**File.** `contrib/Semantic_Embedding/migrate_universal_keys.py`, a standalone script like
+its siblings `migrate_entity_positions.py` and `migrate_theory_hash_rekey.py` — not an
+Isa-REPL app. It needs **no Isabelle, no REPL and no RPC host**: every input is already on
+disk. That is the single most important property of this step and it should be preserved;
+the dump was the part that needed Isabelle.
+
+**Invocation.**
+
+```
+python3 migrate_universal_keys.py \
+    --dump  ~/.cache/Isabelle_Semantic_Embedding/semantics.rekey-dump.lmdb \
+    --store ~/.cache/Isabelle_Semantic_Embedding/semantics.lmdb \
+    --vectors ~/.cache/Isabelle_Semantic_Embedding/vector_Qwen__Qwen3-Embedding-8B.lmdb \
+    --out   ~/.cache/Isabelle_Semantic_Embedding/staging-<TS>/ \
+    [--dry-run]
+```
+
+`--dry-run` computes everything and writes only the four artefacts, no store. Run it first;
+its numbers are what §B.7's constants are checked against.
+
+**Opening.** Every input `lmdb.open(..., readonly=True, lock=False)` and **never through
+`Semantic_DB`** — its `_get_raw`/`iter_items` are layered over a system DB and reading
+through them would copy system-resident records into the new user layer (§B.5). The dump
+is held read-write by a live RPC host; `lock=False` is what makes reading it safe. Assert
+`snapshot_sync.validated_system_db() is None` and stop if a system layer is configured.
+Import the `Record` codec from `Isabelle_Semantic_Embedding.semantics` — do not hand-roll
+msgpack field order; it is positional tail-append and a hand-rolled writer that predates a
+field silently truncates it.
+
+**Output layout.** `--out` is a staging *directory* holding
+`semantics.lmdb` and `vector_Qwen__Qwen3-Embedding-8B.lmdb` **under their final names**.
+Not `.building` suffixes: `vector_store_names()` enumerates `_store_dirs(semantic_DB_dir())`
+and keeps only names ending `.lmdb` that are `semantics.lmdb` or start with `vector_`
+(`semantic_embedding.py:1101`), so a `vector_….lmdb.building` directory is invisible and
+`_get_lmdb_env` would create the real name empty. §B.9 then moves the two out of the
+staging directory. `map_size`: `SEMANTICS_MAP_SIZE` for the store, `VECTOR_MAP_SIZE` for
+the vectors.
+
+#### Memory, and what must not be held
+
+Measured on `cslh19`: a key-only reconstruction of phase 1 + phase 2 peaks at **3.6 GiB
+RSS** and runs in seconds. The box has **16.2 GiB available** (the REPL's ZGC heap holds
+32 GiB and 30.5 GiB is already in swap), so the budget is real. **Do not hold the dump's
+propositions or interpretations in Python objects** — 1.2 GiB packed becomes many GiB as
+`str`. Hold, per tail: the old keys, the new keys, and for each side only what the
+decisions need — `position` (a 3-tuple), `name`, and a **digest** of `prop` and of
+`interpretation` rather than the text. Fetch the full values again, per key, when writing.
+A second pass over LMDB is cheap; a resident copy of the corpus is not.
+
+#### Phase 1 — the tail table
+
+One pass over the dump and one over the store.
+
+- **Dump side.** For each entity key: classify by `len(key) == 32 and key[16] in
+  {0x02,0x12,0x22,0x32,0x42}` (theorem-alike) versus name-addressed. `is_xor_prefixed_key`
+  also admits EXPERIENCE `0x08` and **must not be used**. For theorem-alike keys index by
+  `key[16:]`; keep every dump record on the key (the value is a msgpack *list*), each with
+  `name`, `position`, `prop`-digest, `constituents`, `theory_longname`.
+- **Store side.** Skip `len(key) <= 16` (theory-status and the counter — handled
+  separately), skip `key[16] == 8` (EXPERIENCE, §B.10's), skip **WIP records**
+  (`key[0] & 1`) — §B.6 excludes them from the table and the reason is recorded there.
+  Index the rest by tail, keeping `name`, `position`, `expr`-digest,
+  `interpretation`-digest.
+- Nothing is written in phase 1. The whole point is that the decisive ambiguity is only
+  visible with both sides of a tail in hand.
+
+#### Phase 2 — decide, per tail, in §B.6's order
+
+Iterate tails in sorted order and, within a tail, old records and new keys in sorted key
+order, so the run is reproducible. Apply Case A, then B.0, B.1, B.2, B.3, B.4, then C
+exactly as §B.6 states them. Record for every new key: the old key it took (or none), and
+the mark. **Build the whole map before writing anything** — a later tail cannot change an
+earlier decision, but the artefacts must be complete before the store is opened for
+writing, so that a crash leaves no half-written store.
+
+#### Phase 3 — write
+
+One LMDB write transaction per N keys (N ≈ 10,000; a single transaction over 1.34 M
+records is a large dirty set). For each new key, re-read the chosen old record's full value
+and the dump record's, and write per §B.6's "what is written in a filled theorem-alike
+case". Then:
+
+- **Theory-status records and the counter**: copy all 11,417 plus `\xf0` **verbatim**.
+  Do not filter them out with `len(key) > 16` — §B.7 gate 6 exists because that is the
+  natural way to write the entity loop and it silently drops every one of them.
+- **Vectors**: for each new key, copy the vector of the old key it took, unless the key is
+  on the divergence-drop list. Do **not** carry the 693 vector keys that have no entity
+  record. Copy the 16-byte embed-status records verbatim — but re-take their count, it was
+  723 before the theory-hash re-key and is 692 today.
+- **Name-addressed keys**: §B.6a's three branches.
+- **EXPERIENCE**: write nothing. §B.10's pass owns them and runs later.
+
+#### The four artefacts, written beside the staging store
+
+1. `gap_list.json` — the keys with no source, with **every** claiming theory. §B.8 bills
+   on the theory count.
+2. `suspect_list.jsonl` — one row per suspect tail, carrying per claimant the stating
+   theory long name, that theory's source file, the dump position `(file, line)`, and the
+   proposition digest, plus which old record went where and the mark. §B.6 requires exactly
+   this; without those fields two of its seed populations cannot be re-queried later.
+3. `pruned_keys.txt` — every old key not copied. §B.7 gate 4 checks its length and that
+   every key in it is in the pre-swap backup.
+4. `counts.json` — every constant §B.7 compares against, computed by the join itself.
+
+#### Then check
+
+The join ends by evaluating §B.7's thirteen gates against its own artefacts and exiting
+non-zero on any failure. It does **not** promote; §B.9 does, and only after the gates pass.
+
+#### What it must never do
+
+Open the live store for writing. Write anything outside `--out` and the four artefacts.
+Delete anything. Use `Semantic_DB`. Guess a session name from a theory long name, or a
+theory from a base name — the whole plan exists to remove that inference. Hold the corpus
+in memory. Promote itself.
+
+#### Review
+
+Per the cadence Part E records: the join's **code** is reviewed once written, before it is
+run — the same treatment the dump app got, where review found two defects that had to be
+fixed before the run.
+
 ### B.6 Step 2 — the matching rule
 
 **Scope, decided 2026-08-14 and overriding the two drafts before it.** This migration
