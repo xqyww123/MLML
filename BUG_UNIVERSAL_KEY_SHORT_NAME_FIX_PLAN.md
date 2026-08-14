@@ -1472,7 +1472,10 @@ python3 migrate_universal_keys.py \
 ```
 
 `--dry-run` computes everything and writes only the four artefacts, no store. Run it first;
-its numbers are what §B.7's constants are checked against.
+its numbers are what §B.7's constants are checked against. **Give it its own `--out`**: the
+real run refuses a non-empty output directory — building into a populated one can leave two
+self-consistent generations side by side, which every gate downstream would pass — and the
+dry run's four artefacts are enough to trip that refusal.
 
 **Opening.** Every input `lmdb.open(..., readonly=True, lock=False)` and **never through
 `Semantic_DB`** — its `_get_raw`/`iter_items` are layered over a system DB and reading
@@ -1550,6 +1553,11 @@ case". Then:
   the join, so those two directories must survive until §B.10 has run and gate 12 has
   passed. They cannot be regenerated — an experience is agent-written during proof search,
   never enumerated from a theory.
+
+**The artefacts are written before the store is opened for writing**, not after. Otherwise
+a crash in phase 3 leaves a populated `--out` with no record of what was decided, and the
+non-empty-directory refusal then blocks the re-run. This means the divergence-drop set is
+computed in its own read-only pass over both stores rather than as a by-product of writing.
 
 #### The four artefacts, written beside the staging store
 
@@ -1675,9 +1683,19 @@ rather than invisible, so state it even though the tail-shape reading should lea
 nearly empty.
 
 **Nothing is refused for ambiguity alone.** The gap list holds only keys with no source at
-all. Ambiguity produces a suspect entry, not a gap entry.
+all. Ambiguity produces a suspect entry, not a gap entry. Measured against the written
+join: **Case C never fires on this corpus** — every one of the 280 theorem-alike gap keys
+arrives through the catch-all above, and the 91 name-addressed ones through §B.6a — so
+"the gap list is only Case C" is true of the intent and false of the output.
 
 #### The suspect list
+
+**A tail every one of whose new keys was resolved by B.0 is not suspect** and gets no row.
+Its keys did not move; there is nothing to adjudicate. This is what §B.6's own figure
+already asserts — adding B.0 "cuts the suspect list from 37,754 tails to 16,783" — and it
+is only reachable under this reading. Measured against the written join: 36,253 contested
+tails, of which **19,318 are resolved entirely by B.0**, leaving **16,935**. Keeping them
+would bury the rows that carry a real question under twice their number that do not.
 
 One row per suspect tail, written beside `semantics.lmdb.building` as a machine-readable
 file: the tail, the old keys and their names/positions/interpretation digests, the new keys
@@ -1878,9 +1896,12 @@ join's own four artefacts — the new store, the gap list, the suspect list, the
 table — and compares against a number fixed before the run.** Anything that reduces to
 "report a count and look at it" is not a gate and is not listed here.
 
-**The constants below marked (†) must be re-taken after §B.6's exact-key step**, which was
-added the same day and moves the contested populations; the others are properties of the
-store and the dump and are stable.
+**The (†) constants were re-taken 2026-08-14 against the written join**, by three reviews
+that reconstructed its phases against the real dump and store. Every one of them had been
+wrong, and each offset is an identifiable population rather than a rounding: the 6,768
+experiences this pass deliberately does not write, the 280 keys §B.6's catch-all leaves
+unfilled, the 29,172 WIP records, the 198,953 name-addressed verbatim copies. The numbers
+below are the corrected ones.
 
 1. **Dump theory set.** The dump's 10,570 theory names equal a frozen expected list
    checked in beside this plan with its sha256. Not "equals the target list": the target
@@ -1890,14 +1911,22 @@ store and the dump and are stable.
 2. **The theory hash did not move.** The dump's theory-key set intersected with the store's
    16-byte keyspace has exactly **10,550** members. This is also the proof that copying all
    11,417 theory-status records verbatim is the correct behaviour.
-3. **Record counts.** The new store holds exactly **1,343,702** entity records,
-   **11,417** theory-status records and the counter — **1,355,120** in total. (†)
+3. **Record counts.** The new store holds exactly **1,336,654** entity records,
+   **11,417** theory-status records and the counter — **1,348,072** in total. Not
+   1,343,702: that figure counted the 6,768 experiences, which §B.10 writes and this pass
+   does not, and assumed the 280 catch-all keys were filled.
 4. **Pruned records are recoverable.** The join writes the pruned keys to a file; its
-   length is exactly **37,316** and every key in it is present in
-   `semantics.lmdb.pre-swap-*`. (†) This replaces "no lost interpretation", which was a
+   length is exactly **37,316** — 8,063 theorem-alike leftovers + 81 name-addressed +
+   **29,172 WIP entity records** — and every key in it is present in the source store.
+   The WIP third is the load-bearing part: D10 prunes them regardless, so the loss is
+   intended, but a first draft of the join omitted them and the file then named 22 % of
+   what it had pruned. This replaces "no lost interpretation", which was a
    logical identity — leftover is *defined* as the complement of "fed a new key", so the
    old predicate was true whatever happened while 37,316 interpreted records were pruned.
-5. **Fill accounting.** Fill sources **1,323,365**, fan-out copies **13,569**. (†) This
+5. **Fill accounting.** Fill sources **1,323,365** — 1,124,412 theorem-alike plus the
+   198,953 name-addressed verbatim copies, which are fills from themselves and must be
+   counted or the number misses them entirely — and fan-out copies **13,289**, not
+   13,569: the difference is the 280 catch-all keys, which are not filled at all. This
    replaces the **one-to-one** gate, which is deleted: §B.6's Case B.3 exists precisely to
    let one record feed several keys and does so 13,004 times with a maximum fan-out of 4,
    so the old gate forbade the rule's own behaviour and no relaxation of it could fire on
@@ -1911,30 +1940,43 @@ store and the dump and are stable.
 7. **No WIP keys.** No key in the new store has `key[0] & 1` set, except the 867 WIP
    theory-status records. The dump produced zero WIP keys, so this is exact.
 8. **Prefix check.** `xor_theory_prefix(stored constituents) == key[:16]` for all
-   **1,137,981** theorem-alike keys, and for the 6,768 experiences once §B.10 has run.
-   Understood as a join-implementation check, not a corpus check: it is satisfied by
+   **1,137,701** theorem-alike keys written — that is the denominator, and it must be the
+   one reported: the 198,953 name-addressed keys carry no XOR prefix and are not checked,
+   and printing the store's whole record count instead was the unstated-denominator
+   failure this section was rewritten to remove. Add the 6,768 experiences once §B.10 has
+   run. Understood as a join-implementation check, not a corpus check: it is satisfied by
    construction if the join wrote the dump's constituents, and it fires precisely when the
    join wrote the *old* record's list instead — expected yield on that failure, the 128,225
    records whose prefix moved. **The WIP-OR clause is dropped**: the new store carries zero
    WIP entity records, so the 23,052 false mismatches it guarded against cannot arise.
-9. **Positions.** Exactly **20,890** entity records have `position is None`, and that set
-   equals the union of the 14,120 theorem-alike dump keys the dump reports without a
-   position, the 2 name-addressed ones, and the 6,768 experiences. Set equality, not a
-   tolerance band. This replaces the "~228,700 recoveries, residue ~5,100" gate, whose
+9. **Positions.** Exactly **14,125** entity records have `position is None` — 14,123
+   theorem-alike and 2 name-addressed. Not 20,890: that added the 6,768 experiences this
+   pass does not write. The remainder is within three of the dump's own 14,120 no-position
+   theorem-alike keys, and the three are pick-dependent (a multi-record key whose chosen
+   claimant has no position while a sibling does — 11 such keys exist). This replaces the "~228,700 recoveries, residue ~5,100" gate, whose
    denominator was never stated and three of whose readings stop a correct run.
 10. **No zero-length values.** Exactly zero. The store holds no tombstones, so the old
     exception clause is dead.
 11. **Vectors.** The set of new keys with no vector equals, key for key, the divergence-drop
-    list the join emits. And the **693** vector keys that already have no entity record are
-    not carried forward, or `topk` keeps materialising placeholder records for them. This
-    replaces both halves of the old vector gate, which were false on a correct run.
+    list the join emits, and **no entity-shaped vector key without a record is carried
+    forward**. Both halves must actually be evaluated: a first draft of the join gated only
+    the store, so a failure inside the vector build left a complete `semantics.lmdb` beside
+    a truncated 16 GiB vector store and every other gate still passed.
+    **The "693 vector keys with no entity record" is retired.** Measured 2026-08-14: the
+    693 are the 692 sixteen-byte embed-status keys plus the `\x00__vector_format__` stamp,
+    all of which are copied verbatim on purpose, and **zero** entity-shaped vector keys
+    lack a record. The gate must therefore test the key's shape, not `len(key) > 16` —
+    the stamp is 19 bytes long and a length test flags it.
 12. **Experiences.** Exactly 6,768 EXPERIENCE records, none WIP, zero refusals, the
     multiset of their 15-byte tails equal to the old one, and 6,768 experience vectors
     present under the new keys. §B.10's own checks are in §B.10; this is the count that
     must hold at the swap.
-13. **Gap list.** Exactly the 87 name-addressed keys with no old key on their tail, plus
-    §B.6a's 4 moved ones, over 11 claiming theories — reported with its theory count as
-    §B.8 requires.
+13. **Gap list.** Exactly **371** keys over **33** claiming theories: §B.6a's 87 new and 4
+    moved name-addressed keys over 11 theories, plus the **280** theorem-alike keys §B.6's
+    catch-all leaves unfilled, over 22 more. Not 91: that predates the catch-all. **Case C
+    itself is empty** — every theorem-alike gap key arrives through the catch-all, not
+    through "no old record on the tail" — so §B.6's "the gap list holds only Case C" no
+    longer describes the output and the theory count is what §B.8 bills on.
 
 **Skipped constituent names are not gated here.** The counter is process-global and
 recoverable from none of the four artefacts; §B.3 already snapshots it around the dump and
