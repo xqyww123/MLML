@@ -3558,6 +3558,44 @@ id 形状 703）：**每个 store 里每把键都只有一条活记录**，压�
 输出规格 `\<val> x \<Ztypecolon> \<nat> \<subj> x. even x`、块体算 `$a * ($a + 1)`，
 使关块处的规格 cast 产生一条快攻打不动的义务。理论放在仓库之外，自带独立 store。
 
+#### 5c ①② 的实跑结果（2026-08-14 17:50–18:13，闸门关闭，两轮）：`Phi_Examples` 建不过
+
+作者裁决"破例纳入 `Phi_Examples`"并授权"必须关闸时直接注释 `etc/settings` 那一行"。
+照办：注释掉该行（`isabelle getenv AOA_ALLOW_NONINTERACTIVE` 确认为空）→ 跑两轮 →
+跑完立即恢复（并在该行上方留了一段注释说明它的影响）。**两轮都红，故不是挂钟抖动。**
+
+**红点一：`Matrix_Oprs.thy:139`，§6.1「store 里没有可用的证明」。两轮同一行。**
+该行是 `lemma split_4mat` 的
+`\<medium_left_bracket> \<medium_right_bracket> certified by (auto simp: …; hammer_or_aoa) .`——
+**本计划自己改的**（`phi-system 04712dd3`，2026-08-12，"Three more auto_sledgehammer ->
+hammer_or_aoa in Phi_Examples"），即一条明知 sledgehammer 打不动、交给 AoA 的义务。
+store 里**有**它的记录（哈希键 `67f7a09359deaffc`，AoA blob，26021 字符、录得 5867 毫秒），
+所以 §6.1 的触发路径是"记录在，但**重放失败**"，不是"记录缺失"。
+
+**红点二：`Dynamic_Array.thy` 抛 `exception Option raised (General/basics.ML:84)`。**
+两轮都抛，但**位置不同**（第一轮 `:108` 的 `\<semicolon>`，第二轮 `:40` 的
+`\<medium_left_bracket>`）——位置随机、种类稳定，与根目录
+`OPTION_EXCEPTION_IN_PROOF_REPLAY.md` 里的竞态假说一致。**这是该 bug 的一个新复现点，
+在 `Phi_Examples`，不在那个会话插桩的 `Phi_System`**，值得转告。
+
+**贯穿两轮的核心发现：AoA 录制的 blob 正在成批地重放不了。** 今天可数的失败：
+开闸那轮 3 条（`Matrix_Oprs` 的 `copy_mat/2/7`、`add_mat/2/7`、`zero_mat/2/3/4/2/15`）
+＋ `Dynamic_Array.pop_dynarr/2/9/7/2`；关闸第一轮 2 条，其中
+`Binary_Trees` 的 `e779b9fbd5f16842` 与 `Dynamic_Array` 的 `local.DynArr/Abstract_Domain/0`
+**是三十分钟前由同一台机器上的 AoA 刚刚录进去的**；再加 `Matrix_Oprs:139` 的
+`67f7a09359deaffc` 两轮皆败。**同机、同源码、刚录完就重放不了**——这直接威胁目标 4
+（"下游用户拿到包能不能 build"），因为 store 的全部意义就是让证明可重放。
+存量规模：`Matrix_Oprs` 123 条里 39 条是 blob，`Binary_Trees` 是 40 条。
+
+**尚未查明的是失败原因**，两个候选：① 重放预算
+（`tolerant_time` = `1.5 × 记录时间 + 1 秒`；`:139` 那条录得 5867 毫秒 ⇒ 预算约 9.8 秒，
+机器有负载时未必够——即 R27 / D60）；② `aoa_replay` 本身的缺陷（注意
+`OPTION_EXCEPTION_IN_PROOF_REPLAY.md` 的标题直指"proof replay"）。
+**区分二者需要看到 tracing**（`[eval_prf_str] FAILED on …` 与
+`[aoa_replay] replay failed: …`），而批构建不回显 tracing。可行做法：单独在
+isabelle-mcp 里评估 `Matrix_Oprs.thy` 到 `:139`，读消息面板——但 MCP 的闸门是开的
+（`.mcp.json`），一旦重放失败就会真叫 AoA 花钱，**需作者先授权**。
+
 #### 闸门一直开着——本机环境事实与由此产生的更正（2026-08-14 17:40）
 
 **事实**：`~/.isabelle/Isabelle2025-2/etc/settings` 有一行 `AOA_ALLOW_NONINTERACTIVE=yes`。
