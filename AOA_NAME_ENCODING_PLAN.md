@@ -37,16 +37,20 @@ ASCII 记法,导致凡是名字里带 Isabelle 符号的实体一律解析失败
 > 1. **改任何 Python 也必须重启 REPL**。AoA 的 Python 跑在 REPL 启动时派生的
 >    attached host 进程里,它在启动那一刻 import 完就不再重读。项目规矩只写了 `.ML`
 >    要重启,Python 同样要——我为此白跑了三轮"改了没反应"的测试。
-> 2. 全量回归跑了 273 个用例才被 REPL 崩溃(Broken pipe)截断。崩溃点**之前**只有 7 个
->    失败,全部是语义检索类(`SemanticKNN_patterns`、`SemanticKNN_induction_rule`、
+> 2. 全量回归只跑到第 273/370 个就被 REPL 崩溃(Broken pipe)截断,**约 95 个用例
+>    根本没跑到**(含四个 `Interpret_*` 与 `SymbolicFactName` 自己)。崩溃点**之前**只有
+>    7 个失败,全部是语义检索类(`SemanticKNN_patterns`、`SemanticKNN_induction_rule`、
 >    `QueryNullFields`、`QueryScalarStringField`、`QuerySearchSummary`、`AbbrevQuery`、
 >    `UnfoldSyntax`):向量库返回的近邻和相似度整个变了(0.806/0.800 → 0.300/0.300),
->    与另一位 agent 的 theory-hash 重键工作同源,本计划不碰打分。崩溃点**之后**的 33 个
->    全是管道断裂的连锁噪声。
-> 3. `contrib/auto_sledgehammer/Auto_Sledgehammer.proof-store` 在 15:42 被清成 0 字节
->    (REPL 进程被杀,写到一半)。受影响的是 `Obvious_partial_solve`:它依赖缓存里那条
->    `log 2 8 = 3` 的证明,现在 30 秒内找不到,于是失败。**已确认与本计划无关**
->    ——把 `model.py` 换回改动前的版本,同一个失败一模一样地复现。
+>    与另一位 agent 的 theory-hash 重键工作同源,本计划不碰打分,用户裁定不管。
+>    崩溃点**之后**的 33 个全是管道断裂的连锁噪声。**没跑到的那段在第四轮评审后补跑。**
+> 3. **勘误(2026-08-14,推翻本条的旧版说法)**:`Obvious_partial_solve` 在全量回归里
+>    **通过了**(第 91 个,15.4 秒)。旧版把它此前两次单独运行的失败归因于
+>    `Auto_Sledgehammer.proof-store` 被清成 0 字节——因果是错的:该文件 mtime 是 16:24
+>    (在全量回归**之中**,不是之前),0 字节多半是常态;各测试自己的 `.thy` 旁边的
+>    `*.proof-cache` 才是完好的证明缓存。真实原因是机器内存吃紧时 sledgehammer 真跑了
+>    两次 30 秒搜索没搜到,负载性抖动。A/B 对照(换回改动前的 `model.py` 同样失败)
+>    仍然有效,即失败与本计划无关这一点不变;错的是给它安的机制。
 
 **执行前的状态:代码一行未动。** 三轮对抗评审已结束,所有设计决策已由用户拍板并记录在 §10;
 被否决的意见在 §10.5,被删除的评审意见在 §12。**不要重新评审,不要重开已决议题**
@@ -485,6 +489,21 @@ target / rule / arbitrary"——**`rule` 那一项是错的**。详见 §4.4。
   `split_id_into_segs('1.φcase') = [1, 397623023]`——**段数**变了(ASCII 的 `\`、`<`、`>`
   被当作分隔符,而 `φ` 是 `isalpha()`)。两种形式今天都已经是垃圾,所以不是回归,
   但 §8 的验证必须**专门跑一次"在两个带符号的分支之间插入新步骤"**,不能只看渲染。
+
+  > **第四轮勘误(2026-08-14),订正本段与上一段的三处事实**。
+  > 一、上面"验证要求"里"两种形式都是垃圾"**在带下标数字的名字上不成立**:
+  > `'₁'.isdigit()` 为真而 `int('₁')` 抛异常,所以 `split_id_into_segs('app₁')`
+  > **抛 `ValueError`**,不是垃圾值——解码把"安静的垃圾"变成了"异常"。当前不可达
+  > (`SubgoalMaker.opening()` 硬为 False 挡住 append;`insert_before`/`amend` 拒绝
+  > `GoalNode` 目标),属潜伏。用户已批修法:守卫 `isdigit()` 换 `isdecimal()`,
+  > 使守卫与 `int()` 的接受集合一致,`₁` 落入既有的"其它字符,单独成段"分支。
+  > 二、**`Branch` 的名字根本不进入步骤号**:`agent.ML:1557` 把分支名包成
+  > `Binding.name` 放进**假设槽**,子节点一律位置号(golden `Branch1.yml` 为
+  > `1.0/1.1/…`)。所以"在两个带符号的**分支**之间插入新步骤"这个验证要求瞄错了
+  > 操作符——`Branch` 路上没有任何东西变;该验的是 `CaseSplit`/`Induction`
+  > 的规则声明 `case_names`(AFP 常见带下标,如 `case_names app\<^sub>1 …`)。
+  > 三、连带勘误:`Isa-Mini` 提交 `b349d18` 的信息里"a branch name returns as the
+  > child's step number"这句是错的,以本条为准。
 - **`goal_variables` 比较(`:11024`)**:`name.unicode` 改为 `name.ascii`。
 - **`Interaction_SelectRewriteTargets`(`:8900-8904` / `:9217-9225`)**:
   现在一个 `fact_names` 列表**身兼二职**——发给 `check_looping_rules` 要 ASCII 记法,
@@ -969,7 +988,10 @@ Q 用 `IsabelleFact_Presented.__init__` 的 `assert kind in _THEOREM_KINDS`(`:33
   `fetch_facts → pack() → 操作`,断言送出的名字是 ASCII 记法。**必须自带一个新的 `.thy`
   fixture**(仓库硬规矩:两个 `@model_test` 不共享 `.thy`),里面定义 `lemma \<phi>xxx`。
 - **§6.1 判据**:四种组合各一个断言(空/非空 × 带序号/不带序号),对照 §6.1 的实测表。
-- **§4.6 步骤号**:**专门跑一次"在两个带符号的分支之间插入新步骤"**,不能只看渲染
+- **§4.6 步骤号**:~~专门跑一次"在两个带符号的分支之间插入新步骤"~~——**第四轮勘误:
+  瞄错了操作符**,`Branch` 子节点是位置号,名字不进步骤号(见 §4.6 勘误块)。
+  改为:守卫修正(`isdecimal`)配直接单测;带下标 `case_names` 的 `CaseSplit`
+  用例记为后续工作,当前不可达(两道结构性防线,见 §4.6 勘误块)
   ——解码会改变步骤号的分段结果,不只是拼写(见 §4.6)。
 - **回归**:`test.py` 里直接断 `full_name` 的地方(`:4587-4619`、`:8401-8404`、
   `:9153-9171`、`:9553-9573`)用的都是纯 ASCII 名字,预期不受影响,但要实际跑过。
@@ -1164,6 +1186,34 @@ Q 用 `IsabelleFact_Presented.__init__` 的 `assert kind in _THEOREM_KINDS`(`:33
   纯标注细节,无行为后果。
 - 另有若干"相邻行号"的引用挑剔(`:1549` vs `:1551`、`:2246` vs `:2243` 等),
   按"指向同一个调用式/同一个函数"判为不影响导航,但**仍已逐个订正**。
+
+### 第四轮(2026-08-14,对已落地代码的三人两轮评审;约 20 条 → 存活 6 条)
+
+**存活并已处理的六条**:一、`_choose_ih_facts` 的过滤器没解码(本计划自己引入,
+与三行外自己的注释矛盾)——已修,过滤和显示同用解码形式;二、带下标 case 名使
+`split_id_into_segs` 抛异常(潜伏,见 §4.6 勘误块)——用户批准改守卫为 `isdecimal`;
+三、三处文本事实错误(提交信息的分支名句、§8 瞄错操作符、`a72e5cb` 标题的
+"three"实为四个函数)——前两处已在计划勘误;四、`Obvious_partial_solve` 归因错误
+——§0 第 3 条已整段重写;五、回归只跑到 273/370——补跑中;六、缺"空集合带序号"
+测试组合——已补进 `SymbolicFactName`(fixture 不用动)。
+
+**被删除的意见(不要再提)**:
+- **"`ChooseDef` 的 ASCII 析取项被改窄"**——提出者自行撤回:唯一显示该名字的界面
+  (提示本身)已是解码形式,模型无处抄得 ASCII 拼法;且重开 §4.6 已决议题。
+- **"空集合经 `_try_resolve_as_named_fact` 混进 `ChooseDef` 导致误导文案"**——
+  改前的文案("No accessible fact found")是假话,更差;仓库 396 个测试 theory
+  无一含空集合,不可触发;重开 §6.5/§10。
+- **"端到端没跑算未完成的强制验证"**——§0/§13.11 明写经用户同意推迟。
+- **"新用例的越界断言太弱"**——golden `SymbolicFactName.yml` 已逐字节钉住整句。
+- **"`_pending_proof`/`_splice_body` 不清 `_is_trivial` 有隐患"**——提出者与另一位
+  评审各自遍历全部入口,均构造不出可达路径。
+- **"缺的空集合带序号组合是高危"**——降级:它与已覆盖的 `sym_pair⇩R(9)` 走 ML 里
+  同一个 `else` 分支,且新 ML 不再调 `Attrib.eval_thms`(自己做守卫的 `nth`),
+  §6.1 担心的硬报错结构上不可能发生;是覆盖缺口,不是风险。
+
+**第四轮确认无误的**:ML 判据、编码闸门、`full_name`/`Fact["name"]` 两条不变式、
+`_facts_dropped` 闩锁、两处清除点守卫、`_binds_no_theorem`、`_failure_blob`、
+golden 纪律(只动了批准的两处,逐字符同 §8.1 预测)。
 
 ---
 
