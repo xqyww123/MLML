@@ -1030,6 +1030,14 @@ row of this table may be used as a gate.
 more than one record, covering 22,053 records** — 10,113 tails by 2 records, 581 by 3,
 21 by 4. Persistent only: 9,180 tails, 18,983 records.
 
+**Those figures are of `~/rekey-backup-20260813-165135/semantics.lmdb`, not of the store
+the join reads** (found 2026-08-14; every one of them reproduces byte-exactly against that
+backup and none against the live store). The live store is 1,155,239 / 1,132,475 on
+1,144,541 / 1,123,307 tails, with 10,075 shared tails over 20,773 records — 9,473 by 2, 581
+by 3, 21 by 4; persistent 8,545 / 17,713. The difference is the 1,534-row drop list of the
+theory-hash re-key, concentrated in the shared-by-2 bucket. Nothing here is damaged; the
+census was simply taken one generation early, and the numbers below inherit that.
+
 An earlier draft claimed these were verbatim AFP copies whose content was
 interchangeable, so the join could copy freely. **The disproof offered here does not
 hold, and D19 partially reverses the conclusion — read this paragraph and the next
@@ -1098,9 +1106,41 @@ The store contradicts itself here, which is what makes it decidable: the old rec
 stored position is `~~/src/HOL/Induct/Term.thy:11` while its interpretation uses
 `First_Order_Terms`' convention. The position discriminator, run first, blocks all 24.
 
+**Where this can and cannot happen, settled 2026-08-14.** A theorem-alike key is
+`XOR(constituent hashes) ++ tag ++ thm128[0:15]`. Two dump records **on one key** therefore
+share both the tail and the prefix: same printed term, constants defined in the same
+theories — one fact under several true names, and the mis-copy above is unreachable there
+(measured: byte-identical constituents on all 16,356 such keys, zero exceptions). Two dump
+**keys on one tail** share only the tail: same characters, different constants, different
+facts — and that is this section's shape (measured: differing constituents on all 18,263
+such tails, zero exceptions). The two populations are disjoint by construction, and the 25
+`Term` tails land squarely in the second: their constituents are `['HOL-Induct.Term',
+'HOL.HOL', 'Pure']` against `['First_Order_Terms.Term', 'HOL.HOL', 'Pure']`, so the repaired
+keys already separate them. **The operation at risk is §B.6's Case B.3** — one old record's
+text copied onto every new key of its tail — not the per-key choice of a dump record.
+
+**The list to eyeball afterwards, already computed.** Shared tails carrying several keys:
+23,896 tails over 50,157 keys. Filter: take the symmetric difference of a tail's keys'
+constituent lists and flag the tail when it holds two theories sharing a base name — 18,263
+tails; then keep only theory groups whose source files are genuinely dissimilar (token-set
+Jaccard below 0.30, which separates a fork like `Zip_Benchmarks.List` from `HOL.List` at
+0.6+ from an accidental clash) — **38 theory groups over 1,292 tails**. `('First_Order_Terms.Term',
+'HOL-Induct.Term')` is there with exactly 25, reached independently of this section. Groups
+not named here before include `('Complx.Language', 'Simpl.Language')` 405 tails,
+`('CoCon.System_Specification', 'CoSMeDis.System_Specification', 'CoSMed.System_Specification')`
+190, `('Buchi_Complementation.Formula', 'MSO_Regex_Equivalence.Formula')` 42,
+`('HOL-Library.Tree', 'Tree-Automata.Tree')` 41, `('HOL-Data_Structures.Tree23', 'HOL-ex.Tree23')`
+41, `('ConcurrentHOL.Heap', 'HOL-Hoare.Heap', 'HOL-Imperative_HOL.Heap')` 41, plus the
+`Execute` quartet below at 19. Whether each is harmful needs a human reading the two
+datatypes, as here — 38 groups, not a research project. Lists at
+`cslh19:/tmp/multirec_audit/unrelated_groups.json`; copy them beside this plan before that
+scratch directory is swept.
+
 Two corollaries worth keeping. **"All firing claimants share a theory base name" is true
 and is not evidence of safety** — it is a restatement of the collision mechanism, since
-sharing a base name is the only way to fire at all. And the tuples
+sharing a base name is the only way to fire at all. On *repaired* keys the converse fails
+and the claim must not be read as a filter: 14,509 of the 16,356 multi-record keys are
+claimed by base-name-*distinct* theories. And the tuples
 `POPLmark-deBruijn ↔ VolpanoSmith`, `FeatherweightJava ↔ POPLmark-deBruijn`,
 `CoreC++ ↔ POPLmark-deBruijn` (19 groups each) pair four unrelated AFP entries that each
 happen to contain an `Execute.thy` invoking `code_pred`; no harm was shown there, but they
@@ -1578,6 +1618,16 @@ from the suspect list. The matching gate is one expression: **no key in the new 
 
 #### Phase 2 — fill, and record what was not forced
 
+**Two decisions run here and their order is fixed.** First the tail-level assignment below
+decides, per new key, *which old record* it takes. Only then does the per-key rule under
+"what is written in a filled theorem-alike case" decide *which dump record on that key*
+supplies `name` and `position`. The order has to be stated because B.1 compares a claimant's
+dumped position against the old record's, and a key carrying several dump records has
+several claimants: **a multi-record new key contributes no B.1 witness at all.** Measured
+2026-08-14: letting B.1 fire on "any dump record on the key matches" instead changes the
+assignment on 78 tails, 33 of which are genuinely mutually dependent — the tail-level branch
+would be reading a value the per-key rule has not chosen yet.
+
 **Case A — one old record, one new key, one dump record.** Fill. Not suspect. This is the
 overwhelming majority.
 
@@ -1605,6 +1655,18 @@ suspect list with the reason.**
 **Case C — a new key with no old record on its tail** is a new entity. Collect it; it has
 no source and belongs in §B.8's count. Not suspect. Measured: 91, all name-addressed, none
 theorem-alike.
+
+**B.0 to B.4 are read over the tail's shape, not over what is still unclaimed, and a new
+key that no branch fills goes on the gap list.** Both halves are needed and the second is
+not implied by the first. B.3 says "when the tail carries one old record and several new
+keys"; read instead as "one *unclaimed* old record", B.0 has already consumed that record
+and the tail's remaining new keys reach no branch — and they are not Case C either, since
+their tail does carry an old record, so §B.6 as written neither fills them nor bills for
+them and they leave the store silently. Measured 2026-08-14: **11,856** keys under the
+unclaimed reading against **280** under the tail-shape reading; the "188" B.0 quotes is
+consistent only with the latter. The catch-all is what makes the difference reportable
+rather than invisible, so state it even though the tail-shape reading should leave it
+nearly empty.
 
 **Nothing is refused for ambiguity alone.** The gap list holds only keys with no source at
 all. Ambiguity produces a suspect entry, not a gap entry.
@@ -1639,11 +1701,28 @@ in tail units** — measured over Case B tails the same populations come out at 
 position anywhere), 2,691 (claimants' propositions differ) and 126 (position matches no
 claimant). Re-take them in tail units before treating the table as a work estimate.
 
+**Two of these rows are one identifiable mechanism each and can be swept as a batch rather
+than adjudicated key by key.** Every one of the 3,836 dump records carrying no position at
+all is an `(n)`-indexed member of a dynamic fact collection (`named_theorems` /
+`Global_Theory.add_thms_dynamic`) over 168 collections, the largest being
+`AOT_commands.AOT_no_atp` at 693 — a name that indexes into a bundle whose contents depend
+on what is loaded, so it is not a stable denotation and its absence of a position is normal,
+not damage. And the propositions that differ across a key's claimants differ by *notation*,
+not by fact: one term printed through two theories' syntax (`nat` against `ω`,
+`prefix (take ?n ?xs) ?xs` against `prefix (?xs ↓ ?n) ?xs`, `sats(?A, φ, ?env)` against
+`?A, ?env ⊨ φ`). The digest is on the term and the string is on the printing context, so a
+divergent `prop` on these keys is evidence of nothing.
+
 **Marks.** B.1 gives `matched`, B.3 `copied`, B.4 `arbitrary` — and **B.2 (only-candidate)
 has no mark, which is 14,774 of the 37,754 suspect tails, 39 % of the list.** Its dominant
-shape is 9,314 tails of one old record, one new key and *two dump records*: the pairing is
-forced, but which dump record supplies `name`, `position` and `constituents` is not. Mark
-it `forced-pairing`, and note that this is exactly the choice flagged as needing sign-off.
+shape is one old record, one new key and *two dump records*: the pairing is forced, but
+which dump record supplies `name` and `position` is not. Mark it `forced-pairing`. Two
+corrections: the shape occurs on **12,602** tails, not the 9,314 quoted here before — 9,314
+is the subset still reaching B.2 after B.0 has consumed the rest, but B.0 decides which old
+record, not which dump record, so all 12,602 are affected. And `constituents` are **not**
+among the fields at stake: they are byte-identical across the records of all 16,356
+multi-record keys, zero exceptions. The choice itself is settled above and no longer needs
+sign-off.
 
 **A suspect row must carry, per claimant:** the stating theory's long name, that theory's
 source file, the dump position (file, line), and the proposition digest. Without them two
@@ -1670,9 +1749,59 @@ The record takes the dump's `name`, **entity position** and **corrected constitu
 *theorem-alike*: read as covering §B.6a's verbatim copies it would write the dump's `[]`
 into 198,953 name-addressed records whose `theory_constituents` is documented as `None`.
 
-When a key carries several dump records, take the one whose stating theory appears in the
-key's own constituent list if exactly one does; otherwise the first in sorted-by-theory-name
-order, and mark the tail `arbitrary`. Do not leave it to thread order.
+**When a key carries several dump records** — 16,356 keys do, all theorem-alike; no
+name-addressed key ever does, so §B.6a is untouched by this — take the one whose `name`
+equals the chosen old record's `name` if exactly one does; otherwise the first in
+sorted-by-`(theory long name, name)` order, marking the tail `arbitrary` and recording
+**every** claimant on the suspect row. Do not leave it to thread order. Decided 2026-08-14
+against the four reviews recorded in Part F, replacing "the one whose stating theory appears
+in the key's own constituent list", which was never measured and fires on 8,248 of 16,356 —
+a real discriminator on half the corpus and bare sort order on the other half.
+
+*Why the name and not the other two fields.* `Record.name` reaches disk through exactly one
+writer, `write_answer` (`semantic_interpretation.py:372-378`), which puts name, `expr`,
+interpretation, constituents and position in a single `put`; `__setitem__`'s docstring
+enumerates every writer that bypasses it and **none of them writes `name`**. The defect lived
+in `compute_constituents` and moved only the key prefix and the constituent list. So the
+stored name is the one field that records which claimant the stored English was written
+about — and it is literally the string that was in front of the interpreting model, which
+builds each prompt line as `[line N] {label} {entry.name}: {prop}` (`:475-490`). The other
+two candidates are later writes by other passes: `backfill_positions` (`semantics.py:774-815`)
+writes the position alone, keyed only by universal key — "the theory's own identity is not a
+parameter at all" — so on a multi-claimant key it is the last sweeping theory's; and
+`semantic_interpretation.py:1075-1079` rewrites `expr` from a later theory's printing while
+keeping the earlier name and text. An old record on such a key is therefore a chimera, and
+only its `name` is bound to its `interpretation`.
+
+*Coverage, taken after Phase 2's assignment rather than before it.* The rule decides 14,731
+keys; on 1,491 every dump record carries the same name so there is nothing to choose; ~1,625
+fall to sorted order; on 67 keys Phase 2 assigned no old record at all and the rule does not
+run. **1,469 of the 1,491 are keys whose claimants share a theory base name**, where fact
+names are byte-identical by construction and the name test is structurally blind — they are
+not evidence for the rule and are marked `arbitrary` like the rest of the fallback. Only
+their `position` actually differs (1,209 of them), and nothing reads `position` at runtime.
+
+*Two arguments deliberately not made.* That the rule "drops fewer vectors" is a tautology —
+it is defined as maximising `chosen.name == old.name`, one half of the divergence predicate —
+and on the other half (`chosen.prop != old.expr`) it is slightly worse, 1,608 firings against
+1,359. A dropped vector is refilled lazily by `_auto_embed` from the stored interpretation,
+so the saving is embedding compute, not the LLM re-interpretation §B.8 bills. And a position
+fallback was considered and dropped: it decides 16 keys, and on the 14,731 the name decides,
+the stored position points at a *different* claimant 7,348 times.
+
+*Why the choice cannot corrupt anything here.* On all 16,356 keys the constituent lists are
+byte-identical, so the key prefix and `theory_constituents` are not at stake — only `name`
+and `position`. And the claimants are one fact under several true names, established by an
+import-cone test over all 10,570 dumped theories' headers: no claimant fails to import every
+constituent theory (0 of 16,356), and no claimant's cone holds a second theory sharing a
+base name with a constituent (0 of 16,356), although 607 base names are shared by 1,645
+theories corpus-wide. Same term, same constant internal names, every internal name
+unambiguous in every claimant's context. The mechanisms behind the population, read off the
+sources: 4,531 `lemmas` re-exports, 4,792 locale or class instances, 2,737 dynamic fact
+collection members, 2,997 both sides hand-proved, 1,078 both sides package-generated, 135
+one file enumerated under two long names. **§B.1a's mis-copy is not reachable from this
+decision** — see the note under §B.1a — and the same cone test, applied to the other
+population, recovers its 25 `Term` tails independently.
 
 **`expr` and `name` divergence.** Where the dump's proposition differs from the chosen old
 record's `expr`, or the dump's `name` from its `name`, carry the dump's and **drop that
