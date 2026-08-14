@@ -2900,11 +2900,17 @@ the code is next touched.
    override is delivered in-process, and with the RPC host running externally (started
    for §B.10) it would never reach the host — the default chain resolves to ClaudeCode in
    the host itself, which is what ran. The chained embed then failed: Fireworks returns
-   **401 Unauthorized**, and `EMBEDDING_API_KEY` is set on neither machine (the local
-   `~/.zshrc` line is commented out). Nothing is lost: the **3,654** pending vectors (the
-   join's 3,519 divergence drops plus this run's new records) sit over stored
-   interpretations, so `isabelle-semantics embed` — or lazy `_auto_embed` at query time —
-   fills them the moment a valid key exists. The key decision is the user's.
+   **401 Unauthorized**, and `EMBEDDING_API_KEY` was set on neither machine (the local
+   `~/.zshrc` line is commented out). Nothing was lost: the **3,654** pending vectors (the
+   join's 3,519 divergence drops plus this run's new records) sat over stored
+   interpretations. **Resolved the same day**: the user put the key in cslh19's Isabelle
+   `etc/settings`; the REPL and the external RPC host were both restarted so each carries
+   it (the REPL sources settings itself; the host is a plain Python process and gets it
+   via `isabelle getenv -b EMBEDDING_API_KEY` at launch — remember this on any future host
+   restart, or `_auto_embed` in the host 401s silently). `isabelle-semantics embed` then
+   embedded **3,654/3,654** (454,940 tokens); a re-run reports "already complete
+   (1,343,793 entities)" and `fsck` passes. **The vector store is complete with respect to
+   the promoted store; §B.8 is done.**
 7. ~~**The experience pass** (§B.10)~~ — done 2026-08-14, dry run and real run
    byte-identical: 6,768 written (5,926 verbatim + 752 unchanged + 10 repaired + 80
    cleared-to-global), 6,768 vectors, 0 missing, 0 records destroyed; index rebuilt,
