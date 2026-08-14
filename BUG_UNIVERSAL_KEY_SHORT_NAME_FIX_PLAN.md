@@ -1544,7 +1544,12 @@ case". Then:
   record. Copy the 16-byte embed-status records verbatim — but re-take their count, it was
   723 before the theory-hash re-key and is 692 today.
 - **Name-addressed keys**: §B.6a's three branches.
-- **EXPERIENCE**: write nothing. §B.10's pass owns them and runs later.
+- **EXPERIENCE**: write nothing — no records and no vectors. §B.10's pass owns them and
+  runs later. **That makes §B.10 dependent on the pre-swap copies**: the 6,768 records and
+  their 6,768 vectors exist only in the old `semantics.lmdb` and the old vector store after
+  the join, so those two directories must survive until §B.10 has run and gate 12 has
+  passed. They cannot be regenerated — an experience is agent-written during proof search,
+  never enumerated from a theory.
 
 #### The four artefacts, written beside the staging store
 
@@ -1656,9 +1661,10 @@ suspect list with the reason.**
 no source and belongs in §B.8's count. Not suspect. Measured: 91, all name-addressed, none
 theorem-alike.
 
-**B.0 to B.4 are read over the tail's shape, not over what is still unclaimed, and a new
-key that no branch fills goes on the gap list.** Both halves are needed and the second is
-not implied by the first. B.3 says "when the tail carries one old record and several new
+**B.3's condition is read over the tail's shape, and a new key that no branch fills goes on
+the gap list.** Both halves are needed and the second is not implied by the first. (B.2 is
+about the unclaimed set by its own wording and stays that way; B.3 is the branch this
+paragraph is about.) B.3 says "when the tail carries one old record and several new
 keys"; read instead as "one *unclaimed* old record", B.0 has already consumed that record
 and the tail's remaining new keys reach no branch — and they are not Case C either, since
 their tail does carry an old record, so §B.6 as written neither fills them nor bills for
