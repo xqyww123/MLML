@@ -1455,6 +1455,25 @@ from the measurements recorded in Part F):
 | ~572 | claimants whose printed propositions differ | one of them is not the fact the text describes |
 | 25 | `HOL-Induct.Term` ↔ `First_Order_Terms.Term` | proven wrong text, §B.1a; small enough to fix by hand |
 | 21 | positional match whose old `expr` matches a *different* claimant | the one mechanically detectable wrong award |
+| 132 | Case A fill, key moved, old record has **no position**, and the dump's name differs from the old record's | the tail digest is the only witness left and the two names contradict each other |
+| 7 | name-addressed key copied verbatim whose stored `name` differs from the dump's (the `Real_Vector_Spaces.real_vector.*` constants) | the copy keeps a name, and a vector embedded from it, that no longer spell the entity |
+| 834 | persistent EXPERIENCE record whose old constituent list names a theory with a **shared base name** | §B.10's hash diagnostic is structurally blind exactly here, and these records cannot be re-interpreted — see §B.10 |
+
+**The counts above were taken per record, under the earlier framing, and do not reproduce
+in tail units** — measured over Case B tails the same populations come out at 669 (no
+position anywhere), 2,691 (claimants' propositions differ) and 126 (position matches no
+claimant). Re-take them in tail units before treating the table as a work estimate.
+
+**Marks.** B.1 gives `matched`, B.3 `copied`, B.4 `arbitrary` — and **B.2 (only-candidate)
+has no mark, which is 14,774 of the 37,754 suspect tails, 39 % of the list.** Its dominant
+shape is 9,314 tails of one old record, one new key and *two dump records*: the pairing is
+forced, but which dump record supplies `name`, `position` and `constituents` is not. Mark
+it `forced-pairing`, and note that this is exactly the choice flagged as needing sign-off.
+
+**A suspect row must carry, per claimant:** the stating theory's long name, that theory's
+source file, the dump position (file, line), and the proposition digest. Without them two
+of the seed populations cannot be re-queried from the row at all, which defeats the point
+of the list.
 
 None of these is a reason to hold up the migration. All of them are reasons to keep the
 list.
