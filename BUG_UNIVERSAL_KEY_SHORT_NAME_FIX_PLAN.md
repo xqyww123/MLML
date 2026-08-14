@@ -2242,10 +2242,16 @@ it is two directories, not four** (measured 2026-08-14):
 - `semantics.lmdb` — **moves**; the join produces a new one.
 - `vector_Qwen__Qwen3-Embedding-8B.lmdb` — **moves**; the join produces a new one. It is
   the only vector store on the machine.
-- `experience_index.lmdb` — **renamed aside and rebuilt**, not moved: the join produces no
-  new version, and §B.9 already says to run `rebuild_experience_index`. It must not simply
-  be rebuilt in place, or a rollback leaves a post-migration index over a pre-migration
-  store and `_experience_hits` drops every candidate (`semantics.py:1917-1919`).
+- `experience_index.lmdb` — **renamed aside, and rebuilt only after §B.10**, not moved: the
+  join produces no new version. It must not be rebuilt in place, or a rollback leaves a
+  post-migration index over a pre-migration store and `_experience_hits` drops every
+  candidate (`semantics.py:1917-1919`). **And it must not be rebuilt straight after the
+  swap either, which is what this section used to say.** Measured after the swap: the
+  promoted store holds **0** EXPERIENCE records and the renamed-aside store holds all
+  6,861, because the join writes none by design. A rebuild now yields an empty index —
+  consistent with the store, restoring nothing. The order is §B.10 first, then the rebuild.
+  Until §B.10 runs, experience retrieval returns nothing, which is also exactly what an
+  absent index gives, since an absent index is created empty on first open.
 - `theory_hash.lmdb` — **not touched.** It lives under a different parent
   (`~/.cache/Isabelle_Theory_Hash/`), Part B does not re-key theory hashes — §B.7 gate 2
   proves it, 10,550 dump theory keys byte-identical to store keys — and §B.2 item 1 already
@@ -2270,7 +2276,23 @@ created **empty** on first open and then silently returns no experience hits —
 mode is quiet, so the reminder has to be loud. `backup` makes btrfs reflink clones and
 refuses to continue if one fails.
 
-**Preflight run 2026-08-14: five blockers, all one cause.** Something is listening on
+**Run 2026-08-14, 15:20:23.** The REPL was stopped with the user's approval (wrapper PID
+2120741 then `poly` 2121182 — killing the wrapper alone left `poly` listening, exactly as
+§B.2 item 2 predicts), preflight then read **0 blockers**, three btrfs reflink clones were
+made as `*.pre-swap-20260814-152014` at **zero** disk cost, and the swap moved
+`semantics.lmdb` and the vector store while renaming `experience_index.lmdb` aside.
+
+To restart the server: `./contrib/Isa-REPL/repl_server.sh 0.0.0.0:6666 AFP-ALL-4
+/tmp/repl_outputs -o threads=12 -o document=false`.
+
+**Verified on the promoted store, 16 checks, 0 problems**: 1,336,867 entity records, 11,417
+theory-status records plus the counter, 0 zero-length values, 0 records with
+`interpretation is None`, 867 WIP keys and all of them theory-status, prefix check 0
+mismatches over 1,137,914 theorem-alike keys, 1,334,067 vector keys with **0** entity-shaped
+vector keys lacking a record, all five backups present, and the 6,861 EXPERIENCE records
+still readable in `semantics.lmdb.bak-20260814-152023`.
+
+**Preflight run before that, 2026-08-14: five blockers, all one cause.** Something is listening on
 :6666; `repl_server.sh` is alive (PID 2120741); `semantics.lmdb` and `theory_hash.lmdb` are
 held by PID 2123182; and that PID is an attached `Isabelle_RPC_Host.run_attached__`. The
 last check exists because the first four can all read clean while the swap is still
