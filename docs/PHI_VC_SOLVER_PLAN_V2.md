@@ -3392,12 +3392,13 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 
 **未完成，按可立即开工的顺序**：
 
-- **5b（冻结快照 × 异步重放）——下一个动作，条件已齐备、零 LLM 成本。**
-  材料现成：`Phi_Type.proof-store` 11 条、`Phi_Types.proof-store` 6 条录制文本含具名快照
-  （`the_\<phi>` / `the_\<phi>lemmata`）。`Phi_System` 的 heap 刚建好可直接用。
-  做法：取一条含具名快照的记录，在纯 ML 会话里走 store 通道重放（`eval_prf_str` →
-  `aoa_replay`），确认冻结快照在异步态与同步态下都被正确还原；再按 §7 5b 的原文核对
-  时效判据。**不需要开闸、不需要 REPL、不撞其它会话。**
+- **5b（冻结快照 × 异步重放）——录制侧已证实，重放侧待一次闸门关闭的批构建。**
+  详见下面"5b 执行记录（2026-08-14）"：录制侧的 10 条含具名快照的记录已逐条点出
+  （`Phi_Type` 8 条、`Phi_Types` 2 条，此前写的"11 / 6"是 grep 行数之误）；重放侧的三条
+  可行路径（纯 ML 会话、isabelle-mcp、批构建）现在只剩批构建一条，且它需要作者批准
+  `isabelle build`。**注意 2026-08-14 16:00 另一会话提交的 `Isabelle_RPC/Tools/context.ML`
+  已使 `Phi_System_Base` / `Phi_Semantics_Framework` / `Phi_System` 三个 heap 失效**，
+  下面所有"heap 现成"的说法自那一刻起不再成立。
 - **5c（阶段 2 递延验证批）**：多为构建与重放类，`Phi_System` 已可建，可紧接 5b 做。
 - **5a ②**（批构建 theory 收尾与迟到 fork / store compact 的竞争）：前置条件
   「`Phi_System` 可建」现已满足，可做。
@@ -3415,6 +3416,75 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
 ③ `Phi_System/ROOT` 上挂着另一会话未提交的 ML 调试器插桩与 `Option_Hunt_Probe` 理论
 （临时物，它自己的注释写明如何撤），会把建立其上的一切拖慢约 1.75 倍；动它前先协调。
 ④ 改过任何 `.ML` 之后，做 REPL 相关测试前必须请作者重启 REPL 服务器。
+
+#### 5b 执行记录（2026-08-14）——录制侧已证实，重放侧被 heap 失效挡住
+
+**一、录制侧：已完成，且是纯离线核对，没有起任何 Isabelle 进程。**
+
+写了一个离线解码器读 `.proof-store`（格式见 `auto_sledgehammer/library/cache_file.ML`
+的 `Proof_Store_Format`：`MAGIC(4) 长度(4) CRC(4) 载荷`，载荷是 MessagePack 的
+`[1, [键, 毫秒, 证明文本]]` 或 `[2, 键]` 墓碑；解码器在本会话 scratchpad，未入库）。读数：
+
+- `Phi_System/Phi_Type.proof-store` 110 条活条目里，**8 条**的证明文本引用具名冻结快照，
+  其中 1 条引用的是 `the_\<phi>lemmata`。键：`c82af8daff8c39e3`、`b4b857681c548cf0`、
+  `ab49c9cd32ae4c06`、`a2551c3548518d8c`、`9dcfbbd8e2e09416`、`939c4e8d05abf102`、
+  `6baaaa20dcc8b9d8`、`4d048ebb25cdaeb2`（最后一条即 `metis the_\<phi>lemmata`）。
+- `Phi_System/Phi_Types.proof-store` 69 条里 **2 条**：`727d00fafbf3dd50`、`38a3e5fbe1347235`。
+- **更正本计划此前的数字**：上面写过的"11 条 / 6 条"是 `grep -c` 的**行数**
+  （证明文本本身含换行），不是条目数；正确的条目数是 8 与 2。
+
+这已经把 5b 的上半句证实了：录制发生在 fork 里（`\<phi>async_proof` 默认 `true`，
+`Phi_Envir.ML:222`），而 sledgehammer 的相关性过滤器只枚举**具名**事实——它能在
+proof text 里引用 `the_\<phi>`，就说明冻结语境被 fork 闭包完整带走并进入了事实选择。
+
+附带读数（R27 的现状）：`Phi_System` → `Phi_Test` 这条链上的五个 store **一条墓碑都没有**。
+墓碑只在 `Phi_Examples` 那边有 13 条历史遗留，其中若干还是旧式非哈希键
+（如 `local.Bin_Search_Tree/Abstract_Domain/1`）。
+
+**二、重放侧的结构事实（读码确认，不是推断）。**
+
+- `Phi_Envir.solve_obligation'`（`Phi_Envir.ML:250`）把 `freeze_dynamic_lemmas ctxt`
+  作为语境交给 `hammer_obligation_solver'`——**冻结发生在 async/sync 分叉之前，也在
+  store 查表之前**。
+- `hammer_or_AoA` 先同步做 level-0 查表与重放（`agent_server.ML:2010`），只有 MISS 才
+  fork。所以**重放永远在 fork 之外，用的就是那个已冻结的语境**，与 `\<phi>async_proof`
+  取什么值无关。5b 原文里"异步态与同步态"的区分，对重放侧是构造性地不存在的；
+  真正要实测的只有一句：**第二次构建里这些录制文本重放得成功**。
+- 现成的正向观测点：`sledgehammer_solver.ML:604` 每次重放都打
+  `[eval_prf_str] replaying: …`，失败打 `[eval_prf_str] FAILED on …`；重放失败还会写墓碑
+  （`invalidate_proof_cache true`）并 warning。所以跑完一次构建之后，"这 10 条都被重放过、
+  且没有任何墓碑"是可以逐条读出来的，不必靠推断。
+
+**三、为什么这一步此刻跑不动（三条路都堵，2026-08-14 16:30 实测）。**
+
+1. **纯 ML 会话不行**。`isabelle ML_process -d contrib/phi-system -l Phi_Semantics_Framework
+   -e 'Thy_Info.use_thy_legacy "Phi_System.Phi_Type"'` 能开始加载，但第一条 `by` 就死在
+   `exception Fail … Bad bash_process server address`：`ML_process` 是"没有 Isabelle/Scala
+   语境"的进程，`Isabelle_System.bash` 不可用，而 auto_sledgehammer 要用它。
+   （顺带一条环境更正：Isabelle2025-2 里 `Thy_Info.use_thy` 已被删，替代品是
+   `Thy_Info.use_thy_legacy`。）
+2. **isabelle-mcp 起不来**。`isabelle_launch` 直接拒绝，说 `Phi_System_Base` /
+   `Phi_Semantics_Framework` / `Phi_System` 三个 heap 已不是最新。原因不在本计划的改动：
+   **另一会话在 16:00 提交了 `Isabelle_RPC/Tools/context.ML`**，它在这三个会话的依赖链上游。
+   工作树里没有任何比 heap 更新的 phi-system 源文件，唯一变的就是它。
+3. **就算 heap 是新的，也不该用 isabelle-mcp 跑 5b**。`.mcp.json` 给它设了
+   `AOA_ALLOW_NONINTERACTIVE=yes`（第 1 步实测时经作者批准加入），**闸门是开的**：
+   万一某条重放失败、引擎又搜不出来，就会真的叫起 AoA 花钱。批构建相反——
+   `frontend_identity`（`Isabelle_RPC/src/scala/frontend_identity.scala:39`）把
+   `isabelle.Build_Job` 判为 `interactive = SOME false`，闸门天然关闭，零花钱风险，
+   而重放失败会以 §6.1 硬报错暴露出来。
+
+**四、5b 剩下的唯一动作，以及它需要的授权。**
+
+在**闸门关闭的批构建**里让 `Phi_Type.thy` / `Phi_Types.thy` 从源码重跑一遍，然后从构建
+数据库里读 `[eval_prf_str] replaying:` 与 `FAILED on`，核对上面 10 个键都被重放且零墓碑，
+再核对 `git status` 里五个 store 一个字节没变。需要作者批准两件事：
+
+- **运行 `isabelle build`**（§9 之外的新增项）。注意代价与风险：Isabelle 会**先删目标 heap
+  再重建**，而这次重建会把另一会话 16:00 那笔 `context.ML` 一起编进去；若它编不过，
+  我们会连现有的 `Phi_System` heap 一起失去，波及所有在用的会话。整条链约 20 分钟起。
+- **是否先与那个会话协调**（改 `Isabelle_RPC/Tools/context.ML` 与 `Phi_System/ROOT`
+  调试器插桩的那一方）。
 
 **实施记录（2026-08-10，进行中）**：第 1 步代码半已落（`phi-system dc35fba2`）——
 战术位换接照 §2.3 签名（`proof_id = id`、`async`/`read_store`/`write_store` 透传、
@@ -3798,8 +3868,16 @@ conditions do not hold and this assumption can cause reasoning failure"并按"gu
 
 ## 9. 仍待作者拍板
 
-**（2026-08-14 更新，八项。）** 前四项挡着阶段 5 的推进，后四项是并行的旧账。
+**（2026-08-14 二次更新，九项。）** 前五项挡着阶段 5 的推进，后四项是并行的旧账。
 
+0. **跑一次 `isabelle build` 的授权**（本会话新增，5b 卡在这里）。2026-08-14 16:00
+   另一会话提交的 `Isabelle_RPC/Tools/context.ML` 已让 `Phi_System_Base` /
+   `Phi_Semantics_Framework` / `Phi_System` 三个 heap 失效，isabelle-mcp 因此拒绝启动，
+   而纯 ML 会话跑不了 `by`（没有 bash server）。**5b 的重放侧、5c、5a ② 三项现在都要
+   先重建 heap。** 代价与风险：Isabelle 先删目标 heap 再重建，这次会把那笔 `context.ML`
+   一起编进去，若它编不过则连现有 heap 一并失去；整条链约 20 分钟起。
+   要不要先与那个会话协调，也请一并示下。（作者 2026-08-14 曾对上一个会话给过一次性
+   特许，本会话是 compact 之后的新会话，按仓库规矩重新请示。）
 1. **开闸运行的授权与预算**。阶段 5 第 3 步剩余那半（手工制造一条 sledgehammer 打不动的
    义务，看 AoA 被叫起、落库、二次构建纯 ML 重放）与第 6 步的建满验收，都必须
    `AOA_ALLOW_NONINTERACTIVE=yes` 开闸，会真调 LLM。此前同类实测的量级：单条义务
@@ -3817,7 +3895,10 @@ conditions do not hold and this assumption can cause reasoning failure"并按"gu
    危害不是崩溃而是失败变静默——残留的 `SOME` 会让下一次赋值缺席时读到上一次的旧值。
 7. **`rule_generation.ML` 竞态注释补一句**：旧代码不只会抛 `Option`，两个线程还可能
    **静默拿到对方的 pass**。该修复本身已复核成立（类型、求值顺序、临界区覆盖三点）。
-8. **`Phi_Types.proof-store`（未跟踪）的去留**——旧账，阶段 5 记录里挂着。
+8. **`Phi_Types.proof-store` 的去留**——旧账，阶段 5 记录里挂着。
+   **更正**：此前记作"未跟踪"是错的，2026-08-14 实测它已被 git 跟踪
+   （`Phi_System/` 下五个 `.proof-store` 全部在版本控制里，且当前与 HEAD 完全一致——
+   15:00 那次构建的重写产出与 HEAD 逐字节相同，说明 compact 是确定性的）。
 
 （原第 1/2 项已于 2026-08-10 裁决：`FACT_PRF` 线上 tag = **20**（「批准」）；
 `FactInTime` 有记录分支的重放预算 = **`1.5 × 记录毫秒数 + 3000` 毫秒**（HAMMER 范式，
