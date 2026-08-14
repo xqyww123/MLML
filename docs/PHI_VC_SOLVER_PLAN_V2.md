@@ -3384,6 +3384,38 @@ Python 收到后把证明回填进 op 的 `cached_proof` 字段——这个方�
    - **查自洽**：跑完 `git status` 里 `.proof-store` **一个字节都没变**——下游那一遍
      构建理应对 store 零写入。
 
+#### 阶段 5 当前进度与下一动作（2026-08-14 记，供接手者直接照做）
+
+**已完成**：第 1 步（换接 + `:5132` 的 `sorry` 替换并实测解出）、第 2 步（D51 五类退出原因
+全部实弹触发）、第 3 步的全栈重建那半（整条链到 `Phi_Test` 全绿）、第 4 步（两 method ×
+五类矩阵十格）、5a 的 ① 与 ③。
+
+**未完成，按可立即开工的顺序**：
+
+- **5b（冻结快照 × 异步重放）——下一个动作，条件已齐备、零 LLM 成本。**
+  材料现成：`Phi_Type.proof-store` 11 条、`Phi_Types.proof-store` 6 条录制文本含具名快照
+  （`the_\<phi>` / `the_\<phi>lemmata`）。`Phi_System` 的 heap 刚建好可直接用。
+  做法：取一条含具名快照的记录，在纯 ML 会话里走 store 通道重放（`eval_prf_str` →
+  `aoa_replay`），确认冻结快照在异步态与同步态下都被正确还原；再按 §7 5b 的原文核对
+  时效判据。**不需要开闸、不需要 REPL、不撞其它会话。**
+- **5c（阶段 2 递延验证批）**：多为构建与重放类，`Phi_System` 已可建，可紧接 5b 做。
+- **5a ②**（批构建 theory 收尾与迟到 fork / store compact 的竞争）：前置条件
+  「`Phi_System` 可建」现已满足，可做。
+- **第 3 步剩余那半**（手工制造义务 → AoA 被叫起 → 落库 → 二次构建纯 ML 重放）：
+  **要开闸、要花钱**，等 §9 第 1 项授权。形式上可用 isabelle-mcp 代替 jEdit
+  （`:5132` 那次实测即如此）。
+- **第 5 步**：等 §9 第 2 项（基准与案例选择）。
+- **第 6 步**：要开闸建满，排最后。
+
+**接手须知（环境事实，2026-08-14）**：① `HOL-Library` / `Phi_System_Base` /
+`Phi_Semantics_Framework` / `Phi_System` / `Phi_Semantics` / `Phi_Test` 的 heap 现已全部建好
+（用户 heap 目录此前被清空过，本次是从 `HOL-Library` 起重建的，约 22 分钟）。
+② 仓库 `CLAUDE.md` 规定**未经作者明确指令不得运行 `isabelle build`**（约束子 agent），
+2026-08-14 作者对该次会话给过一次性特许——**新会话必须重新请示**。
+③ `Phi_System/ROOT` 上挂着另一会话未提交的 ML 调试器插桩与 `Option_Hunt_Probe` 理论
+（临时物，它自己的注释写明如何撤），会把建立其上的一切拖慢约 1.75 倍；动它前先协调。
+④ 改过任何 `.ML` 之后，做 REPL 相关测试前必须请作者重启 REPL 服务器。
+
 **实施记录（2026-08-10，进行中）**：第 1 步代码半已落（`phi-system dc35fba2`）——
 战术位换接照 §2.3 签名（`proof_id = id`、`async`/`read_store`/`write_store` 透传、
 `failure_msg = SOME compose`，组装函数原样复用）；`Phi_Type.thy:5132` 的
@@ -3766,7 +3798,28 @@ conditions do not hold and this assumption can cause reasoning failure"并按"gu
 
 ## 9. 仍待作者拍板
 
-（零项。原第 1/2 项已于 2026-08-10 裁决：`FACT_PRF` 线上 tag = **20**（「批准」）；
+**（2026-08-14 更新，八项。）** 前四项挡着阶段 5 的推进，后四项是并行的旧账。
+
+1. **开闸运行的授权与预算**。阶段 5 第 3 步剩余那半（手工制造一条 sledgehammer 打不动的
+   义务，看 AoA 被叫起、落库、二次构建纯 ML 重放）与第 6 步的建满验收，都必须
+   `AOA_ALLOW_NONINTERACTIVE=yes` 开闸，会真调 LLM。此前同类实测的量级：单条义务
+   $0.1–1，五类矩阵一轮 ≈ $3.4。**需要一句授权与花费上限。**
+2. **第 5 步评测冒烟的基准与案例选择**（计划原文即写"待作者给定"）。没有它这一步推不动。
+3. **`\<phi>LPR.rule_gen.timeout` 的修法**（作者 2026-08-14：「这个我们之后再讨论」）。
+   证据与两个决定性实验见根目录 `RULE_GEN_TIMEOUT_SILENT_FACT_LOSS.md`。
+   要点：一条 100 毫秒挂钟期限在决定一个事实是否存在，且失败在默认配置下不可见。
+4. **`prove_or_rebute` guard 预算链的四个新值**（100/100/300/200 ms，注释标 UNDER TEST，
+   目前留在工作树未提交）去留。与第 3 项**不是同一个机制**，勿混。
+5. **§2.5 join 放行名单增补两处**：`hammer_or_AoA` fork 体内对两个恒同步内层 future 的
+   `Future.join`（joined 的都是已兑现的 `Future.value`）。原名单自称穷举，故不擅改。
+6. **`commutativity.ML` 的一词修复**：`check_whether_assoc_norm_synt` 读
+   `whether_assoc_norm__sender` 却复位 `whether_swap_norm__sender`（复制粘贴漏改）。
+   危害不是崩溃而是失败变静默——残留的 `SOME` 会让下一次赋值缺席时读到上一次的旧值。
+7. **`rule_generation.ML` 竞态注释补一句**：旧代码不只会抛 `Option`，两个线程还可能
+   **静默拿到对方的 pass**。该修复本身已复核成立（类型、求值顺序、临界区覆盖三点）。
+8. **`Phi_Types.proof-store`（未跟踪）的去留**——旧账，阶段 5 记录里挂着。
+
+（原第 1/2 项已于 2026-08-10 裁决：`FACT_PRF` 线上 tag = **20**（「批准」）；
 `FactInTime` 有记录分支的重放预算 = **`1.5 × 记录毫秒数 + 3000` 毫秒**（HAMMER 范式，
 作者「1.5 × 记录毫秒数 + 3000 毫秒 不好吗？」）。同日作者裁决 **`exec_mode` 保留**
 （「好的，那就保留」；实际管辖范围 = HAMMER 与 FactInTime 两处消费者，D32 实测），
