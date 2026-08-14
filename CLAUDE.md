@@ -20,9 +20,13 @@ CRITICAL — NEVER run `git clean` (in any form: `-f`, `-d`, `-x`, `-X`, etc.). 
 
 Commit directly on `main`; never create or switch branches (this is a shared working tree — branching moves every other agent's checkout too). If another agent's uncommitted changes get swept into your commit, that is acceptable — briefly describe their work in the commit message alongside your own, and commit it all together.
 
-### Isabelle builds — never lightly add `-c`
+### Never run `isabelle build` without my explicit command
 
-`isabelle build -c` is a *clean build*: the `-c` flag deletes session images before rebuilding, which on this shared checkout destroys the user's and other agents' already-built heaps. NEVER add `-c` to `isabelle build` without explicit user approval. (A plain incremental `isabelle build` without `-c` is fine.)
+Any session, any flags, however small. This binds every subagent you dispatch too — put it in their brief.
+
+It is not a read-only probe: Isabelle deletes a target heap before rebuilding, and the blast radius is not the session you named. On 2026-08-13 a subagent's scratch session pulled `Pure` and `HOL` into the user heaps directory and every user heap on the machine was lost. `ISABELLE_HEAPS` cannot be redirected to sandbox it — Isabelle's own settings override the environment. Never add `-c` or `-f`.
+
+`-f` is not "rebuild the session I named": it rebuilds the whole dependency chain, `Pure` and `HOL` included. To force one session to re-run, edit one of its source files.
 
 ### Reloading `.ML` changes — just restart the REPL
 
