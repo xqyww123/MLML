@@ -30,8 +30,22 @@ ASCII 记法,导致凡是名字里带 Isabelle 符号的实体一律解析失败
 > **执行记录(2026-08-13 傍晚)**:本计划的第 1–7 步**已全部落地并提交**
 > ——`Isa-Mini` 的 `3a3d4de`、`b349d18`,`Isabelle_RPC` 的 `594626d`、`a72e5cb`,
 > 主仓的 `f33d9ec`、`5d85344`。两处 golden 已按批准更新。新增用例 `SymbolicFactName`
-> (自带 fixture)覆盖 §8 的单元层与 §6.1 判据。**只剩 §8 的端到端那一步没跑**
-> (会烧 AoA 额度,按 §0 的规矩要先问用户)。
+> (自带 fixture)覆盖 §8 的单元层与 §6.1 判据。~~只剩 §8 的端到端那一步没跑~~
+>
+> **端到端验收(2026-08-14 17:02,通过)**。方法:独立 REPL(`Phi_Semantics` 底座,
+> 端口 6667,不动共享文件),`file()` 推进 `Binary_Trees.thy` 到 `proc maintain_i`
+> (`:457`)之前,经 `eval` 注入 `declare [[enable_proof_store = false,
+> AoA_read_proof_store = false]]` 关掉两层缓存,再 `eval` proc 原文让
+> `hammer_or_aoa` 真跑。结果:AoA 会话 `FFF6CC88E_149EFEE` 的 17 条 `HAMMER`
+> 操作里 5 条携带 `the_\<phi>` 引用,共 18 次送达,序号覆盖
+> 16/20/29/30/31/32/33/34——**含缺陷报告里的 `the_\<phi>(31)` 本尊**;修复前的
+> 测量是 400 会话 155 次请求 0 次送达。会话 17:02:37 正常收尾。
+> 顺带证实:phi 层 `.proof-store` 因 theory-hash 重键整库 miss(与七个语义检索
+> 红灯同根因),落到 AoA 层后被**目标哈希键**的 L1 免费回放接住——这正是 §8 要求
+> 显式关 `AoA_read_proof_store` 的原因。
+> 另两条操作教训:Isa-REPL 客户端 `eval` 返回 `None` 或 `CommandOutput` 列表、
+> 错误靠抛 `REPLFail`,其文档字符串写的 `(outputs, err)` 元组是错的;
+> `set_trace(False)` 时整个返回是 `None`。
 >
 > 落地时发现的两件操作事实,写在这里免得下次再踩:
 > 1. **改任何 Python 也必须重启 REPL**。AoA 的 Python 跑在 REPL 启动时派生的
