@@ -2453,6 +2453,79 @@ different key from a pre-fix record, leaving only the 0.7-cosine dedup heuristic
 is a live target. Anything written between the join's read and the swap is lost. Confirm
 at run time that the writer is stopped — do not infer it from this sentence.
 
+#### The population, measured 2026-08-14 after the swap
+
+The experiences now live **only** in `~/.cache/Isabelle_Semantic_Embedding/semantics.lmdb.bak-20260814-152023`
+and its `.pre-swap-20260814-152014` twin; the promoted store holds **0**. Those directories
+must survive until this pass has run and its count has been checked.
+
+**87 % of the pass needs no Isabelle at all, and that is provable rather than hopeful.** The
+defect resolved a constant's defining theory through a memo on theory **base** names, so a
+mis-resolution can only ever have written a theory whose base name is shared with another
+theory. Contrapositive: **a record whose constituent list names only theories with a
+corpus-unique base name cannot be carrying a mis-resolution**, so its prefix is already
+right and its key does not move. Measured over the 6,768 persistent records (605 of the
+dump's 9,530 base names are shared):
+
+| count | shape | what the pass does |
+|---|---|---|
+| **5,922** | every named theory has a corpus-unique base name **and** every stored constituent hash equals today's | copy verbatim, key unchanged |
+| **4** | empty constituent list, all-zero prefix — the GLOBAL experiences | copy verbatim; nothing to resolve |
+| **832** | names at least one theory whose base name is shared | recompute (see below) |
+| **10** | names a theory the dump has no key for: 7 × `Pure` (deliberately excluded), 2 × `HOL-Decision_Procs.Approximation`, 1 × `…Approximation_Bounds` (D18) | recompute or clear |
+
+Two invariants checked while measuring, both clean: **0** records have a prefix that differs
+from `xor_theory_prefix(stored constituent hashes)` once the four empty-list GLOBAL records
+are read as the all-zero prefix they legitimately carry; and **6,944 of 6,954** stored
+constituent hashes equal today's, the 10 exceptions being exactly the `Pure` and
+`Approximation` names above. So the static half of §B.10's "one diagnostic" is already
+verified without Isabelle.
+
+#### Clearing the constituent list is a supported state, and `[]` is not `None`
+
+Settled 2026-08-14 with the user: **try to repair; where repair genuinely fails, clear the
+constituent list.** That fallback is better founded than it first looks —
+`experience_index.py` has a `_GLOBAL` sentinel bucket, `b"\x00" * 16`, whose comment says it
+matches `xor_theory_prefix([]) = 0x00..00`, "the key prefix such experiences already carry".
+`add` registers an empty-list record under it "so it stays retrievable + dedup-visible rather
+than being orphaned", and `candidates` **always** unions the `_GLOBAL` bucket in: "global
+experiences are available in every context; the caller's full-subset check passes them
+vacuously". The four existing GLOBAL records are that shape in production. A cleared record
+therefore becomes available everywhere and its `goal_patterns` do the filtering, which is the
+gate that carries the meaning anyway.
+
+**The one way to get this fatally wrong: clear to `[]`, never to `None`.**
+`_experience_hits` opens with `if rec is None or rec.theory_constituents is None: continue`
+(`semantics.py:1917-1919`), so `None` makes the record permanently unreachable while `[]`
+makes it globally available. `[]` is "global"; `None` is "silently lost", and nothing can
+regenerate an experience. Clearing also moves the key: the prefix becomes all-zero, and two
+cleared records can only collide if their tails do, which they do not.
+
+**What counts as "repair failed", decided 2026-08-14.** Only a genuine failure clears:
+**a goal pattern that does not parse in the merged context**, or a context that cannot be
+built at all. A record whose patterns parse and yield a recomputed list is **not** cleared,
+even when that list still names a shared-base-name theory — this section already proves that
+case is indistinguishable from a correct resolution ("the recomputed set equals the old list;
+nothing fires"), and clearing it would push 832 records, 12 % of all experiences, into global
+availability, trading a list that may well be right for a candidate set that is certainly
+wider. Where the recomputed list **differs** from the stored one, that is a detected repair
+and is reported per record.
+
+#### What is left to build
+
+1. A `static_context_unpacker`-based variant of the `Experience.constituents` callback
+   (`Isabelle_RPC/Tools/context.ML:1085-1091`), which today raises if any pattern fails to
+   parse and whose only caller passes an AoA proof-state context
+   (`mcp_http_server.py:2279-2285`). The variant must build its context by merging the
+   theories the record's own old constituent list names, and must **report** a parse failure
+   rather than raising through the batch.
+2. A pass that copies the 5,926 unmoved records and their vectors verbatim, sends the 842 to
+   the callback, writes the repaired or cleared records, and emits a per-record report:
+   repaired (list changed), unchanged, cleared (with the failing pattern), and the count of
+   recomputed-versus-stored hash disagreements, which should be zero.
+3. `Experience_Index.rebuild` afterwards — **only** afterwards; §B.9 records why running it
+   before this pass yields an empty index.
+
 ### B.11 What downstream users lose, for the release note
 
 Recorded because D3 writes it off. After the release a user's own locally collected
