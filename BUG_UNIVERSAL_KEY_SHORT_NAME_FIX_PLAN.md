@@ -1880,9 +1880,36 @@ first audit's "not one names a session" measurement was of the `copied` populati
 not extend to B, where 49 of 58 wrong texts name a setting. Verdicts:
 `evidence/universal-key/suspect_round2_verdicts.json`; the repair list (58 keys over
 exactly 4 claiming theories — JinjaDCI.Type 29, HOL-Imperative_HOL.Heap 16, CoreC++.Type
-10, ConcurrentHOL.Heap 3): `suspect_round2_patchlist.json`. The repair is §B.8's pipeline
-again: delete the 58 records+vectors, clear `finished` on the 4 theories, `collect`, embed
-— estimated $1.1–1.5.
+10, ConcurrentHOL.Heap 3): `suspect_round2_patchlist.json`.
+
+**The repair, run 2026-08-15 (approved).** `contrib/Semantic_Embedding/patch_round2.py`
+against the LIVE store — there is no staging twin this late, so every edit is read back and
+`--dry-run` plans the whole thing first (the dry run matched the wet run exactly). It
+deleted the 58 records **and their 58 vectors** (an orphaned vector would stand for text
+that no longer exists), renamed the 2 CoSMed records to their in-cone names
+(`Safety_Properties.obs_defs(9)/(11)` → `System_Specification.r_defs(9)/(11)`, refusing
+unless the stored name was the one the audit reasoned from) and **dropped those two
+vectors** — the name is part of the embedded document and `_auto_embed` only fills ABSENT
+vectors, so a rename that keeps its vector silently leaves the old name in the index — and
+cleared `finished` on the 4 theories. 0 problems. Then `collect` over the 4 theories:
+**$1.44**, inside the $1.1–1.5 estimate; the chained embed wrote exactly **60** vectors =
+58 rebuilt + 2 renamed. Verified after: of the 58, **0 absent, 0 without interpretation, 0
+without a vector, and 0 still carrying the condemned pattern** (no "Jinja" text on a
+CoreC++ key, no "CoreC++" on a JinjaDCI key, no `Null` claim on a phantom-`ref` key); both
+renames hold the intended name with a fresh vector; `embed` reports already-complete over
+1,343,793 entities and `fsck` passes. Report:
+`evidence/universal-key/patch_round2_report.json`.
+
+**The 6 `unfilled` rows needed no action, and filling them would have been a regression.**
+The D-batch recommended filling them free from their alias records rather than paying for
+re-interpretation. Measured before acting: all 6 keys are in §B.8's 158-key gap list, so
+today's collection had **already** re-interpreted them — each now carries English written
+for that entity (`Exceptions.sys_xcpts_defs(3)` explains the `OutOfMemory` string literal;
+`Kildall.Semilat.list_update_le_listI` states the semilattice hypotheses;
+`Term.stmt.size(6)` names the `Skip` constructor). Copying an alias record's text over that
+would replace purpose-written English with borrowed English. Recorded because the
+recommendation was sound when written and is falsified only by the ordering: the gap
+collection ran between the audit's snapshot and its adjudication.
 
 #### The repairs, applied to the staging store (2026-08-14)
 
@@ -2650,9 +2677,10 @@ shared working tree — and comes back out when it has done its job. History kee
 - `contrib/Semantic_Embedding/dump_universal_keys.py` — whole file.
 - `contrib/Semantic_Embedding/migrate_universal_keys.py` (the join, §B.5–B.7) — whole
   file, with its test `test_migrate_universal_keys.py`.
-- `contrib/Semantic_Embedding/patch_staging_store.py` and
-  `contrib/Semantic_Embedding/promote_rekey.py` (§B.6's surgical repairs and the §B.9
-  swap) — whole files.
+- `contrib/Semantic_Embedding/patch_staging_store.py`,
+  `contrib/Semantic_Embedding/patch_round2.py` and
+  `contrib/Semantic_Embedding/promote_rekey.py` (§B.6's two rounds of surgical repairs and
+  the §B.9 swap) — whole files.
 - `contrib/Semantic_Embedding/migrate_experience_keys.py` (the experience pass, §B.10)
   — whole file, with its test `test_migrate_experience_keys.py`; and in
   `Tools/semantic_interpretation_app.ML`, the
@@ -2970,8 +2998,10 @@ the code is next touched.
    re-interpreted at §B.8's rates", and neither loses a record. **The residue was
    adjudicated 2026-08-14 by a 13-auditor second team** — 1,308 rows read one by one,
    1,252 right, 56 wrong (58 keys over 4 theories), 0 undecided; see "The residue's
-   adjudication" in §B.6. Left to run: the 58-key repair round (delete + collect + embed,
-   ~$1.1–1.5), awaiting the user's approval.
+   adjudication" in §B.6. ~~The 58-key repair round~~ — done 2026-08-15 for **$1.44**:
+   58 records+vectors deleted and rebuilt, 2 CoSMed records renamed with their vectors
+   dropped and re-embedded, 60 vectors written, 0 of the condemned patterns surviving,
+   `fsck` passes.
 
 ---
 

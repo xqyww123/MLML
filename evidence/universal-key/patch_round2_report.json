@@ -1,0 +1,396 @@
+{
+ "dry_run": false,
+ "vector_store": "vector_Qwen__Qwen3-Embedding-8B.lmdb",
+ "counts": {
+  "deleted_records": 58,
+  "deleted_vectors": 58,
+  "renamed_records": 2,
+  "renamed_vectors_dropped": 2,
+  "finished_cleared": 4
+ },
+ "problems": [],
+ "detail": [
+  {
+   "action": "delete",
+   "key": "b8e18a4467042048eab0b1fa3fc6682d020d890e42fe06e1c9d81aae55019f76",
+   "name": "Heap.Heap.ref.pred_mono_strong",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "142777f391c1d9af7b229ef896da48cf023327a4af93a3e702459a24e54b7473",
+   "name": "Heap.Heap.ref.rel_refl_strong",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "b8e18a4467042048eab0b1fa3fc6682d023327a4af93a3e702459a24e54b7473",
+   "name": "Heap.Heap.ref.rel_refl_strong",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "a470e1484151c4f33e3b029c2fd3c3f6023e5807cd07a123ae3e3232463a38a2",
+   "name": "Heap.Heap.ref.rel_refl",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "b8e18a4467042048eab0b1fa3fc6682d0263f237962e6935f82a071154cd9b81",
+   "name": "Heap.Heap.ref.inj_map_strong",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "861e0494f1f8bb979ff7f0c15dd05d960289dbe1ab1f2da9e830894417c598b8",
+   "name": "Heap.Heap.ref.in_rel",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "a470e1484151c4f33e3b029c2fd3c3f6028cf243fa76c7b84bc7a3e74d51f61e",
+   "name": "Heap.Heap.ref.map_ident",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "a470e1484151c4f33e3b029c2fd3c3f602a11ba4a6db6672c824c819651b1954",
+   "name": "Heap.Heap.ref.rel_eq",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "a470e1484151c4f33e3b029c2fd3c3f602ab67051d66ee00db1bb1d28fcf83e6",
+   "name": "Heap.Heap.ref.map_cong_pred",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "b8e18a4467042048eab0b1fa3fc6682d02acf033f20225818baf3797174817f4",
+   "name": "Heap.Heap.ref.set_map",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "a470e1484151c4f33e3b029c2fd3c3f602b4ee7c89b78d0096e94e56b177ac80",
+   "name": "Heap.Heap.ref.pred_True",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "b8e18a4467042048eab0b1fa3fc6682d02c1f624931243ee65b51dc80f510747",
+   "name": "Heap.Heap.ref.rel_mono_strong",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "b8e18a4467042048eab0b1fa3fc6682d02c3539abc183ad421b4ca3cb240780b",
+   "name": "Heap.Heap.ref.pred_cong",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "7e6f23fd0d38103964f33bf8767086c702c63d1dfed99408ec8f1c5fd16ea3bc",
+   "name": "Heap.Heap.ref.set_finite",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "142777f391c1d9af7b229ef896da48cf02da361fb6c1df40f912e538dffc465d",
+   "name": "Heap.Heap.ref.map_ident_strong",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "b8e18a4467042048eab0b1fa3fc6682d02da361fb6c1df40f912e538dffc465d",
+   "name": "Heap.Heap.ref.map_ident_strong",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "b8e18a4467042048eab0b1fa3fc6682d02de905669cae47fcecf6ebbfeef2ecd",
+   "name": "Heap.Heap.ref.pred_set",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "b8e18a4467042048eab0b1fa3fc6682d02e5cb1dfd484c151daf1160c0a364a4",
+   "name": "Heap.Heap.ref.map_cong",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "b8e18a4467042048eab0b1fa3fc6682d02fba4107b796f2f53673b485c43a94c",
+   "name": "Heap.Heap.ref.map_cong0",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e3020fe69f1dc045793a6c0bbac6b9599f",
+   "name": "Type.ty.distinct(19)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e3021ac9cf3c6415468d53f45857adfe36",
+   "name": "Type.ty.split_asm",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e30220e968aad46fc86ad56b2690fd5fd7",
+   "name": "Type.ty.distinct(14)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e3022ca1aff99dff0e82b7f61e71da4111",
+   "name": "Type.ty.case_cong",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e30230137049810c292274f10516073ea2",
+   "name": "Type.ty.rec(2)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e3023bc5d3ce6ba3d76838bad6bf03f598",
+   "name": "Type.ty.case(2)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e3023ebed675bc9b14f4d2ac97f59e170b",
+   "name": "Type.ty.case(4)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e302489af90fe99155b63a8bc46f1198d5",
+   "name": "Type.ty.case_distrib",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "b8671ddbd52b5333ddd3d6782b19c339025777bd1c84118712cac50b2ca117f4",
+   "name": "Type.ty.narrowing_ty.simps",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e30259504f3b819783cb2065ac0dbdc2eb",
+   "name": "Type.ty.rec(5)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e30266265cd047ae58edd56e825b591712",
+   "name": "Type.ty.case(3)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e3026ca8ce26ea23c2ea15e32cfb3b4524",
+   "name": "Type.is_refT_def",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e30272585e8dece6df9853e81f831c9d72",
+   "name": "Type.ty.distinct(8)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e3027a60fe991690b00a86c0290c76f059",
+   "name": "Type.ty.split",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e3027dfcb8a1eaae9daff318950f5e66bb",
+   "name": "Type.ty.nchotomy",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e3028715e0c2e194c8a84d8d9db49f34f2",
+   "name": "Type.ty.distinct(17)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e30288305f9025319368a362495929d8b4",
+   "name": "Type.ty.distinct(18)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e3028cdaea0dffb698f3155723b0b60574",
+   "name": "Type.ty.case(1)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e302911c2b9c5fc336121aaaed618d4b57",
+   "name": "Type.ty.distinct(13)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e302a245617c210b99f66d2f6e7e4dab96",
+   "name": "Type.ty.distinct(7)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e302a67d10c0de9155a766f95664994ee9",
+   "name": "Type.ty.exhaust",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e302acf3913d6c7cc72b3b63617efa3336",
+   "name": "Type.ty.rec(3)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e302b8bcfe2297d936edecc8029ef0be22",
+   "name": "Type.ty.rec(1)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e302b9dd9aedf22d56089fd2d144c7d1ce",
+   "name": "Type.ty.distinct(20)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e302cf46da923f6bc52299db219adec492",
+   "name": "Type.ty.rec(4)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e302e646499c16c02d965adf4df803d95c",
+   "name": "Type.ty.induct",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e302fd5de10c0929f66738a7c8687a783e",
+   "name": "Type.ty.case_cong_weak",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e332e646499c16c02d965adf4df803d95c",
+   "name": "Type.ty.induct",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "6ad6366dc03559f7983438c7571716e342a67d10c0de9155a766f95664994ee9",
+   "name": "Type.ty.exhaust",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "e4c0cf327cead971820d6184a3064e320221095102dfc40072f46da08fde3ce9",
+   "name": "Type.ty.distinct(15)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "929b3b82c836b73f53542b8403fd449a02274d632d48de01929b682d4fa4c6e7",
+   "name": "Type.ty.size(8)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "e4c0cf327cead971820d6184a3064e32024e933ab198602f644cd6075b2f2a11",
+   "name": "Type.ty.distinct(16)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "e4c0cf327cead971820d6184a3064e3202771bec4cbecf52268ac5b644c2b1f8",
+   "name": "Type.ty.distinct(12)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "e4c0cf327cead971820d6184a3064e320284765badd93dabdcfafc8300e9aeeb",
+   "name": "Type.ty.distinct(9)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "929b3b82c836b73f53542b8403fd449a028acd6ccb67bc0bb2149f7038ced1eb",
+   "name": "Type.ty.size(6)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "e4c0cf327cead971820d6184a3064e3202ac01eff68623ba5429bece83f6acc4",
+   "name": "Type.ty.distinct(10)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "e4c0cf327cead971820d6184a3064e3202ce1e26d320a5caace0e3af758ae1aa",
+   "name": "Type.ty.distinct(11)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "929b3b82c836b73f53542b8403fd449a02e461f8756a9fbc747edbc4105df1cb",
+   "name": "Type.ty.size(7)",
+   "had_vector": true
+  },
+  {
+   "action": "delete",
+   "key": "929b3b82c836b73f53542b8403fd449a02fef52418d81ee6d249ea0c41f88737",
+   "name": "Type.ty.size(9)",
+   "had_vector": true
+  },
+  {
+   "action": "rename",
+   "key": "1675a24ee99eee7072b4db5e6971f3230229c7842d9d7d6254b4ae5437a459b9",
+   "from": "Safety_Properties.obs_defs(9)",
+   "to": "System_Specification.r_defs(9)",
+   "vector_dropped": true
+  },
+  {
+   "action": "rename",
+   "key": "1675a24ee99eee7072b4db5e6971f32302c9d606be98bc4360fb4051bebc00d8",
+   "from": "Safety_Properties.obs_defs(11)",
+   "to": "System_Specification.r_defs(11)",
+   "vector_dropped": true
+  },
+  {
+   "action": "clear_finished",
+   "theory": "ConcurrentHOL.Heap",
+   "was": true
+  },
+  {
+   "action": "clear_finished",
+   "theory": "CoreC++.Type",
+   "was": false
+  },
+  {
+   "action": "clear_finished",
+   "theory": "HOL-Imperative_HOL.Heap",
+   "was": true
+  },
+  {
+   "action": "clear_finished",
+   "theory": "JinjaDCI.Type",
+   "was": true
+  }
+ ]
+}
