@@ -293,3 +293,51 @@ K4（修改三的验收判据错，改 §6）、K5(a)（负数渲染成 `~`，�
 裁判点名的"最危险的一件事"就是原 §6 的顺序：修改一一次性作废全部 `holds_fact` 键，
 而后续每一次验收都要求关闸——那 6 条 AoA-only 的 blob 会让验收直接炸掉。
 现已插入强制的开闸重录一步。
+
+---
+
+## 9. 会话交接（2026-08-16 记，供 compact 之后或换人接手直接照做）
+
+**当前状态**：方案已定稿并经两轮对抗评审修订（§8）。**一行代码都还没改**，
+等作者点头。建议动手顺序见 §6。
+
+### 环境事实
+
+- **heap**：`Phi_System_Base` / `Phi_Semantics_Framework` / `Phi_System` /
+  `Phi_Semantics` / `PhiStd` 于 2026-08-14 18:00 前后建好且当时是最新的；
+  **`Phi_Examples` 建不过**（见 §5 第 2、3 条）。接手前先用 `isabelle-mcp` 的
+  `isabelle_launch` 探一下——它会直接告诉你哪个 heap 过期，且**它自己从不构建**。
+- **闸门**：`~/.isabelle/Isabelle2025-2/etc/settings` 那行
+  `AOA_ALLOW_NONINTERACTIVE=yes` **已恢复为生效状态**，并在其上方留了一段注释说明它的
+  影响。作者已授权"必须关闸时可临时注释、用完恢复"。**查它的唯一可靠办法是
+  `isabelle getenv AOA_ALLOW_NONINTERACTIVE`**，`env | grep` 查不到。
+- **`isabelle build`**：仓库规矩是逐次请示；2026-08-14 的几次授权只覆盖那几次。
+- **`Phi_Examples` 的 store**：作者裁决**保留现状**（含 2026-08-14 开闸构建写进去的
+  5 条 agent 记录与若干墓碑）。构建前的三个时间点快照留在本会话 scratchpad 的
+  `store-backup` / `store-backup2` / `store-backup3` 下。
+
+### 工具（都在本会话 scratchpad，`/tmp` 是 tmpfs，可能被清）
+
+- `dump_store.py`：`.proof-store` 的离线解码器，`python3 dump_store.py [-g 关键字] 文件…`。
+  **本次全部关键发现都是它读出来的**。若已丢失，照 §1 与
+  `auto_sledgehammer/library/cache_file.ML` 的 `Proof_Store_Format` 重写即可：
+  帧 = `MAGIC(0x6ABCDEF6) 长度(be32) CRC32(be32) 载荷`，
+  CRC 覆盖"长度字节 ++ 载荷"，载荷是 MessagePack 的 `[1, [键, 毫秒, 文本]]`（PUT）
+  或 `[2, 键]`（墓碑）；重放规则是后帧胜、墓碑删键。
+- `compare_store.py`：比对两份 store 目录，报字节是否相同、条数、墓碑增减、
+  新增/删除/改写的键。验收时直接用它。
+- `idcheck/IDCheck_HoldsFact.thy`：§1 那个受控实验的理论（两个 `holds_fact`，
+  一个加分号一个不加）。修改一落地后应当重跑它，期望从"一条记录"变成"两条"。
+
+### 还欠作者的授权
+
+1. **动手改代码**（三处都在共享的已跟踪文件：`IDE_CP_Core.thy`、
+   `post-app-handlers.ML` + `processor.ML`、`cache_file.ML`）。
+2. **§6 顺序里那一步强制的开闸重录**要真调 LLM，须单独授权花费。
+3. 每一次 `isabelle build`。
+
+### 与主计划的关系
+
+主计划 `docs/PHI_VC_SOLVER_PLAN_V2.md` 阶段 5 的 5c 记录里有完整的取证过程；
+本文只管修法。主计划 §9 尚未把"撞键"列为待裁决项——**动手前应把本方案的裁决结果
+回填进主计划 §9**，否则两份文件会各说各话。
