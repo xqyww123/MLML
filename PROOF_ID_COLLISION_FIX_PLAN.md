@@ -341,3 +341,92 @@ K4（修改三的验收判据错，改 §6）、K5(a)（负数渲染成 `~`，�
 主计划 `docs/PHI_VC_SOLVER_PLAN_V2.md` 阶段 5 的 5c 记录里有完整的取证过程；
 本文只管修法。主计划 §9 尚未把"撞键"列为待裁决项——**动手前应把本方案的裁决结果
 回填进主计划 §9**，否则两份文件会各说各话。
+
+---
+
+## 10. 实施进度（2026-08-16 起，边做边记）
+
+### 回退点
+
+动手前作者要求先有回退点，并裁决"全部 sweep-commit"。已建立：
+
+- phi-system `de0e016c`、auto_sledgehammer `cd61155`、主仓 `98ba68b`（只 bump 这两个
+  submodule 指针，其余 submodule 未碰）。
+- 这三条提交里**没有一行是本方案的代码**，全是别的会话遗留的未提交改动，
+  commit message 里逐项如实描述了它们（`rule_generation.ML` 的加锁修复、
+  `exception Option` 的临时插桩与 `Option_Hunt_Probe.thy`、字形工作、十个 proof-store）。
+- 本方案要改的四个文件在该回退点上与工作树**逐字节相同**，blob 分别是
+  `b9c75f2f`（IDE_CP_Core.thy）、`ee08f157`（post-app-handlers.ML）、
+  `80c2b656`（processor.ML）、`ea7916ca`（cache_file.ML）。
+  还原任一文件用 `git -C <仓库> show <该提交>:<路径> > <路径>`——只读不删，
+  不触碰 `checkout`/`stash`/`reset`（共享工作树禁令）。
+
+### 修改二：已完成并提交（auto_sledgehammer `b1f2178`）
+
+实现与 §3 的定稿规格一致：跳过看内存表 `proofs`，报警看新增的单调表 `written`
+（键 → SHA1 ＋ 前 120 个符号 ＋ 毫秒），两者都在 `update_cached_proof` 原有的
+`Synchronized.change openning_stores` 临界区内更新，未另开 `Synchronized.var`。
+消息在临界区内构造、区外发出。`store_invalidate_proof` / `force_reload` /
+`invalidate_store` 都不碰 `written`，`close_store` 丢弃它。
+对外类型 `store` 一字未改，只有私有的 `openning_stores` 条目多了第三个分量。
+
+**验证方式**：在 `HOL-Library` 会话下直接跑 `Auto_Sledgehammer.thy`（该 session
+不含它，故从源码真编译）——零错误；九条 ML warning 全部落在 227–552 行，
+即第一处改动（旧 555 行）之前，皆为既有。
+
+随后用探针理论 `scratchpad/guard/Guard_Probe.thy` 直接驱动 `update_cached_proof`，
+帧数用模块自己的逐字节读法（`Bytes.content (Bytes.read path)`）从真实文件读回。
+十步全部如设计：
+
+| 步骤 | 观察 |
+| --- | --- |
+| 首次写 | 0→1 appended，静默 |
+| 原样重写 | 1→1 **SKIPPED**，静默 |
+| 同文本换时间 | 1→1 **SKIPPED**，静默 |
+| 同键换文本 | 1→2 appended ＋ **WARNING** |
+| 打墓碑 | 2→3 appended |
+| 墓碑后自愈重写 | 3→4 appended，**静默**（K2 点名的陷阱一，未踩） |
+| 再换文本 | 4→5 appended ＋ **WARNING** |
+| `close_store` 后改一条从文件读来的键 | 5→6 appended，**静默**（K2 陷阱二，未踩） |
+| 再原样重写 | 6→6 **SKIPPED** |
+
+最终 6 帧、1 条活记录，离线解码器独立复核一致。
+在同一 prover 进程里重跑探针时，第一步也会报警——这正是 `written` 表单调、
+且跨"重新执行"存活的证据。
+
+另记两条实测事实：
+- `SHA1.digest` 走的是原生实现（未出现 Isabelle 那条 "Using slow ML implementation"
+  警告），故给十几万字符的 blob 算摘要不构成性能顾虑。
+- **isabelle-mcp 会感知 `ML_file` 引用的 `.ML` 改动并重新执行**（用自己的
+  `guard/marker.ML` 从 `v1` 改到 `v2` 实测，`.thy` 一字未动）。但**已经评估完的
+  `.thy` 不会仅因依赖的 `.ML` 变了就重跑**——要强制重跑，得改 `.thy` 自身。
+  第一次改完注释后我以为验证过了，其实读到的是缓存结果，store 文件根本没重新生成。
+
+### 修改一：代码已落地，**尚未验证**（未提交）
+
+`Phi_System/IDE_CP_Core.thy` 的 `holds_fact` 处理器体已由 `fn _ =>` 改为
+`fn (cfg : Phi_CP_IDE.eval_cfg) =>`，`val id` 改为 `Phi_ID.cons (#id cfg) (Phi_ID.get ctxt)`。
+
+⚠️ **类型标注是必需的，不是装饰**：`cfg` 在此只经 `#id cfg` 使用，而 SML 无法
+从单个字段选择推断记录类型（"Can't find a fixed record type"）。`:2478` 之所以
+能直接写 `#id arg`，是因为那里 `arg` 还被整个传给 `ReEntry`，类型被钉住了。
+§2 给出的改法没写这一点，照抄会编译不过。
+
+### 当前阻塞：所有 phi heap 已过期，验证需要构建授权
+
+修改二动了 `cache_file.ML`，而 `Auto_Sledgehammer` 在每一个 phi session 的依赖链上
+（`Phi_System_Base` → `Minilang_AoA` → `Minilang` → `Auto_Sledgehammer`）。
+实测 `isabelle_launch Phi_System_Base` 直接被拒：
+
+> Heap images cannot be verified as up-to-date … for: Phi_System_Base.
+> Rebuild first (`isabelle build -b -d /home/qiyuan/Current/MLML Phi_System_Base`)
+
+已核对时间戳：动手之前这条链是最新的（`Phi_System/ROOT` 与 `rule_generation.ML`
+的改动都早于 8-14 16:50 那次构建，已烘进 heap），**是我这次改 `cache_file.ML`
+导致的失效**，且不可避免——修改二必须改那个文件。
+
+**验证修改一的最省路径**：把链一路建到 `Phi_Semantics`（我的改动会被烘进 heap），
+然后启动 `Phi_Semantics` 跑 `scratchpad/idcheck/IDCheck_HoldsFact.thy`。
+heap 里是"已修版"完全够用——该实验只观察 id，不需要再编辑 `IDE_CP_Core.thy`。
+判据见 §6：两个不加 `\<semicolon>` 的 `holds_fact` 应落下**两条**记录、键不同
+（今天是一条）。
