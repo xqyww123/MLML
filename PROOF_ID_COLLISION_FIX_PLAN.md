@@ -394,23 +394,53 @@ K4（修改三的验收判据错，改 §6）、K5(a)（负数渲染成 `~`，�
 在同一 prover 进程里重跑探针时，第一步也会报警——这正是 `written` 表单调、
 且跨"重新执行"存活的证据。
 
-另记两条实测事实：
-- `SHA1.digest` 走的是原生实现（未出现 Isabelle 那条 "Using slow ML implementation"
-  警告），故给十几万字符的 blob 算摘要不构成性能顾虑。
-- **isabelle-mcp 会感知 `ML_file` 引用的 `.ML` 改动并重新执行**（用自己的
+另记两条：
+- **推断**（依据是"没出现某条警告"，属反证，未直接测过）：`SHA1.digest` 走的应是原生
+  实现，故给十几万字符的 blob 算摘要不构成性能顾虑。依据是探针调用它时没有出现
+  `sha1.ML:195` 那条 "Using slow ML implementation of SHA1.digest" 回退警告。
+  若日后怀疑写回变慢，这条要先重测，别当既成事实。
+- **实测**：**isabelle-mcp 会感知 `ML_file` 引用的 `.ML` 改动并重新执行**（用自己的
   `guard/marker.ML` 从 `v1` 改到 `v2` 实测，`.thy` 一字未动）。但**已经评估完的
   `.thy` 不会仅因依赖的 `.ML` 变了就重跑**——要强制重跑，得改 `.thy` 自身。
   第一次改完注释后我以为验证过了，其实读到的是缓存结果，store 文件根本没重新生成。
 
+### 本节的记录纪律（作者 2026-08-17 裁定，只适用于本方案）
+
+本节每一条断言都必须标明是**实测**（跑过、看到了输出）还是**推断**（从源码或文档
+推出、尚未跑过）。未实测的一律写成待验，不得以肯定语气叙述。
+紧接着的那条更正就是这条纪律的由来。
+
 ### 修改一：代码已落地，**尚未验证**（未提交）
 
 `Phi_System/IDE_CP_Core.thy` 的 `holds_fact` 处理器体已由 `fn _ =>` 改为
-`fn (cfg : Phi_CP_IDE.eval_cfg) =>`，`val id` 改为 `Phi_ID.cons (#id cfg) (Phi_ID.get ctxt)`。
+`fn cfg =>`，`val id` 改为 `Phi_ID.cons (#id cfg) (Phi_ID.get ctxt)`，
+与 §2 给出的改法逐字一致。
 
-⚠️ **类型标注是必需的，不是装饰**：`cfg` 在此只经 `#id cfg` 使用，而 SML 无法
-从单个字段选择推断记录类型（"Can't find a fixed record type"）。`:2478` 之所以
-能直接写 `#id arg`，是因为那里 `arg` 还被整个传给 `ReEntry`，类型被钉住了。
-§2 给出的改法没写这一点，照抄会编译不过。
+#### 更正：一条被写成事实的推断（2026-08-17）
+
+本节初稿曾断言"必须加 `: Phi_CP_IDE.eval_cfg` 类型标注，否则编译不过"，并据此在
+代码里加了标注。**这条断言是错的**；标注已删除，代码回到 §2 的原样。
+
+错在哪：`cfg` 在此确实只经 `#id cfg` 使用，而 SML 单凭字段选择推不出记录类型——
+这半截没错。漏掉的是 `setup_cmd`（`processor.ML:381-383`）把每个 `\<phi>lang_parser`
+体都包成了 `( <用户源码> ) : Phi_CP_IDE.proc`，而 `proc`（`:18`/`:83`）里已经写明了
+`eval_cfg`。类型从外层 ascription 灌进来，flexible record 当场解开，无需任何标注。
+
+**实测**（`scratchpad/guard/Flexrec_Probe.thy`，`HOL-Library` 会话，零构建）：
+用等价的小类型复刻真实形状——`ecfg` 对应 `eval_cfg`，`prc` 对应 `Phi_CP_IDE.proc`，
+`mk` 对应夹在 ascription 与目标函数之间的 `>>`：
+
+| 用例 | 内容 | 结果 |
+| --- | --- | --- |
+| A | 无外层 ascription，参数只经 `#id cfg` 使用 | **`ML error: Can't find a fixed record type.`** |
+| B | 真实形状：同样的裸 `fn cfg =>`，整体 ascribe 成 `prc` | **通过** |
+| C | 显式标注 | 通过 |
+
+A 说明这个机制真实存在；B 说明在真实形状下它不会发生。
+
+**教训**：当时无法编译 phi-system（heap 全过期），我便用推断补位，还写成了肯定句。
+其实这个问题根本不需要 phi-system——它纯是 SML 类型推断问题，用 `Main` 就能判定，
+成本几秒钟。**在没法验证目标本身时，先找一个能验证同一命题的最小替身。**
 
 ### 当前阻塞：所有 phi heap 已过期，验证需要构建授权
 
