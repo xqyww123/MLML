@@ -3614,10 +3614,46 @@ isabelle-mcp 里评估 `Matrix_Oprs.thy` 到 `:139`，读消息面板——但 M
   故这一例无害，但它证明了 id 生成器确实会发重复键——该键序列的左右邻居
   （`…/7/12`、`…/9/6`）都唯一，只有 `8/10` 出现两次。
 
-**机制**（`Phi_BI/library/system/Phi_ID.ML`）：`type ID = construct * int list`，
-`step_in` 压入一层、`next` 把头 +1，`encode` 拼成 `构件名/i/j/k`。推进由 toplevel 在
-**每条命令**处做（`Proof.map_context Phi_ID.next`）。所以 id 的粒度是命令，
-而一条命令可以交给求解器不止一条义务。
+**机制（2026-08-16 更正）**。⚠️ 本节初稿把成因判成 `IDE_CP_Core.thy:2478` 的 Post_App
+钩子经 `Hook.ML:104` 的 `ReEntry` 重入而复用同一把键——**那是错的**，经对抗评审推翻并由我
+逐条核实。真正的成因是 **`holds_fact`**：
+
+- `IDE_CP_Core.thy:2640` 的处理器体是 `fn ((_,pos), raw_statements) => fn _ =>`，
+  **把 `eval_cfg` 整个丢掉了**，只取命令级 id：`val id = Phi_ID.get ctxt`；
+  再 `val id' = Phi_ID.cons [i] id`（`i` 是一个 `and`-list 内的序号）、
+  `fun id'' j = … Phi_ID.cons [j] id'`。`i` 与 `j` 对**每一个** `holds_fact` 各自从 0 起。
+- 命令级 id 每条 **φ 语句**才推进一次（`processor.ML:205` 的 `apfst Phi_ID.next`）。
+- `Matrix_Oprs.thy` 里 `holds_fact t0: ‹(2::nat) ^ n = 2 ^ (n-1) + 2 ^ (n-1)›` 与
+  `holds_fact t1[simp]: ‹(2::nat) ^ n - 2 ^ (n-1) = 2 ^ (n-1)› \<semicolon>`
+  **之间没有 `\<semicolon>`**，是同一条 φ 语句 ⇒ 同一个命令级 id ⇒ 两条义务的键逐字相同。
+- 存下来的证明自证：第二条是 `metis One_nat_def add_diff_cancel_left' t0`，
+  **直接引用了第一条的事实名 `t0`**。
+
+顺带：`gen_name`（`:2644`）也用 `id'` 造匿名事实名，故同一 φ 语句里两个匿名 `holds_fact`
+的**名字**也会撞。
+
+**修法（评审建议，前提已核实）**：`:2640` 改成接住 cfg 并用它播种 id——
+`fn cfg => let val id = Phi_ID.cons (#id cfg) (Phi_ID.get ctxt)`。可行的依据是
+`processor.ML:166` 的 `loop toks' (uptick_expr_id expr_id, opr_ctxt')`：每成功应用一个
+处理器 `expr_id` 就递进，所以同一 φ 语句里的两个 `holds_fact` 是两次处理器应用、
+`expr_id` 不同。代价：现存的 `holds_fact` 键会多一节而失效（`Matrix_Oprs` 5 条、
+`Binary_Trees` 1 条量级），一次构建自愈。
+
+**配套建议（与键方案无关、防住整类问题）**：在 `auto_sledgehammer/library/cache_file.ML`
+的写回处加一道检查——同一次会话里**同键但证明文本不同**的第二次写入应当报警（并给出键名），
+同键同文本的重复写入直接跳过。若早有这道检查，`Matrix_Oprs` 这次碰撞在产生它的那次构建
+就会被喊出来，而不是靠事后翻日志才发现。
+
+**其余更正**（同次评审，均有 file:line 依据）：① `expr_id` **并非**每次算子应用唯一——
+`generic_element_access.ML:119/174` 在递归重试的循环里拿同一个 `cfg` 反复调 `post_app`，
+且义务在 `Remaining_Eleidx` 回滚判定**之前**就已解出并写回；`build_dot_opr_stack`（`:376`）
+用一个 `#id cfg` 盖 N 个算子帧；`processor.ML:140` 复用处理器自己刚用过的 `#id cfg`。
+② `subspace_expr_id`（`post-app-handlers.ML:35`）**是死代码，全仓库零调用点**，
+故 `expr_id` 恒为单元素表。③ `Phi_ID` 的 `dep` / `dep'` / `father` / `Tab` 也**全是死代码**
+（唯二引用在 `cache_file.ML:229` 与 `:655-676`，都在注释里）。
+④ `Binary_Trees` 第 286/287 帧那一对**证明文本相同**、只是耗时不同，很可能是
+`rw_access` 重试路径把**同一条**义务解了两遍（无害，只浪费搜索时间），
+不宜与 `Matrix_Oprs` 那一对并列为同类。
 
 **注意检测器是保守的**：只认"相邻两帧"，义务并行求解时两次写入会被别的帧隔开而漏掉，
 所以 2 例是下界，不是总数。
