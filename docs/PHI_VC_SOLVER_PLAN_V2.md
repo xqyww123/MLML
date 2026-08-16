@@ -3614,9 +3614,26 @@ isabelle-mcp 里评估 `Matrix_Oprs.thy` 到 `:139`，读消息面板——但 M
   故这一例无害，但它证明了 id 生成器确实会发重复键——该键序列的左右邻居
   （`…/7/12`、`…/9/6`）都唯一，只有 `8/10` 出现两次。
 
-**机制（2026-08-16 更正）**。⚠️ 本节初稿把成因判成 `IDE_CP_Core.thy:2478` 的 Post_App
-钩子经 `Hook.ML:104` 的 `ReEntry` 重入而复用同一把键——**那是错的**，经对抗评审推翻并由我
-逐条核实。真正的成因是 **`holds_fact`**：
+**机制（2026-08-16 两轮更正后的定稿）**。⚠️ 经历了两次翻转，最终结论是
+**存在两条彼此独立的撞键机制，都已在运行时确认**：
+
+**机制一 —— `holds_fact`（第 122/123 帧那一对的成因）。** 本节初稿把这一对判给了
+Post_App 钩子的 `ReEntry`，那是**错的**；对抗评审指出并由我核实：真凶是 `holds_fact`
+（详见下段）。运行时确认（子 agent，scratchpad 里的自足理论，零构建、零花费）：
+两个 `holds_fact` 中间**不加** `\<semicolon>` 时，两条不同的义务只落下**一条**记录
+`IDCheck_HoldsFact.two_in_one_statement/2/1/0/0`（幸存的是后写的
+`metis Suc_pred mult_2 power_Suc`，另一条连同它的证明一起丢失）；**加上** `\<semicolon>`
+后同样两条事实落成**两条**记录 `/2/1/0/0` 与 `/2/2/0/0`。唯一变量就是那个分号。
+
+**机制二 —— Post_App 钩子经 `ReEntry` 复用 `arg`（初稿说的那条，同样是真的）。**
+子 agent 在 `Post_App` 优先级 49 处挂了一个复刻 `:2478` 键计算的临时钩子
+（它只看得见 `Post_App` 的调用，看不见 `holds_fact`），跑真实的 `Matrix_Oprs.thy`：
+**78 条义务里 4 把键重复**，其中 `Matrix_Oprs.strassen/2/4/2/23` 一把键下压了**三条不同的
+义务**（`expr_id` 三次全同），`copy_mat/2/3/4/2/24`、`add_mat/2/3/3/1/36`、
+`sub_mat/2/3/4/2/35` 各两条。对照组 `Phi_Test/PhiTest_Arithmetic.thy` 13 条义务 13 把
+不同的键。所以初稿的机制并没有被推翻，只是**认错了那一对具体的帧**。
+
+下面先讲机制一的代码成因：
 
 - `IDE_CP_Core.thy:2640` 的处理器体是 `fn ((_,pos), raw_statements) => fn _ =>`，
   **把 `eval_cfg` 整个丢掉了**，只取命令级 id：`val id = Phi_ID.get ctxt`；
@@ -3638,6 +3655,16 @@ isabelle-mcp 里评估 `Matrix_Oprs.thy` 到 `:139`，读消息面板——但 M
 处理器 `expr_id` 就递进，所以同一 φ 语句里的两个 `holds_fact` 是两次处理器应用、
 `expr_id` 不同。代价：现存的 `holds_fact` 键会多一节而失效（`Matrix_Oprs` 5 条、
 `Binary_Trees` 1 条量级），一次构建自愈。
+
+**机制二的修法**：初稿那个"给 `eval_cfg` 加 `oblg_no` 计数器、`set_expr_id` 处复位"的方案
+**对机制二仍然有效**——`ReEntry` 的重入发生在**同一次** `Post_App.invoke` 之内
+（`Hook.ML:100-105` 的 `work` 闭包），计数器活得够久。但评审指出的两点缺陷成立且必须一并处理：
+① 复位作用域盖不住**跨 invoke** 共用 `expr_id` 的那些路径
+（`generic_element_access.ML:119/174` 的递归重试、`build_dot_opr_stack:376`、
+`processor.ML:140`），它们每次 invoke 都从 0 重来；② 调用点清单不止三处，`set_tokens`
+必须保持该字段，`processor.ML` 五处 `eval_cfg` 字面量都要加。另：负数索引仍应采用，
+但理由是 `Phi_ID.step_in` 会把更深一层的块编号追加在**同一个位置**，
+而不是初稿说的 `subspace_expr_id`（那是死代码，全仓库零调用点）。
 
 **配套建议（与键方案无关、防住整类问题）**：在 `auto_sledgehammer/library/cache_file.ML`
 的写回处加一道检查——同一次会话里**同键但证明文本不同**的第二次写入应当报警（并给出键名），
