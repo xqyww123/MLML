@@ -4109,7 +4109,9 @@ conditions do not hold and this assumption can cause reasoning failure"并按"gu
 
 ## 9. 仍待作者拍板
 
-**（2026-08-14 二次更新，九项。）** 前五项挡着阶段 5 的推进，后四项是并行的旧账。
+**（2026-08-14 二次更新；2026-08-17 增补第 8a 项，proof store 撞键。）**
+前五项挡着阶段 5 的推进，后几项是并行的旧账。第 8a 项的修法已在动工，
+详情不在此处而在根目录 `PROOF_ID_COLLISION_FIX_PLAN.md`。
 
 0. ~~**跑一次 `isabelle build` 的授权**~~——**作者 2026-08-14 已裁决"直接建，我授权
    isabelle build"**，当场建完（8:01 全绿，三个 heap 恢复最新）。留此条只为记录裁决：
@@ -4139,6 +4141,26 @@ conditions do not hold and this assumption can cause reasoning failure"并按"gu
    危害不是崩溃而是失败变静默——残留的 `SOME` 会让下一次赋值缺席时读到上一次的旧值。
 7. **`rule_generation.ML` 竞态注释补一句**：旧代码不只会抛 `Option`，两个线程还可能
    **静默拿到对方的 pass**。该修复本身已复核成立（类型、求值顺序、临界区覆盖三点）。
+8a. **proof store 撞键的修法**（2026-08-16 新增；修法本身**已获授权动手**，此处只记裁决
+   与仍欠的那一项）。5c 查实两条独立机制会让两条不同义务拿到同一把键、后写静默覆盖先写
+   （取证链见阶段 5 的"查实：proof id 会撞键"一节）。修法、实现规格、验收判据、
+   对抗评审档案与实施进度**全部在根目录 [PROOF_ID_COLLISION_FIX_PLAN.md](../PROOF_ID_COLLISION_FIX_PLAN.md)**，
+   本计划不复述，以免两处走岔。已有的裁决：
+   - 2026-08-16「开始动手」，并要求先有回退点；就回退点范围裁决**全部 sweep-commit**
+     （连别的会话未提交的改动一并提交，见该文 §10）；`Phi_Examples` 的三份 store 快照
+     **不归档**。
+   - 2026-08-17 就一处错误论断裁决**只改正、不回滚**，并立下"本方案内每条断言须标明
+     实测／推断"的记录纪律（该文 §10）。
+   - 2026-08-17 裁决**修改三先写完再构建**（它改 `eval_cfg` 形状、必然重编
+     `Phi_System` 以上，否则要多一轮全链重建），并授权
+     `isabelle build -b -d /home/qiyuan/Current/MLML PhiStd`。
+   - 2026-08-17 裁决该次构建**开闸、接受花费**。相关实测：settings 文件压过环境变量，
+     故无法只对一次调用关闸；且 `isabelle build` 不回显 ML `warning`，对账须用
+     L1 缓存行数与 store 的前后快照。
+   **仍欠的一项**：修改一会让 `holds_fact` 的键全部失效，其中 `Matrix_Oprs` 2 条、
+   `Quicksort` 4 条是 `aoa_replay` blob（引擎搜不出来），故评审 K1 判定必须**开着闸把
+   这两个理论各重录一遍并提交 store**，且要早于任何一次闸门关闭的验收。
+   它属于 `Phi_Examples`，不在上面授权的 `PhiStd` 构建范围内，**仍需单独的花费授权**。
 8. **`Phi_Types.proof-store` 的去留**——旧账，阶段 5 记录里挂着。
    **更正**：此前记作"未跟踪"是错的，2026-08-14 实测它已被 git 跟踪
    （`Phi_System/` 下五个 `.proof-store` 全部在版本控制里，且当前与 HEAD 完全一致——
