@@ -442,7 +442,35 @@ A 说明这个机制真实存在；B 说明在真实形状下它不会发生。
 其实这个问题根本不需要 phi-system——它纯是 SML 类型推断问题，用 `Main` 就能判定，
 成本几秒钟。**在没法验证目标本身时，先找一个能验证同一命题的最小替身。**
 
-### 当前阻塞：所有 phi heap 已过期，验证需要构建授权
+### 修改三：代码已落地，**尚未验证**（未提交）
+
+作者裁定"现在就写，一次构建覆盖三项"，理由是它改 `eval_cfg` 的形状、必然要重编
+`Phi_System` 以上；若等修改一验证完再写，就得再全链重建一次。这不违反评审 K1 的硬
+前置——K1 要求的是开闸重录早于**任何一次闸门关闭的验收**，而不是早于修改三的编码。
+
+三处按 §4 落地：
+
+1. `post-app-handlers.ML`：`eval_cfg` 加 `oblg_no : int`；`set_expr_id` 复位为 0，
+   `set_tokens` 保持；新增并导出 `uptick_oblg_no : eval_cfg -> eval_cfg`
+   （命名沿用既有的 `uptick_expr_id`，未造新词）。
+2. `processor.ML` 五处字面量（`:164, 210, 214, 219, 223`）补 `oblg_no=0`。
+3. `IDE_CP_Core.thy:2478` 起：`oblg_no = 0` 时用 `#id arg`，否则用 `~oblg_no :: #id arg`；
+   `ReEntry` 改传 `Phi_CP_IDE.uptick_oblg_no arg`。
+
+**方向已核**（推断，但两步都可在纸上验算）：`Phi_ID.cons i (c,p) = (c, i@p)` 把
+`[~1, e]` 接在命令级路径前面，而 `encode` 反转路径，故 `~1` 落在编码串**末尾**，
+形如 `…/2/4/2/23/~1`——与 §4 的预期一致。
+
+**另外四处 `ReEntry` 不需要改**（`IDE_CP_Core.thy:2523/2583/2597/2610`）：它们把收到的
+`arg` 原样传出，而 `Hook.ML:104` 的 `work a s` 会把 `a` 交给整张表，所以计数值被如实
+带过去；只有真正解掉一条义务的优先级 50 钩子才递增。这是正确的分工，不是遗漏。
+
+⚠️ **施工时漏过一处，靠通读 diff 抓回**：`processor.ML:223` 那个字面量第一遍没改到。
+ML 记录字面量缺字段是编译错误，构建时必然暴露，但那要浪费一整轮构建。
+**改这类"记录加字段"的任务时，最后一定要用 grep 把全仓库的字面量点一遍**——
+我用 `grep -rn "{ *id *=.*config *=" | grep -v oblg_no` 确认了无遗漏。
+
+### 已解除的阻塞：所有 phi heap 曾因修改二而过期
 
 修改二动了 `cache_file.ML`，而 `Auto_Sledgehammer` 在每一个 phi session 的依赖链上
 （`Phi_System_Base` → `Minilang_AoA` → `Minilang` → `Auto_Sledgehammer`）。
@@ -455,8 +483,32 @@ A 说明这个机制真实存在；B 说明在真实形状下它不会发生。
 的改动都早于 8-14 16:50 那次构建，已烘进 heap），**是我这次改 `cache_file.ML`
 导致的失效**，且不可避免——修改二必须改那个文件。
 
-**验证修改一的最省路径**：把链一路建到 `Phi_Semantics`（我的改动会被烘进 heap），
-然后启动 `Phi_Semantics` 跑 `scratchpad/idcheck/IDCheck_HoldsFact.thy`。
-heap 里是"已修版"完全够用——该实验只观察 id，不需要再编辑 `IDE_CP_Core.thy`。
-判据见 §6：两个不加 `\<semicolon>` 的 `holds_fact` 应落下**两条**记录、键不同
-（今天是一条）。
+**验证路径**：把链一路建到 `PhiStd`（我的改动会被烘进 heap），然后启动 `Phi_Semantics`
+跑 `scratchpad/idcheck/IDCheck_HoldsFact.thy`。heap 里是"已修版"完全够用——该实验只
+观察 id，不需要再编辑 `IDE_CP_Core.thy`。判据见 §6：两个不加 `\<semicolon>` 的
+`holds_fact` 应落下**两条**记录、键不同（今天是一条）。
+
+作者已授权 `isabelle build -b -d /home/qiyuan/Current/MLML PhiStd`（严格这一形式，
+未加 `-c`/`-f`）。
+
+### 闸门与花费：本次构建开闸，作者已接受花费
+
+**实测**：`AOA_ALLOW_NONINTERACTIVE=no isabelle getenv AOA_ALLOW_NONINTERACTIVE`
+仍读出 `yes`——**settings 文件压过环境变量**，与当年 `ISABELLE_HEAPS` 同一教训。
+所以关闸只能改机器级文件，窗口会覆盖整个构建（可能一小时以上），期间其它会话新起的
+进程都会跟着关闸。作者据此裁定**开闸构建、接受花费**。
+
+风险的量级（实测自 store 文件）：构建链上共 **44 条 `aoa_replay` blob**，
+分布为 `Phi_Types` 13、`PhiSem_Mem_C_Ar_MI` 5、`PhiStd_Loop` 4、
+`PhiSem_Aggregate_Array` 4、`PhiSem_Mem_C_Ag_Ar` 4，余者 1–3 条。
+**无法离线判定**哪些正好压在两处改动会挪动的键上，故只能事后对账。
+
+⚠️ **对账不能靠构建日志**：`isabelle build` **不回显** ML 的 `warning`
+（带 marker 的协议消息在 `build_job.scala:582` 被 `filterNot(Protocol_Message.Marker.test)`
+过滤），所以修改二的撞键警告与 AoA 的活动都不会出现在日志里——只有 `error` 会。
+改用**前后快照对账**，两份基线已取（构建前）：
+
+- L1 缓存 `~/.cache/IsaMini/aoa_proof_cache.db`：**1076 行**，最新 timestamp
+  `1786884041.89`。构建后新增的行即 AoA 这次产出的证明。
+- 构建链上 28 个 store 的副本与 md5 清单，存于 scratchpad 的 `prebuild-stores/`
+  （含 `MD5SUMS`）。用 `compare_store.py` 逐个对比即得新增/改写/墓碑清单。
