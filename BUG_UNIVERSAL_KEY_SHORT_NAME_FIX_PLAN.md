@@ -2664,13 +2664,30 @@ memories cannot be regenerated this way at all.
 
 # Part C — loose ends
 
-## To delete when Part B completes
+## Deleted, Part B being complete (done 2026-08-17, `b7dca42`)
 
 Decided 2026-08-14, at the user's instruction: the migration scaffolding goes into the
 repository so that it reaches `cslh19` by the same route as everything else and so that
 the four permanent files it touches are not left as an indefinite uncommitted diff in a
 shared working tree — and comes back out when it has done its job. History keeps it;
 `HEAD` does not.
+
+**Carried out**, everything on the list below, in one commit — 3,621 lines out, 9 files
+gone. Two checks stood in for a build (none was run): the package still imports with all
+13 exports, and `Semantic_Embedding.Semantic_Collection_App`, whose chain compiles both
+edited `.ML` files, loads from source in a fresh REPL. A repo-wide scan for the deleted
+identifiers and modules comes back empty, so nothing dangles.
+
+Three things worth keeping from the doing of it. **The dump was the last EXTERNAL caller
+of the two kept exports** (`Entity_Position.portable_path`,
+`Theory_Hash.get_theory_path`, both via `semantic_store.ML`'s `dump_theory`): they are
+now used only inside their own modules, which does not change the decision to keep them —
+that decision was never about having a caller — but do not read their survival as
+evidence of one. **Two comments that named the dump were corrected rather than left
+lying**: the constituent-name totals report (its non-zero count was described as "a §B.7
+gate", now as a defect to chase) and the app header's "All three:", now "Both:". And the
+`sweep_theory` question below was left open, so **its comment still names the dump** —
+that is the one known-stale comment in the file.
 
 - `contrib/Semantic_Embedding/Isabelle_Semantic_Embedding/rekey_dump.py` — whole file,
   and its import line in `Isabelle_Semantic_Embedding/__init__.py`.
@@ -2698,7 +2715,15 @@ shared working tree — and comes back out when it has done its job. History kee
   the second is what the theory hash is taken over.
 - **Decide then, not now**: whether `sweep_theory` reverts into `backfill_theory`. It
   exists to keep the two passes from drifting on which theories they cover, and with the
-  dump gone there is one pass again.
+  dump gone there is one pass again. **Still open on 2026-08-17** — deliberately not
+  decided while doing the deletions, and put to the user. What it actually is: six lines
+  that check `Theory_Hash.is_persistent`, warn and take the caller's `skip` branch if the
+  theory is not persistent, and otherwise hand `enumerate_entries` to the caller's `body`.
+  Its comment carries the reasoning (a WIP theory's records are a disposable cache, so no
+  sweep has anything to do with one) and that reasoning has to live somewhere either way.
+  The recommendation given: keep it, rewriting only the sentence that names the dump —
+  inlining edits permanent code for no functional gain and dissolves the one place where
+  "which theories a sweep covers" is decided. A single caller is not by itself a defect.
 
 ## Settled, not yet applied
 
