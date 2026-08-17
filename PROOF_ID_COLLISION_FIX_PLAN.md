@@ -470,6 +470,85 @@ ML 记录字面量缺字段是编译错误，构建时必然暴露，但那要�
 **改这类"记录加字段"的任务时，最后一定要用 grep 把全仓库的字面量点一遍**——
 我用 `grep -rn "{ *id *=.*config *=" | grep -v oblg_no` 确认了无遗漏。
 
+### 修改一：**验收通过**（2026-08-17，实测）
+
+判据是 §6 写死的那条："重跑 §1 的受控实验，两个 `holds_fact` 不加 `\<semicolon>` 时应当
+落下**两条**记录、键不同"。在 `PhiStd` 会话下跑
+`scratchpad/idcheck/IDCheck_HoldsFact.thy`，三条互相独立的证据：
+
+1. **tracing 直接打出两把不同的键**（改动前两条义务同为 `two_in_one_statement/2/1/0/0`）：
+
+   ```
+   Proof store miss, IDCheck_HoldsFact.two_in_one_statement/2/1/2/0/0
+   Proof store miss, IDCheck_HoldsFact.two_in_one_statement/2/1/3/0/0
+   ```
+
+   多出来的 `2` 与 `3` 就是 `expr_id`——同一条语句里的两次处理器应用。
+2. **store 从 3 条记录变成 4 条**。A 段（无分号）现在各占一条
+   `/2/1/2/0/0`（`metis Suc_pred mult_2 power_Suc`）与 `/2/1/3/0/0`
+   （`insert the_\<phi> that(1) fA that(2) \<phi>initial, fastforce …`，注意它引用了第一条的
+   事实名 `fA`）；B 段（有分号）仍是两条，键上多了 `expr_id` 那节。
+   改动前的读数留在 `scratchpad/idcheck/backup/IDCheck_HoldsFact.proof-store.before-fix1`。
+3. **修改二的守卫全程零报警**，与"已不撞键"互相印证。
+
+#### 这个探针自带一处毛病，与本修改无关（记此以免下次误判）
+
+该探针的两个 proc 都声明 `output \<open>n \<Ztypecolon> \<val> \<nat>\<close>`（要返回一个值），
+而 body 只有 `holds_fact`（返回 unit），于是 `\<medium_right_bracket>` 报
+**`Current block expects returning VAL but it actually returns unit`**，`.` 随后报
+`Illegal application of proof command in "state" mode`。四条报错全部由此而来。
+它是上一个会话写这个探针时就带着的，与 proof id 无关；上次只看 store 结果，没人注意。
+
+⚠️ **我在这里犯过一次同类错误**：第一次判定时我拿一个 **body 为空**的 proc 做对照，
+见它也报错就宣布"与修改一无关"——但空 body 的 proc **本身就非法**（同样返回 unit），
+那个对照不足以支撑结论。正确的做法是把 `\<medium_right_bracket>` 与 `.` 拆到两行，
+直接读**括号自己**的错误，看到的正是同一条 VAL/unit 消息。
+教训与 §10 开头那条纪律同源：**对照组必须自身合法，否则它证明不了任何事。**
+
+### 作者裁决（2026-08-17）：修改一保持现状，名字跟着变
+
+**背景**：这次构建暴露出修改一的一层连带后果，方案初稿完全没写。修改一把 `expr_id`
+加进 id，而**同一个 id 也用来生成匿名 `holds_fact` 的事实名**（`gen_name`，
+`IDE_CP_Core.thy:2666`），于是那些自动生成的名字从 `\<phi>fact_2_3_1` 变成了
+`\<phi>fact_2_3_5_1`（多出的 `5` 就是 `expr_id`）。**任何在正文里引用了旧名字的已录证明
+都会重放失败**——这类被牵连的记录不在 §2 算的那 17 条里，因为引用者与被引用者未必
+同键、甚至未必同理论。
+
+实测的波及面（扫了全部证明库与全部源文件）：**构建前全仓库仅 2 条**记录引用匿名事实名，
+都在 `PhiSem_Mem_C`、都引用 `\<phi>fact_2_3_1`、**都不是 blob**；
+**`Phi_Examples` 零条**（故 §6 那步重录只受键变化影响，与改名无关）；
+其余目录零条；**源文件里零处手写引用**（`grep 'phi>fact_\|φfact_'` 全空）。
+这 2 条一条被引擎 402ms 补回，另一条引擎搜不出来、AoA 搜了 66 分钟产出 blob。
+
+**曾摆给作者的两条路**：保持现状（名字跟着变）；或拆开——算键用带 `expr_id` 的 id，
+生成名字仍用不带 `expr_id` 的旧 id。
+
+**作者裁决：保持现状，"proof store 失效就好"。** 并裁决**任何需要重跑的 session 直接
+重跑，开销不必考虑**（订阅覆盖，不产生真实货币支出）。同日一并授权了 §6 那步开闸重录。
+
+支持这个裁决的技术理由（记此以免日后重议）：键撞车与名字撞车**是同一个病根**——
+命令级 id 在一条语句内不前进，而键与名都由它派生。把 `expr_id` 加进 id 是一次把两个
+症状一起治；拆开等于为保护已录证明而故意留下一个已知症状不治。
+
+### 另记：为什么用独立字段 `oblg_no` 而不重用 `expr_id`（2026-08-17 作者提问）
+
+`oblg_no` **不落盘、不进 context、不进 proof store**，只活在钩子之间传递的 `eval_cfg`
+记录里，生命周期是一次 `Post_App.invoke`；唯一的外部痕迹是非零时键末尾多出的 `~1`/`~2`。
+
+最直接的重用方式——在钩子里对 `expr_id` 做 `uptick_expr_id`——**行不通**：它把表头加一，
+`[5]` 变 `[6]`，而算子栈稍后会把**下一个**算子应用的 `expr_id` 设成 `6`，于是
+"第 5 号应用的第二条义务"与"第 6 号应用的第一条义务"撞成同一把键。这不是修好撞键，
+是把它搬了个地方。
+
+另一种重用——把负数直接压进 `expr_id`（`set_expr_id (~1 :: #id arg) arg`）——**技术上通**：
+`set_expr_id` 换掉整张表即天然复位，`set_tokens` 保留整张表即天然保持。
+不选它的两条理由：① `expr_id` 有既定含义（"处理语法命令的每一步的唯一 id"），
+用符号约定让它承载义务计数，违反"同一概念一个词、不造新义"，且此后每个读它的地方都得
+知道这个约定；② 可读性——`if oblg_no = 0 then #id arg else ~oblg_no :: #id arg`
+在用的地方就说清了意图，而"判表头符号再决定压还是减"是容易写错且错了不报错的分支。
+重用的好处也记下：不改记录形状就没有那五处字面量要扫——而本次恰恰漏了
+`processor.ML:223`，靠通读 diff 才抓回。
+
 ### 已解除的阻塞：所有 phi heap 曾因修改二而过期
 
 修改二动了 `cache_file.ML`，而 `Auto_Sledgehammer` 在每一个 phi session 的依赖链上
