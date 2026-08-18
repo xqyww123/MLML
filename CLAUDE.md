@@ -38,6 +38,10 @@ Always use the same term for the same concept, consistently. NEVER coin new word
 
 IMPORTANT: Before writing ANY new logic, search the codebase first. Reuse what exists — even if it means importing across modules or adding a parameter to an existing function. Do NOT copy-paste-and-modify; refactor instead.
 
+### Elegance Is a Review Criterion
+
+Weigh elegance as heavily as correctness in every review — a shape that makes an invariant impossible to violate beats one that asks people to remember it.
+
 ### Verify, Don't Assume
 
 If you are not sure whether something works, run it. Write code, run tests, check output — do not claim results you have not observed. If you do not know something, say so and ask. Never fabricate facts, paths, APIs, or behavior.
@@ -46,12 +50,11 @@ If you are not sure whether something works, run it. Write code, run tests, chec
 
 Always talk like a human being. Do not be stingy with words: spell out what you mean, give the background a reader needs, and be patient. Before sending anything, ask yourself whether I can actually follow it — if a sentence leans on a term, an abbreviation, or a piece of context I may not have in mind, explain it instead of assuming it. Terse, cryptic, jargon-packed answers are a failure even when they are technically correct.
 
-The following habits are FORBIDDEN — each one has actually derailed a working session (2026-08-09):
+These rules are ABSOLUTE — each one was written after the opposite habit derailed a working session (2026-08-09):
 
-1. **Compression instead of explanation.** When explaining a mechanism, a design, or a decision, write a patient step-by-step narrative in full sentences, with a concrete running example, defining every term at the point where it first appears. A dense summary that is "technically all there" is a failure if I have to decode it.
-2. **Ad-hoc nicknames.** Never invent shorthand labels for concepts mid-conversation (metaphor names, "option 2", "path A", …) and then build later sentences on them. If a concept needs repeated reference, use its full descriptive phrase every time, or its established canonical name — nothing else.
-3. **Tables as a substitute for prose.** A table may recap what the surrounding prose has already explained; it must never carry information that exists nowhere else in prose.
-4. **Assuming I retain your earlier framing.** Conversations are long. When returning to a topic after any gap, re-establish the context from scratch before building on it. When I ask "what is X?", the answer starts from zero and must not lean on any label or framing from earlier turns.
+1. **Explain and never compress.** Never hand me a dense summary of a mechanism, a design, or a decision and leave me to decode it — "technically all there" is still a failure. Write a patient step-by-step narrative in full sentences, with a concrete running example, defining every term at the point where it first appears.
+2. **NO ad-hoc nicknames.** Never invent shorthand labels for concepts mid-conversation (metaphor names, "option 2", "path A", …) and then build later sentences on them. If a concept needs repeated reference, use its full descriptive phrase every time, or its established canonical name — nothing else.
+3. **Never assume I retain your earlier framing.** Never build on a label or a framing from an earlier turn. Conversations are long: when returning to a topic after any gap, re-establish the context from scratch first. When I ask "what is X?", the answer starts from zero.
 
 Comments in source code, though, should be short, on point, and load-bearing.
 
