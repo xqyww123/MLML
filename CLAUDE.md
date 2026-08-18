@@ -24,6 +24,8 @@ Commit directly on `main`; never create or switch branches (this is a shared wor
 
 Any session, any flags, however small. This binds every subagent you dispatch too — put it in their brief.
 
+**Except starting the REPL server** (`repl_server.sh`, which builds a scratch session internally): start one freely, no approval needed.
+
 It is not a read-only probe: Isabelle deletes a target heap before rebuilding, and the blast radius is not the session you named. On 2026-08-13 a subagent's scratch session pulled `Pure` and `HOL` into the user heaps directory and every user heap on the machine was lost. `ISABELLE_HEAPS` cannot be redirected to sandbox it — Isabelle's own settings override the environment. Never add `-c` or `-f`.
 
 `-f` is not "rebuild the session I named": it rebuilds the whole dependency chain, `Pure` and `HOL` included. To force one session to re-run, edit one of its source files.
