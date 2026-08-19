@@ -6,6 +6,26 @@ theory hashes that fold in the theory long name.
 **This is the working list. Keep the status column current** — it is the only
 place that says which of these have been done.
 
+**Status as measured on 2026-08-19** (not read off this document — recomputed).
+Each theory's hash was derived afresh from today's sources with the live
+`theory_xxhash128`, and the live store counted by that prefix, so the count does
+not depend on `theory_hash.lmdb`, whose gaps would make a theory look empty when
+it is not. The registry agreed with the recomputation on all 20 Group 1 names.
+
+- **Group 1: 10 of 16 done**, five pairs, each side now carrying its own entity
+  records and its own theory-status record — which is only possible after the
+  re-key. Measured own-entity/status counts: `Restriction_Spaces-HOLCF` 16/1 on
+  both names, `Relations` 15/1 on both, `Core_DOM_Basic_Datatypes` 5/1 on both,
+  `Testing_Utils` 3/1 on both, `ListExtras` 3/1 on both.
+- **6 still pending** — rows 11–16, three pairs owing one record each, and all
+  six carry no theory-status record, so no collection has reached them.
+  **3 records outstanding out of the 52.**
+- **Group 2: none done.** All 13 measure zero, and 12 of the 13 are no longer in
+  the theory-hash registry at all, consistent with their records being gone.
+  Row 25 `Minilang` is the one with a deadline: it carries the single EXPERIENCE
+  record no re-interpretation can recreate, and it is still only in the
+  pre-migration store (`*.pre-rekey-20260813-170504` and the backup).
+
 Derived on 2026-08-13 from the `AFP-ALL-4` image itself (all 10,598 theories it
 holds, `Pure` included), not from the store: a pair of theories that share a
 hash today is invisible in the store whenever only one side was ever
@@ -31,16 +51,16 @@ reaches them re-enumerates without being told to.
 
 | # | theory | shares its hash with | records to regenerate | status |
 | --- | --- | --- | --- | --- |
-| 1 | `Restriction_Spaces-HOLCF` | `Restriction_Spaces-HOLCF.Restriction_Spaces-HOLCF` | 17 | pending |
-| 2 | `Restriction_Spaces-HOLCF.Restriction_Spaces-HOLCF` | `Restriction_Spaces-HOLCF` | (same 17) | pending |
-| 3 | `Lowe_Ontological_Argument.Relations` | `Types_Tableaus_and_Goedels_God.Relations` | 16 | pending |
-| 4 | `Types_Tableaus_and_Goedels_God.Relations` | `Lowe_Ontological_Argument.Relations` | (same 16) | pending |
-| 5 | `Core_DOM.Core_DOM_Basic_Datatypes` | `Core_SC_DOM.Core_DOM_Basic_Datatypes` | 6 | pending |
-| 6 | `Core_SC_DOM.Core_DOM_Basic_Datatypes` | `Core_DOM.Core_DOM_Basic_Datatypes` | (same 6) | pending |
-| 7 | `Core_DOM.Testing_Utils` | `Core_SC_DOM.Testing_Utils` | 4 | pending |
-| 8 | `Core_SC_DOM.Testing_Utils` | `Core_DOM.Testing_Utils` | (same 4) | pending |
-| 9 | `CryptoBasedCompositionalProperties.ListExtras` | `FocusStreamsCaseStudies.ListExtras` | 4 | pending |
-| 10 | `FocusStreamsCaseStudies.ListExtras` | `CryptoBasedCompositionalProperties.ListExtras` | (same 4) | pending |
+| 1 | `Restriction_Spaces-HOLCF` | `Restriction_Spaces-HOLCF.Restriction_Spaces-HOLCF` | 17 | done |
+| 2 | `Restriction_Spaces-HOLCF.Restriction_Spaces-HOLCF` | `Restriction_Spaces-HOLCF` | (same 17) | done |
+| 3 | `Lowe_Ontological_Argument.Relations` | `Types_Tableaus_and_Goedels_God.Relations` | 16 | done |
+| 4 | `Types_Tableaus_and_Goedels_God.Relations` | `Lowe_Ontological_Argument.Relations` | (same 16) | done |
+| 5 | `Core_DOM.Core_DOM_Basic_Datatypes` | `Core_SC_DOM.Core_DOM_Basic_Datatypes` | 6 | done |
+| 6 | `Core_SC_DOM.Core_DOM_Basic_Datatypes` | `Core_DOM.Core_DOM_Basic_Datatypes` | (same 6) | done |
+| 7 | `Core_DOM.Testing_Utils` | `Core_SC_DOM.Testing_Utils` | 4 | done |
+| 8 | `Core_SC_DOM.Testing_Utils` | `Core_DOM.Testing_Utils` | (same 4) | done |
+| 9 | `CryptoBasedCompositionalProperties.ListExtras` | `FocusStreamsCaseStudies.ListExtras` | 4 | done |
+| 10 | `FocusStreamsCaseStudies.ListExtras` | `CryptoBasedCompositionalProperties.ListExtras` | (same 4) | done |
 | 11 | `Superposition_Calculus.Relation_Extra` | `Typed_Ordered_Resolution.Relation_Extra` | 1 | pending |
 | 12 | `Typed_Ordered_Resolution.Relation_Extra` | `Superposition_Calculus.Relation_Extra` | (same 1) | pending |
 | 13 | `Separation_Logic_Imperative_HOL.Imperative_HOL_Add` | `Van_Emde_Boas_Trees.Imperative_HOL_Add` | 1 | pending |
