@@ -296,51 +296,82 @@ K4（修改三的验收判据错，改 §6）、K5(a)（负数渲染成 `~`，�
 
 ---
 
-## 9. 会话交接（2026-08-16 记，供 compact 之后或换人接手直接照做）
+## 9. 会话交接（2026-08-19 重写，供 compact 之后或换人接手直接照做）
 
-**当前状态**：方案已定稿并经两轮对抗评审修订（§8）。**一行代码都还没改**，
-等作者点头。建议动手顺序见 §6。
+**当前状态：三项修改全部落地并提交，强制重录已完成并提交。方案只剩一项正式验收。**
 
-### 环境事实
+### 已完成（提交号即回退点）
 
-- **heap**：`Phi_System_Base` / `Phi_Semantics_Framework` / `Phi_System` /
-  `Phi_Semantics` / `PhiStd` 于 2026-08-14 18:00 前后建好且当时是最新的；
-  **`Phi_Examples` 建不过**（见 §5 第 2、3 条）。接手前先用 `isabelle-mcp` 的
-  `isabelle_launch` 探一下——它会直接告诉你哪个 heap 过期，且**它自己从不构建**。
-- **闸门**：`~/.isabelle/Isabelle2025-2/etc/settings` 那行
-  `AOA_ALLOW_NONINTERACTIVE=yes` **已恢复为生效状态**，并在其上方留了一段注释说明它的
-  影响。作者已授权"必须关闸时可临时注释、用完恢复"。**查它的唯一可靠办法是
-  `isabelle getenv AOA_ALLOW_NONINTERACTIVE`**，`env | grep` 查不到。
-- **`isabelle build`**：仓库规矩是逐次请示；2026-08-14 的几次授权只覆盖那几次。
-- **`Phi_Examples` 的 store**：作者裁决**保留现状**（含 2026-08-14 开闸构建写进去的
-  5 条 agent 记录与若干墓碑）。构建前的三个时间点快照留在本会话 scratchpad 的
-  `store-backup` / `store-backup2` / `store-backup3` 下。
+| 内容 | 提交 |
+| --- | --- |
+| 回退点（动手前 sweep-commit，含别的会话的未提交改动） | phi-system `de0e016c` / auto_sledgehammer `cd61155` / 主仓 `98ba68b` |
+| 修改二：撞键守卫（十步探针验证） | auto_sledgehammer `b1f2178` |
+| 修改一 ＋ 修改三：源码与三个链上 store | phi-system `e73f3b9e` |
+| 强制开闸重录的产物（`Phi_Examples` 三个 store） | phi-system `0794496a` |
+| 主仓：bump phi-system ＋ 两份计划的记录 | `ad098a7` 及其后若干 |
 
-### 工具（都在本会话 scratchpad，`/tmp` 是 tmpfs，可能被清）
+**验收状态**：修改二、修改一均已按 §6 判据验收通过（证据见 §10）。
+修改三**在生产代码里得到证实**（`Quicksort` 的 `qsort/2/8/8/1` 与 `…/~1`、`…/~2`
+三条文本互异的证明），比 §6 原定的探针判据更硬。
 
-- `dump_store.py`：`.proof-store` 的离线解码器，`python3 dump_store.py [-g 关键字] 文件…`。
-  **本次全部关键发现都是它读出来的**。若已丢失，照 §1 与
-  `auto_sledgehammer/library/cache_file.ML` 的 `Proof_Store_Format` 重写即可：
-  帧 = `MAGIC(0x6ABCDEF6) 长度(be32) CRC32(be32) 载荷`，
-  CRC 覆盖"长度字节 ++ 载荷"，载荷是 MessagePack 的 `[1, [键, 毫秒, 文本]]`（PUT）
-  或 `[2, 键]`（墓碑）；重放规则是后帧胜、墓碑删键。
-- `compare_store.py`：比对两份 store 目录，报字节是否相同、条数、墓碑增减、
-  新增/删除/改写的键。验收时直接用它。
-- `idcheck/IDCheck_HoldsFact.thy`：§1 那个受控实验的理论（两个 `holds_fact`，
-  一个加分号一个不加）。修改一落地后应当重跑它，期望从"一条记录"变成"两条"。
+### 唯一还没做的正式验收：合并验收（§6 最后一项）
 
-### 还欠作者的授权
+跑完一个完整理论，要求**修改二的守卫撞键警告为零**；若不为零，看它报的是不是 §5 登记的
+那两类"明说不修"的路径——那属于预期收益，不是失败。
 
-1. **动手改代码**（三处都在共享的已跟踪文件：`IDE_CP_Core.thy`、
-   `post-app-handlers.ML` + `processor.ML`、`cache_file.ML`）。
-2. **§6 顺序里那一步强制的开闸重录**要真调 LLM，须单独授权花费。
-3. 每一次 `isabelle build`。
+⚠️ **必须在 PIDE 里做，不能用批构建**：`isabelle build` 会过滤掉带 marker 的协议消息，
+ML 的 `warning` 根本不会出现在日志里，只有 `error` 会（本会话实测踩过）。
+
+可选的补充：挂一个 `Post_App` 优先级 49 的探针钩子，把键连同 `oblg_no` 一起打出来，
+判据是"**剩下的重复键全部 `oblg_no = 0`**"（此判据经评审 K4 更正，初稿的"78 条义务
+应得 78 把不同的键"是错的，会把正确实现读成失败）。
+
+### 环境事实（2026-08-19）
+
+- **heap**：phi 链于 8-17 22:29–22:36 建好，但**此后已再次过期**——别的会话在 8-17 之后
+  改了 `phi-system` 7 个、`Semantic_Embedding` 4 个源文件。做合并验收前要重建一次
+  （上次全链约 7 分钟）。
+- **`Auto_Sledgehammer` / `Minilang` / `Minilang_AoA` / `Minilang_AoA_REPL` 四个 heap
+  仍是 8-14 的旧物**。原因：`Phi_System_Base` 的**父会话是 `HOL-Library`**，那几个 session
+  只是被 `sessions` + `theories` 拉进来**从源码装进它自己的 heap**，因此不在 `PhiStd` 的
+  父链上，建 `PhiStd` 不会重建它们。谁要单独启动这几个 session 会被拒。
+- **闸门**：`~/.isabelle/Isabelle2025-2/etc/settings` 的 `AOA_ALLOW_NONINTERACTIVE=yes`
+  生效中。**实测：settings 文件压过环境变量**，`AOA_ALLOW_NONINTERACTIVE=no isabelle getenv …`
+  仍读出 `yes`，故无法只对一次调用关闸，只能改那个机器级文件（会影响其它会话新起的进程）。
+  查它的唯一可靠办法是 `isabelle getenv AOA_ALLOW_NONINTERACTIVE`。
+- **构建**：作者已授权 `isabelle build -b -d /home/qiyuan/Current/MLML PhiStd` 这一形式
+  （**不加 `-c`/`-f`**），并裁决"**任何需要重跑的 session 直接重跑就好，开销完全不用管**"
+  （订阅覆盖，不产生真实货币支出）。
+  ⚠️ **务必用 `setsid nohup` 脱离进程组启动**：本会话有一次构建被 harness 的任务时限
+  掐死在 `PhiStd` 中途（判据是该 session 只有 `.db` 没有 `.gz`——**建成的 session 两者成对**）。
+- **`Phi_Examples` 现状**：只剩 `Dynamic_Array.thy:188` 一处失败（§5 第 3 条，另一会话在查）。
+  `Matrix_Oprs` 已能建过——卡死 5c 两轮的 `:139` 被开闸的 AoA 修好，新证明以哈希键
+  `5792510a697c64dc` 落库。**故 §5 第 2 条中关于 `Matrix_Oprs` 的部分已作废。**
+
+### 工具：scratchpad 已于 2026-08-19 被清空，需要时重写
+
+`/tmp` 是 tmpfs。丢失的是 `dump_store.py`（`.proof-store` 离线解码器）、`compare_store.py`、
+`account.py`（花费对账）、两轮构建日志、探针理论、以及若干 store 快照。
+**store 本身都在 git 里，历史可从提交恢复。**
+
+重写解码器所需的全部格式（本会话实测有效）：
+帧 = `MAGIC(0x6ABCDEF6) 长度(be32) CRC32(be32) 载荷`，CRC 覆盖"长度字节 ++ 载荷"，
+载荷是 MessagePack 的 `[1, [键, 毫秒, 文本]]`（PUT）或 `[2, 键]`（墓碑）；
+重放规则是**后帧胜、墓碑删键**。模块自己的读法是
+`Bytes.content (Bytes.read path)`（逐字节忠实，`File.read` 不可靠）。
+判定一条记录是不是"只有 LLM 产得出"：证明文本以 `aoa_replay "` 开头即 blob。
+
+### 尚欠的授权
+
+无。构建与花费均已获概括授权（见上）。**唯一仍须逐次请示的是本仓库的通则**：
+改动共享的已跟踪文件前先说明，且**永不使用 `git stash` / `checkout` / `reset --hard` /
+`git clean`**——还原单个文件用 `git -C <仓库> show <提交>:<路径> > <路径>`。
 
 ### 与主计划的关系
 
-主计划 `docs/PHI_VC_SOLVER_PLAN_V2.md` 阶段 5 的 5c 记录里有完整的取证过程；
-本文只管修法。主计划 §9 尚未把"撞键"列为待裁决项——**动手前应把本方案的裁决结果
-回填进主计划 §9**，否则两份文件会各说各话。
+主计划 `docs/PHI_VC_SOLVER_PLAN_V2.md` §9 已回填两项：
+**第 8a 项**（本方案的全部裁决与仍欠事项）、**第 8b 项**（哈希键双查兜底的调查结果，
+作者裁决"之后再做这个升级"）。两份文件不再各说各话。
 
 ---
 
