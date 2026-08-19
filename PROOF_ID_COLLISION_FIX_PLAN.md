@@ -331,6 +331,13 @@ ML 的 `warning` 根本不会出现在日志里，只有 `error` 会（本会话
 - **heap**：phi 链于 8-17 22:29–22:36 建好，但**此后已再次过期**——别的会话在 8-17 之后
   改了 `phi-system` 7 个、`Semantic_Embedding` 4 个源文件。做合并验收前要重建一次
   （上次全链约 7 分钟）。
+- ⚠️ **不要用"源文件 mtime 比 heap mtime 新"来判断链条是否过期**（2026-08-19 我据此
+  误判成"没有过期"，被 `isabelle_launch` 的拒绝当场推翻）。两个原因：其一 Isabelle
+  比对的是**源码内容哈希**而非时间戳；其二**依赖会跨仓库延伸**——`Phi_System_Base`
+  的 ROOT 用 `sessions` 拉进 `Minilang_AoA`，后者又依赖 `Semantic_Embedding`，所以
+  改 `contrib/Semantic_Embedding/Tools/*.ML` 就足以打脏整条 `PhiStd` 链。
+  **唯一可靠的判据**是让 Isabelle 自己说：`isabelle_launch` 过期时会拒绝启动并
+  给出该跑的构建命令。
 - **`Auto_Sledgehammer` / `Minilang` / `Minilang_AoA` / `Minilang_AoA_REPL` 四个 heap
   仍是 8-14 的旧物**。原因：`Phi_System_Base` 的**父会话是 `HOL-Library`**，那几个 session
   只是被 `sessions` + `theories` 拉进来**从源码装进它自己的 heap**，因此不在 `PhiStd` 的
@@ -372,6 +379,42 @@ ML 的 `warning` 根本不会出现在日志里，只有 `error` 会（本会话
 主计划 `docs/PHI_VC_SOLVER_PLAN_V2.md` §9 已回填两项：
 **第 8a 项**（本方案的全部裁决与仍欠事项）、**第 8b 项**（哈希键双查兜底的调查结果，
 作者裁决"之后再做这个升级"）。两份文件不再各说各话。
+
+---
+
+### 合并验收：第一次尝试（2026-08-19，PIDE，靶子 `Quicksort.thy`）
+
+**已确立**：`PhiStd` 全链重建干净（8 分 18 秒，五个 session 全部 `Finished`）；
+`Quicksort.thy` 在 PIDE 下**完整跑完 161 行、零错误**（第二跑），即 §6 要求的
+"跑完一个完整理论"这一半已达成。
+
+**尚未钉死**："守卫零告警"这一半。三次跑的经过与各自的证据力：
+
+- **第一跑**撞上 `OPTION_EXCEPTION_IN_PROOF_REPLAY.md` 登记的那个独立缺陷：
+  `Quicksort.thy:46`（`qsort (i, d-1)`，命令 `；`）抛 `exception Option`，签名与该文档
+  五次观测一致（phi 语言命令上、紧跟一行 `[eval_prf_str] replaying:`、**没有**
+  `[eval_prf_str] FAILED` 前导行）。该缺陷早于本方案的三项修改被观测到。
+  之后 47 行状态走岔、无界搜索 240 秒以上，我取消了它。
+  这一跑仍给出一个有效读数：整跑只追加**一帧墓碑、零条 PUT**。
+- **第二跑**（重启会话后）同一行直接通过，坐实了该缺陷的不确定复现。整跑零错误。
+- **第三跑**用来钉死守卫零告警，但 isabelle-mcp 服务器中途断连、会话消失，
+  **无法证明它跑完**（校验和确实没变，但"整跑无写入"与"跑到一半被掐断"无法区分）。
+  **此跑作废，需重做。**
+
+**本次确立的验收方法（比读 PIDE 消息更硬，且覆盖全部写入方）**：
+守卫的告警与 store 的 PUT 追加**出自同一个 `else` 分支**（`msg` 与 `do_append` 一起产生，
+见 `cache_file.ML` 的 `update_cached_proof`），所以"整跑期间 store 文件逐字节不变"
+在逻辑上**蕴含**"守卫零告警"。做法：库补齐并压实之后再跑一遍，比对文件校验和。
+⚠️ 两个坑：其一**压实会重写整个文件**（本次 47 帧→43 帧），一旦触发，"按前缀比对新增帧"
+的办法就失效，所以要先让库达到无死帧状态；其二**必须独立确认那一跑真的跑完**，
+仅凭校验和不变不足以结论。
+
+**顺带排除的一个虚警**：store 里的 `insert ,`（`insert` 后空无一物）不是丢符号——
+九个 `Phi_Examples` store 里 22 处 `insert` 全部是空参数，这是 auto_sledgehammer
+在"不需要额外引理"时的固定模板。
+
+**工具已重建**：`dump_store.py`（scratchpad），支持 `--summary` / `--keys` / `--full`，
+九个 store 全部解码通过、CRC 无误。
 
 ---
 
