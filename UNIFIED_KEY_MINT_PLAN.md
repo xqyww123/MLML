@@ -60,13 +60,13 @@ deriver 122 ＋ 哈希 377；结构化 blob 186（153＋33）**。补记两条�
 
 **角色说明（作者裁决 ②的配套）**：`Phi_ID` 的角色从"地址命名空间的权威"扩为
 "**键**的权威"——一条义务如何在 proof store 记账（结构化键／deriver 名字键／
-无键落哈希）由它一手表达。这与"Phi_ID 是在切分命名空间"一致：记账声明是紧挨
+无键落哈希）由它一手表达。这与"Phi_ID 是在切分命名空间"一致：一条义务如何记键，本就是紧挨
 着地址的问题。
 
 ```sml
 signature PHI_ID = sig
   type ID        (* 抽象！内部 = construct * int list * counter *)
-  type key_spec  (* 不透明：义务的记账声明；构造只有 mint/named/no_key 三个入口 *)
+  type key_spec  (* 不透明：一条义务在 proof store 里如何记键的声明；构造只有 mint/named/no_key 三个入口 *)
 
   (* 值级 *)
   val next          : ID -> ID          (* ≡ 今天的 uptick_expr_id（数值逐位相同） *)
@@ -74,10 +74,10 @@ signature PHI_ID = sig
   val nth_child     : int -> ID -> ID   (* = funpow i next o step_in；i<0 报错；≡ sub_expr_id i *)
   val set_construct_v : string -> ID -> ID   (* 值级；context 版是其 ID.map 包装 *)
   val path          : ID -> int list
-    (* 唯一读出口，只读不构造。方向：内层在前——与内部表示及全系统工作约定
+    (* ID 内容的唯一读出口，只读不构造。方向：内层在前——与内部表示及全系统工作约定
        一致；呈现（键串、事实名）时由消费者翻转（gen_name 用 rev_map）。 *)
 
-  (* 记账声明 *)
+  (* 铸键与折算 *)
   val mint       : ID -> key_spec       (* 先判匿名（construct="" ⇒ 不 tick，无键）；
                                            具名才 tick 该值的 counter 并 encode *)
   val named      : string -> key_spec   (* deriver 配方 *)
@@ -85,7 +85,7 @@ signature PHI_ID = sig
   val key_string : key_spec -> string option  (* 唯一折算出口；无键 ⇒ NONE。
                                                  只读，不破坏"结构化键只能出自 mint" *)
 
-  (* context 级（Proof_Data 槽；均为值级操作经 ID.map 的薄包装） *)
+  (* context 级（Proof_Data 槽；对应关系见下方条目） *)
   val get           : Proof.context -> ID
   val set_construct : string -> Proof.context -> Proof.context
   val next_ctxt     : Proof.context -> Proof.context
@@ -94,6 +94,12 @@ end
 ```
 
 - `int list` **同时容纳**语句成分与表达式成分：`expr_id` 的类型**就是** `ID`。
+- context 级中，`next_ctxt`/`step_in_ctxt` 是值级操作经 `ID.map` 的薄包装；
+  **`set_construct` 不是**——它多做两件值级做不到的事：用
+  `Sign.full_bname (Proof_Context.theory_of ctxt)` 展全名、对空名特判保留
+  `""`（否则匿名判断失效），展开后的名字才交给 `set_construct_v`；
+  "construct 已设即 `error`"这条约束住在 `set_construct_v` 里——D-5 的
+  "帧携带的 construct 与 ambient 恒同"整个建立在它上面。
 - `counter` 是每个 ID 值自带的义务计数单元（`int Unsynchronized.ref`）；
   **值的每次构造（`next`/`step_in`/`nth_child`/`set_construct_v`）都新建单元**。
   反向约束（D-3 的前提）：**`set_expr_id` 与 `eval_cfg` 的记录字面构造搬运的是
@@ -108,6 +114,8 @@ end
 - `Structural` 一类的构造子**不对外导出**（`key_spec` 不透明）——"结构化键
   只能出自 mint"是类型级事实。`named` 仍从字符串造键（deriver 需要），
   其调用点枚举见 §5.5。
+- 唯一的功能损失：调用点看不出这次 mint 是否匿名。实测无调用点需要知道
+  （`Phi_Envir` 不需要，六个铸键点也不需要）；将来真要区分再加判定函数即可。
 - 编译期判据（§5.5 的实体）：**签名中不存在接受 `int list` 的导出；唯一接受
   `int` 的构造子是 `nth_child`，且 `i<0` 报错**。
 
@@ -170,7 +178,7 @@ end
 的状态边界与 `Remaining_Eleidx` 的异常边界（"固定子层替代"两轮均否决）。
 
 **行首冻结的实质收益（本轮新认领）**：今天守卫块路径上，同一条语句里块之后的
-钩子键与该守卫块的 led 键**共用锚槽位前缀**，不撞仅靠数值余量（led 的槽位号
+钩子键与该守卫块的 led 键**共用块锚那一格的前缀**，不撞仅靠数值余量（led 的槽位号
 恒为 1，块后表达式序号 ≥3）——一个跨 ≥3 条 Isabelle 命令的守卫块会耗尽余量
 （机理见 D-4）。方案 D 下 `eval_line` 在行首一次派生该行的表达式基底、此后由
 帧携带，ambient 的推进再也够不到任何表达式键——余量换成结构隔离。
@@ -208,9 +216,9 @@ rev 2 原五条收益的下场（存档）：`certified` 打断与 dot-chain 由
 
 **"槽位身份互斥"的说法删除**（rev 3 的 (a) 论证经实测不成立）：守卫块路径
 （`embedded_block`，`IDE_CP_Core.thy:2331-2334`）**没有** `toplevel.ML:482` 与
-`:504`——块闭合后 ambient 停在锚槽位上，锚槽位继续为同一条语句的表达式键
+`:504`——块闭合后 ambient 停在块锚那一格上，它继续为同一条语句的表达式键
 服务，与该块的 led 键共用前缀，今天只靠数值余量分开（见 D-3 行首冻结段）。
-显式 `⟨medium_left_bracket⟩` 路径上锚槽位确实无人复用（前后共三格），但那是
+显式 `⟨medium_left_bracket⟩` 路径上块锚那一格确实无人复用（前后共三格），但那是
 该路径的余量，不是结构保证。**多余的 `next` 只跳号不复用**（`next` 只前进），
 故七站点清单里的冗余格无害。
 
@@ -229,7 +237,7 @@ rev 2 原五条收益的下场（存档）：`certified` 打断与 dot-chain 由
 - `gen_name`（`IDE_CP_Core.thy:2666`）改经 `path` 取数（**内层在前**），继续用
   `rev_map` 翻转拼名。数字串逐字不变的**旁条件**：同一条 Isabelle 命令内
   `holds_fact` 之前无嵌入块（当前全部 5 个匿名用点满足，见 §5.4）——这与
-  §5.6 例外表第 3 类（嵌入块后钩子键搬迁）是同一件事的两面。
+  §5.6 例外表第 3 类（嵌入块内与块后钩子键搬迁）是同一件事的两面。
 - **`IDE_CP_Core.thy:2663-2681` 是改动最重的一处**：`:2663` 退化为 `#id cfg`
   （语义等价论证：construct 由 `toplevel.ML:275` 每 procedure 设一次且不可重设
   ——`Phi_ID.ML:58-63` 重设即 error——故帧携带的 construct 与 ambient 恒同）；
@@ -272,7 +280,8 @@ rev 2 原五条收益的下场（存档）：`certified` 打断与 dot-chain 由
   语句路径键与哈希键的命中路径完全同一（`agent_server.ML:2008-2010`）。
   **裁决：不设任何族别记号。** 三条旁条件如实入账：
   1. **失败重放的成本是 L2 一次＋L1 一次**（1243/1368 的键两边都有；81 个键
-     两边文本不同）；单次预算 `tolerant_time = 1.5×记录时间+1s`
+     两边文本不同——80 哈希＋语句路径键 `Matrix_Oprs.strassen/2/8/1/0/0`，
+     故 L1 那一次重放拿到的常是另一份文本）；单次预算 `tolerant_time = 1.5×记录时间+1s`
      （`cache_file.ML:834`），实测中位 ≈1.1 s、p90 ≈5.8 s、最坏 ≈155 s；
      全库整体陈旧时 L2 一遍上界 ≈79 分钟。
   2. **墓碑先行**：三个 L2 失效站点先落墓碑再搜索，且不受 `store_hit_replay`
@@ -319,7 +328,8 @@ blob**：228 条键不在 HEAD（70 blob）＋59 条键在 HEAD 但文本已变�
    （BSD 锁，实测能在 ML 持锁时直接拿到、虚假互斥）；锁文件以
    `os.open(p, os.O_RDWR|os.O_CREAT, 0o644)` 打开（只读 fd 实测 EBADF）；
    持锁期覆盖"读旧文件 → 写 tmp → rename"整段。**并注意锁只保护写路径——
-   Isabelle 的读路径（`load_store_raw`，`cache_file.ML:589-593`）不取锁，
+   Isabelle 的读路径不取锁（`load_store_raw`，`cache_file.ML:594`；
+   `:590-593` 的注释亦明言），
    故 (a) 不可省**；
    (c) 事后全量 CRC 复核＋活键计数对拍；
 4. **写盘顺序**：帧序＝键按（utf8 字节长度，字节）**降序**（`write_state_new`
@@ -401,8 +411,10 @@ blob**：228 条键不在 HEAD（70 blob）＋59 条键在 HEAD 但文本已变�
    - **例外表（五类；脚本事先把第 2、3 类算成白名单，第 4 类单列，不混进
      不明失配）**：① `certified` 打断帧（地址从归约时 ambient 改为出生地址）；
      ② `Meta_Apply` 下标族整族移位（闭 `]` 的 ambient → `[` 的出生地址），
-     单独分组列出；③ 含嵌入块的语句其**块内与块后**全部钩子键（今天读
-     ambient、被块锚推进顶过一格，方案 D 行首冻结后搬回；与 D-5 的 `gen_name`
+     单独分组列出；③ 含嵌入块的语句其**块内与块后**全部钩子键——块后的今天读
+     ambient、被块锚推进顶过一格（`c/2/(k+1)/e → c/2/k/e`），块内的今天还多一段
+     块内 `step_in`（`c/2/(k+1)/0/e → c/2/k/e`），方案 D 行首冻结后一并搬回
+     （与 D-5 的 `gen_name`
      旁条件互为表里）；④ counter 盈余（`rw_access` 重试、`opr_stack2.ML:177/179`
      两条流各占独立序号——旧世界无对应物）；⑤ 负数键换形 `X/~n → X:n`
      （序号未必对齐；脚本须有明确判定规则区分"迁移"与"盈余"）。
@@ -434,7 +446,9 @@ blob**：228 条键不在 HEAD（70 blob）＋59 条键在 HEAD 但文本已变�
 0. **改码之前**：§5.4 的基线即第 0 步清单（无需额外采集）；完成 §4 第 0 步
    提交；**停掉当前 `-l PhiStd` 的 MCP 会话**。
 1. **一次原子编辑、一次全链编译、单个提交**（步骤互为编译前置，不可分步；
-   共享 main 不得留编译不过的提交）。文件清单（**11 个**，跨 Phi_BI/Phi_System/
+   共享 main 不得留编译不过的提交）。总纲：D-1 把 `next`/`step_in` 拆成值级与 context 级两套，
+   全仓七处 `Phi_ID.next`（除 `toplevel.ML:515` 死代码）与唯一一处
+   `Phi_ID.step_in` 全部改名 `*_ctxt`——编译前置。文件清单（**11 个**，跨 Phi_BI/Phi_System/
    Phi_Semantics 三个 session）：
    - `Phi_BI/library/system/Phi_ID.ML`：D-1 签名重写（含 key_spec/mint/named/
      no_key/key_string、值级 `set_construct_v`、`path` 内层在前注释）＋删除
@@ -442,10 +456,11 @@ blob**：228 条键不在 HEAD（70 blob）＋59 条键在 HEAD 但文本已变�
    - `Phi_System/library/system/post-app-handlers.ML`：`expr_id = Phi_ID.ID`；
      删 `oblg_no`/`uptick_oblg_no`/`initial_expr_id`/`uptick_expr_id`/
      `sub_expr_id`；`set_expr_id` 保留；改写 `:13-19` 与 `:50` 两处注释；
-   - `Phi_System/library/system/processor.ML`：`eval_line` 行首经 `step_in`
-     冻结表达式基底；五处记录构造；
+   - `Phi_System/library/system/processor.ML`：`:205` 的 `Phi_ID.next` →
+     `next_ctxt`；`eval_line`（`:199`）行首改经**值级** `step_in` 冻结该行的
+     表达式基底；五处记录构造（`:164/210/214/219/223`）；
    - `Phi_System/library/system/opr_stack.ML`：`Meta_Apply` 加地址分量
-     （`:29-33`/`:122-126`）；**两哨兵改独立构造子**——`precedence_of_frame`
+     （`:29-33`/`:122-126`）；**两哨兵改独立构造子**（名字待作者定，不得再用魔法串）——`precedence_of_frame`
      （`:152-158`）补两条 arm：`<interrupt>` **必须返回 ~1**（活语义：
      `processor.ML:226` 的"表达式没结束"告警判据靠它 <0，报 ≥0 会与 §5.1
      打架），`<initial>` 原样抄 1001（实测不可达，保守）；
@@ -460,8 +475,9 @@ blob**：228 条键不在 HEAD（70 blob）＋59 条键在 HEAD 但文本已变�
    - `Phi_System/library/system/Phi_Envir.ML`：`solve_obligation'` 键参数改
      `Phi_ID.key_spec`（`:45-47` 两处签名；`:252` 派生值不动）；`:224` 函数体
      内 `key_string` 折算；
-   - `Phi_System/library/system/toplevel0.ML`：led 站点（`:395` 闭包外
-     `Phi_ID.mint`＋载荷注释；`:294`/`:326` 改 `no_key`）；
+   - `Phi_System/library/system/toplevel0.ML`：`:101`/`:394` 的 `Phi_ID.next`
+     → `next_ctxt`、`:242` 的 `Phi_ID.step_in` → `step_in_ctxt`；led 站点
+     （`:395` 闭包外 `Phi_ID.mint`＋载荷注释；`:294`/`:326` 改 `no_key`）；
    - `Phi_System/library/system/toplevel.ML`：`:482`/`:499`/`:504` 三处
      `Phi_ID.next` → `next_ctxt`（`:275` 的 `set_construct` 名不变；`:515`
      在注释块内不动）；
@@ -475,6 +491,8 @@ blob**：228 条键不在 HEAD（70 blob）＋59 条键在 HEAD 但文本已变�
    通配——经质证两哨兵在该路不可达，无害）；
    `Phi_Semantics/library/generic_element_access.ML:344-349`（哨兵恒在栈底，
    结论不变）。
+   这两处复核登记，与 `opr_stack.ML` 那四个自带通配分支的函数，是本次改动里
+   **编译器唯一帮不上忙的地方**。
 2. auto_sledgehammer 死拷贝 `git rm`（跨 submodule 提交＋父仓指针 bump）。
 3. **编译验证**：PIDE、基座 `Phi_System_Base`；重编译面 `Phi_Preliminary.thy`
    起约 10 万行，须验证到 `Phi_Examples`，**另加两个兄弟 session**：
@@ -485,7 +503,9 @@ blob**：228 条键不在 HEAD（70 blob）＋59 条键在 HEAD 但文本已变�
 
 ## 7. 风险
 
-- **R1 波及面**：必改 11 个文件、跨 3 个 session（§6 清单）＋2 处复核登记；
+- **R1 波及面**：必改 **11** 个文件、跨 3 个 session（§6 清单），另 2 处复核
+  登记（`PhSm_Ag_Base.thy` 是第 12 个被打开的文件；`generic_element_access.ML`
+  已在 11 之内）；
   每次编译验证的重编译面约 10 万行。
 - **R2（已从风险降为已证事实）**：`next`/`step_in`/`nth_child` 与今天
   `uptick_expr_id`/`initial_expr_id`/`sub_expr_id` 的数值等价**逐位可证**
@@ -550,8 +570,7 @@ D-3 五条收益仅一条成立；led 闭包重复求值 ⇒ mint 急切；`fun 
 三条新实测：**(甲)** led 的 next 落在块内层、随 `close_block` 丢弃（数据铁证：
 58 个 2 分量键、零个 1 分量键）——rev 3 D-4 补记层次归属写反；**(乙)** 两个
 哨兵今天在归约求值里不可达（`<initial>` 在求值前被无条件弹掉、`<interrupt>`
-的 ~1 恒短路）——哨兵改造是纯类型问题，无活撞键路径；**(丙)** "块锚槽位
-不复用"在守卫块路径上不成立——今天靠数值余量，跨 ≥3 条命令的守卫块会耗尽
+的 ~1 恒短路）——哨兵改造是纯类型问题，无活撞键路径；**(丙)** "块锚那一格不复用"在守卫块路径上不成立——今天靠数值余量，跨 ≥3 条命令的守卫块会耗尽
 余量，方案 D 的行首冻结把它换成结构隔离（方案此前未认领的收益）。
 成立并吸收：`set_expr_id` 原样搬运的前提必须显式（D-1/D-3）；哨兵波及完整
 清单（四个带通配函数是人工核对点、`<interrupt>` 的 ~1 是唯一活优先级语义）；
@@ -561,7 +580,8 @@ D-3 五条收益仅一条成立；led 闭包重复求值 ⇒ mint 急切；`fun 
 （6/10 负数键无基座）；§5.4 离线基线降级（义务键即事实名基线）；§5.1 删 PUT
 判据（与守卫告警等价且非确定）＋告警指名 `collision_message`；§8 L1 按族清理
 （83 条无副本 blob）；tmpfs 副本；`pgrep`/`lockf` 判据实测；B-8 读路径键对
-写规则集的依赖；R4 数字订正（93 不可用→约两百余处）；编译面补两个兄弟
+写规则集的依赖；R4 数字订正（93 不可用→约两百余处）；3 个非规范 store 形态订正
+（"已压实＋尾部恰一条追加"，非追加日志态）；编译面补两个兄弟
 session；`Phi_Test` 靶子在编译面外的问题。
 被驳倒／删除："Post_App 探针是造词"（词在 `cache_file.ML:682` 注释里就有）；
 `fuser` 判据（实测恒为空）；PIDE markup 与"就地取 `facts_of`"两条 §5.4 路线；
@@ -588,7 +608,8 @@ session；`Phi_Test` 靶子在编译面外的问题。
 
 ## 10. 状态（2026-08-20）
 
-rev 4 定稿；全部设计项有作者裁决、无悬空；**代码一行未动**。
+rev 4 定稿；全部设计项有作者裁决；唯一待定：两个哨兵构造子的命名
+（实施时定，不得再用魔法串）；**代码一行未动**。
 下一步＝§6 实施（第 0 步与停会话在最前）。
 环境纪律：绝不 `isabelle build`（改 `.ML` 重启 REPL 即可）；共享工作树，
 永不 stash/checkout/reset --hard/clean；推送只推 origin；实施基座
