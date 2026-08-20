@@ -56,6 +56,12 @@ These rules are ABSOLUTE — each one was written after the opposite habit derai
 2. **NO ad-hoc nicknames.** Never invent shorthand labels for concepts mid-conversation (metaphor names, "option 2", "path A", …) and then build later sentences on them. If a concept needs repeated reference, use its full descriptive phrase every time, or its established canonical name — nothing else.
 3. **Never assume I retain your earlier framing.** Never build on a label or a framing from an earlier turn. Conversations are long: when returning to a topic after any gap, re-establish the context from scratch first. When I ask "what is X?", the answer starts from zero.
 
+4. **Essence first, mechanism second (2026-08-20).** Open every explanation of a concept
+   with one sentence saying what the thing IS at its core; only then unfold the machinery.
+   Three patient pages of mechanism that never say "expr_id is just a running count of the
+   operations within one line" are worse than that one sentence alone — mechanism-first
+   walkthroughs bury the point and leave me more confused after each round.
+
 Comments in source code, though, should be short, on point, and load-bearing.
 
 
