@@ -158,7 +158,9 @@ end
   闭 `]` 时的 ambient cfg。六处修改：`opr_stack.ML:29-33` 与 `:122-126` 加分量；
   `opr_stack2.ML:347` 存 `#id cfg`；`:228-229` 解构后 `set_expr_id`；
   `:357`、`:372` 模式补 `_`。
-- **两个哨兵帧改独立构造子（作者已裁）**。今天 `<interrupt>`（`opr_stack.ML:177`）
+- **两个哨兵帧改独立构造子 `Statement_Interruption`（原 `<interrupt>`）与
+  `Initial_Statement`（原 `<initial>`）（作者已裁并定名）**。
+  今天 `<interrupt>`（`opr_stack.ML:177`）
   与 `<initial>`（`:193`）是伪装成 `Meta_Opr` 的假帧：回调 `K I` 从不被调用、
   地址槽填字面量 `[]`（抽象化后编译必断）、字段全是哑值——它们对 `Meta_Opr`
   机制**零使用**，唯一被用的是名字字符串（四个函数靠字符串比较认出）与
@@ -460,7 +462,9 @@ blob**：228 条键不在 HEAD（70 blob）＋59 条键在 HEAD 但文本已变�
      `next_ctxt`；`eval_line`（`:199`）行首改经**值级** `step_in` 冻结该行的
      表达式基底；五处记录构造（`:164/210/214/219/223`）；
    - `Phi_System/library/system/opr_stack.ML`：`Meta_Apply` 加地址分量
-     （`:29-33`/`:122-126`）；**两哨兵改独立构造子**（名字待作者定，不得再用魔法串）——`precedence_of_frame`
+     （`:29-33`/`:122-126`）；**两哨兵改独立构造子 `Statement_Interruption`／`Initial_Statement`**
+     （作者已定名——继承 `statement_interruptionO`/`initial_statementO` 的
+     既有名，零新词；两构造子均无参）——`precedence_of_frame`
      （`:152-158`）补两条 arm：`<interrupt>` **必须返回 ~1**（活语义：
      `processor.ML:226` 的"表达式没结束"告警判据靠它 <0，报 ≥0 会与 §5.1
      打架），`<initial>` 原样抄 1001（实测不可达，保守）；
@@ -590,7 +594,8 @@ session；`Phi_Test` 靶子在编译面外的问题。
 "删 `set_expr_id` 改就地构造"（字面构造点 5→9，否决）；B-9 空烧号（不可
 观测）；L-6（SML 严格求值天然每 j 一次）；B-7 并发半段。
 
-**作者裁决（2026-08-20 续三）**：哨兵＝**独立构造子**（`<interrupt>` 的 ~1
+**作者裁决（2026-08-20 续三）**：哨兵＝**独立构造子**，定名
+`Statement_Interruption`／`Initial_Statement`（继承既有值名，零新词；`<interrupt>` 的 ~1
 原样保留）；**key_spec 搬进 `Phi_ID`**、`mint` 直接返回（D-1 开篇写明角色
 扩展）；**`path` 内层在前**（忠于全系统工作约定，方向写死在签名注释；
 `rev_map` 保留原状——其累加器式"映射＋翻转一趟完成"性能优于 `rev o map`，
@@ -606,11 +611,36 @@ session；`Phi_Test` 靶子在编译面外的问题。
 重叠的错误模型；rev 1 文法复活 K3；"K3 不可实例化"猜想被驳；"可实例化"直接
 当"必须文法杜绝"且修法未批先落；led 层次归属写反（rev 3→rev 4）。
 
-## 10. 状态（2026-08-20）
+## 10. 会话交接与执行准备（2026-08-20，compact 前写就）
 
-rev 4 定稿；全部设计项有作者裁决；唯一待定：两个哨兵构造子的命名
-（实施时定，不得再用魔法串）；**代码一行未动**。
-下一步＝§6 实施（第 0 步与停会话在最前）。
-环境纪律：绝不 `isabelle build`（改 `.ML` 重启 REPL 即可）；共享工作树，
-永不 stash/checkout/reset --hard/clean；推送只推 origin；实施基座
-`Phi_System_Base`，动手前停 `-l PhiStd` 会话。
+**状态**：rev 4 定稿，全部设计项有作者裁决、**零悬空**（哨兵构造子已定名
+`Statement_Interruption`／`Initial_Statement`）；**代码一行未动**。
+**作者已指示：compact 之后即开始执行本计划**——本文档是唯一权威，接手者
+无需对话史。
+
+**执行顺序**：
+1. **§6 第 0 步（先行）**：§4 第 0 步的 store 抢救提交（287 条/128 blob，
+   解码器全量清单存档为 §5.4/§5.6 基线）；停掉 `-l PhiStd` 的 MCP 会话；
+2. **§6 第 1-3 步**：一次原子编辑（11 文件＋2 复核登记，照 §6 清单逐条）、
+   单个提交；PIDE（基座 `Phi_System_Base`）全链编译验证至 `Phi_Examples`
+   ＋`Phi_Test`＋`Phi_Syntax_Constraint_Test`；auto_sledgehammer 死拷贝
+   `git rm`（跨 submodule 提交）；
+3. **§4 迁移与 §5 验收**。**注意 §0 的前提**：本方案假定挂钟闸门
+   （`WALL_CLOCK_GATES_IN_REASONING.md`，四道）已修复，而它们**尚未修复**。
+   代码改动（第 1-2 步）不依赖闸门；但重录（§4）与稳定性验收（§5.2）依赖
+   推理可复现——**重录开跑前须先修闸门，或获作者对此顺序的明示豁免**。
+
+**实施提醒**（详见各节）：四个带通配的哨兵识别函数与两处复核登记是编译器
+帮不上忙的人工核对点（§6）；`Statement_Interruption` 的优先级必须原样返回
+~1（§6）；mint 急切求值、led 闭包外铸键（D-2）；`set_expr_id` 绝不新建计数
+单元（D-1/D-3）；离线动 store 先 `pgrep -x poly`＋`fcntl.lockf`、副本落
+持久盘（§4）；heap 失效后不得以 `-l PhiStd` 启动会话，重建须作者批准（§7 R6）。
+
+**本会话提交清单**（主仓）：`e830810`（rev 3）、`c90d5c1`（rev 4）、
+`9872d73`（誊写审计修正）、本次定名＋交接提交；此前会话：`f52e006`/
+`e181334`/`e2429ad`/`b635104`/`86c58af`/`ff9f013`，phi-system `1735611a`。
+评审档案：§9 浓缩；全文在会话记录。
+
+**环境纪律**：绝不 `isabelle build`（`repl_server.sh` 豁免；改 `.ML` 重启
+REPL 即可）；共享工作树，永不 stash/checkout/reset --hard/clean；`git clean`
+绝对禁止；推送只推 origin；记忆目录写入须作者逐次批准。
