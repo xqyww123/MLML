@@ -644,3 +644,50 @@ session；`Phi_Test` 靶子在编译面外的问题。
 **环境纪律**：绝不 `isabelle build`（`repl_server.sh` 豁免；改 `.ML` 重启
 REPL 即可）；共享工作树，永不 stash/checkout/reset --hard/clean；`git clean`
 绝对禁止；推送只推 origin；记忆目录写入须作者逐次批准。
+
+### §10.1 执行日志（2026-08-20 晚，compact 后会话）
+
+**已完成**：
+1. 第 0 步：`-l PhiStd` MCP 会话已停；store 抢救提交 phi-system `95744d2f`
+   ＋主仓指针 `36a42bb`。对账与基线逐字吻合（228 条不在 HEAD/70 blob ＋
+   59 条文本已变/58 blob＝287/128；Matrix_Oprs 独占 49）。全量清单
+   （1371 条活记录、1368 不同键、38 store）存档
+   `~/archive/unified-key-mint/step0_baseline_inventory.tsv`（持久盘）。
+2. §6 第 1 步：11 文件原子编辑已提交 phi-system `bc6022d7`；第 2 步：
+   auto_sledgehammer 死拷贝删除已提交 `43c4d1c`。
+   全仓扫描：被删 API 零残留（唯 `toplevel.ML:515` 注释块，按方案不动）；
+   两处复核登记确认落通配、结论不变。
+
+**环境事件（非本会话所为）**：Isabelle2025-2 的用户 heap 目录
+（`~/.isabelle/Isabelle2025-2/heaps/`）当日 ~19:33 被清空——
+`Phi_System_Base`/`PhiStd`/`Phi_System` 等全部消失（磁盘 99% 满，疑似
+空间清理）。作者批准重建 **仅 `Phi_System_Base`**（实建 HOL-Library＋
+Phi_System_Base，4 分钟）。R6 的级联失效因此成为"本就无 heap"。
+
+**新发现（补 §6 第 3 步的一个未言明纠缠）**：编译验证"到 Phi_Examples"
+与 §4 重录**是同一次运行，分不开**——新文法下 deriver（125）与语句路径
+（830）键全 miss，miss 即真搜索；编译路径上第一个含 blob 的键控 store 是
+`Phi_System/Phi_Types`（58 deriver 键、11 blob），AoA 闸门关死时 blob
+义务搜索失败＝构建失败（`cache_file.ML:676` 注释原话）。
+**安全前沿＝`Phi_System/Phi_Type.thy`**：其导入闭包只触哈希键 store
+（`IDE_CP_Reasoning2` 6 把、`Phi_Type` 110 把——哈希键不动、命中重放、
+零写盘），覆盖 11 个改动文件中 10 个的编译（`deriver_framework.ML` 装载
+点即 `Phi_Type.thy:5925`）；唯一漏网是 `generic_element_access.ML:376`
+一行（装载理论 `PhSm_Ag_Base` 的闭包已含键控 store），已人工核型，机器
+检验待重录开跑。
+
+**作者裁决（2026-08-20 晚，三项）**：① heap 只建 `Phi_System_Base`；
+② **重录整体缓行**（挂钟闸门与重录时机连同后议；编译不得越过
+`Phi_Type.thy`）；③ 原子编辑在安全前沿验证绿后提交。
+
+**安全前沿验证结果（绿）**：PIDE、基座 `Phi_System_Base`，
+`Phi_Type.thy:8203` 收到完成信号；**零错误**；**零新增 ML 警告**（各文件
+警告逐条核对，全部为改动 hunks 之外的旧警告；`Phi_ID.ML`/`opr_stack.ML`/
+`post-app-handlers.ML`/`processor.ML` 零警告）；**store 零写入**（git
+字节不动）；编译出的签名确认 `key_spec`、两哨兵构造子、`Meta_Apply` 新
+分量成形。
+
+**接手时剩余**：§6 第 3 步全链验证（到 `Phi_Examples`＋`Phi_Test`＋
+`Phi_Syntax_Constraint_Test`）＝重录本身，与 §4/§5 一并等作者重启；
+届时先议挂钟闸门。工作树注意：`Phi_Examples/*.thy` 有 7 个文件的证明
+简化改动属另一会话，勿混入本工作的提交。
