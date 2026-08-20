@@ -87,7 +87,8 @@ result — what you upload is what everyone eventually gets.
    exclude a pulled `system/` copy and the install lock** — the system layer is
    the published artifact itself and must never ride into its own source
    snapshot. Everything else in the cache dir does ride along:
-   `semantics.lmdb/`, the `vector_*.lmdb/` store(s), and also
+   `semantics.lmdb/`, the `vector_*.lmdb/` store(s), `theory_hash.lmdb/` (the
+   theory-hash registry — shared data, not a local cache), and also
    `experience_index.lmdb/` and `AoA_Collected/` — tombstones and WIP included
    (CI's export strips what must not ship):
    ```bash
