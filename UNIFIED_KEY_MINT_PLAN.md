@@ -691,3 +691,31 @@ Phi_System_Base，4 分钟）。R6 的级联失效因此成为"本就无 heap"�
 `Phi_Syntax_Constraint_Test`）＝重录本身，与 §4/§5 一并等作者重启；
 届时先议挂钟闸门。工作树注意：`Phi_Examples/*.thy` 有 7 个文件的证明
 简化改动属另一会话，勿混入本工作的提交。
+
+### §10.2 验证结果（2026-08-21，作者裁定编译到 Phi_Test 即验证通过）
+
+**结论：验证通过。** 第 4 跑（PIDE、基座 `Phi_System_Base`、目标
+`PhiTest_All.thy`）全链零错误——路径上 18 个带 store 的理论逐一开检确认。
+
+过程账（四跑）：
+1. 跑 1（08-20 深夜）被并行会话所杀，无完整结果;
+2. 跑 2：全链唯一错误＝`PhSm_Ag_Base.thy:531` 的 AoA ClaudeCode 驱动
+   surrogate 截断 bug（8/8 重试同点失败;已单独立档
+   `AOA_CLAUDECODE_DRIVER_SURROGATE_BUG.md`，作者另派调查）;新键机制全程
+   健康（miss→真搜索→按 `地址:序号` 落盘）;
+3. 跑 3（作者裁定直接重试）：surrogate 义务这次 AoA 成功、
+   `…synthesis_construct_aggregate/2/1/7:0` 永久入库;新冒出的唯一错误＝
+   `Phi_Types.thy:2710` 的已知 exception Option 重放竞态（§0 已接受的
+   残余风险，档案预测"下一轮即消失"）;
+4. 跑 4：全绿。
+
+**store 账目（全部已提交）**：跑 2 落 225 条新记录（147 新文法重录产出＋
+78 条 §7 R3 孤儿——旧代码 jEdit 会话并发写入，无污染，迁移时清）
+（`95d8f799`）;跑 3-4 落 `7:0` 的 AoA 成果＋17 个 store 的延迟压实
+（逐店核对无损）（`f27f25c9`）。**Phi_Test 路径上的键控义务重录实质已随
+验证完成**;`Phi_Examples`（含 Matrix_Oprs 长尾）仍未重录。
+
+**验证判据的作者改裁**：§6 第 3 步原定"到 `Phi_Examples`＋`Phi_Test`＋
+`Phi_Syntax_Constraint_Test`"，作者 2026-08-21 改裁为"编译到 `Phi_Test`
+即算验证通过"。`Phi_Examples` 与 `Phi_Syntax_Constraint_Test` 的编译并入
+后续重录阶段。
