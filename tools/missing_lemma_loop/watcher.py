@@ -67,8 +67,9 @@ REPL_PORT = 6666
 # a 127.0.0.1-bound socket would refuse it).
 REPL_START_CMD = ("./contrib/Isa-REPL/repl_server.sh 0.0.0.0:6666 "
                   "MathBench_Prover /tmp/repl_outputs -o threads=10 -o document=false")
-# Default address AoA's RPC layer connects to when the RPC_Host env var is
-# unset (contrib/Isabelle_RPC/Tools/RPC.ML:74-75). The watcher OWNS this host:
+# Address the watcher pre-launches the RPC host on and exports as RPC_Host.
+# (Isabelle_RPC has had no default address since 0.4.0 -- with RPC_Host unset each
+# Isabelle would spawn its own ephemeral host instead.)  The watcher OWNS this host:
 # it pre-starts it with AOA_MISSING_LEMMA_SURVEY in its environment (用户方案
 # 2026-06-11) so the lazy-spawn race ("whichever Isabelle process reconnects
 # first donates its env") can never decide the survey switch.

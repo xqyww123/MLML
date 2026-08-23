@@ -15,6 +15,10 @@ The AoA agent itself executes in the SHARED `IsaMini.AoA` RPC host on the login
 node, which is started SEPARATELY by the operator (NOT by this script); every fleet
 REPL server must have `RPC_Host` pointing at it. This script owns only the REPL
 fleet — exactly like premise-extraction, which likewise never starts an RPC host.
+Since 0.4.0 the operator really must pre-launch it: a set `RPC_Host` is external-only,
+so Isabelle never launches there and errors out if nothing is listening. (Leaving
+`RPC_Host` unset is the other option — then each REPL gets its own ephemeral host,
+bound to that REPL's lifetime, and no login-node host is involved.)
 
 Concurrency per server = the csv's `num-evaluator` (the AoA workload matches the
 agent evaluators). Cache is bypassed on the ML side (AoA_read_proof_store /
@@ -525,8 +529,8 @@ async def learn(args):
 async def main_async():
     args = parse_args()
     # Bring up the REPL fleet (CLUSTER=slurmx -> slurm nodes on the SESSION heap).
-    # The shared IsaMini.AoA RPC host is NOT started here — the operator runs it on
-    # the login node and every fleet REPL points RPC_Host at it.
+    # The shared IsaMini.AoA RPC host is NOT started here — the operator pre-launches
+    # it on the login node and every fleet REPL points RPC_Host at it.
     await launch_servers()
     await learn(args)
 

@@ -479,30 +479,140 @@ directly through `Infra_Filter.gen_infra_filters`), to be fixed **after** this
 migration, since fixing them means re-enumerating and re-interpreting the
 affected theories, which costs LLM budget.
 
-- **`has_class_variant` infers "L is a type class" from the string `_class`.**
-  `Class.is_class thy "Ring.cring"` is false — there is no type class named
-  `cring` in the image — yet `Elliptic_Locale.cring_class.pdouble` exists,
-  because `HOL/Decision_Procs/Algebra_Aux.thy:286` writes
-  `interpretation cring_class: cring …` with a human-chosen prefix. The rule
-  therefore deletes the general locale constant and keeps the specialization,
-  taking all 20 `Elliptic_Locale.cring.*` facts with it. Fix: ask
-  `Class.is_class`, and derive the class prefix with `Class.class_prefix`
-  (`= Logic.const_of_class o Long_Name.base_name`), the very function
-  `class_declaration.ML:295` uses to create the name path. **This fix does not
-  bring the type-class templates back** — excluding the locale-level twin of a
-  genuine class is the rule's intended behaviour, and only ~500 of the 55,679
-  dangling references are misfire victims.
-- **The `Abs_`/`Rep_` base-name test hits locale predicates.** Intended for
-  typedef morphisms, it fires on the predicate constant `Abs_Int1.Abs_Int`, so
-  7 of that locale's 9 facts die and only the two `.cong` rules survive. Fix:
-  ask `Typedef.get_info_global` instead of the name.
-- **An infra session poisons other sessions transitively.** `EC_Common` is not
-  infrastructure, but four of its ancestors are in `HOL-Decision_Procs`, so
-  every fact mentioning `Algebra_Aux.of_integer` / `of_natural` / `m_div` is
-  dropped: of its 15 `field` lemmas the filter rejects 12, and the store holds
-  exactly the other 3. Fix: separate "this entity does not deserve a record"
-  from "any theorem mentioning it is worthless" — today one rule does both,
-  through `Term.exists_Const is_internal_constant`.
+**Rewritten 2026-08-19.** The first two entries stand as measured, and 8.2's fix
+is now approved. The third entry was misdiagnosed: what it called a defect is
+documented, intended behaviour, and the real fault is one input feeding it.
+
+### 8.1 `has_class_variant` infers "L is a type class" from the string `_class`
+
+`Class.is_class thy "Ring.cring"` is false — there is no type class named
+`cring` in the image — yet `Elliptic_Locale.cring_class.pdouble` exists,
+because `HOL/Decision_Procs/Algebra_Aux.thy:286` writes
+`interpretation cring_class: cring …` with a human-chosen prefix. The rule
+(`infra_filter.ML:322-337`, consumed at `:359`) therefore deletes the general
+locale constant and keeps the specialization, taking all 20
+`Elliptic_Locale.cring.*` facts with it.
+
+**Fix**: ask `Class.is_class`, and derive the class prefix with
+`Class.class_prefix` (`= Logic.const_of_class o Long_Name.base_name`), the very
+function `class_declaration.ML:295` uses to create the name path.
+
+**This fix does not bring the type-class templates back** — excluding the
+locale-level twin of a genuine class is the rule's intended behaviour, and only
+~500 of the 55,679 dangling references are misfire victims.
+
+### 8.2 The `Abs_`/`Rep_` base-name test hits locale predicates
+
+`infra_filter.ML:361-362` classifies a constant as infrastructure when its base
+name starts with `Abs_` or `Rep_`. This is a pure string test, so it fires on
+anything spelled that way, and `Abs_` is a homonym: in
+`HOL/IMP/Abs_Int1.thy` it abbreviates **Abstract Interpretation**, not the
+abstraction morphism of a `typedef`.
+
+Measured: the locale predicate constant `Abs_Int1.Abs_Int` is classified
+infrastructure, and 7 of that locale's 9 facts die with it; only the two `.cong`
+rules survive. `locale Abs_Int` (`Abs_Int1.thy:35`) is the centrepiece of
+Nipkow's *Concrete Semantics* chapter on abstract interpretation: parameterised
+by a concretisation function `γ :: 'av ⇒ val set`, it defines the abstract step
+function `step'` and the abstract interpreter `AI c = pfp (step' ⊤) (bot c)`,
+and proves the soundness theorem `AI_correct : AI c = Some C ⟹ CS c ≤ γ⇩c C`.
+It is instantiated ten times by `global_interpretation` across
+`Abs_Int1_const.thy`, `Abs_Int1_parity.thy`, `Abs_Int2_ivl.thy` and
+`Abs_Int3.thy`. Its two derived locales `Abs_Int_mono` and `Abs_Int_measure`
+are hit by the same rule for the same reason.
+
+Locale predicate constants are to be kept: `infra_filter.ML:542` already treats
+every locale a user can see as not infrastructure, and the file has an explicit
+rule for **class** predicates (`:366`) and none for locale predicates. Dropping
+`Abs_Int1.Abs_Int` follows no policy — three of the six locale predicates in
+that one theory are dropped and three kept, decided by the first four letters of
+the name.
+
+**Fix (approved 2026-08-19)**: drop the name test and ask
+`Typedef.get_info_global` for the real `Rep_name`/`Abs_name`. The file already
+does exactly that at `:287` inside `quotient_typedef_infra`, so `:361-362` is an
+extra rule layered on top of an authoritative one, and it is the layer that
+overreaches.
+
+Not yet measured: how many constants `:361-362` classifies as infrastructure in
+`AFP-ALL-4`, and how that set splits between real `typedef` morphisms and
+homonym victims.
+
+### 8.3 The cascade is by design; the session-granularity marker is not
+
+`is_infra_thm` drops any theorem whose statement mentions an infrastructure
+constant (`infra_filter.ML:444`, `Term.exists_Const is_internal_constant`).
+**This is intended and documented** — `infra_filter.ML:52-53` states that a
+declared infrastructure constant is "filtered AND cascading to every theorem
+whose statement mentions it". It is also right: a theorem about genuine
+machinery is noise in retrieval, because the agent has no record of the
+machinery and should not touch it. An earlier revision of this section proposed
+separating the entity judgement from the theorem judgement; that would have
+broken a correct design and is withdrawn.
+
+The fault is one of the inputs. `is_infra_const'` mixes two kinds of judgement:
+
+- **intrinsic** — decided by what the constant *is*: `Name_Space.is_concealed`,
+  `is_hidden`, `quotient_typedef_infra` (asks `Quotient_Info` and
+  `Typedef.get_info_global`), `pre_prefixes` (asks `BNF_FP_Def_Sugar`), and the
+  `Lifting.` / `BNF_Def.` / `Transfer.` / `ATP.` prefixes. The cascade over
+  these is sound.
+- **extrinsic** — decided by where the constant *lives*: `is_from_infra_theory`
+  (`:319-320`), fed by `infra_session_names = ["HOL-Decision_Procs"]` (`:26`)
+  and `infra_base_theory_names = ["Minilang"]` (`:38`).
+
+The two extrinsic markers differ only in granularity, and only the coarse one
+misfires. `Minilang` is per theory and accurate: `Minilang.thy` is entirely
+proof-language plumbing (`TAG`/`GOAL`/`PROTECT`/`ISO_*`), so cascading over it
+is right. `HOL-Decision_Procs` is per session, and a session is a directory, not
+a semantic unit. `Algebra_Aux.thy` sits in that directory while being ordinary
+ring algebra — its header reads "Things that can be added to the Algebra
+library" and it imports `HOL-Algebra.Ring` — and it defines all three of the
+constants that caused the measured damage: `of_natural` (`:11`, the canonical
+embedding of the naturals into a ring), `of_integer` (`:14`) and `m_div`
+(`:318`, ring division). `EC_Common` is not infrastructure, but four of its
+ancestors are in this session, so of its 15 `field` lemmas the filter rejects
+12 and the store holds exactly the other 3.
+
+**Fix**: leave `:444` alone and lower the granularity of the extrinsic marker,
+from the session to the theory. The theory-by-theory classification, and the
+four decisions taken on it, are in
+`contrib/Semantic_Embedding/DECISION_PROCS_INFRA_THEORY_LIST.md`: of the 21
+theories in the session, 3 are ordinary mathematics and are kept
+(`Algebra_Aux`, `Polynomial_List`, `DP_Library`), 16 are machinery, 1 is an
+empty umbrella and 1 is a generated file that is never loaded. The session
+concept is retired: `infra_session_names` is emptied and `is_infra_session`
+deleted.
+
+**Reviewed and decided 2026-08-20.** A three-reviewer, two-round adversarial
+review settled the shape: identity is the theory **long name**, resolved per
+name space through `Name_Space.theory_name {long = true}` — which
+`infra_filter.ML:471-472` already does for methods. An earlier revision of this
+section claimed the per-entity matcher could only see base names; that was wrong
+and is withdrawn. Base-name matching was measured to destroy 259 existing store
+records (216 `Correctness_Algebras.Approximation`, 43
+`LinearQuantifierElim.Cooper`). Two further rulings change what "marked
+infrastructure" means: the marking is hoisted out of the `preserved_set` guard
+at `:351` so it stops being vetoed by datatype constructors, and
+`is_excluded_theory` loses its `is_infra_session` disjunct so a marked theory is
+still interpreted (recovering 10 proof methods and 1 `named_theorems` that pass
+the filter and were lost only to never being collected). All ten decisions, the
+rejected proposals with their reasons, and the order of work are recorded in
+`contrib/Semantic_Embedding/DECISION_PROCS_INFRA_THEORY_LIST.md`.
+
+**A third effect, measured after the above was written**: `is_infra_session`'s
+other caller is `is_excluded_theory` (`semantic_store.ML:1867`), whose own
+comment reads "Theories that are never interpreted". So `Algebra_Aux.thy` has no
+records because it was never interpreted, not because a filter rejected it, and
+every theory moved to `keep` must be interpreted at LLM cost — approved
+2026-08-19 for the three above. Per the 2026-08-20 review, `is_excluded_theory`
+does not consult the theory list at all: it keeps only `base_theory_ids`, so
+every theory in the cone is interpreted and the filter alone decides what gets a
+record. **`Infra_Filter.is_infra_theory` (`:41`) does have a caller** —
+`tasks/AoA-learning/learning.ML:123`; an earlier revision of this section said it
+had none, from a grep that missed `tasks/`.
+
+### The unmeasured part
 
 The visible symptom is only 505 dangling references. The real loss is unmeasured:
 an entity dropped where no instance of it happens to be stored leaves no trace at

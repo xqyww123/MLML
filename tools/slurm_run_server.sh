@@ -21,9 +21,10 @@ session="${SESSION:-MathBench_Prover}"
 
 # RPC host (host:port) the REPL's ML callbacks dial back to. Propagated from the
 # launching environment via srun's --export (see tools/slurm.py), mirroring how
-# SESSION is forwarded; falls back to the localhost default (matches the
-# contrib/Isabelle_RPC default) when unset.
-RPC_Host="${RPC_Host:-127.0.0.1:27182}"
+# SESSION is forwarded. Deliberately NOT defaulted: unset means each Isabelle
+# launches its own ephemeral host, bound to that process's lifetime. Setting it
+# means external-only -- Isabelle never launches there and errors out if nothing
+# is listening, so a stale default address turns every REPL into a hard failure.
 
 # Process each port/numproc pair
 while [ $# -gt 0 ]; do

@@ -90,7 +90,10 @@ def run_server(node, numprocss):
             session = os.environ.get("SESSION", "MathBench_Prover")
             # RPC host (host:port) the compute-node REPL's ML callbacks dial back
             # to. Forwarded explicitly like SESSION rather than trusting implicit
-            # --export=ALL; defaults to the contrib/Isabelle_RPC localhost default.
+            # --export=ALL. NB Isabelle_RPC has had no default address since 0.4.0,
+            # and a set RPC_Host is external-only -- so the 127.0.0.1:27182 fallback
+            # below only works if something is already LISTENing there ON THE COMPUTE
+            # NODE. Export RPC_Host to the operator-launched host before calling this.
             # Validated once up front in run_servers (fail-fast in the main thread).
             rpc_host = os.environ.get("RPC_Host", "127.0.0.1:27182")
             # --time default 720h (30d): a multi-round missing-lemma loop can run
