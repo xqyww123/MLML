@@ -283,7 +283,30 @@ Useless for this design, since the display step is already free. Kept only in
 case some future consumer needs an accessibility test where no `extern` is
 already running.
 
-### The implementation, in `contrib/Isa-Mini/IsaMini/AoA/model.py`
+### The implementation, in `contrib/Isa-Mini/IsaMini/AoA/model.py` — DONE
+
+Written 2026-08-23 in `semantic_knn_counted`. Five edits plus one guard:
+
+- `k_fetch = max(k + 1, int(k * 1.15))`, computed once, used at all **three**
+  truncation sites — `store.lookup(query, k_fetch, …)` (vector branch),
+  `entries[:k_fetch]` (pattern-only branch), `scored_recs[:k_fetch]` (the
+  experience merge). The `exact_name` branch has no truncation and gets none.
+- `_retrieve_entity` → `_retrieve_entity_with_diagnostics`, so the per-entity
+  diagnostic is available; `info_by_idx` is unchanged.
+- The drop: `info[0].unicode.startswith("??.")` or `info is None`. **On every
+  path, `exact_name` included** (ruled 2026-08-23) — a name the agent cannot
+  write is useless however it was asked for.
+- `EXPERIENCE` records are untouched: `ent_idx` already excludes them, they never
+  reach `retrieve_entity`, and they can never carry `??.`.
+- Dropped count and per-entity diagnostics go to `logging.getLogger(__name__)`,
+  **not** into the agent's result text.
+- **The cap is conditional and the drop is not.**
+  `cap = k if exact_name is None else len(scored_recs)`. A first version capped
+  unconditionally at `k`, which would have truncated an `exact_name` bundle
+  expansion — that path never over-fetched and legitimately returns more than `k`
+  members. That was a regression I introduced and removed.
+
+### The original sketch, for reference
 
 ```
 1. :2354  take  max(k + 1, int(k * 1.15))  instead of k
@@ -331,6 +354,243 @@ Note the severity is asymmetric: `universal_key_and_name_of`
 does resolve — so the name half is the wrong *form*, not a mis-citation risk.
 `rec.expr` is the real staleness: it was pretty-printed at interpretation time in
 a different theory context.
+
+## Requirement 1 — live re-rendering: the design, settled 2026-08-23
+
+### The essence
+
+`IsaMini.retrieve_entity` is the ONE callback of thirteen that hard-codes "my
+argument is a Minilang state id". The other twelve all take a **`context_unpacker`**
+and let the caller decide where the context comes from. Make this one conform,
+and the problem disappears — no shared helper, no duplicated callback record.
+
+### What was discovered, and what it overturns
+
+**`Agent_Server.query_by_name` has ZERO callers in ML.** Declared at
+`agent_server.ML:131`, defined at `:2152`, and nothing in any `.thy` or `.ML`
+invokes it — so the Python RPC `IsaMini.query_by_name` (`toplevel.py:65-73`)
+never fires. That path is dead today. **The user ruled 2026-08-23 that it must
+be fixed anyway.**
+
+The live by-name caller is `retrieval.py:1002` — the `Head <const>` line of an
+`exact_term` query — and it already passes `ctxt=ml_state.name`, a Minilang state
+id. So the earlier diagnosis ("the obstacle is that the RPC caller has only a
+`Context.generic`") described a real obstacle on a path nobody walks.
+
+**A refactor was written and then reverted.** It extracted the ~100-line renderer
+into a helper `retrieve_entities_in ctxt entities` and planned two callback
+records over it. That is a bespoke solution to a problem this codebase already
+solves generically, and it was reverted (`git diff` on `agent_server.ML` is
+empty; backup at `scratchpad/agent_server.ML.bak`). **Do not re-derive it.**
+
+### The mechanism, verified from source
+
+`contrib/Isabelle_RPC/Tools/context.ML:4-6` states the pattern: every callback
+generator takes a `context_unpacker`, a msgpack unpacker yielding a
+`Context.generic`. Two implementations:
+
+```sml
+(* Tools/Universal_Key.ML:255-257 *)
+fun static_context_unpacker (ctx: Context.generic) : context_unpacker =
+  fn src => let val (_, src') = MessagePackBinIO.Unpack.unpackUnit src
+            in (ctx, src') end
+
+(* agent_server.ML:734-739 *)
+val agent_context_unpacker : Context_Callbacks.context_unpacker =
+  fn src => case unpackOption unpackString src of
+              (NONE, src')     => (Context.Proof ctxt, src')
+            | (SOME sid, src') => (Context.Proof (Minilang.context_of (get_state sid)), src')
+```
+
+Both consume exactly one msgpack value in the ctxt slot, and `None`/nil is legal
+for both.
+
+**The load-bearing fact that makes the search path zero-risk**
+(`contrib/Performant_Isabelle_ML/contrib/mlmsgpack/mlmsgpack.sml:902-903`):
+
+```sml
+fun unpackOption u ins = (u >> SOME || unpackUnit >> (fn () => NONE)) ins
+```
+
+It tries `u` first. So a **plain** msgpack string still decodes to `SOME s`.
+`model.py:2418` sends `(self.name, args)` with `self.name` a bare `str`; under
+`agent_context_unpacker` that decodes to `SOME sid` → `get_state sid` → exactly
+today's context. **The schema changes; the wire bytes and the behaviour of the
+search path do not. Python needs no change there.**
+
+### Which arg_schema changes, and which does not
+
+Two different ones, in opposite directions — an earlier note conflated them:
+
+| | changes? | why |
+| --- | --- | --- |
+| `IsaMini.retrieve_entity`'s arg_schema (**callback**, Python→ML) | **YES** | `unpackPair (unpackString, …)` → `unpackPair (ctxt_unpack, …)`. This *is* the mechanism. |
+| its wire format for the existing caller | no | `unpackOption` accepts a bare string; Python keeps sending `self.name` |
+| `IsaMini.query_by_name`'s arg_schema (**command**, ML→Python) | **NO** | `static_context_unpacker context` fixes the context at callback-construction time from the `context` that ML's `query_by_name` already receives. Decided 2026-08-23 not to extend it: the only reason would be letting one ML call pick a different context, and nothing needs that. |
+| `query_by_name`'s callback list | add one entry | `make_retrieve_entity_callback su` |
+
+### The four steps
+
+**Step 1 — turn `retrieve_entity_callback` into a generator.**
+Currently a `val` at `agent_server.ML:890`, whose `function` opens with:
+
+```sml
+        function = (fn (state_id, entities) =>
+          let val s0 = get_state state_id
+              val ctxt = Minilang.context_of s0
+              val thy = Proof_Context.theory_of ctxt
+```
+
+Becomes `fun make_retrieve_entity_callback ctxt_unpack = { … }` with
+`arg_schema = unpackPair (ctxt_unpack, unpackList (unpackPair
+(Universal_Key.unpack_entity_kind, unpackString)))`, `ret_schema` unchanged, and
+
+```sml
+        function = (fn (gctx, entities) =>
+          let val ctxt = Context.cases Proof_Context.init_global I gctx
+              val thy = Proof_Context.theory_of ctxt
+```
+
+**The remaining ~100 lines of the body change not at all.** Verified by grep over
+`:898-1006`: the body captures exactly ONE name from the enclosing scope,
+`get_state`, and that is the name being removed. (`check_criterion`,
+`simp_rule_net`, `intro_rule_net`, `elim_rule_net`, `budget`, `driver`, `send`,
+`recv` — all zero hits.) The body ends at `:1006`:
+`in map (fn e => the_default (NONE, NONE) (try retrieve e)) entities end),`.
+
+**Step 2 — the AoA command uses it with the agent unpacker.**
+`make_retrieve_entity_callback agent_context_unpacker`, where
+`agent_context_unpacker` is at `:734`. Behaviour identical to today.
+
+**Step 3 — `query_by_name` installs it with the static unpacker.**
+At `agent_server.ML:2152-2166` the command currently carries one callback:
+
+```sml
+    val su = Context_Callbacks.static_context_unpacker context
+    ... callback = [Universal_Key.make_universal_key_callback su],
+```
+
+becomes
+
+```sml
+    callback = [Universal_Key.make_universal_key_callback su,
+                make_retrieve_entity_callback su],
+```
+
+**Step 4 — Python actually uses it.**
+`retrieval.py:913-949` `_query_entity_core` currently does
+
+```python
+rec = Semantic_DB[uk]
+if rec is not None: rec = apply_live_name_if_member(rec, live_name)
+_format_record(buf, f"{rec.kind.label} {rec.name}" if rec is not None else …, rec)
+```
+
+and `_format_record` (`:954-970`) prints `trunc_expr(rec.expr)` and
+`rec.interpretation`. Change it to call `IsaMini.retrieve_entity` with
+`(ctxt, [(kind, name)])` — `ctxt` is the parameter it already receives (a state
+id from `retrieval.py:1002`, `None` from `toplevel.py:72`, and the static
+unpacker eats nil) — and render the **returned** short name and expression, while
+keeping `rec.interpretation` for the English.
+
+**Read `contrib/Semantic_Embedding/DYNAMIC_MEMBER_NAMING_PLAN.md` §2.1 first.**
+`retrieval.py:919-923`'s comment says the restraint in `apply_live_name_if_member`
+(substituting the live name only for invented collection-member names) is
+deliberate and cites that plan. Answer its reasoning rather than ignoring it.
+
+### IMPLEMENTED 2026-08-23 — `Minilang_AoA` builds clean
+
+The placement question resolved itself: a new top-level
+`local open MessagePackBinIO.Pack MessagePackBinIO.Unpack in … end (*local*)`
+block sits just **before** `fun raw_AoA`, inside `structure MiniLang_Agent_AoA`
+(so both use sites see it; the signature does not export it, which is fine —
+there are no external callers).
+
+**The "body captures exactly ONE name" verification was wrong twice.** Besides
+`get_state` (removed by the redesign), the body also captured:
+
+1. `abbreviations_in_term` — self-contained (parameters only, library calls
+   only); moved verbatim into the same top-level block.
+2. `thm_roles` — depends on three iNet rule tables built once per AoA run from
+   the run's init-time context (`simpset_of ctxt`, `Classical.dest_decls ctxt`)
+   as a deliberate cache. Resolved by lifting the whole cluster into a top-level
+   `fun make_thm_roles ctxt = … fn thms => …` and giving the generator a second
+   parameter: `make_retrieve_entity_callback ctxt_unpack thm_roles`. raw_AoA
+   keeps its per-run cache (`val thm_roles = make_thm_roles ctxt`, TODO comment
+   kept in place); `query_by_name` builds one per call from its `context` via
+   `Context.cases Proof_Context.init_global I`. Semantics unchanged on the AoA
+   path: the role tables still reflect the init-time context, not the
+   per-invocation one.
+
+The four steps landed as designed. Python side:
+
+- `model.py`: `_retrieve_entity_with_diagnostics` body extracted to module-level
+  `retrieve_entities_with_diagnostics(connection, ctxt, entities)`; the method
+  delegates with `ctxt=self.name`. Wire format unchanged (bare string decodes
+  as SOME under `unpackOption`).
+- `retrieval.py` `_query_entity_core`: after the guarded
+  `apply_live_name_if_member`, one extra call
+  `retrieve_entities_with_diagnostics(connection, ctxt, [(tag, live_name)])`;
+  when it returns info, the heading shows the live externed short name and the
+  expression shows the live-rendered propositions/type (per-item `trunc_expr`,
+  newline-joined); `rec.interpretation` stays the stored English. When it
+  returns None (kind without a retrieve branch, entity gone), the old stored
+  rendering is the fallback. `live_name` is passed, not the agent's `name`, so
+  the direct branch and the short-name retry branch normalize identically.
+- `_format_record` gained an optional `expr` override so a live expression can
+  show even when there is no semantic record.
+
+**One deliberate small choice, flagged for review**: kinds whose live expression
+list is empty — types, classes, locales (`retrieve` returns `[]` for them) —
+keep the stored `rec.expr`. The alternative (show nothing) loses information and
+the callback simply has no renderer for those kinds.
+
+Verified: `isabelle build -d . -d contrib/Semantic_Embedding Minilang_AoA`
+passes (2026-08-23); both Python modules import clean. NOT yet exercised at
+runtime — no live AoA query or `query_by_name` RPC has been run against the new
+code; a running REPL server must be restarted to pick up the `.ML` change.
+
+## Requirement 2 — DONE, and what is left of it
+
+Implemented in `model.py` (see the section above for the exact edits).
+`exact_name` **is** included in the drop, ruled 2026-08-23; the *cap* is still
+conditional (`cap = k if exact_name is None else len(scored_recs)`) because that
+path never over-fetched and a bundle expansion legitimately returns more than k.
+
+**A proposal that was raised and rejected**: warning the agent when an
+`exact_name` lookup returns empty because its one hit was dropped. Rejected
+because the warning would have been misleading. `Name_Space.extern_if`
+(`name_space.ML:295-315`) already tries the fully qualified spelling without the
+uniqueness requirement as its last fallback; `??.` means **no** spelling resolves
+to the entity here, not "the short name is shadowed, try the long one". There is
+no action the agent could take differently, so there is nothing to tell it. The
+per-entity diagnostic still goes to the log, which is for humans.
+
+## State at 2026-08-23, before compaction
+
+**Committed** (superproject `5152e39`, `aa07a03`; `Semantic_Embedding`
+`dd22e1b`, `ba1e1a1`; `Isabelle_RPC` `352192a`): this plan's earlier revisions,
+`THEORY_HASH_REKEY_PLAN.md` §8 rewritten as a pointer, the integrated
+`INFRA_FILTER_REWORK_PLAN.md`, the infra-filter instrumentation, the SKILL fixes.
+
+**Uncommitted and mine**: `contrib/Isa-Mini/IsaMini/AoA/model.py` (+52 −5,
+requirement 2, syntax-checked, not run) and this file. Backups in the scratchpad:
+`model.py.bak`, `agent_server.ML.bak`,
+`INFRA_FILTER_REWORK_PLAN.pre-integration.md`.
+
+**Uncommitted and NOT mine** — do not sweep in: `contrib/Isa-Mini`'s
+`driver_openai_api.py` and `translator`, `AOA_CLAUDECODE_DRIVER_SURROGATE_BUG.md`,
+`data/*`, and the several root `*_PLAN.md` files belonging to other sessions.
+
+**Permissions in force**: `isabelle build` is approved **for the sessions this
+work needs** (granted 2026-08-23; earlier a narrower grant covered
+`contrib/_se_check/SE_Check` only). Never add `-c` or `-f`. `isabelle-mcp` is
+also available for compile-checking. Note that `SE_Check` does **not** cover
+`contrib/Isa-Mini/Agent/agent_server.ML` — its session is
+`HOL + Isabelle_RPC + Performant_Isabelle_ML` and compiles only
+`Semantic_Embedding/Tools/*`. Checking `agent_server.ML` needs the
+`Minilang_AoA` chain, whose heaps (`Minilang`, `Minilang_Translator`) are in the
+stale list and `Minilang_AoA` was never built.
 
 ## Still open
 
