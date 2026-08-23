@@ -428,7 +428,10 @@ blob**：228 条键不在 HEAD（70 blob）＋59 条键在 HEAD 但文本已变�
      tick=3 的地址 `Quicksort.qsort/2/8/8/1`）、`Bucket_Hash.thy`（5 个 tick≥2
      地址）、`Dynamic_Array.thy`（3 个）；`Matrix_Oprs.thy` 现存 0 把负数键、
      不保证触发，不作证伪靶子。顺手记账（非判据）：该跑 mint 的不同键串数
-     vs 新增含 `:` 活键数，差额＝未落盘的 mint 数。
+     vs 新增含 `:` 活键数，差额＝未落盘的 mint 数。**反向证伪器（2026-08-23
+     评审补）**：led 与 holds_fact 两族的 tick 必须恒为 1（两站点铸键前必经
+     `next_ctxt`/`nth_child`，counter 恒新建）——表中出现 >1 即说明有 counter
+     被意外共享，是"值级构造必造新单元"被破坏的失败信号。
 7. **观察项（不设通过线，实测入账）**：
    - **异族陈旧命中的失败重放次数**：重录跑收不到（新旧文法不相交、全 miss），
      采集窗口是**迁移完成后的日常使用期长期登记**，分 L2／L1 两个计数。仪器：
@@ -491,7 +494,8 @@ blob**：228 条键不在 HEAD（70 blob）＋59 条键在 HEAD 但文本已变�
    - `Phi_System/library/phi_type_algebra/deriver_framework.ML:1293`：
      `Phi_ID.named`＋`:` 改写。
    另两处**复核登记**（行为在不可达路径上变化、编译器不报警）：
-   `Phi_Semantics/PhSm_Ag_Base.thy:652`（哨兵不再匹配 `Meta_Opr` 分支，落到
+   `Phi_Semantics/PhSm_Ag_Base.thy:652`（旧路：打断→`err_assignment`，
+   初始→递归下探；哨兵不再匹配 `Meta_Opr` 分支，落到
    通配——经质证两哨兵在该路不可达，无害）；
    `Phi_Semantics/library/generic_element_access.ML:344-349`（哨兵恒在栈底，
    结论不变）。
@@ -610,6 +614,20 @@ session；`Phi_Test` 靶子在编译面外的问题。
 **设计演化**：A → B → C → **D**。助手五次错误由作者追问纠正并记档：块空间
 重叠的错误模型；rev 1 文法复活 K3；"K3 不可实例化"猜想被驳；"可实例化"直接
 当"必须文法杜绝"且修法未批先落；led 层次归属写反（rev 3→rev 4）。
+
+**落地后代码评审（2026-08-23，4 评审＋2 质证，Opus）**：对 `bc6022d7`＋
+`43c4d1c` 的 18 条意见，质证后 11 条被驳杀（7 条钻牛角尖：`Initial_Statement`
+改值——前提为假且改了才是唯一行为变化；`ecfg` 绑定器——锁不住任何东西；
+holds_fact 提升 mint——序号结构性恒 0 且实参自右向左求值使前提反转；等；
+3 条与作者已有裁决相抵：去导出 `set_construct_v`（D-1 逐字裁过、§5.4(iii)
+单测需要）、改名 `expr_id`（§6"保留"）、`set_construct` 加后缀（§6"名不变"
+且前提数错））。**作者裁决**：评审头条"`type ID` 透明归属致表示外泄、可伪造
+ID"（三方 Poly/ML 实测属实）**被作者否决**——"并不需要追求如此完美的封装；
+甚至如有必要，用户 hack 一下也不是不可以"，`type ID` 保持缩写＋透明归属，
+datatype 包装不做；`key_spec` 的构造子级不透明经实测为真、维持。幸存并落地
+的全部为注释/文档级：`""`＝匿名短语、`fun init _` 刻意性半行、哨兵承重注释
+补结构体拷贝、R4 跨命令 counter 寿命半句（post-app-handlers）、§6 登记补
+旧路 4 字、§5.6 反向证伪器。"放宽规约换优雅"的四条提案全军覆没。
 
 ## 10. 会话交接与执行准备（2026-08-20，compact 前写就）
 
