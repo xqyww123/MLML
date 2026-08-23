@@ -822,7 +822,6 @@ Abstract-Hoare-Logics.PsHoareTotal
 Abstract-Hoare-Logics.PHoareTotal
 Abstract-Hoare-Logics.HoareTotal
 Sigmoid_Universal_Approximation.Sigmoid_Universal_Approximation
-HOLCF.HOLCF
 HOLCF.README
 HOL-SPARK-Manual.Complex_Types
 HOL-SPARK-Manual.Reference
@@ -959,7 +958,6 @@ Multitape_To_Singletape_TM.Multi_Single_TM_Translation
 Completeness_Decreasing_Diagrams_for_N1.Main_Result_DCR_N1
 Completeness_Decreasing_Diagrams_for_N1.DCR3_Optimality
 Allen_Calculus.nest
-Restriction_Spaces-HOLCF.Restriction_Spaces-HOLCF
 HOL-Decision_Procs.Decision_Procs
 Galois_Energy_Games.Natural_Galois_Energy_Game
 IMP_Compiler_Reuse.Compiler2

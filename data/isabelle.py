@@ -27,6 +27,21 @@ with open(f'{MLML_BASE}/data/theories.json', 'r') as f:
     # key: long name
     # value: {'deps':[long names], 'path':file_name}
     THEORIES = json.load(f)
+    # A `(global)` theory's canonical long name is bare (resources.ML,
+    # `literal_theory`), but the dump can also record the session-qualified
+    # alias `X.X` for the same file when the dumping session did not have the
+    # global registered.  Keep only the bare spelling, and rewrite deps that
+    # name the alias, so no downstream theory list can load one file twice
+    # under two names (the 2026-08-23 twin cleanup).
+    _aliases = {alias: bare for alias in THEORIES
+                if '.' in alias
+                and alias == f'{(bare := alias.rsplit(".", 1)[-1])}.{bare}'
+                and bare in THEORIES
+                and THEORIES[bare]['path'] == THEORIES[alias]['path']}
+    for _alias in _aliases:
+        del THEORIES[_alias]
+    for _info in THEORIES.values():
+        _info['deps'] = [_aliases.get(d, d) for d in _info['deps']]
     THEORIES_IN_FILE = {}
     for long_name, info in THEORIES.items():
         path = info['path']
