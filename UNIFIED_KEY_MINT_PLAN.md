@@ -749,5 +749,16 @@ Phi_System_Base，4 分钟）。R6 的级联失效因此成为"本就无 heap"�
 | §5.3 | **完成**：分类器全库跑通，1597 条活记录＝416 哈希＋125 旧 deriver＋830 旧语句路径＋93 新 deriver＋133 新语句路径，**零不合文法**；跨库同键异文 3 把（DynArr 双库已知重复） |
 | §5.4 | (i) 基线已存档（step0_baseline_inventory.tsv）；(ii) 五点名中已重录的 2 处：`PhiSem_Mem_C.thy:226` **PASS**（义务键 `op_load_mem/2/3/5/{0,1}/0:0` 地址与基线逐字吻合），`PhiTest_Arithmetic.thy:118` 旧世界无记录（义务当年被推理直接解决），按本节规则降级由 (iii) 覆盖；余 3 处待重录；(iii) **完成**：`Phi_ID_Unit_Test.thy`（存档于 ~/archive/unified-key-mint/）10 断言全过——匿名无键、path 内层在前、gen_name 拼法、mint 序号 0 起且按值 tick、构造必新建单元、nth_child 等式、named/no_key、construct 单次设置 |
 | §5.5 | **完成**：铸键站点收口枚举——3 处 `mint`＋1 处 `named`（deriver）＋2 处 `no_key`，无第七站点；`^ ":" ^` 拼接全仓仅 mint 内部与 deriver 前缀两处 |
-| §5.6 | **已重录部分完成**：133 把新语句路径键——109 精确命中基线地址＋19 把例外①（certified 打断搬回出生地址：全部在 PhiTest_Mem_C/test_ptr，同过程槽位整齐后移 2-3 格）＋5 把例外①②复合（带深层子分量），**零无法解释**；软对账：序号盈余 5 地址（全 PhiTest_Mem_C，`:1` 对旧 `~0`＝例外④）；tick 计数表仪器与三靶子待 Phi_Examples 重录跑 |
+| §5.6 | **已重录部分完成**：133 把新语句路径键——109 精确命中基线地址＋19 把例外③（含多个嵌入块的语句其块后键搜回出生地址：全部在 PhiTest_Mem_C/test_ptr，同过程槽位整齐后移 2-3 格＝块锚数；初报误标为①，经核 PhiTest_Mem_C 无打断形态 certified，已更正）＋5 把例外②③复合（带深层子分量），**零无法解释**；软对账：序号盈余 5 地址（全 PhiTest_Mem_C，`:1` 对旧 `~0`＝例外④）；tick 计数表仪器与三靶子待 Phi_Examples 重录跑 |
 | §5.7 | 待办：L1 计数行（Isa-Mini 一行改码，需批准）、certified 重执行探针（可在已重录的 PhiTest_Mem_C 上做）、基线登记 |
+
+**§5.7 certified 探针（2026-08-23，作者批准执行）——结果与一处方案内矛盾**：
+实测发现 §5.7 点名的 `PhiTest_Mem_C.thy` 5 处 certified **全部是 `❵ certified`
+形态**，而 §7 R4 自己写明该形态"走 Enter_Proof_Mode、不压哨兵、不在此列"——
+方案的靶子名单与 R4 的排除句相互矛盾。据此本次把探针改作**阴性对照**执行：
+对 :284 的 `❵ certified` 命令做两次编辑触发重执行，前后解码 store——
+**零新增键、零墓碑、零碰撞告警，store 字节未动，文件字节复原**（md5 对拍）。
+阴性对照通过：`❵` 形态确认不漂移。**阳性探针**（压 `Statement_Interruption`
+的打断形态）的最近靶子是 `Phi_StdLib/PhiStd_Loop.thy:60/:93`——该理论在
+未重录区（21 把旧语句键、4 blob），动它即触发其重录；阳性探针与其重录同批
+执行，届时把 §5.7 的靶子名单从 PhiTest_Mem_C 更正为 PhiStd_Loop。
