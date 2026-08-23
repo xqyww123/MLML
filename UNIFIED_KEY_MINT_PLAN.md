@@ -737,3 +737,17 @@ Phi_System_Base，4 分钟）。R6 的级联失效因此成为"本就无 heap"�
 `Phi_Syntax_Constraint_Test`"，作者 2026-08-21 改裁为"编译到 `Phi_Test`
 即算验证通过"。`Phi_Examples` 与 `Phi_Syntax_Constraint_Test` 的编译并入
 后续重录阶段。
+
+### §10.3 §5 验收进展（2026-08-23，作者指示提前执行可离线部分）
+
+作者另派专人处理挂钟闸门，此处不再列为本线前提。
+
+| 项 | 状态 |
+| --- | --- |
+| §5.1 | **追溯性完成**：验证四跑的追加记录离线核对，同跑内同键异文写入为零（守卫无告警对象）；正式判据（重录跑、靶 Quicksort/Matrix_Oprs）待 Phi_Examples 重录 |
+| §5.2 | 结构性等待（前提＝§4 规范化后的 warm 双跑） |
+| §5.3 | **完成**：分类器全库跑通，1597 条活记录＝416 哈希＋125 旧 deriver＋830 旧语句路径＋93 新 deriver＋133 新语句路径，**零不合文法**；跨库同键异文 3 把（DynArr 双库已知重复） |
+| §5.4 | (i) 基线已存档（step0_baseline_inventory.tsv）；(ii) 五点名中已重录的 2 处：`PhiSem_Mem_C.thy:226` **PASS**（义务键 `op_load_mem/2/3/5/{0,1}/0:0` 地址与基线逐字吻合），`PhiTest_Arithmetic.thy:118` 旧世界无记录（义务当年被推理直接解决），按本节规则降级由 (iii) 覆盖；余 3 处待重录；(iii) **完成**：`Phi_ID_Unit_Test.thy`（存档于 ~/archive/unified-key-mint/）10 断言全过——匿名无键、path 内层在前、gen_name 拼法、mint 序号 0 起且按值 tick、构造必新建单元、nth_child 等式、named/no_key、construct 单次设置 |
+| §5.5 | **完成**：铸键站点收口枚举——3 处 `mint`＋1 处 `named`（deriver）＋2 处 `no_key`，无第七站点；`^ ":" ^` 拼接全仓仅 mint 内部与 deriver 前缀两处 |
+| §5.6 | **已重录部分完成**：133 把新语句路径键——109 精确命中基线地址＋19 把例外①（certified 打断搬回出生地址：全部在 PhiTest_Mem_C/test_ptr，同过程槽位整齐后移 2-3 格）＋5 把例外①②复合（带深层子分量），**零无法解释**；软对账：序号盈余 5 地址（全 PhiTest_Mem_C，`:1` 对旧 `~0`＝例外④）；tick 计数表仪器与三靶子待 Phi_Examples 重录跑 |
+| §5.7 | 待办：L1 计数行（Isa-Mini 一行改码，需批准）、certified 重执行探针（可在已重录的 PhiTest_Mem_C 上做）、基线登记 |
