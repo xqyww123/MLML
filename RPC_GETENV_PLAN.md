@@ -395,7 +395,8 @@ Semantic_Embedding `6fd8827`、Isabelle_RPC `fa80547`。
 OpenAI base_url、K2 CHAT_COT_RETENTION、Chat 的 OPENAI_API_KEY 退路)→
 全部补声明并显式传参;ClaudeCode_Interactive 工厂缺 ENV_VARS(已挂)+
 tmux 主进程不吃注入(设计取舍:不把密钥写进磁盘上的启动脚本,已在注册点
-文档化);`bind_connection_env` 误置于通用基类会用 QWEN3_* 残值覆盖自定义
+文档化)——**该项已失效:ClaudeCode_Interactive 及整个 standalone 模式已于
+2026-08-24 删除(Isa-Mini `abf8f1f`,见 `AOA_SURROGATE_BUG_FIX_PLAN.md` §16.1)**;`bind_connection_env` 误置于通用基类会用 QWEN3_* 残值覆盖自定义
 子类的硬编码配置(实现越出了 §5.5.2 的说明范围)→ 下沉到 Qwen3_Reranker_8B;
 CLI 名单补 ANTHROPIC_SMALL_FAST_MODEL(实测 CLI 二进制 16 处引用,
 ANTHROPIC_MODEL 经查证非缺口);rpc.pyi 补 `_getenv_unavailable`;测试补
