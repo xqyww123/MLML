@@ -592,6 +592,74 @@ also available for compile-checking. Note that `SE_Check` does **not** cover
 `Minilang_AoA` chain, whose heaps (`Minilang`, `Minilang_Translator`) are in the
 stale list and `Minilang_AoA` was never built.
 
+## The 2026-08-24 review round — rulings and the second implementation pass
+
+A 2-turn adversarial review (two Opus 5 reviewers, two Opus 5 refuters) plus a
+runtime pass over the golden tests produced the following, all ruled by the
+owner on 2026-08-24 and implemented the same day:
+
+1. **`??.` suppression extends to the by-name path.** When the live externed
+   short name starts with `??.` (no spelling resolves here — extern's last
+   fallback already tried the fully qualified name), `_query_entity_core`
+   returns failure with `"<name>" is not accessible in the current proof
+   context.` and shows NOTHING of the entity, stored record included — the
+   same delete-don't-display policy as the search listing's drop (ruled
+   earlier for requirement 2; the owner confirmed the by-name path was simply
+   not discussed then). The Head-line caller consumes this through its
+   existing failure fallback (`Head <full head-constant name>`, bare);
+   the RPC returns the message with is_error. One implementation in the
+   shared core serves both entries; zero per-entry code.
+2. **The stored-expression fallback is kind-driven.** Exactly TYPE, CLASS,
+   LOCALE (the kinds whose ML `retrieve` branch has no expression renderer,
+   returning `[]`) fall back to the stored expression (their stored `expr` is
+   the declaring command's source text). Every other kind shows the live
+   result as-is — a live empty list (e.g. an empty dynamic collection) shows
+   as empty, never as the stored declaration.
+3. **The live name wins over §2.1's member-name guard on the live-rendered
+   branch.** `apply_live_name_if_member` moved into the fallback branch, the
+   only place its output is still read. Ruling recorded in
+   `DYNAMIC_MEMBER_NAMING_PLAN.md` §2.1 (blockquote after the by-name site).
+4. **The constant branch resolves with `Universal_Key.intern_declared`**
+   (now exported from UNIVERSAL_KEY), so a declared-but-shadowed constant
+   resolves, externs to `??.`, and lands in ruling 1's suppression instead of
+   silently leaking the stored rendering through the fallback. On the search
+   path this only changes the drop reason (unresolved → inaccessible).
+5. **Shape fixes, behavior-preserving:** `make_retrieve_entity_callback`
+   takes `mk_roles : Proof.context -> thm list -> string list` FIRST and the
+   context_unpacker LAST (peer convention); the roles table is built
+   `Lazy`ily per invocation from the unpacked context — raw_AoA passes
+   `(fn _ => thm_roles)` keeping its per-run init-time cache visible at the
+   call site, query_by_name passes `make_thm_roles` itself (cannot desync,
+   costs nothing for non-theorem queries). `Context.proof_of` replaces the
+   spelled-out `Context.cases Proof_Context.init_global I`. The lifted block
+   moved above raw_AoA's doc comment. `_format_record` takes the live
+   expression LIST and renders via `print_expression_list` (one truncation
+   site, search-consistent bullets). The requirement-2 drop uses one
+   container (`info_by_idx` holds exactly the survivors; `cap = k … else
+   None` sliced as `kept[:cap]`). The live-render RPC call sits inside the
+   error contract (IsabelleError → failure return).
+
+**Reviewer findings refuted in the adversarial turn** (do not re-raise): the
+by-name path dumping large fact bundles (bare multi-thm names error at the
+universal-key step; collections cap at 3+sentinel); the discarded per-entity
+diagnostic (out-of-range errors are raised upstream, the slot is dead here);
+THEOREM_COLLECTION's member-props expression being a new deviation (it matches
+the search path and predates the lift); dropping the stored fallback entirely
+(loses type/class/locale's only expression); `K []` for query_by_name's roles
+(would mislabel every theorem `[manual]` if the shared renderer is ever
+reused).
+
+**Runtime verification (2026-08-23/24, REPL `Minilang_AoA_REPL` + golden
+tests):** all schema/wire/drop tests pass (`RetrieveFact`, `RetrieveFact2`,
+`QueryExactNameOp`, …). `UnfoldSyntax`'s single-line diff IS requirement 1
+working (`Head constant Test_UnfoldSyntax.my_forall` → `Head constant
+my_forall: <live type>`); golden update approved 2026-08-24. Five KNN goldens
+drift deterministically because the store's vectors were re-embedded after
+the July baselines (scores never touch this work's code); re-baselining
+approved 2026-08-24. `Query_BundleBareName`/`Query_BundleTruncate` broke from
+the OTHER session's committed member-naming change (fbc8dd6) — their goldens,
+not touched here.
+
 ## Still open
 
 1. **Does requirement 1 cover the third by-name path?**
