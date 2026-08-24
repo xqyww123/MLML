@@ -49,3 +49,6 @@
 [submodule "contrib/isabelle-packaging-ci"]
 	path = contrib/isabelle-packaging-ci
 	url = git@github.com:xqyww123/isabelle-packaging-ci.git
+[submodule "contrib/isasearch-web"]
+	path = contrib/isasearch-web
+	url = git@github.com:xqyww123/isasearch-web.git
