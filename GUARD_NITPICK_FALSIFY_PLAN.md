@@ -27,31 +27,41 @@ reasoners.ML:974`）的"30ms 速证之后"部分**整体替换**为并行竞速�
 
 ### 1.1 总体形状
 
+**（2026-08-25 修订：竞速机器层整体由 Performant_Isabelle_ML 的竞速引擎
+`Race.race`（`library/race.ML`）接管——先到认领胜出、并发认领取最小下标、
+败者及时裁撤、每选手如实出口、全路径 join 屏障、中断穿透。PLPR 只保留
+选手与守卫策略两层。）**
+
 ```sml
 timed_tac 30ms (auto_search_tac ctxt) ORELSE (fn th =>
-  let val rconv_refuted = Synchronized.var "guard_race.rconv" false
-      val racers = (* P-auto 必须居首（§2.2 依赖 + 并列仲裁偏向 Proved） *)
-        P_auto :: R_conv rconv_refuted :: map R_nitpick subgoals
-      val run = if Future.relevant racers then Par_List.get_some else get_first
-  in case run run_racer racers of
-       SOME (Proved th') => Seq.single th'
-     | SOME Refuted      => Seq.empty        (* 静默跳过，与现状同结局 *)
-     | NONE => if Synchronized.value rconv_refuted then Seq.empty
-               else fail                      (* 现状失败出口；将来 LLM judge 挂此 *)
+  let val pauto_finished = Synchronized.var "guard_race.pauto_finished" false
+      val refuted_by = Synchronized.var "guard_race.refuted_by" (NONE: string option)
+      val racers = (* P-auto 必须居首：并发认领取最小下标 + 串行按表序，皆偏向 Proved *)
+        [P_auto ..., R_conv ...]  (* T2 追加 map R_nitpick subgoals *)
+        |> map (fn (name, body) => (name, fn () => Timeout.apply budget body ()))
+      val {winner, exits, forked} = Race.race racers
+  in case winner of
+       SOME (name, Proved th')   => Seq.single th'
+     | SOME (_, Refuted refuter) => Seq.empty  (* 静默跳过；归名在 payload，胜者名可能只是转发信使 *)
+     | NONE => (case Synchronized.value refuted_by of
+                  SOME refuter => Seq.empty    (* 赛后记录命中 *)
+                | NONE => fail)                (* 现状失败出口；将来 LLM judge 挂此 *)
   end)
 ```
 
-- `datatype race_result = Proved of thm | Refuted`；选手类型
-  `unit -> race_result option`——只在决定性结果时返回 SOME。
+- `datatype race_result = Proved of thm | Refuted of string`（携反驳者名）；
+  选手类型 `race_result Race.racer = string * (unit -> race_result option)`
+  ——只在决定性结果时返回 SOME。选手体自带 `Timeout.apply` 预算是引擎契约
+  的调用方义务。崩溃诊断赛后从 `exits` 扫出（`Race.Crashed`→diag 2）。
 - **子目标是选手表的一等公民**（评审 blocker 1 的修复）：每个守卫子目标一个
   R-nitpick 选手、各拿**完整**预算；目标项与变量形态在竞速前**一次性**算好共享
   （消除 §2 各选手重复计算与纪律分岔的可能）。~~并发封顶~~（**作者 2026-08-24
   裁定废除**：该条款系评审配套建议、未经作者单独裁决；依赖 future 工作线程池的
   天然上限即可，不设应用层封顶；若 T2/T5 实测出现队列挤占，凭数据重议）。
-- **并行降级自动化**（评审 major 6 的修复，非配置）：`Future.relevant racers`
-  为假（单工作线程等）时用 `Library.get_first` 按表序短路串行——单线程下的
-  "竞速"本来就该是短路串行，这是正确性不是选项。串行/并行裁决一致性列为 T3
-  性质测试。
+- **并行降级自动化**（评审 major 6 的修复，非配置）：由引擎承担——
+  `Race.race` 在入口用 `Future.relevant` 一次判定（无内部二次降级），为假时
+  按表序短路串行、语义与并行逐字一致（引擎测试电池 T7 钉死）；`forked` 字段
+  如实报告实选模式。串行/并行裁决一致性仍列 T3 性质测试（消费者侧对拍）。
 - 旧级联、`Falsified` 异常、`ORELSE0`（连同 `helpers0.ML:514–519` 的声明）、
   `Unsupported` 独立分支随替换**删除**。`ORELSE0` 不做惰性化修复也不独立先行
   ——它与 Pure `ORELSE` 同构且急切性在 Pure 是有意设计，直接消亡（评审 13）。
@@ -303,12 +313,95 @@ T 步的可达性分支删除）。
 - 评审否决、不再重提：deadline 式共享预算（破坏 §1.1 串行/并行裁决一致性）；
   "R-conv 无条件抢答"（会在空虚-H 守卫上把"通过"翻成"跳过"）；绕过 Nitpick
   模型重构（`codatatypes_ok` 参与 genuine 判定，不可绕）。
-- 挂起待 T2 再议：`pauto_finished` 旗标（P-auto 返回后允许 R-conv 直接
-  `SOME Refuted` 终场——不变式按构造保持，T1 收益≈0、T2 收益真实）；
-  自造 `Future.forks` 竞速引擎（本项目有 hand-rolled fork 既往教训）。
 - 挂起待 T5 实测再议：30ms 前置与 P-auto 判据统一（会剧增竞速触发频率）。
 
-待作者裁决：（无）
+已定（2026-08-25，第二轮对抗评审后作者逐项裁决）：
+- **关切一（两处调用线程裸跑代码加护罩）批准**：日志写入经局部辅助
+  `checked_io`（`Exn.capture_body` + `contains_interrupt` 重抛 + 否则 `diag 2`）
+  保护，`Path.explode` 提至臂顶、每场解析一次、失败即禁用本场日志；预计算
+  半边由 D6 结构性解决，无需单独护罩。
+- **D6 批准**：R-conv 预计算移入选手体内，选手无条件在场；`r_conv_racer`
+  返回 `racer`（非 option），`map_filter I` 消失；原"急切性决定选手表长度"
+  辩护注释删除（该耦合被认定为偶然而非收益）。代价记账：非 Trueprop 守卫
+  多付一次空 fork（罕见）；选手表恒两元使 forked 列变常量——与 D7 联动。
+- **`pauto_finished` 旗标批准（原挂起项，作者提前裁决并亲自补全为对称协议）**：
+  两个每场 `Synchronized` 旗标互为镜像——R-conv 找到反驳：先置
+  `rconv_refuted`、再读 `pauto_finished`，置位则 `SOME Refuted` 终场，否则照旧
+  只记录；P-auto 空手而归（正常跑完无果，超时/崩溃不置位）：先置
+  `pauto_finished`、再读 `rconv_refuted`，置位则转发 `SOME Refuted`。
+  **"先写自己、再读对方"的顺序承重**（store-then-load：两事件都发生时至少
+  一方必见对方，保证早终场；写反则存在双双扑空的交错）。裁决与赛终读记录
+  逐字相同，纯提前时序；不变式按构造保持。T1 收益≈0，T2（多选手）收益真实。
+- **`Refuted` 携带反驳者名**（`datatype race_result = Proved of thm |
+  Refuted of string`；记录变量升级 `string option` 存反驳者名）：P-auto 转发
+  时归名指向真正的反驳者，日志/摘要一律 `"refuted by " ^ 反驳者名`；顺带
+  单源化 "R-conv" 字面量（评审 B5 的归宿）。
+- **`recording_racer` 组合子否决**：其 `unit -> bool` 体类型在类型上禁止获胜，
+  与已批准的 pauto_finished（R-conv 条件合法获胜）不相容。
+- **自造竞速引擎批准（原挂起项转正）**：落地
+  `contrib/Performant_Isabelle_ML/library/race.ML`（signature-first，结构名
+  Race；每选手出口报告 Won/Gave_None/Timed_Out/Crashed/Cancelled、全模式真
+  短路、join 屏障、诚实模式报告；相关性判定只做一次、无二次降级；无并发
+  封顶承 D4）。由 agent 编写 + 两轮对抗评审迭代至无 blocker/major；根理论
+  `ML_file` 注册与 PLPR 集成均待引擎过审后另行请示作者。注：`Par_List.get_some`
+  的退化窗口经实测在作者环境不可达（`parallel_limit` 默认 0 且全仓库无人设置），
+  引擎的价值在真短路语义保证 + 每选手出口数据（服务 D7 的 exits 列）。
+  **已完工（2026-08-25）**：`race.ML` 342 行落地并通过完整迭代（编写→两轮
+  对抗评审→按合并工单重写→双 ACCEPT 验收→文档收尾）；14 项测试电池
+  （含平局不变式、取消路径 join 屏障、脱工人线程调用、确定性 Discarded、
+  内部中断隔离）多轮全绿。终版语义：模式一次判定如实报告；先到认领胜出、
+  并发认领取最小下标；单选手组 + 永不取消的父组作外部取消探针；六种出口
+  `Won/Gave_None/Timed_Out/Crashed/Cancelled/Discarded of 'a`，认领记录是
+  胜负唯一权威；选手体浮出中断三臂归因（本组已取消/调用线程被吸收的外部
+  取消/选手内部）；全路径 join 屏障；三条不可约残差成文。待作者：注册
+  `ML_file` 行 + SKILL/Readme 措辞、race.ML 提交、PLPR 换用引擎的集成时机、
+  `contains_interrupt` 三处合一的后续（删 reasoners.ML 副本需 PLPR ROOT 加
+  sessions）、测试理论从 scratchpad 迁入仓库（暂 parked）。
+
+已定（2026-08-25 晚，作者指示"更新计划以及代码"）：
+- **PLPR 换用竞速引擎立即落地**（不等 T2）：`(** race engine **)` 小节整体
+  删除（`run_racer`/`run_race`/本地 `contains_interrupt`/`type racer`），
+  由 `Race.race` 接管；已批的 D6、pauto_finished 对称协议、`Refuted of string`、
+  关切一护罩（`checked_io` + 臂顶解析日志路径）在同一次重写中一并落地；
+  关切三的内容（`p_auto_racer` 入 Racers 小节、`search_solved` 共享判据、
+  居首契约注释）与关切四的代码侧杂项（小节标题大写、ctxt/ctxt0 方向注释、
+  import/export 分支强弱注释、signature 虚拟时间/墙钟句）随重写自然落地。
+- 注册与接线（文件编辑已做，提交另请示）：`Performant_Isabelle_ML.thy` 加
+  `ML_file race.ML`；Readme/SKILL 首句放宽为 "data structures and concurrency
+  utilities" + Race 条目；PLPR ROOT sessions 加 `Performant_Isabelle_ML`；
+  PLPR.thy imports 加 `Performant_Isabelle_ML.Performant_Isabelle_ML`。
+  **heap 后果**：Performant_Isabelle_ML → Auto_Sledgehammer → Minilang →
+  Minilang_AoA → Phi_System_Base 全链失效，验证前需作者跑/授权一次 build。
+- 集成后立即再跑一轮对抗代码评审（作者指示）。
+
+已定（2026-08-25 深夜，集成后评审收口，作者三连批准：修复方案 / build 授权 /
+提交）：
+- 集成评审终榜（Opus 5 两轮 + 交叉互驳）：正确性与并发本体零 blocker 零
+  major；唯一 major 是文档三副本失同步（`.claude/skills/` 下 harness 真正加载
+  的那份漏更）。互驳战果：双旗标"依赖硬件内存序"的质疑被四步互斥反证驳倒
+  （`Synchronized.value` 同样上锁，协议无条件正确）；重复构造搜索器的性能
+  论证被驳倒（`addss` 在闭包内按次求值，属小常数）。
+- 修复全部落地：三份模块文档逐字节同步（description 行放宽、Race 条目改准
+  "最小下标胜、先到者终局" + Warning 子条目）；节头三句改准（胜负规则/中断
+  三臂归因/孪生同步句恢复）；协议注释本质先行 + 收益≈0 注记 + 丢记录残差句；
+  "vacuous-hypothesis race"→guard；崩溃不置旗标改结构性理由；**R1 落地：双
+  旗标并成单 `Synchronized.var`（`{pauto_finished, refuted_by}` 记录），每选手
+  单临界区内"发布自己 + 读对方"，时序论证整段删除**；`r_conv_racer` 收
+  `search` 参数（删重复构造）；`negation` 迁回使用点旁；装配点注明引擎两义务。
+  评审否决且未做：给选手尾部加不可中断护罩（纪律属引擎边界内）。
+- build 已执行（作者授权）：仅 `Phi_System_Base` 需重建（57s），上游链经
+  干跑核验新鲜。验证全绿：冒烟三路（control 5ms 不进竞速 / undecided 511ms /
+  赛后记录 500ms，TSV 行齐全）；全前沿至 `Phi_Type.thy:8203` 零错误，
+  `Phi_Type.thy` 警告行与基线逐行一致，`PLPR.thy` 警告行整体 +1（imports 多
+  一行所致，同组警告逐条对应）。
+- 遗留小事：`PLPR.unicode.thy`（gitignore 生成物）陈旧但可编译，待下次跑
+  Isabelle_RPC sweep 时再生成；auto_sledgehammer 侧孪生注释重指向另行请示
+  （注意其 :1829 递归拆包与引擎单层语义不同，不能直接替换调用）。
+
+待作者裁决：D7（TSV schema 一次到位修订——verdict/winner 拆列、racer_exits
+（现可从引擎 exits 一行映射得到）、runner 改名、可选 max_threads/version 列）；
+D8（计划文件移入 `contrib/phi-system/Docs/`）；SPIN/BAD 构造件抢救去处
+（关切四残项）。
 
 ## 9 · 档案索引
 
