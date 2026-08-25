@@ -189,18 +189,20 @@ hide_const (open)
    but PutnamBench resolves `metric` to the metric-space one. Hide the geometry
    constant (open) so the metric-space wins; qualified Metric.metric stays.
 hide_const (open) Metric.metric *)
-(* Re-bind reusable math facts orphaned by the semantic library's exclusion of
-   the whole HOL-Decision_Procs session (its theories are skipped wholesale at
-   collection time as decision-procedure infrastructure). The 14 lemmas below
-   are genuine, self-contained facts with NO equivalent elsewhere in the
-   distribution or AFP (verified by an exhaustive grep audit, 2026-06-17), so
-   without this re-binding they would be lost. Aliasing them here gives each a
-   fact whose home theory is MathBench_Prover (not infra), so the collector
-   indexes them; base names are kept identical to the originals. The other DP
-   candidates were dropped: they either duplicate an already-indexed type-class
-   version (all Algebra_Aux locale ports of Fields/Rings/Power lemmas) or are
-   quantifier-elimination machinery (Dense_Linear_Order.finite_set_intervals*,
-   dlo_qe_bnds). *)
+(* Re-bind reusable math facts orphaned by the semantic library's marking of
+   individual HOL-Decision_Procs theories as decision-procedure infrastructure
+   (theory-level marking; the "whole session" wording this comment used to carry
+   predates it). The 24 lemmas below are genuine, self-contained facts with NO
+   equivalent elsewhere in the distribution or AFP (verified by an exhaustive
+   grep audit, 2026-06-17, extended 2026-08-25), so without this re-binding they
+   would be lost. Aliasing them here gives each a fact whose home theory is
+   MathBench_Prover (not infra), so the collector indexes them; base names are
+   kept identical to the originals -- verified harmless: each alias takes the
+   short name from the very theorem it binds, and every displaced full name
+   stays reachable. The other DP candidates were dropped: they either duplicate
+   an already-indexed type-class version (all Algebra_Aux locale ports of
+   Fields/Rings/Power lemmas) or are quantifier-elimination machinery
+   (Dense_Linear_Order.finite_set_intervals*, dlo_qe_bnds). *)
 lemmas arctan_divide_mono = Approximation_Bounds.arctan_divide_mono
 lemmas arctan_le_mult     = Approximation_Bounds.arctan_le_mult
 lemmas arctan_lower_bound = Approximation_Bounds.arctan_lower_bound
@@ -214,6 +216,17 @@ lemmas ln_bounds          = Approximation_Bounds.ln_bounds
 lemmas neg_prod_sum_le    = Dense_Linear_Order.neg_prod_sum_le
 lemmas neg_prod_sum_lt    = Dense_Linear_Order.neg_prod_sum_lt
 lemmas nz_prod_sum_eq     = Dense_Linear_Order.nz_prod_sum_eq
+lemmas interval_empty_iff = Dense_Linear_Order.interval_empty_iff
+lemmas neg_prod_lt        = Dense_Linear_Order.neg_prod_lt
+lemmas pos_prod_lt        = Dense_Linear_Order.pos_prod_lt
+lemmas pos_prod_sum_lt    = Dense_Linear_Order.pos_prod_sum_lt
+lemmas sum_lt             = Dense_Linear_Order.sum_lt
+lemmas neg_prod_le        = Dense_Linear_Order.neg_prod_le
+lemmas pos_prod_le        = Dense_Linear_Order.pos_prod_le
+lemmas pos_prod_sum_le    = Dense_Linear_Order.pos_prod_sum_le
+lemmas sum_le             = Dense_Linear_Order.sum_le
+lemmas nz_prod_eq         = Dense_Linear_Order.nz_prod_eq
+lemmas sum_eq             = Dense_Linear_Order.sum_eq
 
 declare [[coercion_delete "enat :: nat \<Rightarrow> enat"]]
 declare [[coercion_delete "of_nat :: nat \<Rightarrow> ennreal"]]
