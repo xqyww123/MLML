@@ -116,10 +116,11 @@ fun learning_plugin (driver, log_dir, budget : MiniLang_Agent.budget, send, recv
                      | _ => Position.none
      in if is_goal_command' current_command
            andalso Toplevel.is_proof state
-           (* Skip goals in an infrastructure session (e.g. HOL-Decision_Procs):
-              these are excluded from semantic collection/retrieval by design
-              (Infra_Filter), so learning from them yields no useful, retrievable
-              experience — keep them out of the learning scope. *)
+           (* Skip goals in a theory marked as infrastructure (Infra_Filter's
+              enumerated marking, e.g. the HOL-Decision_Procs reflection
+              theories): these are machinery proofs about reflected syntax, and
+              an experience learned from them is worthless regardless of whether
+              the theory's entities are retrievable from the semantic store. *)
            andalso not (Infra_Filter.is_infra_theory
                           (Proof_Context.theory_of (Toplevel.context_of state)))
            andalso (let val st = #goal (Proof.raw_goal (Toplevel.proof_of state))
