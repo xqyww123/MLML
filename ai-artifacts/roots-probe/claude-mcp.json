@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "probe": {
+      "type": "stdio",
+      "command": "/home/qiyuan/Current/MLML/.venv/bin/python",
+      "args": ["/home/qiyuan/Current/MLML/ai-artifacts/roots-probe/probe_server.py"],
+      "env": {"PROBE_LOG": "/home/qiyuan/Current/MLML/ai-artifacts/roots-probe/claude.json"}
+    }
+  }
+}

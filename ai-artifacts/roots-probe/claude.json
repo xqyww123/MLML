@@ -1,0 +1,38 @@
+{
+  "server_cwd": "/home/qiyuan/Current/MLML/contrib/Isabelle-MCP",
+  "client_params": {
+    "task": null,
+    "meta": null,
+    "protocolVersion": "2025-11-25",
+    "capabilities": {
+      "experimental": null,
+      "sampling": null,
+      "elicitation": {
+        "form": null,
+        "url": null
+      },
+      "roots": {
+        "listChanged": true
+      },
+      "tasks": null
+    },
+    "clientInfo": {
+      "name": "claude-code",
+      "title": "Claude Code",
+      "version": "2.1.263",
+      "websiteUrl": "https://claude.com/claude-code",
+      "icons": null,
+      "description": "Anthropic's agentic coding tool"
+    }
+  },
+  "roots": {
+    "meta": null,
+    "roots": [
+      {
+        "uri": "file:///home/qiyuan/Current/MLML/contrib/Isabelle-MCP",
+        "name": null,
+        "meta": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "server_cwd": "/home/qiyuan/Current/MLML/contrib/Isabelle-MCP",
+  "client_params": {
+    "task": null,
+    "meta": null,
+    "protocolVersion": "2025-06-18",
+    "capabilities": {
+      "experimental": null,
+      "sampling": null,
+      "elicitation": {
+        "form": {},
+        "url": {}
+      },
+      "roots": null,
+      "tasks": null
+    },
+    "clientInfo": {
+      "name": "codex-mcp-client",
+      "title": "Codex",
+      "version": "0.153.2",
+      "websiteUrl": null,
+      "icons": null
+    }
+  },
+  "roots": {
+    "meta": null,
+    "roots": []
+  }
+}
