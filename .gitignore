@@ -94,3 +94,6 @@ secret.sh
 # working plan documents live in docs/; stray manual backups stay untracked
 PHI_VC_SOLVER_PLAN*.bak*
 *.md.bak*
+
+# scratch backups of files removed from git by cleanup sessions; never tracked
+/.trash/
