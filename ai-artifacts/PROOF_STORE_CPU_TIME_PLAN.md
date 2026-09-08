@@ -1,3 +1,9 @@
+> SEALED (2026-09-08): the design below is implemented and committed
+> (auto_sledgehammer 7615fe5, Isa-Mini 191e8b3, Isa-REPL d12051f).  It has since
+> been modified: a record now carries BOTH the thread CPU time and the wall
+> time, and each replay limit derives from its own kind.  The modification is
+> in `PROOF_STORE_CPU_AND_WALL_TIME_PLAN.md`; this file is not edited any more.
+
 # Proof-store replay in thread CPU time: handoff (2026-09-07)
 
 Goal (the author's proposal): in the proof store of auto_sledgehammer and of
