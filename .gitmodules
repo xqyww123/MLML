@@ -52,3 +52,6 @@
 [submodule "contrib/isasearch-web"]
 	path = contrib/isasearch-web
 	url = git@github.com:xqyww123/isasearch-web.git
+[submodule "contrib/MathFormalizer"]
+	path = contrib/MathFormalizer
+	url = git@github.com:xqyww123/MathFormalizer.git
