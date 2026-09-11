@@ -55,3 +55,6 @@
 [submodule "contrib/MathFormalizer"]
 	path = contrib/MathFormalizer
 	url = git@github.com:xqyww123/MathFormalizer.git
+[submodule "contrib/light_locale"]
+	path = contrib/light_locale
+	url = git@github.com:xqyww123/Light_Locale.git
