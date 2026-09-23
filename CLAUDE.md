@@ -26,7 +26,7 @@ Commit directly on `main`; never create or switch branches (this is a shared wor
 
 ### Never run `isabelle build` without my explicit command
 
-Any session, any flags, however small — this binds every subagent too. **Except starting the REPL server** (`repl_server.sh`, and its replacement `isabelle REPL`).
+Any session, any flags, however small — this binds every subagent too. **Except starting the REPL server** (the `isabelle REPL` tool).
 
 Never add `-c` or `-f`. To force one session to re-run, edit one of its source files.
 
