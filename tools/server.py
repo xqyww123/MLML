@@ -104,7 +104,7 @@ async def launch_server(server, retry=6, timeout=600):
         host, port = server.split(':')
         if CLUSTER != "slurmx" and CLUSTER != "external_managed":
             # Construct the SSH command to launch the REPL server
-            # ./contrib/Isa-REPL/repl_server_watch_dog.sh 0.0.0.0:6666 HOL /tmp/repl_outputs -o threads=32
+            # isabelle REPL -l HOL -o threads=32 0.0.0.0:6666 /tmp/repl_outputs
             numprocs = SERVERS[server]["numprocs"]
             ssh_command = f"ssh {host} \"cd {pwd} && " + \
                 f"mkdir -p ./cache/repl_tmps/{host}_{port} && " + \

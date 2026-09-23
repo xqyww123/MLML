@@ -110,7 +110,7 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
     # The verify REPL server resolves a case's session-qualified imports from the
     # session base + `-d` dirs it was LAUNCHED with (the client cannot register
     # sessions at runtime). Each dataset declares that requirement on its
-    # evaluator class; print the exact repl_server.sh command so --repl-addr is
+    # evaluator class; print the exact isabelle REPL command so --repl-addr is
     # pointed at a correctly-configured server. If unspecified, the server is
     # assumed pre-configured (prior behaviour).
     verify_session = getattr(cls, "VERIFY_SESSION", None)
