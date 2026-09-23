@@ -31,7 +31,7 @@ ADDR = f'127.0.0.1:{PORT}'
 SESSION = 'MathBench_ProverBase'
 OUTDIR = '/tmp/mathbench_repl_outputs'
 LOG = '/tmp/mathbench_repl.log'
-REPL_SH = os.path.join(ROOT, 'contrib', 'Isa-REPL', 'repl_server.sh')
+ISABELLE = os.path.join(ROOT, 'contrib', 'Isabelle2025-2', 'bin', 'isabelle')
 
 
 def listener_pid(port=PORT):
@@ -91,7 +91,7 @@ def start():
     else:
         os.makedirs(OUTDIR, exist_ok=True)
         logf = open(LOG, 'w')
-        subprocess.Popen([REPL_SH, ADDR, SESSION, OUTDIR],
+        subprocess.Popen([ISABELLE, 'REPL', '-l', SESSION, ADDR, OUTDIR],
                          stdout=logf, stderr=subprocess.STDOUT,
                          start_new_session=True, cwd=ROOT)
         print(f"launching REPL on {ADDR} (base session {SESSION}); waiting for ready...")

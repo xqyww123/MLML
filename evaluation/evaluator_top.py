@@ -121,10 +121,10 @@ def autocorrode_handler(cls, dataset, category_loader, index_parser):
         logger.info(
             f"[{dataset}] The verify server at {args.repl_addr} MUST be launched with "
             f"base session '{verify_session}', these dirs, AND these options, e.g.:\n"
-            f"    ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:{port or '6666'} "
-            f"{verify_session} /tmp/repl_outputs {dirs} {opts} -o threads=<N>\n"
+            f"    isabelle REPL -l {verify_session} {dirs} {opts} -o threads=<N> "
+            f"0.0.0.0:{port or '6666'} /tmp/repl_outputs\n"
             f"    (imports resolve only if -l/-d match; and quick_and_dirty=false is REQUIRED "
-            f"-- it overrides repl_server.sh's hard-coded quick_and_dirty=true, which would "
+            f"-- it overrides isabelle REPL's default quick_and_dirty=true, which would "
             f"otherwise make verify reject genuine proofs as 'Untrusted oracles: Pure.skip_proof')")
 
     log_dir = args.log_dir

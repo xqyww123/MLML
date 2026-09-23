@@ -36,7 +36,7 @@ tools/missing_lemma_loop/watcher.py   ← 外层 orchestrator（确定性 Python
         （预置 semantic_collect_failed）
      3. watcher 跑隔离 collect（6665/27183 专属对；成功后清标记）
      4. 杀 6666 REPL + Isabelle_RPC_Host，带 AOA_MISSING_LEMMA_SURVEY 重启
-        ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:6666 MathBench_Prover …；
+        isabelle REPL -l MathBench_Prover 0.0.0.0:6666 …；
         刷新 heap_theories.txt（已提前到标 imported 前）
      5. 回到 Phase 1 重跑同一道题（--force-retry），看是否还缺
   约束：单题最多 3 轮（--max-attempts）；每轮 1 小时预算；超时进下一题。
@@ -227,7 +227,7 @@ python tools/missing_lemma_loop/watcher.py scan --log-dir <dir> --scan-case <cas
 ```
 
 注意：`AOA_MISSING_LEMMA_SURVEY` 必须出现在 **Isabelle_RPC_Host 进程**的环境里
-（AoA Python 跑在那里）。host 跨 REPL 重启存活，所以仅给 repl_server.sh 设变量
+（AoA Python 跑在那里）。host 跨 REPL 重启存活，所以仅给 isabelle REPL 设变量
 不够——watcher 启动 / Phase 2 重启会先 `pkill -f fork_and_launch__`（host
 进程的 cmdline 特征）再带环境变量启动。**这会杀掉其他 agent 在 6666/host 上的会话**：跑 loop 期间
 watcher 独占它们（设计如此，但请知悉）。

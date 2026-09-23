@@ -10,7 +10,7 @@ add_lib(['MathBench_Prover.MathBench_Prover']).
 Theory names are suffixed per phase to avoid Isabelle's theory cache collisions.
 
 Requires: an Isa-REPL server on MathBench_Prover session.
-  ./contrib/Isa-REPL/repl_server.sh <addr> MathBench_Prover /tmp/repl_outputs
+  isabelle REPL -l MathBench_Prover <addr> /tmp/repl_outputs
 
 Usage:
     python -m tools.PutnamBench.chk_parse [--addr HOST:PORT] [--limit N] [--start KEY]

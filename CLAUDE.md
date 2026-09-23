@@ -2,6 +2,10 @@
 
 ## Rules
 
+### No unapproved PRs
+
+NEVER open a pull request without my explicit, per-item approval.
+
 ### Memory writes require explicit approval
 
 Never write to, update, or delete anything in the memory directory without my explicit approval for that specific write. Propose what you want to record and wait for me to agree. Reading memory is fine. When I approve, record it in the memory directory — do NOT put it in a `CLAUDE.md` instead. (Adding a rule to a `CLAUDE.md`, or writing a SKILL, is a separate thing and needs its own explicit approval.)
@@ -22,7 +26,7 @@ Commit directly on `main`; never create or switch branches (this is a shared wor
 
 ### Never run `isabelle build` without my explicit command
 
-Any session, any flags, however small — this binds every subagent too. **Except starting the REPL server** (`repl_server.sh`).
+Any session, any flags, however small — this binds every subagent too. **Except starting the REPL server** (`repl_server.sh`, and its replacement `isabelle REPL`).
 
 Never add `-c` or `-f`. To force one session to re-run, edit one of its source files.
 
@@ -30,9 +34,21 @@ Never add `-c` or `-f`. To force one session to re-run, edit one of its source f
 
 After editing any Isabelle/ML (`.ML`) source, **just restart the REPL server**. A freshly started REPL loads the `.ML` from source even if it was never built — no `isabelle build` is required. An already-running REPL does NOT auto-reload edited code; restart it to pick up the change. Do NOT rebuild the session heap or chase heap timestamps for an `.ML` edit.
 
+### Subagents default to Opus 5
+
+When spawning subagents, use model Opus 5 (`opus`) by default.
+
+### Temporary files go to `ai-artifacts/`
+
+Put plan documents, test files, and other scratch files in `ai-artifacts/` at the root of the project you are working in (create it if missing). It is git-tracked.
+
+### No scripted edits to plan documents
+
+Never modify plan/design documents (`*_PLAN.md`, `*_ISSUES.md`, and the like) with scripts (sed, python, batch replace). Edit them by hand — rewriting the text is part of reviewing it.
+
 ### Consistent Terminology — Never Coin Words
 
-Always use the same term for the same concept, consistently. NEVER coin new words on the fly! Fix a single canonical name the first time a concept appears (if a document has a glossary, the glossary is authoritative), and stick to it in all subsequent discussion, documents, and comments. Express properties as descriptive sentences (e.g. "X does not change with content") — never wrap a property into a new noun.
+Always use the same term for the same concept, consistently. NEVER coin new words on the fly! Fix a single canonical name the first time a concept appears (if a document has a glossary, the glossary is authoritative), and stick to it in all subsequent discussion, documents, and comments. Express properties as descriptive sentences (e.g. "X does not change with content") — never wrap a property into a new noun. Always use the original English term (e.g. sort, type class) — never invent Chinese translations or metaphorical stand-ins.
 
 ### Always Reuse Code — Never Reinvent the Wheel
 
@@ -41,6 +57,12 @@ IMPORTANT: Before writing ANY new logic, search the codebase first. Reuse what e
 ### Elegance Is a Review Criterion
 
 Weigh elegance as heavily as correctness in every review — a shape that makes an invariant impossible to violate beats one that asks people to remember it.
+
+### Code Comments Are Concise
+
+### Monitor Long-Running Tasks
+
+任何长时间跑的 shell 任务必须定期监视。监视间隔不能超过 10 分钟。
 
 ### Verify, Don't Assume
 

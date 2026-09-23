@@ -46,7 +46,7 @@ while [ $# -gt 0 ]; do
   mkdir -p $mash_dir
   
   # Start the server instance
-  RPC_Host="$RPC_Host" MASH_STATE_PATH=$mash_dir/mash_state ./contrib/Isa-REPL/repl_server.sh 0.0.0.0:$port "$session" $dir -o threads=$numprocs > $dir/log.txt 2>&1 &
+  RPC_Host="$RPC_Host" MASH_STATE_PATH=$mash_dir/mash_state isabelle REPL -l "$session" -o threads=$numprocs 0.0.0.0:$port $dir > $dir/log.txt 2>&1 &
   
   #echo "Started server on port $port"
 done

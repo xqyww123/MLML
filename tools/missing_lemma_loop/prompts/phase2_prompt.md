@@ -53,7 +53,7 @@ that every decision is recorded for later audit:
   again — no `mathbench_repl.py restart`, no divergence radar, no goal gate.
   The moment `Base/MathBench_ProverBase.thy` has CHANGED since its heap was
   built, a 7777 restart silently triggers a FULL heap rebuild inside
-  repl_server.sh (~15 min, cannot fit any foreground call, leaves an orphan
+  the isabelle REPL tool (~15 min, cannot fit any foreground call, leaves an orphan
   build when it times out) — that rebuild is the watcher's job, done after
   you submit. Your final validation is the last all-green inner loop run
   BEFORE the promotion edits; after the edits, call

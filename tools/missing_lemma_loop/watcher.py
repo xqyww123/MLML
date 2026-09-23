@@ -65,8 +65,8 @@ REPL_PORT = 6666
 # Bind 0.0.0.0 so the evaluator reaches it via the configured hostname
 # (config/evaluation_servers.csv uses `cslcw2u`, which resolves to 127.0.1.1 —
 # a 127.0.0.1-bound socket would refuse it).
-REPL_START_CMD = ("./contrib/Isa-REPL/repl_server.sh 0.0.0.0:6666 "
-                  "MathBench_Prover /tmp/repl_outputs -o threads=10 -o document=false")
+REPL_START_CMD = ("isabelle REPL -l MathBench_Prover -o threads=10 -o document=false "
+                  "0.0.0.0:6666 /tmp/repl_outputs")
 # Address the watcher pre-launches the RPC host on and exports as RPC_Host.
 # (Isabelle_RPC has had no default address since 0.4.0 -- with RPC_Host unset each
 # Isabelle would spawn its own ephemeral host instead.)  The watcher OWNS this host:
@@ -83,9 +83,8 @@ RPC_HOST_ADDR = "127.0.0.1:27182"
 COLLECT_REPL_ADDR = "127.0.0.1:6665"
 COLLECT_REPL_PORT = 6665
 COLLECT_RPC_ADDR = "127.0.0.1:27183"
-COLLECT_REPL_START_CMD = (f"./contrib/Isa-REPL/repl_server.sh {COLLECT_REPL_ADDR} "
-                          "MathBench_Prover /tmp/repl_outputs_collect "
-                          "-o threads=10 -o document=false")
+COLLECT_REPL_START_CMD = ("isabelle REPL -l MathBench_Prover -o threads=10 -o document=false "
+                          f"{COLLECT_REPL_ADDR} /tmp/repl_outputs_collect")
 SEMANTIC_COLLECT_CMD = ("./contrib/Semantic_Embedding/semantics_manage.py collect "
                         "MathBench_Prover.MathBench_Prover "
                         f"--repl-addr {COLLECT_REPL_ADDR} "

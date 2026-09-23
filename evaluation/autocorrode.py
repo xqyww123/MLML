@@ -93,15 +93,15 @@ class AutoCorrode_Base(Evaluator):
     # `-d` session dirs registered at launch; the client cannot register session
     # dirs at runtime (load_theory/add_lib only load already-registered
     # sessions). So each dataset declares here what its verify server must be
-    # launched with, and autocorrode_handler prints the exact repl_server.sh
+    # launched with, and autocorrode_handler prints the exact isabelle REPL
     # command. VERIFY_SESSION is None by default, meaning "unspecified -- the
     # operator is assumed to have pre-configured the server" (the prior
     # behaviour for miniF2F/Putnam, left unchanged until their launch is
     # confirmed). Subclasses that need a specific server override both.
     VERIFY_SESSION: "str | None" = None
     VERIFY_SESSION_DIRS: "list[str]" = []
-    # Isabelle options the verify server MUST be launched with. repl_server.sh
-    # HARD-CODES `-o quick_and_dirty=true`; a later `-o quick_and_dirty=false`
+    # Isabelle options the verify server MUST be launched with. isabelle REPL
+    # DEFAULTS to `-o quick_and_dirty=true` (user-overridable); a later `-o quick_and_dirty=false`
     # (last-wins) overrides it -- and THIS is the fix:
     #   Under quick_and_dirty=true, a structured `proof .. qed` forks its subgoal
     #   `by` steps as proof futures that capture the server-level quick_and_dirty
