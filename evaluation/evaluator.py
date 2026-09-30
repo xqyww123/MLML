@@ -179,6 +179,7 @@ class MiniLang_Base(Evaluator):
             except TimeoutError as E:
                 times.append(time.time() - start_time)
                 errors.append(E)
+                break  # the client is closed; no later attempt can succeed
         return Result(Status.FAIL, errors, times)
 
     async def move_to(self, file, line, column):
@@ -297,8 +298,12 @@ class Isar_Base(Evaluator):
         self._connection_timeout = connection_timeout
         self.repl: Client = None  # type: ignore[assignment]  # set in __aenter__
 
+    def _client_timeout(self):
+        """Seconds the client waits for the connection and for each reply; None waits forever."""
+        return max(self._connection_timeout, self._timeout + 20)
+
     async def __aenter__(self):
-        self.repl = Client(self.addr, 'HOL', timeout=max(self._connection_timeout, self._timeout + 20))
+        self.repl = Client(self.addr, 'HOL', timeout=self._client_timeout())
         await self.repl.__aenter__()
         await self.repl.record_state("init")
         if self._libs:
@@ -360,6 +365,7 @@ class Isar_Base(Evaluator):
                 errors.append(E)
             except TimeoutError as E:
                 errors.append(E)
+                break  # the client is closed; no later attempt can succeed
         return Result(Status.FAIL, errors, times)
 
     @classmethod
@@ -457,14 +463,19 @@ class MinilangAgent_Base(Isar_Base):
     def __init__(self, addr, timeout=500, connection_timeout=1200,
                 timeout_seconds=14400, max_tool_calls=10000, max_retries=3,
                 log_dir=None, retrieval_forking=None, interactive_retrieval=None,
+                enable_read_memory=False,
                 auto_interpret_for_embedding=False):
-        super().__init__(addr, libs=type(self)._LIBS,
-                         timeout=max(60, timeout_seconds), connection_timeout=max(60, timeout_seconds))
+        super().__init__(addr, libs=type(self)._LIBS, timeout=timeout, connection_timeout=connection_timeout)
         self._cfg = auto_interpret_for_embedding
         self._budget = (timeout_seconds, max_tool_calls, max_retries)
         self._log_dir = log_dir
         self._retrieval_forking = retrieval_forking
         self._interactive_retrieval = interactive_retrieval
+        self._enable_read_memory = enable_read_memory
+
+    def _client_timeout(self):
+        # the whole agent run is one reply, and its budget-exempt waits (quota pauses) have no bound
+        return None
 
     async def __aenter__(self):
         await super().__aenter__()
@@ -486,14 +497,16 @@ class MinilangAgent_Base(Isar_Base):
         # Isabelle's AoA_read_proof_store defaults to true (the AoA driver looks up
         # a previously cached proof for the goal). Disable it for all agent
         # evaluations so every case is solved by a fresh agent run rather than a
-        # cache hit. Also disable AoA_enable_write_memory: a benchmark run must not
-        # spend the agent's budget writing experience memories, nor pollute the
-        # shared experience DB with them (experience RETRIEVAL via `query` stays on,
-        # so the agent can still use pre-existing memories). Declared on the open
-        # proof context before record_state so the EVAL snapshot carries them and
-        # pass@N rollbacks preserve them.
+        # cache hit. Also disable AoA_enable_write_memory: a benchmark run must
+        # not spend the agent's budget writing experience memories nor pollute
+        # the shared experience DB with them. AoA_enable_read_memory (experience
+        # RETRIEVAL, `query kinds:["experience"]`) is controlled by the caller
+        # via --enable-read-memory; default off keeps the measurement memory-free.
+        # Declared on the open proof context before record_state so the EVAL
+        # snapshot carries them and pass@N rollbacks preserve them.
         await self.repl.config(['AoA_read_proof_store = false',
-                                'AoA_enable_write_memory = false'])
+                                'AoA_enable_write_memory = false',
+                                f'AoA_enable_read_memory = {"true" if self._enable_read_memory else "false"}'])
 
         if len(proofs) > 1:
             await self.repl.record_state('EVAL')
@@ -564,6 +577,7 @@ class MinilangAgent_Base(Isar_Base):
                     errors.append(E)
             except TimeoutError as E:
                 errors.append(E)
+                break  # the client is closed; no later attempt can succeed
         return Result(Status.FAIL, errors, times, data={"log_ids": log_ids, "costs": costs})
 
 
@@ -1041,7 +1055,6 @@ async def evaluate_and_save(result_path : str | None, cases : list[Case], evalua
                                         if db is not None:
                                             db[case.index] = result
                                             db.commit()
-                                        break
                                 elif cached is not None and case.index not in force_retry and (cached.status == Status.SUCCESS or (cached.status == Status.FAIL and not retry_failure)):
                                     result = cached
                                 else:
@@ -1056,7 +1069,6 @@ async def evaluate_and_save(result_path : str | None, cases : list[Case], evalua
                                         if db is not None:
                                             db[case.index] = result
                                             db.commit()
-                                        break
                             except Exception as e:
                                 logger.error(f"Error processing case {case.index}: {str(e)}")
                                 logger.error(f"Traceback:\n{traceback.format_exc()}")

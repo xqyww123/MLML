@@ -100,6 +100,11 @@ class AutoCorrode_Base(Evaluator):
     # confirmed). Subclasses that need a specific server override both.
     VERIFY_SESSION: "str | None" = None
     VERIFY_SESSION_DIRS: "list[str]" = []
+    # Server-side cap of the verification eval, in seconds. The client waits
+    # twice as long so that the server's verdict arrives first (its timer
+    # starts later and stretches with GC pauses and timeout_scale); at a
+    # timeout_scale of about 2 or more the client gives up first.
+    VERIFY_TIMEOUT_S = 600
     # Isabelle options the verify server MUST be launched with. isabelle REPL
     # DEFAULTS to `-o quick_and_dirty=true` (user-overridable); a later `-o quick_and_dirty=false`
     # (last-wins) overrides it -- and THIS is the fix:
@@ -142,7 +147,7 @@ class AutoCorrode_Base(Evaluator):
         if not self._log_dir:
             self._tmpdir = tempfile.mkdtemp(prefix=f"autocorrode_{self._worker_id}_")
             logger.info(f"Worker {self._worker_id}: temp dir {self._tmpdir}")
-        self._repl = REPLClient(self._repl_addr, 'HOL', timeout=600)
+        self._repl = REPLClient(self._repl_addr, 'HOL', timeout=2 * self.VERIFY_TIMEOUT_S)
         await self._repl.__aenter__()
         await self._repl.load_theory(["MLML_Verify.MLML_Verify"])
         await self._repl.record_state("init")
@@ -280,7 +285,7 @@ class AutoCorrode_Base(Evaluator):
             await self._repl.rollback("init")
             response = await self._repl.eval(
                 final_thy,
-                timeout=600000,
+                timeout=self.VERIFY_TIMEOUT_S * 1000,
                 # Per-command (single statement) wall-clock cap, scoped to THIS
                 # validator eval only: it travels in the \x05eval request and the
                 # server applies it per-call without persisting, so it does not
