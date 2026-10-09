@@ -170,7 +170,7 @@ fun learning_plugin (driver, log_dir, budget : MiniLang_Agent.budget, send, recv
                (* Hard backstop over AoA's own cooperative budget: kill a wedged
                   goal 300s past its budget so it cannot wedge the whole replay. *)
                val hard = Time.fromSeconds (#timeout_seconds budget + 300)
-               val task = Learning isar
+               val task = learning isar
                (* `outcome` classifies why the AoA run ended so the client can decide
                   resume policy per goal (see the protocol doc at the top). A plain
                   return means the agent ran to completion ("finished"); the catch
@@ -184,7 +184,8 @@ fun learning_plugin (driver, log_dir, budget : MiniLang_Agent.budget, send, recv
                val outcome = \<^try>\<open>
                      Timeout.apply hard (fn () =>
                         (raw_AoA {driver = driver, minilang_cfg = cfg, budget = budget,
-                                  invocation_id = iid, task = task} (ctxt, sequent);
+                                  invocation_id = iid, task = task,
+                                  user_operations = []} (ctxt, sequent);
                          "finished")) ()
                    catch Timeout.TIMEOUT _ =>
                            (send (fn cout => doPack (packPair (packInt, packList packString))
