@@ -608,7 +608,7 @@ val _ = TextIO.closeOut out
    stalls. Reject its use and steer to the coercion `rat_of_int`. This is the
    agent-output interceptor only — it does NOT touch the SemanticDB, which still
    indexes `Rat.of_int_def` etc. *)
-declare [[agent_reject_constant Rat.of_int
+declare [[aoa_reject_constant Rat.of_int
   "Rat.of_int is a code-generation shadow constant that the of_int_* lemmas do not apply to. Use rat_of_int instead."]]
 
 end
