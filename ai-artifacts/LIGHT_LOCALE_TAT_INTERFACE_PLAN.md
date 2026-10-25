@@ -1,6 +1,6 @@
 # light locale 给 TAT 的接口小补丁（三件：D20 声明 warning 与重新绑定的 warning 的文本函数、`eliminated_params` 导出、Lifting 读取入口）
 
-状态：第 3 稿，2026-10-24 16:4x UTC 起（第 1 稿 08:1x，第 2 稿 11:2x）。§8 的问题全部已定；代码与测试已实现，cslh19 链绿（Pure 与五 session 见 `tat_chain_5.log`，之后只重建过 Test：`tat_chain_6.log`、`tat_chain_7.log`）、变异体四轮（§5）；完整模板评审 16:2x 回 **accept_after_author_fixes**，九条 must_fix（`ai-artifacts/light_locale_m3_rev2_review/tat_interface/impl/judge_report.txt`），第 3 稿按它改、代码改一处（§3 第 1 条）、测试两处（§5 行 E 与 `check_rows`）；修后 cslh19 第四轮 17:36 全绿、五个变异体全抓住（§5 末段）；清单式复审 17:4x 回、四处小错已改（§5 末段）；用户 17:5x「批准提交 ⏎ 批准本机构建」——已提交：私有树 `6913036`（locale.ML、expression.ML）、light 仓库 `649a95e`（tests/ROOT、两个新 leaf、tools/signature_additions.txt）、主仓库（本文件、主计划、子模块指针）见 git；本机 run-tree 七 session 构建（tested 记录）见 §7 第 7 步。
+状态：第 3 稿，2026-10-24 16:4x UTC 起（第 1 稿 08:1x，第 2 稿 11:2x）。§8 的问题全部已定；代码与测试已实现，cslh19 链绿（Pure 与五 session 见 `tat_chain_5.log`，之后只重建过 Test：`tat_chain_6.log`、`tat_chain_7.log`）、变异体四轮（§5）；完整模板评审 16:2x 回 **accept_after_author_fixes**，九条 must_fix（`ai-artifacts/light_locale_m3_rev2_review/tat_interface/impl/judge_report.txt`），第 3 稿按它改、代码改一处（§3 第 1 条）、测试两处（§5 行 E 与 `check_rows`）；修后 cslh19 第四轮 17:36 全绿、五个变异体全抓住（§5 末段）；清单式复审 17:4x 回、四处小错已改（§5 末段）；用户 2026-10-25 02:45:31 UTC「批准提交 ⏎ 批准本机构建」（第 3 稿第一版误写成 10-24 17:5x，未查时钟）——已提交：私有树 `6913036`（locale.ML、expression.ML）、light 仓库 `649a95e`（tests/ROOT、两个新 leaf、tools/signature_additions.txt）、主仓库 `80583e89`（本文件、主计划、子模块指针）；本机 run-tree 七 session 构建（tested 记录）见 §7 第 7 步。
 树：私有树 `contrib/Isabelle2025-2-light_locale`（分支 `Isabelle2025-2/light_locale`，HEAD `577e67d`）、light 仓库 `contrib/light_locale`（`6602d9a`）。行号按这两个提交。TAT 的文档与代码行号按 TAT 提交 `86a2e9f`（2026-10-24），另注明的除外；TAT 行号在 978671b、8670ac3、86a2e9f 之间会漂移。
 流程（用户 2026-10-24 07:49:58 批）：本稿 → 用户批 → 实现 → cslh19 构建与变异体 → 一轮完整模板评审 → 中文报告 → 提交令 → 回 locale 会话名字、签名、提交 id。
 
@@ -15,6 +15,8 @@
 - 2026-10-24 08:4x 用户对 Q1 的解释不满（「没一个能让我明白你要干嘛」「是不是钻牛角」），令起 Opus agent team 讨论。Workflow `wf_43a658b8-6f9`（4 设计者 → 8 提案各一反驳者 → judge；报告 `ai-artifacts/light_locale_m3_rev2_review/tat_interface/q1_judge_report.txt`，全量 `q1_workflow_result.json`）09:1x 回：**作者的前提错了**——"`for Zp` 留空位与隐含继承在记录里分不开"的那个头部根本声明不出来：Isabelle 拒绝 `for` 里写隐含参数（expression.ML:171–174 "Parameter(s) declared simultaneously in expression and for clause"，Test8_Gate.thy:55 已钉），也拒绝 `fixes` 里再 fix 已继承的名字（variable.ML:418–419 "Duplicate fixed variable(s)"）。所以对每个存在的 locale，头部 `for`/`fixes` 写的名字恰等于"参数减去头部边 `Inherited` 位置上的名字"，即**本 locale 自己声明的参数**；头部补丁已为 (structure) 参数算过这个集合（`own_structure_params`，locale.ML:902–910）。judge 建议（作者核对了三处代码事实，成立）：`unfolded_definitions_message : Proof.context -> string -> string list` 两参数、无 `written`；新导出 `Locale.own_params`（`own_structure_params` 去掉 structure 过滤，后者改为它的过滤）；重新绑定的 warning 按 `own_params` 顺序对 `unfolded` 里有的名字各一条；`declare_unfolded` 先做 `not_bound` 声明再在结果 context 里打印；TAT 传 `Toplevel.context_of`；测试行 A 改用命令返回的 lthy 而非 `Proof_Context.init_global`（打印依赖 context）、加顺序行 `LX = Two g x _ _ for g x z y`、加 `fixes` 重名被拒行。**待用户定**（§8 Q1 改写）。
 - 2026-10-24 11:12:37 用户「1-3 按你建议来，之后需要改的话可以改 ⏎ Q3 请先简要讲一下本质，再从头耐心讲一遍，给我完整上下文 ⏎ Q5 与文案、测试相关的，在不改变设计的前提下，你可以自决」——1 = Q1 取 Opus 团队的两参数形状；2 = 新导出叫 `Locale.own_params`；3 = Q2 导出已有的 `Locale.header_edges`。Q3 作者先讲解再等裁定；Q5 作者自决（§8）。本稿 §2/§3/§5 按此改写。
 - 2026-10-24 11:25:09 用户「Q3 按你建议来 ⏎ ⏎ 之后在 TAT 中，如果用户尝试在 locale/interpretation 外去使用这个 lifting，我们能得体地报告用户能看懂的错误信息吗？」——Q3 = (a)：本补丁只记录 Lifting 的读取入口与判据，discharge 留给修复阶段第二步 (j)。全部问题已定，§7 第 2 步开工。问题的答复见交接同时刻条。
+- 2026-10-24 16:38:57 用户「我没看，你按流程来吧」——对评审九条的中文报告的答复：按 Q5 授权与既定流程修（代码一处、测试两处、记录六处），不逐条再批；作者据此改、重测、复审。
+- 2026-10-25 02:45:31 用户「批准提交 ⏎ 批准本机构建」——提交令（私有树、light 仓库、主仓库各一个 commit，显式路径，不推送；TAT 接口计划 `git add -f`）与本机 run-tree 七 session 构建（tested 记录）的逐次批准。
 - 2026-10-24 11:58:06 用户「很好，请你记一下，之后我们要专门来检查并实现 interpretation 之外用这个 lifting 的得体报错 ⏎ ⏎ 现在请你继续实现。请你报告目前的实现进度」——**后续待办（不在本补丁）**：专门检查并实现"在 locale/interpretation 之外使用块内 Lifting setup"的得体报错，覆盖 TAT 两个直接入口的过渡期措辞与 `transfer` 等间接使用的报错；记在交接待办清单。
 
 ## 1. 本质
@@ -103,7 +105,7 @@ src/Pure/Isar/expression.ML EXPRESSION val unfolded_definitions_message : Proof.
 4. 变异体 M1–M5（cslh19）。
 5. 记录（§6）。
 6. 完整模板评审一轮（Workflow、Opus xhigh、英文 agent、四透镜、gate、每条一个 defender、judge；评审 agent 不启动 Isabelle）；中文报告；同意前不改代码。已做：`wf_67f6c427-691`，2026-10-24 16:2x 回 accept_after_author_fixes、九条 must_fix；用户 16:3x「我没看，你按流程来吧」，作者按 Q5 授权改；修后 cslh19 第四轮（Pure、五 session 链、M1–M5），再一次清单式复审（一个 reviewer、judge 给的清单）。
-7. 提交令后：私有树新 commit、light 仓库、主仓库（显式路径；不推送）；申请一次本机 run-tree 构建写 tested 记录（git 会话的 make-patches 门禁 (e) 要它）。
+7. 提交令后：私有树新 commit、light 仓库、主仓库（显式路径；不推送）；申请一次本机 run-tree 构建写 tested 记录（git 会话的 make-patches 门禁 (e) 要它）。已做（2026-10-25 02:46–03:10 UTC）：三个 commit（§0 02:45:31 条）；本机 `run-tree contrib/Isabelle2025-2-light_locale build -d contrib/light_locale -d contrib/light_locale/tests Light_Locale_Golden Light_Locale_Base Light_Locale_Test Light_Locale_Test_Serial Light_Locale_Corec_Check FOL ZF` EXIT 0（22:04，`ai-artifacts/tat_interface_tests/local_tested_1.log`），tested 记录写在 `6913036` 上（`git -C contrib/Isabelle2025-2-light_locale notes --ref=tested show 6913036`，覆盖 required_sessions.txt 的七个 session）。
 8. 回 locale 会话。
 
 ## 8. 问题与决定
