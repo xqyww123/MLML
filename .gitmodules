@@ -58,3 +58,7 @@
 [submodule "contrib/light_locale"]
 	path = contrib/light_locale
 	url = git@github.com:xqyww123/Light_Locale.git
+[submodule "contrib/isabelle-base-features"]
+	path = contrib/isabelle-base-features
+	url = git@github.com:xqyww123/isabelle-base-features.git
+	branch = main
