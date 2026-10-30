@@ -1,6 +1,6 @@
 # `Pure.thy` 恢复原版（实现计划）
 
-状态：**§2 已实现、实测、复审，待提交令；§3 的 make-patches `.thy` 门已取消（用户 2026-10-28 02:01:17 反对，§0）**。依据：主计划 `ai-artifacts/LIGHT_LOCALE_PLAN_REV37.md` §11 (49)（决定全文与要改的记录清单）。
+状态：**§2 已实现、实测、复审，已提交（用户 2026-10-28 06:14:04「> 还要提交的东西 ⏎ ⏎ 请提交」；私有树 `5826993`、light `f5b9f29`、主仓库 `7b806ba6`）；§3 的 make-patches `.thy` 门已取消（用户 2026-10-28 02:01:17 反对，§0）**。依据：主计划 `ai-artifacts/LIGHT_LOCALE_PLAN_REV37.md` §11 (49)（决定全文与要改的记录清单）。
 
 ## 0. 用户的决定（UTC，原话逐字）
 
@@ -46,7 +46,7 @@
 
 (h) **提交**（等用户令；显式路径；不推送）：私有树 `src/Pure/Pure.thy`、`src/Pure/Isar/parse_spec.ML`；light 仓库 `tests/Test/Test_Support.thy`、`tools/patched_files.txt`、`tools/signature_additions.txt`；主仓库主计划（含第 1 批 (50) 末尾"本机构建绿、tested 记录在 `f44d7f3`"那一句，2026-10-27 12:4x 写的，尚未提交）、本计划（新文件，`git add -f`，逐个请批）、`contrib/light_locale` 子模块指针；主仓库暂存区里另一会话的 `.gitmodules`、`contrib/isabelle-base-features` 不要带上（用 `git commit --only -- <路径>`；`git add` 被忽略目录下的路径会打印警告并返回 1，路径其实已暂存，先 `git diff --cached --name-status` 看清）。然后申请本机 run-tree 七 session 构建写 tested 记录（命令同第 1 批：`contrib/my_better_isabelle_prover/tools/run-tree contrib/Isabelle2025-2-light_locale build -d contrib/light_locale -d contrib/light_locale/tests Light_Locale_Golden Light_Locale_Base Light_Locale_Test Light_Locale_Test_Serial Light_Locale_Corec_Check FOL ZF`，约 27 分钟）。
 
-(i) **语义数据库核对**（只读）：按 `Theory_Hash.hash_of` 的算法（`Isabelle_RPC_Host.theory_hash.theory_xxhash128`：long name、NUL、`.thy` 内容、父 theory 的哈希；父 theory 是 `Context.make_parents` 之后的列表）用私有树的文件重算数据库里每个带记录的 theory 的哈希，与记录比对。父 theory 列表优先取本机 session 构建数据库的 `theory/parents` 导出，否则解析文件头 `imports`；算出的哈希与记录相同即证明列表无误。脚本与结果在 `ai-artifacts/light_locale_m3_step1/pure_thy_restore/semantic_db_check/`（不提交）。2026-10-27 16:1x UTC 的结果：10588 个中 10576 个相同；9 个不同，与 `Pure.thy` 无关（7 个项目工具 theory 的 `.thy` 10-25 改过；`Abs_Int3`、`Sudoku` 的记录来自打了 skip_nitpick_examples 的共享树，换上那两份文件即相同）；3 个 Naproche 本机无文件。对照：用共享树现在的文件（仍带改过的 `Pure.thy`）只有 1 个相同。
+(i) **语义数据库核对**（只读）：按 `Theory_Hash.hash_of` 的算法（`Isabelle_RPC_Host.theory_hash.theory_xxhash128`：long name、NUL、`.thy` 内容、父 theory 的哈希；父 theory 是 `Context.make_parents` 之后的列表）用私有树的文件重算数据库里每个带记录的 theory 的哈希，与记录比对。父 theory 列表优先取本机 session 构建数据库的 `theory/parents` 导出，否则解析文件头 `imports`；算出的哈希与记录相同即证明列表无误。脚本与结果在 `ai-artifacts/light_locale_m3_step1/pure_thy_restore/semantic_db_check/`（不提交）。2026-10-27 16:1x UTC 的结果：10588 个中 10576 个相同；9 个不同，与 `Pure.thy` 无关（7 个项目工具 theory 的 `.thy` 10-25 改过；`Abs_Int3`、`Sudoku` 的记录来自打了 skip_nitpick_examples 的共享树，换上那两份文件即相同）；3 个 Naproche 本机无文件。对照：用共享树现在的文件（仍带改过的 `Pure.thy`）只有 1 个相同。共享树快进到 daily 7eb9137、16 个 heap 重建之后（git 会话 2026-10-28 08:02 UTC 通知），08:03 UTC 用共享树的文件重跑：10578 个相同；7 个不同即上面那 7 个项目工具 theory；`Abs_Int3`、`Sudoku` 已相同；3 个 Naproche 照旧。
 
 (k) **复审 F6**：`gen_locale_val` 只剩 `locale_val'` 一个调用者、第三个参数恒为 `([], [])`。用户 2026-10-28 02:19:43「如果这是实现相关的，与设计无关，不需要跟我讨论」；作者判为实现（它不在 `PARSE_SPEC` 签名里，解析结果、报错与 `!!!` 位置都不变），并进 `locale_val'`，写法与 stock `Pure.thy` 的 `locale_val` 相同。cslh19 Pure 与五 session 链再跑一次 EXIT 0（`ptr_pure_2.log`、`ptr_chain_2.log`），`Test_Support` 的警告仍是那四条。
 

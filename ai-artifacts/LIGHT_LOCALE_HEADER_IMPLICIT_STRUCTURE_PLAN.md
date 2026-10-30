@@ -99,7 +99,12 @@
   → 作者按 judge 裁定直接修，不另起讨论团队（13 条修法都已由 judge 写定，无设计分歧）；兄弟 leaf 取 judge 给的选项 (a)（`abbreviation (in LS)` 让记录真的改变 + merge 变异体）；
   judge 要报用户知情的一条：`set_implicit_structure` 在 instantiation/overloading/bundle 块里被接受（字面禁令只禁 locale 与 class 的块），按现状记录并加测试行，不收窄。
 - 2026-10-24 06:49:16「批准提交 ⏎ 提醒一下我们现在在哪里？记下来还有什么工作要做？」（答第四轮小范围复审 `wf_dfb77ca5-d02` 的 accept_after_author_fixes 与五处计划文字手改）
-  → 按报告的范围提交三处（私有树分支 `Isabelle2025-2/light_locale` 的 6 个 Pure 文件；light 仓库；主仓库 `main` 的子模块指针与两份计划；交接与实验产物不提交）；提交 id 记在主计划 §11 (43) 尾与交接；剩余工作清单记在交接末条。
+  → 按报告的范围提交三处（私有树分支 `Isabelle2025-2/light_locale` 的 6 个 Pure 文件 `577e67d`；light 仓库 `6602d9a`；主仓库 `main` 的子模块指针与两份计划 `9d9da36e`；交接与实验产物不提交）；提交 id 记在主计划 §11 (43) 尾与交接；剩余工作清单记在交接末条。
+- 2026-10-24 07:02:24「批准」（答"在本机私有树上用 run-tree 跑发布门禁构建：五个 light session + FOL + ZF"的申请；FOL、ZF 按 2026-10-22 15:3x 定的逐次申请，这是第一次）
+  → 本机 `run-tree contrib/Isabelle2025-2-light_locale build -d contrib/light_locale -d contrib/light_locale/tests Light_Locale_Golden Light_Locale_Base Light_Locale_Test Light_Locale_Test_Serial Light_Locale_Corec_Check FOL ZF`，日志 `ai-artifacts/header_tests/release_gate_1.log`：七 session 全绿（23:29，Golden 逐字节相同），run-tree 在 `577e67d` 上写了 tested 记录（2026-10-24 07:26:57 UTC；make-patches gate (e) 所需）。
+- 2026-10-24 07:34:01「很好，你刚刚写的代码有做代码评审吗？没有的话：」+ 评审模板 → 答：已按该模板评审四轮（`wf_d69984b2-e3d`、`wf_93582aca-d09`、`wf_a6956102-f09`、`wf_dfb77ca5-d02`），第四轮 judge 明说不需再审；
+  07:36:38「你认为需要复审吗？」→ 作者答不需要（理由：第四轮裁定、每行代码都在第二至四轮里被审过、实测门禁全绿）；07:49:58「可以，按这个顺序，先 compact 再开工」→ 本补丁的工作到此收口，
+  下一项是 TAT 接口小补丁（清单在交接末条）；make-patches 由 git 会话按用户命令跑。**本计划自此只在 make-patches 有输出或 K3 残留有决定时再改。**
 
 ## 1. 本质
 
