@@ -252,6 +252,7 @@ val shift_count = with_count (fn k => fn th => fn th' =>
   - HOL `code_pred` 在 light 块里跑（predicate_compile_core.ML:1654–1659）：原版在那里本就在 `Core_Data.set_elim` 失败，也没有读 K 的代码；
   - 用户自己写的 ML 从 light 块导出到 theory。
 - **morphism 兜底的已知局限**（J6）：只有自定义 ML 导出层能触发（先消一条前提、再在前面粘普通前提），`Assumption.export` 得 K 0，`export_morphism` 被 `restore_counts` 写回 K 1，违反 §3.1。根子在"K = 0 即无 tag"，留给"0 与不知道分开"那一项。
+  - 10-30 更新：用户 10:24:44「第 7 条，在只剩"-1 报错"这一项好处的情况下不要做了」，那一项不做；这条改由兜底的范围处理（`LIGHT_LOCALE_OPEN_QUESTIONS.md` 第 28 条）：用户 10:38:03 定做法二，去掉 `Morphism.morphism` 里的兜底，系统库（`src/`）里每个 morphism 自己保 K。若总表第 29 条（不靠 K、按内容认 setclass 前提，讨论中）落地，K 与兜底一并去掉，本条随之作废。
 - **自定义 ML 层**若保住 tag 又在前面加前提，会被当成"自己写了 K"。local theory 自己产生的层都不会。
 - **已有、本批不改**：`Rule_Cases.save` 在 `project_rule.ML:44–50` 挪前提后仍抄 K（待讨论总表第 14 条）。
 - **已知局限（聚焦复审 2026-10-29 发现，只记录）**：`cases x`、`induct x`、`coinduct x` 这类带实例的写法，induct.ML（:528、:794、:888）先用 `infer_instantiate` 实例化规则，再把结果交给 `Rule_Cases.consume`；`Thm.instantiate` 清掉 tag，所以 `consume` 看到 K 0，不会跳过排到前 K 条前提最后一条为止的那段里的 `SORT_CONSTRAINT`。这与原版行为一致，也合乎 setclass.ML 文件头"kernel 推理规则清 K"。只有带这种 `SORT_CONSTRAINT` 前提的规则会走到（HHF 归一后的规则都没有）；从普通 Isar 能否走到未查证。要改就得改 `consume` 读什么，属于新决定，本批不做。
