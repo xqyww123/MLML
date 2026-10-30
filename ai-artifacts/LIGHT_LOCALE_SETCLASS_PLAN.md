@@ -2,7 +2,7 @@
 
 本批的实现计划（修复阶段第 2 批之前单独一批）。
 
-**状态**：第 5 稿，2026-10-29 02:2x UTC，作者手写；按用户 02:20:51「很好，建议再次通读计划，确保详细自洽，然后准备 compact，之后开工」通读补全。**实施中**：(b) 已做（03:1x UTC，§4 已补）；(c1) 已做并验收（03:16–03:24 UTC cslh19 五 session 链与 FOL/ZF 全绿，日志 `ai-artifacts/light_locale_setclass/logs/sc_c1_1.log`）；(c2) 已做，(d) cslh19 全链与 FOL/ZF 全绿（03:26–03:53 UTC，四份日志：`logs/sc_c2_pre1.log` Pure 到 HOL-Algebra、Golden、Corec_Check、FOL、ZF、Base；`sc_c2_1.log` Base、Serial，Test 失败于新 leaf 的笔误 `x :: prop`，已改；`sc_c2_2.log`、`sc_c2_3.log` Test 绿）；(e) 变异体第一轮已做（03:55–08:03 UTC，21 杀 1 装不上，§4）；(f) 实现评审已做、9 条已改（§6 (f)；评审材料 `ai-artifacts/light_locale_setclass/impl/`）；(f′) 已做（全链绿，变异体第二轮 6 个全杀）；(f″) 已做（聚焦复审 `wf_d0b8c3b5-e4f`，08:44–09:01 UTC：不需要再评审，作者改三处与记录后全链与 FOL/ZF 09:02–09:09 UTC 全绿，`logs/sc_f2_1.log`）；(g) 已做（用户 10:21:51「好的，全部提交」）：私有树 `cb2a525`（分支 `Isabelle2025-2/light_locale`），两道门禁通过（`check-signatures` exit 0，基准版本条目全部不变、新增 87 条与清单一致；`diff-tree` 与 `patched_files.txt` 一致），light 仓库 `4b270bd`，主仓库提交本计划与子模块指针；均未推送。之后：本机 run-tree 七 session 构建待用户批；通知 record、net printing、TAT。
+**状态**：第 5 稿，2026-10-29 02:2x UTC，作者手写；按用户 02:20:51「很好，建议再次通读计划，确保详细自洽，然后准备 compact，之后开工」通读补全。**实施中**：(b) 已做（03:1x UTC，§4 已补）；(c1) 已做并验收（03:16–03:24 UTC cslh19 五 session 链与 FOL/ZF 全绿，日志 `ai-artifacts/light_locale_setclass/logs/sc_c1_1.log`）；(c2) 已做，(d) cslh19 全链与 FOL/ZF 全绿（03:26–03:53 UTC，四份日志：`logs/sc_c2_pre1.log` Pure 到 HOL-Algebra、Golden、Corec_Check、FOL、ZF、Base；`sc_c2_1.log` Base、Serial，Test 失败于新 leaf 的笔误 `x :: prop`，已改；`sc_c2_2.log`、`sc_c2_3.log` Test 绿）；(e) 变异体第一轮已做（03:55–08:03 UTC，21 杀 1 装不上，§4）；(f) 实现评审已做、9 条已改（§6 (f)；评审材料 `ai-artifacts/light_locale_setclass/impl/`）；(f′) 已做（全链绿，变异体第二轮 6 个全杀）；(f″) 已做（聚焦复审 `wf_d0b8c3b5-e4f`，08:44–09:01 UTC：不需要再评审，作者改三处与记录后全链与 FOL/ZF 09:02–09:09 UTC 全绿，`logs/sc_f2_1.log`）；(g) 已做（用户 10:21:51「好的，全部提交」）：私有树 `cb2a525`（分支 `Isabelle2025-2/light_locale`），两道门禁通过（`check-signatures` exit 0，基准版本条目全部不变、新增 87 条与清单一致；`diff-tree` 与 `patched_files.txt` 一致），light 仓库 `4b270bd`，主仓库提交本计划与子模块指针；提交后已通知 record、net printing、TAT、locale。之后的 base 挪动、推送、golden 重录与本机构建见 §6 末条，都已做完。
 - 第 2 稿经完整对抗评审（Workflow `wf_49844e26-d88`；judge 报告 `ai-artifacts/light_locale_setclass/review/judge_report.md`，不提交）：核心设计成立，未达开工条件。
 - 第 3 稿（15:5x，按用户 15:56:00「启动评审前请再次通读，确保自洽，详细，确保没有决策落下」通读补全）吸收了用户对四问的答复与 J1–J18，经聚焦复审（`wf_03584073-acc`；judge 报告 `ai-artifacts/light_locale_setclass/review/rereview_report.md`，不提交）：设计仍成立，未达开工条件。
 - 第 4 稿（16:5x，按用户 16:54:07「赞同，评审前请再次通读计划，确保自洽，详细」通读补全）按复审的 Item 1–9 手改，并按用户对 U1 的答复（16:44:55，16:54:07 确认）加 §3.3b；经最后一轮聚焦复审（`wf_cdfdc665-fcf`；judge 报告 `ai-artifacts/light_locale_setclass/review/final_review_report.md`，不提交）：设计成立，§3.3b 补全与更正，不再需要评审轮次。
@@ -465,6 +465,15 @@ val shift_count = with_count (fn k => fn th => fn th' =>
   7. 提交 light 仓库。
   - 之后若还要提交（如门禁失败后修正），提交前重跑第 3 步。
 - 之后本机构建申请；提交后通知 `record`、`net printing`、TAT 会话。(c1)、(c2) 是否分开提交由作者定。
+  - 已通知（10-29 10:23 UTC，另加 locale 会话）。本机构建 10:27 UTC 起，用户 10:31:03「现在的构建先停下来 ⏎ ⏎ 给 git agent 让它来做 ⏎ ⏎ 第 3 条按你建议来」停掉，先挪 base。
+  - base 挪到 `Isabelle2025-2/fast_abbrev_printing/1`（`aeda54f`）：私有树合并 `3578f4c`，无冲突。
+    - 两边都改的只有 proof_context.ML、ROOT.ML，改动位置互不相干（10-30 08:3x UTC 核对）。
+    - cslh19 从 Pure 起全链与 FOL/ZF 全绿，golden 逐字节相同（10-29 10:32–10:41 UTC，`logs/sc_base_1.log`）。
+    - 下游 5 个分支的合并与 isabelle-patched 的推送由 git 会话做。
+  - 推送：light `4b270bd`（用户 10-29 14:12:22「可以推送」）；主仓库到 `f0f79495`（10-30 07:47:39「1. 推送」）。
+  - 新 stock 树上重录 golden（10-30 07:48–08:08 UTC，`logs/golden_stock.log`）：五个文件逐字节不变，只改 METADATA，light `457b7e3`。
+  - 本机 run-tree 七 session 构建全绿（10-30 08:09–08:29 UTC，`logs/local_tested_2.log`），`3578f4c` 的 tested 记录已写。
+  - light `457b7e3` 与 tested 记录已推送（用户 10-30 08:34:09「推送」）。主仓库的 light 子模块指针仍在 `4b270bd`。
 
 ## 7. 待用户
 
