@@ -6,6 +6,7 @@ echo "Initializing system..."
 git submodule update --init --recursive --remote
 pip install -q sqlitedict huggingface_hub
 pip install -q -e ./contrib/Isa-Mini -e ./contrib/Isa-REPL -e ./contrib/Semantic_Embedding -e ./contrib/Isabelle_RPC
+pip install -q -e ./contrib/my_better_isabelle_prover
 python3 manage_data.py get --group core --skip-existing
 mkdir -p ./cache/downloads
 mkdir -p ./translation/results
@@ -53,7 +54,11 @@ if [[ "$reinstall_isabelle" == "y" ]]; then
     echo "Isabelle and AFP will be reinstalled."
 fi
 
-if md5sum --status -c ./contrib/Isabelle2025-2.md5sum; then
+# A shared tree that is a git clone of isabelle-patched carries the feature commits, so it never
+# matches the release's md5 list: git updates it, and the sync-isabelle-afp-distribution SKILL the AFP.
+if [ -e ./contrib/Isabelle2025-2/.git ]; then
+    echo "contrib/Isabelle2025-2 is a git clone: not checked against the md5 list (update it with git)."
+elif md5sum --status -c ./contrib/Isabelle2025-2.md5sum; then
     echo "Isabelle2025-2 is up to date."
 else
     echo "Isabelle2025-2 is out of date. Reinstalling..."
@@ -64,6 +69,14 @@ else
     rm ./contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst
     echo "Isabelle2025-2 and AFP reinstalled."
 fi
+
+# The feature repositories (those whose .gitmodules registers trees under worktrees/): each
+# init.sh puts its Isabelle trees in place and installs their build products from the shared tree.
+for home in ./contrib/*; do
+    if [ -f "$home/init.sh" ] && grep -q '^[[:space:]]*path = worktrees/' "$home/.gitmodules" 2>/dev/null; then
+        bash "$home/init.sh"
+    fi
+done
 
 # Ask user for maximum memory allocation for Isabelle
 read -p "Enter memory limit (in GB) for Isabelle (default: 50): " isabelle_memory
