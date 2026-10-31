@@ -62,3 +62,18 @@
 	path = contrib/isabelle-base-features
 	url = git@github.com:xqyww123/isabelle-base-features.git
 	branch = main
+[submodule "contrib/local_type_abbrev"]
+	path = contrib/local_type_abbrev
+	url = git@github.com:xqyww123/Local_Type_Abbrev.git
+[submodule "contrib/localized_record"]
+	path = contrib/localized_record
+	url = git@github.com:xqyww123/Localized_Record.git
+[submodule "contrib/local_datatype"]
+	path = contrib/local_datatype
+	url = git@github.com:xqyww123/Local_Datatype.git
+[submodule "contrib/dot_syntax"]
+	path = contrib/dot_syntax
+	url = git@github.com:xqyww123/Dot_Syntax.git
+[submodule "contrib/qiyuan_dev_patches"]
+	path = contrib/qiyuan_dev_patches
+	url = git@github.com:xqyww123/qiyuan_dev_patches.git
