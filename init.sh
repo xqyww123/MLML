@@ -70,10 +70,45 @@ else
     echo "Isabelle2025-2 and AFP reinstalled."
 fi
 
+# The shared trees of the release lines the feature repositories register are clones of
+# isabelle-patched. The newest line's comes from its official release. A shared tree unpacked from a
+# tarball becomes a clone in place: `checkout -f` writes daily's files over the tarball's, the build
+# products are ignored, and the .git moves in last, so that a rerun redoes a conversion that stopped
+# (contrib/<R>.clone holds nothing but that unfinished clone).
+lines=$(sed -n 's|^[[:space:]]*branch = \(Isabelle[^/]*\)/.*|\1|p' ./contrib/*/.gitmodules | sort -uV)
+newest=$(echo "$lines" | tail -1)
+if [ -n "$newest" ]; then
+    tarball=./contrib/${newest}_linux.tar.gz
+    if [ ! -e "./contrib/$newest" ]; then
+        echo "Downloading $newest, the newest release line of the feature repositories..."
+        curl -fL -o "$tarball" "https://isabelle.in.tum.de/website-$newest/dist/${newest}_linux.tar.gz"
+    fi
+    if [ -e "$tarball" ]; then    # also finishes an unpack that stopped half way
+        tar -xzf "$tarball" -C ./contrib
+        rm "$tarball"
+    fi
+fi
+for r in $lines; do
+    if [ -d "./contrib/$r" ] && [ ! -e "./contrib/$r/.git" ]; then
+        echo "Turning contrib/$r into a clone of isabelle-patched on $r/daily..."
+        rm -rf "./contrib/$r.clone"
+        git clone -q -n -b "$r/daily" https://github.com/xqyww123/isabelle-patched.git "./contrib/$r.clone"
+        git --git-dir="./contrib/$r.clone/.git" --work-tree="./contrib/$r" checkout -q -f
+        git --git-dir="./contrib/$r.clone/.git" config "branch.$r/daily.mergeoptions" --ff-only
+        mv "./contrib/$r.clone/.git" "./contrib/$r/"
+        rmdir "./contrib/$r.clone"
+    fi
+done
+
 # The feature repositories (those whose .gitmodules registers trees under worktrees/): each
 # init.sh puts its Isabelle trees in place and installs their build products from the shared tree.
+# `git submodule update` left the repository on no branch, and the tools commit there: put it back
+# on its default branch first, at the commit `--remote` checked out.
 for home in ./contrib/*; do
     if [ -f "$home/init.sh" ] && grep -q '^[[:space:]]*path = worktrees/' "$home/.gitmodules" 2>/dev/null; then
+        branch=$(git -C "$home" symbolic-ref --short refs/remotes/origin/HEAD)
+        git -C "$home" switch "${branch#origin/}"
+        git -C "$home" merge --ff-only "$branch"
         bash "$home/init.sh"
     fi
 done
