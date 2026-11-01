@@ -97,3 +97,5 @@ PHI_VC_SOLVER_PLAN*.bak*
 
 # scratch backups of files removed from git by cleanup sessions; never tracked
 /.trash/
+ai-artifacts/
+/contrib/Isabelle2026_and_afp-2026-10-26.tar.zst

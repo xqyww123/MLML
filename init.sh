@@ -46,28 +46,28 @@ done
 
 if [[ "$reinstall_isabelle" == "y" ]]; then
     echo "Removing existing Isabelle and AFP installations..."
-    rm -rf ./contrib/Isabelle2025-2 ./contrib/afp-2026-05-13
-    rm -f ./contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst
-    if [ -d "$HOME/.isabelle/Isabelle2025-2/heaps" ]; then
-        mv $HOME/.isabelle/Isabelle2025-2/heaps $HOME/.isabelle/Isabelle2025-2/heaps.$(date +%Y%m%d%H%M%S)
+    rm -rf ./contrib/Isabelle2026 ./contrib/afp-2026-10-26
+    rm -f ./contrib/Isabelle2026_and_afp-2026-10-26.tar.zst
+    if [ -d "$HOME/.isabelle/Isabelle2026/heaps" ]; then
+        mv $HOME/.isabelle/Isabelle2026/heaps $HOME/.isabelle/Isabelle2026/heaps.$(date +%Y%m%d%H%M%S)
     fi
     echo "Isabelle and AFP will be reinstalled."
 fi
 
 # A shared tree that is a git clone of isabelle-patched carries the feature commits, so it never
 # matches the release's md5 list: git updates it, and the sync-isabelle-afp-distribution SKILL the AFP.
-if [ -e ./contrib/Isabelle2025-2/.git ]; then
-    echo "contrib/Isabelle2025-2 is a git clone: not checked against the md5 list (update it with git)."
-elif md5sum --status -c ./contrib/Isabelle2025-2.md5sum; then
-    echo "Isabelle2025-2 is up to date."
+if [ -e ./contrib/Isabelle2026/.git ]; then
+    echo "contrib/Isabelle2026 is a git clone: not checked against the md5 list (update it with git)."
+elif md5sum --status -c ./contrib/Isabelle2026.md5sum; then
+    echo "Isabelle2026 is up to date."
 else
-    echo "Isabelle2025-2 is out of date. Reinstalling..."
-    rm -rf ./contrib/Isabelle2025-2
-    rm -rf ./contrib/afp-2026-05-13
-    python3 manage_data.py get contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst -y
-    tar --zstd -xf ./contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst -C ./contrib
-    rm ./contrib/Isabelle2025-2_and_afp-2026-05-13.tar.zst
-    echo "Isabelle2025-2 and AFP reinstalled."
+    echo "Isabelle2026 is out of date. Reinstalling..."
+    rm -rf ./contrib/Isabelle2026
+    rm -rf ./contrib/afp-2026-10-26
+    python3 manage_data.py get contrib/Isabelle2026_and_afp-2026-10-26.tar.zst -y
+    tar --zstd -xf ./contrib/Isabelle2026_and_afp-2026-10-26.tar.zst -C ./contrib
+    rm ./contrib/Isabelle2026_and_afp-2026-10-26.tar.zst
+    echo "Isabelle2026 and AFP reinstalled."
 fi
 
 # The shared trees of the release lines the feature repositories register are clones of
@@ -128,7 +128,7 @@ printf "ML_OPTIONS='--minheap 4G --maxheap ${isabelle_memory}G'\nML_MAX_HEAP=${i
 echo "Setting Isabelle memory limit to ${isabelle_memory}GB"
 
 #rm -f  $(isabelle getenv -b ISABELLE_HOME_USER)/etc/components 2>/dev/null
-isabelle components -u ./contrib/afp-2026-05-13/thys || exit 1
+isabelle components -u ./contrib/afp-2026-10-26/thys || exit 1
 isabelle components -u . || exit 1
 
 # Isa-Mini's REPL-app sessions live in per-directory ROOTs (Minilang_Translator,

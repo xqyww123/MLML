@@ -14,6 +14,10 @@ Never write to, update, or delete anything in the memory directory without my ex
 
 CRITICAL: You MUST NEVER make autonomous decisions under ANY uncertainty. If anything is ambiguous, unclear, or inconsistent — stop and ask me BEFORE acting. Never guess, never silently work around issues, never make judgment calls on my behalf. Be proactive: if something MIGHT be worth clarifying, ask first. It is always better to ask one question too many than to make one wrong assumption. When in doubt, ask. When not in doubt, consider whether you should be.
 
+### Every design element needs my explicit approval
+
+Any deviation from a design I have stated must be flagged as a deviation and approved before it is presented as part of the design.
+
 ### Shared Working Directory
 
 You operate in a shared working directory alongside other agents. Never use git stash, git checkout, git reset --hard, or any command that discards or hides uncommitted changes.
@@ -42,9 +46,14 @@ When spawning subagents, use model Opus 5 (`opus`) by default.
 
 Put plan documents, test files, and other scratch files in `ai-artifacts/` at the root of the project you are working in (create it if missing). It is git-tracked.
 
+### Edit plans before compaction, never after
+
+When a plan or design document needs changes, make them now, before any compaction. Details that only live in the conversation are lost at compaction, so a plan edit deferred past it is a plan edit forgotten.
+
 ### No scripted edits to plan documents
 
 Never modify plan/design documents (`*_PLAN.md`, `*_ISSUES.md`, and the like) with scripts (sed, python, batch replace). Edit them by hand — rewriting the text is part of reviewing it.
+Never delegate an edit of a plan or design document to a subagent; make every such edit yourself.
 
 ### Consistent Terminology — Never Coin Words
 
@@ -58,11 +67,27 @@ IMPORTANT: Before writing ANY new logic, search the codebase first. Reuse what e
 
 Weigh elegance as heavily as correctness in every review — a shape that makes an invariant impossible to violate beats one that asks people to remember it.
 
+### Typical review workflow
+
+Run a two-turn adversarial debate among a team of agents, all Opus 5.5 at `xhigh` reasoning effort, using the `Workflow` tool. All in English.
+
+- **Turn 1 — challenge:** reviewers raise concerns about the target.
+- **Turn 2 — defense:** a brand-new agent for each concern defends the target against it.
+- **Judge:** rules whether the acceptance criteria are met, and splits the surviving concerns into those I must decide with you and those you may decide yourself and then send back for re-review.
+
+Priorities: cull low-quality concerns; weigh elegance heavily and reject dirty hacks; identify hair-splitting and rebut it sternly; if slightly relaxing my spec/design would make the target clean and elegant, propose that to me.
+
+Afterwards, tell me every concern and how you plan to fix it, in Chinese. Do not change the target before I agree.
+
+The workflow above is not mandatory; adapt it as the situation requires.
+
 ### Code Comments Are Concise
 
 ### Monitor Long-Running Tasks
 
 任何长时间跑的 shell 任务必须定期监视。监视间隔不能超过 10 分钟。
+
+**例外**：`Workflow` 工具起的多 agent 运行不用监视——它完成时自己发通知，起跑后直接等通知即可。
 
 ### Verify, Don't Assume
 
@@ -91,10 +116,8 @@ Comments in source code, though, should be short, on point, and load-bearing.
 
 | Directory | Description |
 | --- | --- |
-| `contrib/Isabelle2024/` | The Isabelle 2024 theorem prover distribution |
-| `contrib/afp-2025-02-12/` | Archive of Formal Proofs (2025-02-12 snapshot), paired with Isabelle2024 |
-| `contrib/Isabelle2025-2/` | The Isabelle 2025-2 theorem prover distribution |
-| `contrib/afp-2026-05-13/` | Archive of Formal Proofs (2026-05-13 snapshot), paired with Isabelle2025-2 |
+| `contrib/Isabelle2026/` | The Isabelle 2026 theorem prover distribution |
+| `contrib/afp-2026-10-26/` | Archive of Formal Proofs (2026-10-26 snapshot), paired with Isabelle2026 |
 
 ## Core systems
 
