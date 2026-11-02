@@ -1,6 +1,6 @@
 ---
 name: sync-semantic-embedding-db
-description: How to install or refresh the semantic embedding database (LMDB stores at ~/.cache/Isabelle_Semantic_Embedding; layered — a read-only system DB under the writable user DB). The development channel is the Hugging Face Hub tarball via manage_data.py (get/update). End users instead install the system DB from the conda channel (the isabelle-semantic-data package, or `isabelle-semantics pull`). Use when setting up or refreshing the semantic DB on a machine, or when deformalizations / vector stores are stale or missing. Do NOT dispatch `isabelle-semantics release` — publishing is a human-only action.
+description: How to install or refresh the semantic embedding database (LMDB stores at ~/.cache/Isabelle_Semantic_Embedding; layered — a read-only system DB under the writable user DB). The development channel is the Hugging Face Hub tarball via manage_data.py (get/update). End users instead install the system DB from the conda channel (the isabelle-semantic-data package, or `isabelle-semantics pull`). Use when setting up or refreshing the semantic DB on a machine, or when deformalizations / vector stores are stale or missing. Release isabelle-semantic-data only on the owner's order, following isabelle-packaging-ci's RELEASE_CHECKLIST.md.
 ---
 
 Two channels. **Developers** publish and fetch the full working DB via the
@@ -67,8 +67,9 @@ snapshot (`contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst`):
 
 To package the current `~/.cache/Isabelle_Semantic_Embedding` and upload it as the
 published snapshot. This upload is ALSO the exact input of the next conda data
-release: CI downloads this very tarball, drops the tombstones, and packages the
-result — what you upload is what everyone eventually gets.
+release: the release downloads this very tarball, exports it (dropping the
+tombstones) and packages the result — what you upload is what everyone
+eventually gets.
 
 1. **Make sure nothing is writing the cache** (a mid-write LMDB packages a corrupt
    snapshot). Confirm no live collection/embedding process holds open data fds —
@@ -90,7 +91,7 @@ result — what you upload is what everyone eventually gets.
    `semantics.lmdb/`, the `vector_*.lmdb/` store(s), `theory_hash.lmdb/` (the
    theory-hash registry — shared data, not a local cache), and also
    `experience_index.lmdb/` and `AoA_Collected/` — tombstones and WIP included
-   (CI's export strips what must not ship):
+   (the release's export strips what must not ship):
    ```bash
    tar --zstd -cf contrib/Semantic_Embedding/Isabelle_Semantic_Embedding.tar.zst \
        --exclude='Isabelle_Semantic_Embedding/embed_cache' \
@@ -140,15 +141,11 @@ current" when there is nothing new). It refuses when a conda-delivered system
 DB would shadow the pulled copy — update through conda there. Then restart any
 running RPC host / REPL server.
 
-## Releasing the published data package (human-only)
+## Releasing the published data package
 
-`isabelle-semantics release` warns when the local DB looks newer than the last
-HF upload (publish to HF first — the release ships the HF state, see above),
-then dispatches the `release-semantic-db` workflow in
-`xqyww123/isabelle-packaging-ci`: it runs `isabelle-semantics export` over the
-HF tarball (tombstones dropped, experience index rebuilt, manifest stamped,
-gates run) and publishes `isabelle-semantic-data` to conda.qiyuan.me. The
-package version derives from the export timestamp — there is nothing to
-choose. **Do not dispatch this yourself — it is a human's call.** Ordering: a
-new `isabelle-semantic-embedding` must be on the channel before the first data
+Only on the owner's order, by isabelle-packaging-ci's `RELEASE_CHECKLIST.md`,
+"9. Release" (item 3 holds this package's own build steps). The package ships
+the snapshot that is on HF when it is built. Uploading one (see above) is not a
+release step: do it only when the owner's order says so. A new
+`isabelle-semantic-embedding` must be on the channel before the first data
 release that changes format expectations.
