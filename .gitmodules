@@ -77,3 +77,6 @@
 [submodule "contrib/qiyuan_dev_patches"]
 	path = contrib/qiyuan_dev_patches
 	url = git@github.com:xqyww123/qiyuan_dev_patches.git
+[submodule "contrib/bicompose_rename_fix"]
+	path = contrib/bicompose_rename_fix
+	url = git@github.com:xqyww123/Bicompose_Rename_Fix.git
