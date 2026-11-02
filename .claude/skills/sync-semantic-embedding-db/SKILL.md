@@ -1,6 +1,6 @@
 ---
 name: sync-semantic-embedding-db
-description: How to install or refresh the semantic embedding database (LMDB stores at ~/.cache/Isabelle_Semantic_Embedding; layered — a read-only system DB under the writable user DB). The development channel is the Hugging Face Hub tarball via manage_data.py (get/update). End users instead install the system DB from the conda channel (the isabelle-semantic-data package, or `isabelle-semantics pull`). Use when setting up or refreshing the semantic DB on a machine, or when deformalizations / vector stores are stale or missing. Release isabelle-semantic-data only on the owner's order, following isabelle-packaging-ci's RELEASE_CHECKLIST.md.
+description: How to install or refresh the semantic embedding database (LMDB stores at ~/.cache/Isabelle_Semantic_Embedding; layered — a read-only system DB under the writable user DB). The development channel is the Hugging Face Hub tarball via manage_data.py (get/update). End users instead install the system DB from the conda channel (the isabelle-semantic-data package, or `isabelle-semantics pull`). Use when setting up or refreshing the semantic DB on a machine, or when deformalizations / vector stores are stale or missing. Release isabelle-semantic-data only on the owner's order, with the SKILL conda-release.
 ---
 
 Two channels. **Developers** publish and fetch the full working DB via the
@@ -143,8 +143,8 @@ running RPC host / REPL server.
 
 ## Releasing the published data package
 
-Only on the owner's order, by isabelle-packaging-ci's `RELEASE_CHECKLIST.md`,
-"9. Release" (item 3 holds this package's own build steps). The package ships
+Release isabelle-semantic-data only on the owner's order, with the SKILL
+conda-release. The package ships
 the snapshot that is on HF when it is built. Uploading one (see above) is not a
 release step: do it only when the owner's order says so. A new
 `isabelle-semantic-embedding` must be on the channel before the first data
