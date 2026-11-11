@@ -80,3 +80,6 @@
 [submodule "contrib/bicompose_rename_fix"]
 	path = contrib/bicompose_rename_fix
 	url = git@github.com:xqyww123/Bicompose_Rename_Fix.git
+[submodule "contrib/sledgehammer_fact_trigger"]
+	path = contrib/sledgehammer_fact_trigger
+	url = git@github.com:xqyww123/Sledgehammer_Fact_Trigger.git
