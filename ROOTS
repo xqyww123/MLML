@@ -3,8 +3,6 @@ tasks/MathBench_Prover
 tasks/AoA-learning
 tasks/MiniF2F_Prover
 tasks/MiniF2F_MyProver
-tasks/extraction/theorem-relevance
-tasks/extraction/pretrain
 #tasks/NTP4Verif
 data/NTP4VC
 evaluation/MLML_Verify
