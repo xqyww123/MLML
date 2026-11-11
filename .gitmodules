@@ -86,3 +86,6 @@
 [submodule "contrib/global_form"]
 	path = contrib/global_form
 	url = git@github.com:xqyww123/Global_Form.git
+[submodule "contrib/default_fact_qualifiers"]
+	path = contrib/default_fact_qualifiers
+	url = git@github.com:xqyww123/Default_Fact_Qualifiers.git
