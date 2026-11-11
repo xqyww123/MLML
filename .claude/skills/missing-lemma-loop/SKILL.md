@@ -5,6 +5,10 @@ description: Operational pipeline to start, monitor, STOP, and recover the MathB
 
 # Missing-lemma loop — fleet operations pipeline
 
+> **Runs on the Isabelle2025-2 toolchain; not ported to Isabelle2026.** MathBench_Prover's
+> 2026 port is set aside (owner, 2026-11-11), and Isa-REPL, Isabelle_RPC and Isa-Mini on main
+> are Isabelle2026-only, so this loop does not run on the current main.
+
 Runbook to start / monitor / stop / recover the loop on the MBZUAI cluster in
 `--fleet` mode. Design rationale: `MISSING_LEMMA_LOOP.md` (repo root).
 
@@ -94,7 +98,7 @@ Gotchas:
 ## Git safety on the shared `/lustre` checkout (HARD RULE)
 
 The checkout is shared with other agents that hold uncommitted WIP (e.g.
-`contrib/Isa-Mini/translator`, `data/miniF2F` — known bad pins, leave them).
+`data/miniF2F` — a known bad pin, leave it).
 
 - **严禁动 git 切换目录树**: never `git checkout <ref>` / `git checkout -- <path>`
   / `git reset --hard` / `git stash` / `git clean`, or anything that switches or
