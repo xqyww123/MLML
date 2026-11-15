@@ -98,6 +98,12 @@
       "size": 1442487236,
       "description": "Isabelle2026 + AFP 2026-10-26 distribution",
       "group": "tools"
+    },
+    {
+      "path": "contrib/Semantic_Embedding/archive/Isabelle_Semantic_Embedding-Isabelle2025-2-2026-11-15.tar.zst",
+      "size": 9995203370,
+      "description": "archive of the semantic DB build store as built with Isabelle2025-2, before the migration to Isabelle2026",
+      "group": "optional"
     }
   ]
 }
