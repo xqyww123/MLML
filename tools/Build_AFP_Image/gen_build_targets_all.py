@@ -14,8 +14,9 @@ import os
 from data.isabelle import THEORIES, INFLUENCES, SESSIONS, session_of, short_name_of
 from gen_build_targets import has_examples, EXEMPT_SHORT, BASE_THEORIES, CLASH_EXCLUDE
 
-DEP1_BASE = 'AFP-DEP1-21'                       # chain top of the DEP1 image
 DEP1_DIR  = './tools/Build_AFP_Image/AFP-DEP1'
+DEP1_STEPS = open(f'{DEP1_DIR}/ROOTS').read().split()   # the DEP1 chain, in order
+DEP1_BASE = DEP1_STEPS[-1]                      # chain top of the DEP1 image
 OUT_DIR   = './tools/Build_AFP_Image/AFP-DEP0'
 BATCH     = 384
 
@@ -30,9 +31,9 @@ def can_use_all(thy):
 
 # --- theories already present in the DEP1 image (listed in its ROOTs) ---------
 covered = set(BASE_THEORIES)
-for i in range(22):
+for step in DEP1_STEPS:
     mode = None
-    for line in open(f'{DEP1_DIR}/AFP-DEP1-{i}/ROOT').read().splitlines():
+    for line in open(f'{DEP1_DIR}/{step}/ROOT').read().splitlines():
         t = line.strip()
         if t == 'sessions':
             mode = 's'; continue
