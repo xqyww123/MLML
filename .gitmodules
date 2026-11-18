@@ -89,3 +89,6 @@
 [submodule "contrib/default_fact_qualifiers"]
 	path = contrib/default_fact_qualifiers
 	url = git@github.com:xqyww123/Default_Fact_Qualifiers.git
+[submodule "contrib/generic_mksimps"]
+	path = contrib/generic_mksimps
+	url = git@github.com:xqyww123/isabelle-generic-mksimps.git
