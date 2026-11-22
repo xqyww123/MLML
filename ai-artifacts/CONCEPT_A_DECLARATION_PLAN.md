@@ -37,6 +37,10 @@ concept ('a, 'b) C = "'a Base"
 - 第一项不带 qualifier 的是 major parent；第一项就带 qualifier 则没有显式的 major parent（如 group_hom），major parent 隐含为 base concept `concept`（作者 2026-11-17，4.1）。
 - 带名字但类型不是 concept 的项（字段）后面跟 `where`、带 qualifier 的 parent 后面跟 mixfix，要读完类型才看得出，读完后报"Bad syntax"（10.1）；parent 不接受 mixfix，要符号就在体内用 `notation`（作者 2026-11-17「A9.1 赞同你的建议」）。
 - 读 header 时固定成变量的，除了 `+` 项自己的字段和 qualifier，还包括 major chain 继承来的字段（2026-11-17 补，A 区评审 A5）。**继承来的字段包括 major chain 祖先的视图名**（如 `ordered_group` 的后代里写 `where le = ord.le`，`ord` 可用）【已定，作者 2026-11-18「同意」；原型实现时我按"对用户视图就是字段"这样读，报告后作者同意】。评审 A5 留下、归 D 区评审的一条【提案；我向作者说过要记这一条，内容没有讨论过】：读 header 里的项（`assumes`、`where` 右边）时，stage −200 的 notation check 看得到哪些 candidate，计划没有说，例如 monoid 的 `assoc` 里自己字段的 mixfix `*`、继承来的符号。裁判给的草案：读任何 header 项之前，命令先由 `+` 项建好 C 的 static notation table，`\<S>` 算作 C 的一个 `Context` 级、depth 0 的结构；`where` 右边在由命令的 context 派生的 context 里读，所以只有当时已有的条目适用。A 区的原型可以只用字段名和 selector 写，不被这一条挡住。
+  【2026-11-22 注：上面草案里"`\<S>` 算作 C 的一个 `Context` 级、depth 0 的结构"随 priority 一起过时。
+  作者 2026-11-22 在 concept D 的会话里定了 contextual notation table（D 区文件 `CONCEPT_D_NOTATION_PLAN.md` 6.3，它取代 dynamic notation table 与五级的 priority）：
+  一个 context 里不写下标的符号怎样读，由一张有序的来源列表决定，列表由带语句的命令或块设置一次。
+  concept 的块打开时由命名 target 设置它，放一条（`\<S>`，这个 concept）；读 header 里的项时看得到什么，照那份文件，仍归 D 区。】
 - **"本结构还满足另一个 concept"用 `assumes` 写**【已定，作者 2026-11-16「我建议把这种语法改为 `concept 'a cring = "'a ring" + assumes cm: "comm_monoid \<S>"`」】：`concept 'a cring = "'a ring" + assumes cm: "comm_monoid \<S>"` 只是一条假设，生成 parent 规则 `cring.cm : cring ?S ⟹ comm_monoid ?S`（名字就是这条 `assumes` 的名字，2.2），无常量、无视图、不导入。
   此前这里还写着"不往 static notation table 加条目"，2026-11-21 改：作者 2026-11-20 16:11 对 concept B 提出并表的顺序（那条消息以「你觉得如何？」结尾），concept B 报了读法后作者 16:24「确认」，直接说 `\<S>` 的假设的 concept 的表也并进来，排在 major parent 之后、视图之前
   （「最优先的是 the major parent 然后是 assumptions 中直接描述 \<S> 的，然后是视图，然后是其余的 assumptions」；全文与例子在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 6.1）。**header 里形如 `D \<S>` 的 `assumes`（`D` 是 concept，参数恰好是 `\<S>`）当作一条 parent 边**：`concept_fact` 沿它推、查找链与 2.3 的 `[intro!]` 都认它；别的形状（`comm_monoid \<S> ∧ P`、`group (\<S>.sub H)`）是普通假设。原先"不能有新字段"的条件现在由类型检查自动保证：`order \<S>` 写在有序群之外的结构上类型就通不过，报 stock 的 "Type unification failed"（作者 2026-11-16「赞同直接用 Isabelle 的类型错误」；实测它会列出两个冲突的类型以及算子和操作数的类型，探针 `ai-artifacts/concept_unary_partition_A_probes/Type_Error_Probe.thy`）。于是**只有 major parent 不带名字**。对照：带 qualifier 的 `cm: "'a comm_monoid" where super = \<S>` 是一个普通视图，有常量 `cring.cm`、自动导入，不搞特殊（后果：comm_monoid 的 lemma 在 `cring.cm \<S>` 上复制一份，去重认不出，作者 2026-11-11 接受）。两种写法的对照写进 TAT 使用说明（`ai-artifacts/CONCEPT_TAT_NOTES.md` 第 4 条，作者「记一笔，之后给 TAT 的使用说明中要给这个例子」）。
@@ -615,7 +619,8 @@ concept A1 02:24 向作者报了自己的理解（A 区剩下的问题里只属�
 - **iff 绑定到实例的裸名上**【已定，作者 2026-11-16「我建议只绑 group.sub…把 iff 绑到 group.sub，不再绑 group.sub.iff」】：`thm group.sub` 是 `group (group.sub ?G ?H) ⟷ group ?G ∧ (∀x y. x ∈ ?H ⟶ y ∈ ?H ⟶ x * y ∈ ?H) ∧ … ∧ ?H ⊆ carrier`。
   - 右边是宿主前提加各条 `if` 子句按声明顺序的合取，子句里的 `⋀`、`⟹` 写成 `∀`、`⟶`，也就是本节 `_constraint` 存的内容（这个形式作者 2026-11-16 确认：「确认实例 iff 的确切形式」）。
   - 只有带前提的实例有（体内实例、全局带 `if` 的实例）；没有前提的实例裸名上仍是原子 fact。
-  - **不挂任何 attribute**（作者「不挂 [simp]，iff 不挂任何 attribute」）：挂 `[simp]` 会把假设里的 `group (G.sub H)` 改写成合取，而 assumption destruction、intro table、dynamic notation table 都靠这个形状。
+  - **不挂任何 attribute**（作者「不挂 [simp]，iff 不挂任何 attribute」）：挂 `[simp]` 会把假设里的 `group (G.sub H)` 改写成合取，而 assumption destruction、intro table、contextual notation table 的来源都靠这个形状
+    （2026-11-22 改：此前这里写的是 dynamic notation table，它已由 contextual notation table 取代，D 区文件 6.3）。
   - 不另绑 `.iff`，`iff` 因此不是保留名。细则见 5.2。日常仍用 destruction lemma。
 - `_constraint` 的 selector 就是谓词 `concept`（本节开头），不作 dot 字段、定义式封掉。`_constraint` 不拆分（5.2）。
 - 代码生成（concept record 会话 2026-11-11 实测）：带参数实例把条件存成数据，生成代码严格求值，条件含对无限 carrier 的量词时构造值即抛 `Match`，全局实例不受影响。

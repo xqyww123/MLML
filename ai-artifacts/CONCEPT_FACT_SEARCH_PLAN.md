@@ -31,7 +31,8 @@
   作者 11-20 04:21：「注意一点，我上面说的“带条件”指的是带有非 concept 条件」。
   截断等式带的 `concept (…)` 条件是另一回事，本文件里总写作"带 `concept` 条件"。
 - **可用的规则**：对一个 concept 目标，按第 3 节取出的那些规则。
-  本文件不用"候选"这个词：B 区 7.1 里它专指 trigger 交给 Sledgehammer 的 `candidate`，公共文件的术语表里它又指 dynamic notation table 的记录。
+  本文件不用"候选"这个词：B 区 7.1 里它专指 trigger 交给 Sledgehammer 的 `candidate`，公共文件的术语表里它又指 dynamic notation table 的记录
+  （2026-11-22 起 dynamic notation table 不再有，由 contextual notation table 取代，D 区文件 6.3；D 区 6.4 仍用 candidate 指查一个 key 查到的条目）。
 - **intro table**：`concept_fact` 查的那张表，形状见 2.1。
 - **`concept_entailment`**【名字已定，见 2.2】：每个 concept 一张，记它蕴含哪些祖先 concept、各隔多远。
 - **concept 距离**（记作 `d'`）：一条规则结论里的 concept 到目标的 concept 隔多远，从 `concept_entailment` 读出；就是同一个 concept 时为 0，目标的 concept 是它的 parent 时为 1。
@@ -207,7 +208,18 @@ theory 数据与上下文数据两部分的分法、条目的 mask 都不变；"
   激活是 assumption destruction 对每个叶子 concept fact 的最后一步，不再另有"打开 concept 的块"这种机制；
   激活出的 fact 不再走 assumption destruction；simp 收前提那一路也做激活，已经激活过的不再做；
   激活出的 fact 只进 intro table，不挂 `[intro!]`、不作 notation 的来源。
-- 用户登记的规则不做激活（concept A1 对作者 15:52 那句话的读法，向作者说过）。作者 11-20 16:31 问过 concept B"只有一个 concept 前提的 intro rule 是不是也进激活"；concept B 建议不进、仍放 intro table，作者 11-20 16:53：「赞同」。
+- **用户用 `[concept_intro]` 登记的定理，登记时做不做激活**（11-21 15:27 改；机制在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 2.2，以那里为准）。
+  - 不带前提的事实：登记时做激活【已定，作者 11-21 15:27 对 concept B：「赞同每条进表的路都在进表时激活，请写入计划」，concept A1 在它的会话转录里核过】。
+    例：`lemma r [concept_intro]: "X c0"` 登记时，把 `X` 的激活列表对 `c0` 实例化、化简，结果也放进 intro table。
+    不做的话，之后证明里 `assume "X c0"`，表里已有一模一样的条目，照进表时的查重不再激活，`X` 的激活列表在 `c0` 上就始终没有人做。
+  - 导入进来的不带前提的副本登记时也做激活（同一个决定；归 E 区文件）。
+  - 带前提的规则：登记时做不做，作者没有说到【没有定，`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 8 节第 17 项】。
+    导入进来的带前提的副本是同一个没有定的问题（concept B 15:49 照校对写明；作者 15:27 的决定里它向他举的只有不带前提的事实与副本）。
+    此前这里写的是"用户登记的规则不做激活"，是 concept A1 对作者 11-20 15:52 那句话的读法（向作者说过）；它对不带前提的事实不再成立，对带前提的规则是现状。
+  - 对搜索的含义：在 intro table 里的条目，它自己的 concept 的激活一定做过，搜索不必为"表里有这条 fact、它的激活却没有做"另作处理。
+    这两种新激活出的条目各栏怎样记，concept B 的文件还没有写；它们是不带前提的事实，标记无所谓（2.3）。
+- 作者 11-20 16:31 问过 concept B"只有一个 concept 前提的 intro rule 是不是也进激活"；concept B 建议不进、仍放 intro table，作者 11-20 16:53：「赞同」。
+  这一条说的是规则进不进激活列表，与上一条（登记时做不做激活）是两件事，15:27 的决定没有改它。
 - **补强**【已定，作者 11-21 03:34、05:09、05:22 对 concept B，concept A1 在它的会话转录里核过；机制在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 2.5，以那里为准】。
   一条结论是 `C t` 的定理进 intro table 时，若 `t` 的头是一个按 concept `D` 声明的实例，而 `C` 是 `D` 的严格祖先，表里存的是把结论换成 `D t` 的那一条，前提不动，原来那条不留。
   - 例：`sub` 是按 group 声明的。用户登记 `lemma r [concept_intro]: "P ?H ⟹ monoid (G.sub ?H)"`，表里存的是 `P ?H ⟹ group (G.sub ?H)`；
@@ -314,7 +326,7 @@ concept_entailment:  {distance: int, entailment: thm, path: string list option} 
   - 带 `if` 的（`sub.comm_monoid G H`）是一个普通的实例：有自己的隐藏字段，自己的规则是系统标安全的，来源是同一层的 `sub.monoid G H`。它不属于本条。
     它与来源之间靠 3.2 的转换接：规则说 `sub.monoid`、目标说 `sub.comm_monoid` 时补 `concept t`、leap 照 4.2 是 0；反过来不补前提、leap 至少是 1。
   - 不带 `if` 的才是本条说的"不定义常量、沿用已有常量的声明"：登记的是 `concept (frac.ring ?D) ⟹ field (frac.ring ?D)`，全局、不带参数时前提消掉，就是 `comm_monoid int.monoid`
-    （作者 10:40「赞同你的建议」；concept C 说会请作者再确认这一半）。
+    （作者 10:40「赞同你的建议」；13:05 对 concept C 再次确认：「> 不带 if 的 refinement 成员照旧不定义常量」「对」，concept A1 在它的转录里核过）。
     它唯一的前提说的是目标自己的结构项（4.2 的例外，距离不变），又没有非 concept 条件，所以标记对它不起作用；本条"用户标，不标按不安全"现在没有用得上的情形。】
 - **不带任何前提的事实**（原子的实例 fact、assumption destruction 得到的、simp 收前提时登记的、视图的 `concept (C.q ?c)`）：用它不产生新目标，也不留条件，标记不影响任何东西。
 - **激活得到的、带着实例原前提的条目**，如 `foo.h : P ?a ⟹ group ((foo.X ?a).sub (K ?a))`【已定，作者 11-20 16:37、17:14】
@@ -1574,3 +1586,7 @@ B 区 11.2"truncate 三件事"第 (1) 件问的是 `P.truncate t` 算不算第�
   它留的文字修改已改：3.2 (c) 不再把两种情形写成全部；"嵌在结构项里面"一条的状态；2.4 那句蕴含的用处。
   (2) **更正 11:12 第 (2) 条**：作者 11:38 对 concept C 推翻了他 11:01 的决定，带 `if` 的只加假设的成员定义自己的常量。2.3 表后第三条、6.2 第 1 项、3.2 第 2 步那一句照此改回。
 - 2026-11-21 12:19：3.2"匹配"里加一条：类型相同的两个成员也不正规化成一个写法，理由与它属于"靠截断转换"的哪一种（作者 11:47 至 12:06 问的几句的回答，设计没有改）。
+- 2026-11-21 13:18：2.3 表后第三条里"不带 `if` 的不定义常量"一句的出处补上作者 13:05 对 concept C 的再次确认（只改出处，规则没有变）。
+- 2026-11-21 15:30：2.1 第六类里"用户登记的规则不做激活"一句照作者 15:27 对 concept B 的决定改写（「赞同每条进表的路都在进表时激活，请写入计划」，转录里核过）：
+  不带前提的事实与导入进来的不带前提的副本登记时做激活；带前提的规则与带前提的副本没有定。搜索的算法没有因此改。
+- 2026-11-22 04:24：第 0 节"可用的规则"一条里提到 dynamic notation table 的那句加注：它已由 contextual notation table 取代（作者 2026-11-22 在 concept D 的会话里定，D 区文件 6.3）。只改这一句的指路。

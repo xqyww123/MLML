@@ -6,6 +6,7 @@
 - rev 4（2026-11-13）：**同步稿**。写入 rev 3 之后作者的全部裁定、第二轮评审（`wf_e55250cc-cd8`，修改后通过）的处置、与 unary concept 会话对过的语义、新增探针的结果；第 9 节列全部未定问题。包的定位在这一版变了（0.1 第 23–26 条）：它只为 concept 服务，对外只留两个入口。新的"一次调用"那一层的设计还是草稿、尚无探针（3.2、3.3、3.8、3.9），本稿的目的是不让任何决定只留在对话里。写完后由本会话通读、再由一个 Opus agent 对照会话记录校对，校对指出的问题已改入（第 10 节末）。
 - rev 5（2026-11-16）：本计划改由 unary concept 会话维护（作者「我建议把 concept record 相关的工作全都划归到你这里」，0.1 第 31 条）；写入作者当日对第 9 节的裁定（0.1 第 32–39 条）和新 feature `concept` 的决定；过时的状态与归属随之更正。没有新的探针，已定的设计没有改动。下文的"本会话""我"在 rev 4 及以前指原来的 concept record 会话，rev 5 新写的部分指 unary concept 会话。
 - 2026-11-18/19（未另编 rev 号）：0.1 加第 70–77 条（第 74–77 条在表里的排列不是编号顺序：75、77、76、74）。其中第 75–77 条推翻或改动了此前的多处：`truncate` 放给用户（第 75 条；改动第 5、9、18、43 条，3.5、3.7、3.9、第 2 节）；类型的打印按模式匹配、一律印全名（第 76 条；改动第 33 条，3.4，第 6 节测试第 4 项）；类型缩写读成 `('a, _) C_scheme`、视图可带 row variable、more 变量叫 `'\<e>`（第 77 条；改动第 8、45、57 条，3.1 第 13 项，3.4，3.8，3.12）。各处加了指回的话，正文没有重写；待定的事集中在 concept 计划 11.2 开头那一条。
+- 2026-11-21（未另编 rev 号，十一续，12:38 UTC）：3.1 第 11 项写进 dot_syntax 定下的"只用于读入的登记"（`(input)` 与 `Dot_Field.declaration` 的形状）。实现已开工（作者 12:22 UTC「开工」），进度记在 `CONCEPT_A_IMPLEMENTATION_KICKOFF.md`。
 - 2026-11-21（未另编 rev 号，十续）：**第四轮评审 `wf_db306edf-786` 通过**，3.13 照它改三处文字、放宽一条（隐藏字段为 `True` 的也算视图项），第 84 条与"状态"随之改。
   更正"八续"第 (3) 条：作者 11:38 对 concept C 推翻了 11:01 的决定，带 `if` 的只加假设的成员有自己的常量；例子表后那一段的例子改回，另记"同类型的两个成员要补的一处"（没有评审）。
 - 2026-11-21（未另编 rev 号，九续）：0.1 加第 85 条，3.1 第 11 项加"`more` 也登记"：每一层的 `C.more` 登记成点写法的字段，打印时不折回（作者 11:14 定）；3.14 开头加一句指过去。
@@ -261,7 +262,13 @@ concept 'a ordered_group = "'a group" + ord: "'a order" where carrier = carrier
       `H :: ('a, 'e) group_scheme` 时是 `group.more H`；`H :: 'a group` 时它的类型是 `unit`；concept `C` 的体内 `\<S>.more` 是 `C.more \<S>`（`C` 没有自己一层时是拥有者那一层的 more）。
       要说"载体之外的全部内容"，对象的类型得正好标在 carrier 那一层的 scheme 上，或直接写带层名的常量。
     - 打印时不折回点写法：`group.more H` 仍印成 `group.more H`，不印成 `H.more`。靠 dot_syntax 的登记上一个按条设置的 flag，本层登记 `more` 时设上它。
-      这个 flag 由 dot_syntax 会话加（2026-11-21 已转告），ML 登记入口的形状等它定。
+      这个 flag 由 dot_syntax 会话加，2026-11-21 已定并实现（它的计划 §1 第 33 条；dot_syntax 会话 12:37 UTC 告知，代码当时还没有提交，它说对差异的复审若改动签名会再通知）。
+      - 给用户的写法：`[[dot_field (input) C.more]]` 或 `[[dot_field (input) more = C.more]]`。`(input)` 这个写法见作者 2026-11-21 12:23 UTC 在 dot_syntax 会话里的原话
+        （「To add a field for input only and not use it for printing, `[[dot_field (input) List.length]]` or …」，concept A1 在它的转录里核过）。
+      - ML 入口（dot_syntax 会话给的，实现层面）：`Dot_Field.declaration : {add: bool, input: bool, pos: Position.T} -> (string * term) list -> Morphism.declaration`。
+        本层登记 `more` 时传 `{add = true, input = true, pos = …}` 与 `[("more", Const (c, T))]`；带名字的字段与视图照旧是 `input = false`。
+      - 行为（同上来源）：读入时这些登记与别的登记同样算数（选择、最具体的赢、冲突检查、警告）；打印时的折叠找不到带 `input` 的登记；
+        同一个常量另有不带 `input` 的登记时照那一条折；`[[dot_field del …]]` 把两种一并删。
     - 起因：concept D 2026-11-21 查出各份计划里 `more` 没有登记成字段，A 区文件 3.7 写的 `more = \<S>.more` 与库里 `sub` 定义中的 `G.more` 照字面都解析不了。
 12. 【rev 6，0.1 第 53、54、65 条】selector Simpset；每个 selector 的 simproc 与它的缓存；针对 `concept _` 的 simproc；attribute `concept_selector` 与对应的 Sledgehammer trigger（3.7）。本层不直接写 `Concept_Fact` 的名字：消 `concept _` 条件要用的搜索函数由 `Concept_Package` 传进来（复审 R7，concept 计划第 9 节"加载顺序"）。
 13. 【2026-11-19：本项取消。类型缩写改读成 `('a, _) C_scheme`，裸类型的 warning 作废，0.1 第 77 条】【rev 6，0.1 第 57 条】裸 concept 类型的检测与 warning（concept 计划 5.2；TAT 复用同一个检测函数）。
@@ -1058,7 +1065,13 @@ semigroup.more ?X = semigroup.more ?Y  ⟷  monoid.one ?X = monoid.one ?Y ∧ mo
 - 扩展类型的值保持不透明：不给用户它的构造子与读取函数，它只以 `L.more t` 的形式出现。所以只有两边都写成 `L.more _` 的等式才拆得开，`m = L.more X`（`m` 是变量）拆不开
   【已定，作者 2026-11-21 09:22「赞同这符合现在"record 封死"的方针，不需要补」】。
 - 库的事，不归系统：`sub` 的定义与它的 extraction rule、取出 more 等式的引理；定义里的 `more` 是 carrier 那一层的，所以库里要有一个叫 carrier 的 concept 垫在 semigroup 之下。
-- 能不能让 simp 一见到前提 `sub …` 就自动取出那条 more 的等式：generic mksimps 可以登记这样的处理器，只有 ML 接口（concept B 2026-11-21 读它的 README 得到的，没有运行）。
+- **simp 见到前提 `sub …` 时不自动取出那条 more 的等式**【已定，作者 2026-11-21 14:18 UTC 对 concept B；concept A1 在它的转录里核过】。
+  concept B 向他讲"用户把 `sub group H G` 交给 simp 时，要有人从它里面取出这条 more 的等式，交给 simp 作改写规则"，他答：
+  「不不！这不是我的意图！这做的太多了！`sub group H G` 这个前提就从中抽取出 `group H`, `group G` 就够了，最多加上一个标准的 assumption destruction 机制，不需要抽取出 `G.more = G'.more` 然后再利用」。
+  所以下面这一条里设想的处理器不做，"两个处理器抢同一条前提"也随之不存在。
+  本节的 simproc 只在项里已经写着 `L.more _ = L.more _` 的等式上起作用（用户自己展开 `sub` 的定义或用引理取出等式之后，以及证这种等式的时候）；
+  这一半作者那句话没有说到，concept A1 2026-11-21 向他单独确认（见交接笔记）。
+- （以下是 2026-11-21 早些时候的设想，已被上一条否决，留作经过。）能不能让 simp 一见到前提 `sub …` 就自动取出那条 more 的等式：generic mksimps 可以登记这样的处理器，只有 ML 接口（concept B 2026-11-21 读它的 README 得到的，没有运行）。
   它交回的规则不再被化简，所以处理器要自己先把那条 more 的等式拆开。它还会与 concept 自己接 `sub group H G` 的处理器抢同一条前提（同一条定理只有第一个交回结果的处理器生效），
   两边怎样合在一起由 concept B 设计、报作者。在那之前，用户自己展开 `sub` 的定义或用引理取出等式。
 
