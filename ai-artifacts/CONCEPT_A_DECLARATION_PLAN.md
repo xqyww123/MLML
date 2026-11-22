@@ -41,9 +41,25 @@ concept ('a, 'b) C = "'a Base"
   作者 2026-11-22 在 concept D 的会话里定了 contextual notation table（D 区文件 `CONCEPT_D_NOTATION_PLAN.md` 6.3，它取代 dynamic notation table 与五级的 priority）：
   一个 context 里不写下标的符号怎样读，由一张有序的来源列表决定，列表由带语句的命令或块设置一次。
   concept 的块打开时由命名 target 设置它，放一条（`\<S>`，这个 concept）；读 header 里的项时看得到什么，照那份文件，仍归 D 区。】
+- **header 里固定成变量的只是"在新 concept 的表里，这个名字指的正是它"的字段与视图**【已定，作者 2026-11-22 12:36 UTC「按你建议来」；它收窄上一条】。
+  - 上一条说 major chain 继承来的每个字段、每个祖先的视图名在 header 里都固定成变量。作者 2026-11-22 定了常量覆盖必须被接受（后代可以用同一个名字盖住祖先的，C 区、D 区），两者相抵：
+    例：先有 `definition (in ordered_group) carrier`，再写 `concept 'a og2 = "'a ordered_group" + assumes a: "𝟭 ∈ carrier"`。
+    照上一条，header 里的 `carrier` 是固定的字段，导出成 `monoid.carrier \<S>`；在 og2 的块里，`carrier` 是 `ordered_group.carrier \<S>`。同一个名字在 header 里与块里指两样东西。
+  - 这与作者 2026-11-22 08:41 UTC 对 concept D 定的那条相抵（「赞同 (a)」，(a) 是"读 header 用的表，就是这个 concept 定义完之后的表"；concept A1 在它的转录里核过）。
+  - 改成：header 里只固定这样的字段与视图——在新 concept 的 static notation table 里，这个名字指的正是它；其余的不固定，经表读；被盖住的字段要用就写长名（如 `monoid.carrier \<S>`）。
+    这是 concept D 2026-11-22 11:35 UTC 提的要求（D 区文件 6.10 的 (7)），concept A1 12:1x UTC 报给作者并建议同意。
+  - 哪些名字"表里指的正是它"，由 D 区的建表函数给出（读 header 之前，用 major parent 与自己的字段、视图算的那张表）。
+    代码还没有改：类型层的 `reading_context` 现在照上一条固定全部，等 D 区的函数做出来再接；没有名字被盖住时两种做法结果相同。
 - **"本结构还满足另一个 concept"用 `assumes` 写**【已定，作者 2026-11-16「我建议把这种语法改为 `concept 'a cring = "'a ring" + assumes cm: "comm_monoid \<S>"`」】：`concept 'a cring = "'a ring" + assumes cm: "comm_monoid \<S>"` 只是一条假设，生成 parent 规则 `cring.cm : cring ?S ⟹ comm_monoid ?S`（名字就是这条 `assumes` 的名字，2.2），无常量、无视图、不导入。
   此前这里还写着"不往 static notation table 加条目"，2026-11-21 改：作者 2026-11-20 16:11 对 concept B 提出并表的顺序（那条消息以「你觉得如何？」结尾），concept B 报了读法后作者 16:24「确认」，直接说 `\<S>` 的假设的 concept 的表也并进来，排在 major parent 之后、视图之前
   （「最优先的是 the major parent 然后是 assumptions 中直接描述 \<S> 的，然后是视图，然后是其余的 assumptions」；全文与例子在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 6.1）。**header 里形如 `D \<S>` 的 `assumes`（`D` 是 concept，参数恰好是 `\<S>`）当作一条 parent 边**：`concept_fact` 沿它推、查找链与 2.3 的 `[intro!]` 都认它；别的形状（`comm_monoid \<S> ∧ P`、`group (\<S>.sub H)`）是普通假设。原先"不能有新字段"的条件现在由类型检查自动保证：`order \<S>` 写在有序群之外的结构上类型就通不过，报 stock 的 "Type unification failed"（作者 2026-11-16「赞同直接用 Isabelle 的类型错误」；实测它会列出两个冲突的类型以及算子和操作数的类型，探针 `ai-artifacts/concept_unary_partition_A_probes/Type_Error_Probe.thy`）。于是**只有 major parent 不带名字**。对照：带 qualifier 的 `cm: "'a comm_monoid" where super = \<S>` 是一个普通视图，有常量 `cring.cm`、自动导入，不搞特殊（后果：comm_monoid 的 lemma 在 `cring.cm \<S>` 上复制一份，去重认不出，作者 2026-11-11 接受）。两种写法的对照写进 TAT 使用说明（`ai-artifacts/CONCEPT_TAT_NOTES.md` 第 4 条，作者「记一笔，之后给 TAT 的使用说明中要给这个例子」）。
+- **针对视图的假设就是一条普通的 header 假设**【已定，作者 2026-11-21 09:44 UTC 对 concept B；concept A1 2026-11-22 在它的会话转录里核过原话】。
+  作者原话：「确认：定义 concept 时，header 里每条 assumes 都走 assumption destruction，用当时看得见的 extraction rule；走到的 concept fact 进激活列表，并作 notation 并表的来源；拆不动的照旧丢掉」。
+  例：`hom` 有带扩展的视图 `A: "('a, 'x) carrier_scheme"`；以代入了类型的 `hom` 为 major parent 的 `semigroup_hom`（3.7"现行的规定"第 4 条）写 `assumes sa: "semigroup A"`，原型里写成 `semigroup (hom.A \<S>)`。
+  它的结构项是视图项 `hom.A \<S>`，不是 `\<S>`，所以不是 parent 边，属于"说别的结构的"那一种 header 假设（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 0 节）。
+  生成的东西与别的 header 假设相同：全局形式 `semigroup_hom.sa: semigroup_hom ?S ⟹ semigroup (hom.A ?S)`；这条 concept fact 进激活列表；并表时归"其余的假设"，只并符号（同一文件 6.1）。
+  不往 intro table 放 `semigroup_hom ?c ⟹ semigroup (hom.A ?c)` 这样的规则：header 假设的蕴含不进 intro table（作者 2026-11-20 15:43 UTC 对 concept B，同一文件 2.3）。
+  这一条了结 11.2 开头那一条第 9 项的第一件。
 - `where` 只能跟在带 qualifier 的 parent 后面，违反时报"Bad syntax"（10.1）。跟在不带名字的 major parent 后面的，由语法拦下；跟在带名字的字段后面的，语法上和 parent 分不开，读完类型后才报（本节前面"带名字但类型不是 concept 的项"那一条，2026-11-17）。
 - **`where` 各项之间只用空格分隔**【已定，作者 2026-11-16「where 的分隔符统一用空格我觉得就够了」】，header 与 `concept_instance` 一样；每项是"路径 `=` 一个项"，不加引号的项只能是单个词，所以没有歧义，列表在遇到 `+`、`if`、`for`、`assumes`、`begin` 等关键字时结束。`if` 子句、`assumes` 之间仍用 `and`。
 - `where` 的 LHS 是点分路径，从该 parent 的根出发，段是字段名、它内部 parent 的 qualifier 或 `super`；可以落在叶子，也可以落在整个子视图（整视图映射展开成逐叶子映射）。
@@ -154,7 +170,7 @@ concept ('a, 'b) C = "'a Base"
 - **concept 只给结构**：有成分（尤其函数类型的成分）、要在其上发展 background theory、要有专属的 notation、实例是有名字的对象。monoid、group、ring、module、group_hom（态射带函数成分 `h`，作 concept，两个群都是 non-major parent，没有显式的 major parent，隐含为 base `concept`，2.1、4.1）。
 - **结构之间的关系怎么写，三条路**【已定，作者 2026-11-12】：
   1. **从属构造**——由一个宿主和参数造出来的结构：子群、正规子群、理想、商群、商环。写成宿主体内的带参数实例，`concept_instance (in group) sub: group … for H`、`normal: group … if … and conj: … for H`、`(in ring) ideal: comm_group … if … and l_closed: … and r_closed: … for I`、`quotient`。"H 是 G 的子群"就是 `group (G.sub H)`（4.3 据此关闭）。作者原话：「sub, normal 我认为并不是关系，而是从属函数，于是定义为了 concept_instance」。
-  2. **结构之间的关系，双方平等，关系自身带实体**——同态、同构、嵌入，实体是那个映射。写成 concept：典型地没有显式的 major parent（隐含为 base `concept`），每一方是一个视图，映射是字段。例：`concept ('a, 'b) group_hom = G : "'a group" + H : "'b group" + ι :: "'a ⇒ 'b" assumes hom: … and into: …`；嵌入 `concept ('a, 'b) group_emb = "('a, 'b) group_hom" + assumes inj: "inj_on ι G.carrier"`，以 group_hom 为 major parent、只加一条假设——"无继承"是典型情形不是规则，继承由内容决定【我的补充，作者 2026-11-16「确认 2.4 里你补的一句」】。箭头唯一（没有自己的数据）的关系也按本条写，无害；"G 能嵌入 H"写 `∃ι. group_emb (emb G H ι)`，`emb` 是带全部 `if` 条件的全局带参数实例，按 4.1 它是 iff。范畴比喻（作者）：结构是对象、二元关系是箭头，带数据的箭头是本条。
+  2. **结构之间的关系，双方平等，关系自身带实体**——同态、同构、嵌入，实体是那个映射。写成 concept：典型地没有显式的 major parent（隐含为 base `concept`），每一方是一个视图，映射是字段。例：`concept ('a, 'b) group_hom = G : "'a group" + H : "'b group" + ι :: "'a ⇒ 'b" + assumes hom: … and into: …`；嵌入 `concept ('a, 'b) group_emb = "('a, 'b) group_hom" + assumes inj: "inj_on ι G.carrier"`，以 group_hom 为 major parent、只加一条假设——"无继承"是典型情形不是规则，继承由内容决定【我的补充，作者 2026-11-16「确认 2.4 里你补的一句」】。箭头唯一（没有自己的数据）的关系也按本条写，无害；"G 能嵌入 H"写 `∃ι. group_emb (emb G H ι)`，`emb` 是带全部 `if` 条件的全局带参数实例，按 4.1 它是 iff。范畴比喻（作者）：结构是对象、二元关系是箭头，带数据的箭头是本条。
   3. **plain definition**（作者原话）：指的是通常以多个 concept 对象为参数的谓词，而且满足一条硬条件：在这个谓词之下不会有需要当作 local theory 来对待的东西——没有要在它的上下文里陈述的 lemma，没有作为一个 locale/module/local theory 的需要。一旦需要上下文，就按第 1 或第 2 条写。`Units`、`center` 这类在某个 concept 体内 definition 出来的导出常量不属于这一条，它们是那个 concept 的内容，谈它们的 lemma 就在那个 concept 的上下文里。
   整个设计不用 stock locale（同节下一条）。
 - **子结构关系由带参数的实例导出**【已定，作者 2026-11-12，见 4.3】：`subgroup H G` 就是 `group (group.sub G H)`。
@@ -197,6 +213,119 @@ concept ('a, 'b) C = "'a Base"
 - `notation t (infix "+")` 往本 concept 的 notation table 登记，可覆盖已有 key（6.3）。`t` 可以是复合项：ring 体内 `notation add.mul (infix "+")` 的意思是把 `+` 绑定到 `magma.mul (ring.add \<S>)` 这个复合项（作者 2026-11-15 的说法；`add.mul` 先由 `add` 解析成视图项、再由 dot_syntax 取 `.mul`，解析没有问题；这种 notation 怎么打印回 `+` 见 6.4"打印"）。refinement（与 major parent 共用 record 类型的 concept）同样可以声明任何 notation，包括覆盖继承来的 key【已定，作者 2026-11-15「依旧允许 refinement concepts 声明任何的 notations，包括 override」】。后果在 6.4：refinement 与 parent 类型相同，所以 explicit form `x *⇘G⇙ y` 在上下文里和全局都没有 `G` 的 concept fact、而同类型的几个 concept 绑的项不同时报错（文案 10.1）。
 - `concept_instance x: D where … for a: A`【已定，作者 2026-11-10】定义**一个**全局常量 `C.x :: C ⇒ A ⇒ D`，隐含 `for \<S>` 和 `if "C \<S>"`；结果继承 `\<S>` 的 `more`（3.6）【这半句 2026-11-21 作废：不再默认继承，要继承就手写 `more = \<S>.more`，不写时结果的 more 是 `unit`，3.7"现行的规定"第 5 条】；登记 dot 访问 `c.x` 表示 `C.x c`（走 dot_syntax 的字段登记表）；把裸名 fact `C.x` 绑定为实例的 iff（5.2，作者 2026-11-16 改；此前绑的是分开前提的 intro rule，它现在只在 intro table 里；祖先不静态绑定，由 `concept_fact` 推）；除此之外不定义别的常量、不绑定别的 fact、不导入。`x` 不得与 C 的 notation table 里已有的任何标识符重合，重合报错；从祖先继承来的名字也算，后代不能重新定义祖先已有的体内实例名，要换一个名字（3.6，作者 2026-11-16）。`concept_instance (in C) x: …` 与之等价，是在体外定义带参数实例的推荐写法；TAT 的节点给 `in` 一个字段。每个 `concept_instance`（体内的、全局带参数的、全局不带参数的）自动得到一个可打开的上下文，证明结束后用 `context C.x begin … end` 打开；`concept_instance` 命令本身只交证明目标，不带 `begin`（2026-11-18 改，C 区评审 C1，作者在 concept C 的会话里「C1 赞同评审建议」，我在它的会话记录里核对过；细节见 5.1），见 `CONCEPT_INSTANCE_CONTEXT_PLAN.md` 第 1 节【已定，作者 2026-11-12；2026-11-17 起它与 concept 的块是同一种命名 target，不再是 light locale，A 区评审 A1，第 9 节】。体内实例 `where` 没给的字段**一律报错**，不继承 `\<S>` 的同名字段【已定，作者 2026-11-14，否决 11-12 的继承提案：按名继承等于假定 `\<S>` 与结果 concept 是同一个 concept，`concept_instance (in ring) ideal: comm_group where carrier = I for I` 按名字拿到的 `mult` 是乘法、要的是加法】；4.3 的 `sub` 例子因此写全 `mult = mult  one = one  inv = inv`（右边是体内字段的短名，不需要 `super`）。文案待拟（10.2）。【拆分时加的指路：这句文案已定（作者 2026-11-18），在 C 区文件第 10 节"实例没给全字段"一条。】
 - （本节讲 non-major parent 的 lemma 在 `concept` 声明时自动导入的那一条，在 E 区文件的 2.5。）
+
+### 2.6 `concept` 命令与它的块：实现时定下的各点（2026-11-22）
+
+来由：作者 2026-11-22 08:36 UTC 把 `concept` 命令的设计交给 concept A1，条件是「要进行充分的 Opus agent team 讨论与评审」。
+没定的设计列成六处，每处开一个讨论小组（三个提示词相同的 Opus 各自作答，一个只比较异同）。结果在 `concept_A_prototype/discussion_T1_result.json` 至 `discussion_T6_result.json`（不提交）。
+下面标【concept A1 定】的是小组一致或多数、concept A1 照此定下的，作者可以推翻。
+2026-11-22 10:2x UTC 报给作者定的四处，作者 10:57 UTC 都答了，各处已写明他的原话（一个名字下几个命题；同名常量的打印；动 Isabelle 的源码；命令结束时印什么）。
+本节还没有送对抗评审；命令的代码写出来后与本节一起送。
+
+**语法**（讨论 T1）【concept A1 定】
+- `assumes` 前的 `+` 必须写。2.4 里 `group_hom` 的例子少写了这个 `+`，是笔误。
+- 只有一段 `assumes`，在最后；各条用 `and` 连。它后面只能是 `begin`。
+- 2.1 说 `where` 的列表"遇到 `assumes` 结束"，那是 `concept_instance` 的情形；header 里 `where` 之后要先有 `+`。
+- 只有一个 major parent、别的都没有的 header 合法：`concept 'a C = "'a group"` 得到 `C_def: C ?\<S> ≡ group ?\<S>` 与 parent 规则 `C.group`，不造新的一层。
+- 没有 `=` 的 header、`=` 后面直接写 `assumes` 的 header 都是 Bad syntax。
+- 类型参数照 `record` 的写法（`Parse.type_args_constrained`）：可以带 sort，可以一个都没有；全部明写，系统自己的 more 变量不写。
+- 一条命令，关键字种类 `thy_decl_block`，`begin` 可有可无，像 `locale` 那样走 `Toplevel.begin_main_target`，只能写在 theory 层。
+- `begin` 之前的 `opening ⟨bundle⟩` 先不做，以后加不改变已经接受的文本。
+- `where` 的路径只收标识符；右边恰好一个 token。项的名字带点、或是空串 `""` 时报 Bad syntax。
+- `\<S>` 加进保留的字段名，沿用已批的 `Illegal field name "\<S>" in concept "foo": this name is reserved`。
+- 每个带名字的项，语法上都收"类型、可选的 mixfix、可选的 `where`"；读完类型才知道它是字段还是 parent，那时报 2.1 说的两种 Bad syntax。
+- **一个假设名下可以写几个命题，写法仍同 locale**【已定，作者 2026-11-22 10:57 UTC：「我感觉一个名字下写几个命题（assumes ax: "A" "B"）是可以被允许的」「(is …) 应该也是无害的？」】。
+  讨论小组三个都建议只收一个命题，concept A1 照此报给作者，作者没有采纳。
+  - `assumes ax: "A" "B"`：`A`、`B` 各是谓词定义式的一个合取分量，按书写的先后；fact `C.ax` 是两条定理（各自的全局形式），`ax` 的 attribute 作用在这两条上。
+  - `(is …)`：语法上照 locale 收（`Parse.propp`）。stock 的 locale 声明自己就不许它，报 `Illegal term bindings in context element`（`expression.ML` 的 `no_binds`，concept A1 核过源码）；
+    header 照 locale，报的是 stock 的这一句。这半句是 concept A1 对"写法同 locale"的读法，已在答复里告诉作者。
+
+**header 的假设怎样读**（讨论 T2）【concept A1 定】
+- 没有 fix 的自由变量全称封闭。先后照 `Specification.read_multi_specs` 的做法：每条假设各自 parse、各自封闭（按第一次出现的先后，最先的在最外），然后全部假设一起做一次类型检查。
+  与 locale 的一处差别：两条假设里同名的自由变量各自定类型。`_` 当作不起名的全称变量。
+- concept D 要在"封闭之后、一起检查之前"插一步（把记号表建好放进 context，D 区文件 6.9），所以命令照那个函数的三步自己写，不整个调它。
+- 假设里写了正在声明的 concept 自己的名字时报错，否则它会被悄悄封闭成一个变量：
+  `The assumption "a"⌂ uses "ordered_group" itself, which is a circular reference`（句式照 10.1"用了正在声明的这个视图自己的名字"那一句）。
+- 不是 concept 类型参数的类型变量，在定义谓词之前报出来，不让内核去拒绝：
+  - 用户明写的（`∀f :: 'b ⇒ 'b. …`）：沿用类型层 3.11 第 3 句 `Extra type variable 'b in concept "foo": every type variable must be a type parameter of the concept`，单复数照算。
+  - 类型推断留下的（`fin: "finite UNIV"`）：`The assumption "fin"⌂ needs a type annotation on the term "UNIV"`，后半句由 `Undetermined_Types.message` 给出，复数是 `needs type annotations on the terms …`；`⌂` 指假设的名字。
+  - `\<S>` 的 more 变量算已经定下来的。用户不必也不该写它；写了字面的 `'\<e>` 不另拦。
+- 把 `\<S>` 用在别的类型上、或迫使它的 more 取某个类型，得到的是 Isabelle 自己的 `Type unification failed`。
+- 写不成 HOL 公式的命题（如 `PROP P`、`OFCLASS(…)`）：`The assumption "a"⌂ is not a formula of HOL: "…"`。
+- schematic 变量是 Isabelle 自己的 `Unbound schematic variable: ?x`。不提 `\<S>` 也不提任何字段的命题照收。
+- **parent 边只认一种形状**：读完之后整条假设恰好是 concept 的谓词作用在 `\<S>` 上。`D (O.truncate \<S>)`、`D \<S> ∧ P` 都是普通假设。
+  同一个 `D` 已经是祖先、或同一条边用两个名字各写一次，都接受、不出声；各自有自己的合取分量与全局形式，用到"第一条"的地方取书写在先的。
+  这条边的 fact 被 attribute 改写过时（如 `[simplified]`），`concept_entailment` 的 `path` 在这一步记 `NONE`，蕴含本身用改写之前的定理。
+- **谓词的定义式与全局形式**：每条封闭好的假设各自用 `Object_Logic.atomize` 化成 HOL 的公式，作一个合取分量；合取右嵌套（不用 stock `def_pred` 的平衡合取，四个分量起它会印成 `(A ∧ B) ∧ C ∧ D`）。
+  全局形式是用户写的命题原样、前面加前提 `C ?\<S>`，由 atomize 的那条等式换回来，不做 rulify：用户写成 `∀x. P x ⟶ Q x` 的，全局形式里仍是这个样子。
+  印出来的 schematic 变量是 `?\<S>`；本文件别处写的 `?S` 是简写。
+- **名字**：与 parent 规则重名、或在拥有类型的 concept 里叫 `equality`，报 10.1 的 A7；重复报 A11。字段的名字、concept 自己的名字、`intro`、`axioms`、`C_axioms` 都不拦。
+
+**同名的 locale**（讨论 T3）【concept A1 定】
+- 声明 concept 时不为同名的 locale 发 warning（公共文件第 9 节留的那个问题）。不改 Isabelle 的源码，不 hide stock 的名字，不绑占位的 fact。
+- concept 有自己的名字空间（kind 是 `concept`）。`context C begin`、`(in C)` 的名字先在里面解析；认不得的名字原样放过，由 Isabelle 当 locale 去解析，所以既不是 concept 也不是 locale 的名字得到的仍是 `Undefined locale`。
+- 查找链里放的是带 theory 名的完整前缀，不放裸的 qualifier。否则块里的短名会抓到 stock locale 的同名 fact（`monoid` 的块里 `intro` 会读成 `Groups.monoid.intro`）。
+- 别的 theory 里重开的块证的 lemma，全名带那个 theory 的名字（`T2.monoid.foo`）。所以链上每个 concept 放的是"存过它的 fact 的每个 theory 各一个前缀"，由命令记下哪些 theory 存过；
+  先后是 ancestor 多的 theory 在前，再按名字。不采用"一律挂在 concept 的全名下"：两个互不 import 的 theory 各证一条同名的 lemma 时，合并会报重复。
+- 要知道的后果：
+  - concept 叫 `order`、`ring`、`lattice`、`field` 时，`context order begin` 打开的是 concept 而不是 type class（class 也是 locale）；要 class 写 `context Orderings.order begin`。
+  - concept 的 fact 盖住 stock 的同名 fact（如 `order.trans`）；concept 没有而 locale 有的带前缀的名字（`monoid.intro`、`monoid.left_neutral`）在 theory 层仍读成 locale 的定理。
+  - 与 Main 的常量同名的谓词（`monoid`、`group`、`semigroup`、`comm_monoid`）在目标里印成带 theory 名的长名 `Lib.monoid G`
+    （实测，探针 `concept_A_prototype/Name_Print_Probe.thy`；设 `names_unique = false` 后印成 `monoid G`、Main 的那个印成 `Groups.monoid`）。
+    **先接受**【已定，作者 2026-11-22 10:57 UTC：「赞同先接受」】。
+  - 作者同一条消息另要一个新功能，为 concept 让路：
+    「我们需要一个额外的 ML 命令与 configuration option 开关来禁用已有的 locales，hide 它们的存在，且令之后 typeclass 自动构建的 locales 也被隐藏。以此来为 concept 系统让路。
+    这个功能我决定 fork 你的 session 去派你的 fork 去做」。它不归本会话做，由作者 fork 出的会话做；公共文件 11.5 里"在 TAT 里禁用整个 locale 系统"那一条与它有关。
+
+**块里的定理怎样存**（讨论 T4）
+- **方案已另写成文件 `CONCEPT_BLOCK_NOTES_PLAN.md`（2026-11-22，正在评审）；本段与它不一致的地方以那份文件为准。**
+  它定了本段留着没定的两处：不带 hyps 的定理原样存的做法（在"把假设暂时放到一边"的状态下调 stock 的导出，再抄回规则标签）；"第一条前提正是块的假设时先消掉"仍然没定。
+- 计划此前漏掉的一件：块里按名字拿到的是全局形式，所以 `lemmas bar = foo`、`declare foo [simp]` 交去存的定理已经带着前提，照 stock 的导出会再贴一遍，得到 `C ?S2 ⟹ C ?\<S> ⟹ …`。
+- 【作者 2026-11-22 10:57 UTC 同意动 Isabelle 的源码，设计交给 concept A1，方案要单独写一个文件、走评审：「赞同。我交给你去自主设计，但要把方案写到单独一个文件里走评审」。
+  那个文件还没有写；下面是讨论小组一致的做法，定稿以那个文件为准】做法是 light_locale 用过的：`Local_Theory` 里加一个通用的标记"这条命令只是重新登记已有的定理"，
+  `lemmas` 与 `declare`（`specification.ML` 一处）、bundle（`bundle.ML` 两处）设它；带着这个标记来、又没有 hyps 的定理只把固定变量泛化、原样存，其余一律照 stock 导出。
+  另要 `generic_target.ML` 把 `thm_definition` 导出。它不随证明是否并行而变：stock 的那一支不看 hyps，带标记的命令不证明东西。
+  它改了 2.5"`lemmas`、`declare` 不包，规则照常带 `C ?S`"的字面意思：前提带且只带一次，本来不依赖块的定理不带（块里 `declare group.assoc [simp]` 登记的就是 `group.assoc` 本身）。
+- 【concept A1 定】`notes` 交回给调用方的是本地形式，与 stock 相同。`Specification.theorem` 会拿交回的定理再记一次总名，`fun`、`inductive` 等包拿交回的定理接着算，交回全局形式两者都会坏。
+- 【concept A1 定】attribute 在块的上下文里（带查找链）用 `Attrib.partial_evaluation` 算一次。改写定理的那部分（`OF`、`of`、`rule_format`…）作用在证出来的本地陈述上、导出之前，
+  所以 `lemma foo [OF bar]: "A ⟹ B"` 里 `OF` 填的是 `A`，与 locale 相同；声明性的那部分（`simp`、`intro`…）作用在存下的全局定理上，theory 一次、块的每一层各一次。
+- 【concept A1 定】块里不再用本地名字把全局定理记一次：短名由查找链解析到 `C.foo`。2.3 与公共文件第 9 节说的"在块里再 note 一次"只留"让 attribute 在块里生效"这一半。
+- 【concept A1 定】嵌套的无名 `context fixes … assumes … begin` 里，按名字拿到的也是全局形式（那一层的假设成了前提）；`end` 之后相同。
+- 【concept A1 定】`declaration` 操作：theory 那一份用上面同一条导出规则；开着的块里是本地的包数据，与 stock 的 theory target 相同；重开的块只看得到 theory 那一份。
+  后果：`fun` 的自动终止性证明在声明块里照常；在重开的块里 `termination` 要点名函数。`declare [[…]]` 走的是 `notes`，对整个 theory 生效，块关了还在。
+- 接受并写进文档的一处：块里 `lemma foo` 证完时 Isar 印的是本地的陈述，`thm foo` 给的是全局形式（改它要动 Pure 的 `specification.ML`）。
+- 没定、留给原型试的："待存的定理第一条前提正好是块的假设时，先把它消掉再导出"（使 `lemma "C \<S> ⟹ P"` 与重开的块里 `termination` 得到的定理只带一次前提）。
+
+**块里别的操作**（讨论 T5，三个一致）【concept A1 定】
+- `abbreviation`：成为一个全局的 abbreviation 常量 `C.sq`，参数照 stock 的规则（右边用到的固定变量，块里就是 `\<S>`），用用户写的 print mode；块里不留本地的 abbreviation。
+- 块里对 stock locale 的 `interpretation`：照 stock 是到块结束为止的本地 interpretation，不用写代码；重开的块里要再写一次。
+- 块里的 `global_interpretation` 与不带名字的 `sublocale` 报错（在它们的证明结束时报，与 stock 的 `Not possible in locale target` 同一个时刻）：
+  `global_interpretation cannot be used in concept monoid` / `Use interpretation instead, whose facts last until the end of this context, or write global_interpretation outside the concept`；
+  `sublocale cannot be used in concept monoid: a concept is not a locale` / `Use interpretation instead, whose facts last until the end of this context`。
+- stock 里五处问"当前的 target 是 theory 还是 locale"的代码，在 concept 的块里都按"两者都不是"；其中 `time_fun`（`HOL/Library/time_commands.ML`）在块里不能用，记作已知的限制。
+- 块里别的要自己开块的命令（`instantiation`、`class`、`locale`、嵌套的 `concept`、有名字的 `context D begin`）得到 stock 的 `Bad context for command`。
+- mixfix 写在块里的 `definition`、`abbreviation` 上：交给 notation 那一层；它没加载时不起作用。
+
+**打印**（讨论 T6）
+- 【concept A1 定】target 的 `pretty` 照 `Locale.pretty_locale` 的版式印三行，后面留一个钩子给 D 区接符号列表：
+  `concept ordered_group` / `  fixes \<S> :: "('a, '\<e>) ordered_group_scheme"` / `  assumes ordered_group_axioms: "ordered_group \<S>"`。
+  `concept` 命令结束时、`context C begin` 时、`print_context` 时印它；`lemma (in C)` 不印。header 的假设不列在 `assumes` 下面，免得被读成块里的本地假设。
+- `concept` 命令结束时除这三行外还印新常量的清单【concept A1 定；作者 2026-11-22 10:57 UTC：「我交给你自主决定了」；讨论小组三个意见不一：不印、印常量清单、再加类型与 fact 名】。
+  措辞照 2.2 `concept_instance` 的那一句，每个常量一行、格式照 stock 的 `consts` 输出；只列用户写得出的名字，先谓词，再按 header 的先后列字段与带名字的 parent 的常量，拥有类型的 concept 再列 `C.truncate`、`C.more`。
+  ```
+  Defined the new constants
+    ordered_group :: "('a, '\<e>) ordered_group_scheme ⇒ bool"
+    ordered_group.ord :: "('a, '\<e>) ordered_group_scheme ⇒ ('a, unit) order_scheme"
+    ordered_group.norm :: "('a, '\<e>) ordered_group_scheme ⇒ 'a ⇒ real"
+    ordered_group.truncate :: "('a, '\<e>) ordered_group_scheme ⇒ ('a, unit) ordered_group_scheme"
+    ordered_group.more :: "('a, '\<e>) ordered_group_scheme ⇒ '\<e>"
+  ```
+  只有一个常量时是 `Defined the new constant`。印不印照 stock `definition` 的开关（`show_results`），不看是不是交互模式。不列 fact：`print_theorems` 列得出。
+- 按需打印一个 concept 的命令（`print_concept`）三个小组成员都认为该有，印什么意见不一；原型里先不做。
+
+**与别的会话约定的实现安排**（不是设计决定；2026-11-22 concept B、C、D 都同意，已报作者）
+- 原型阶段各会话各写各的文件，稳定后再照公共文件第 9 节合并。`concept_package.ML` 只放 `concept` 命令、每个 concept 的数据（谓词、定义式、各条规则、construction rule、`concept_entailment`）与命名 target。
+- 它紧跟 `concept_type.ML` 加载；命令在几个时刻调 `Hooks` 的实例，别的会话的文件加载时往上登记，没加载时是恒等。
 <!-- 冻结主计划 CONCEPT_UNARY_PLAN.md 第 252–350 行 -->
 
 ---
@@ -940,6 +1069,8 @@ A 区待拟的文案列在 11.2 开头那一条的第 7 项。2.5 说的"体内�
   第 9 项的第一件，针对视图的假设（`assumes A: "semigroup A"`）生成什么：concept A1 的看法是它就是一条 header 的 concept 假设，照 concept B 的激活机制处理（拆开进激活列表），不另设规则，待与 concept B 核对后写进 2.1；
   第 11 项里别的区还没跟上的地方，由各区的会话改。A 区已经没有等作者答的问题，也没有待拟的文案（`lemma [truncate_cong]: …` 的形状不对时的报错作者 2026-11-21 06:17 批了，在 `CONCEPT_TRUNCATE_CONG_PLAN.md` 4.2a）。
   family 里"新成员可以接在哪一层上"作者 2026-11-21 对 concept C 定了（不顺带定义祖先的常量；接在已被覆盖的层上时那一层必须有自己的常量），落在本文件的几条在 2.4 的注。
+  【2026-11-22 08:58 UTC：上面两件里的第一件了结。针对视图的假设照作者 2026-11-21 09:44 UTC 对 concept B 定的"header 里每条 assumes 都走 assumption destruction"办，
+  写在 2.1"针对视图的假设就是一条普通的 header 假设"一条；concept A1 在 concept B 的转录里核过原话。】
 - **随 3.5 开头（放开 `truncate`）与 3.7（row variable 与类型缩写）而来的待定事项**（2026-11-19 集中到这里；校对 agent 对照作者原话核出其中哪些我曾写成"已定"）：
   0. **2026-11-21 的总注**：3.7 开头作者改定的四件与同日其后的几件，使下面各项里只剩第 9 项的第一件与第 11 项没有了结（第 7 项的文案全部不用拟）；各项开头标了状态。
      专项评审 `wf_701d5cfa-566`（`concept_A_prototype/review6_result.json`）判给作者定的十条里当时没讲的七条，随之的状态：
@@ -969,6 +1100,7 @@ A 区待拟的文案列在 11.2 开头那一条的第 7 项。2.5 说的"体内�
   7. 【2026-11-21：全部不用拟了。前两组（`consts` 等命令里的 `_`；`for`、`if K:`、parent 里写了缩写）随 3.7"现行的规定"第 1、2 条撤掉；row variable 的两句随"靠名字前缀识别"一起去掉（作者 03:30）】**待拟的文案**：`consts`、`datatype`、`typedef`、`record` 遇到 `_` 的通用报错（作者给的例子是「不能自动推理 `_` 的类型」；`consts` 现有的那句要不要也改，我问过、未答）；`for`、`if K:`、parent 里写了缩写时的报错（提案原文要它提示写 `('a, unit) group_scheme`）；row variable 没排在参数表末尾、`'\<e>…` 被用作普通类型参数时的报错。
   8. 【2026-11-21：(a) 了结，作者 03:21 定报错并批了"already bound to the constant"那一句，10.1；(b) 是 concept A1 的判断、没有问作者：它不是要定的事，simp 靠 truncate congruence rule 把它化掉、`rule` 与 `OF` 的合一不认，记作已知的情形，见第 13 项】**放开 `truncate` 带出的两个没答的问题**：(a) 体内的 `definition truncate`、体内实例 `truncate` 会与可见的 `C.truncate` 重名，而保留名现在只管字段和 parent 的名字（类型层计划 3.5 原来特意把 `C.` 下的名字空出来让体内 `definition truncate` 可用，这个理由反过来了）；(b) 3.5 第 2 条之后那段讲的 `group.center (group.truncate \<S>)` 的危险，原来靠"用户写不出 `truncate`"挡住，现在用户写得出来。
   9. 【2026-11-21：第三件不再存在，默认继承已取消，3.7"现行的规定"第 5 条；第二件随第 12 项了结；只剩第一件】**3.7 末尾原列的三件**：针对视图的假设（`assumes A: "semigroup A"`）生成什么、算不算 concept fact；视图声明成 `unit` 时还允不允许填带 more 的结构（concept C 提的，没向作者提过）；体内实例继承宿主 more 的规则（类型层计划 0.1 第 28 条）与带 row variable 的视图合在一起没有重新核对。
+      【2026-11-22 08:58 UTC：第一件也了结，见 2.1"针对视图的假设就是一条普通的 header 假设"一条。】
   10. 【2026-11-21 了结：这处改动撤掉了】**Pure 里 `obtain`/`define` 的一般改动放在哪个 feature**。它不是 concept 专有的，现在的打算是放在 concept 的补丁里；没有向作者提过。
   11. **别的区要跟着改的**（已告诉相应会话，或待告诉）：C 区 3.6、5.2、5.4、5.6 里的糖、`unit` 读法、warning、"`truncate` 只在内部用"；B 区 7.1 的搜索按结构项的形状分情形、没有 `P.truncate t` 这一种（2026-11-20 已了结：B 区 7.1 重写为指向 `CONCEPT_FACT_SEARCH_PLAN.md`，截断的项怎样取键、怎样剥在那份文件的 2.1、3.1）；第 6 节 6.2 里视图的类型模式写的是 `('a, unit) order_scheme`。
   12. 【2026-11-21 了结，连同第 9 项的第二件：`unit` 视图要填带扩展的结构时，用户自己写截断，如 `ord = "order.truncate g"`，系统不替他截；不写就是普通的类型错误。
