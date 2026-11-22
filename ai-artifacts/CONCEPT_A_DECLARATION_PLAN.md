@@ -341,6 +341,54 @@ concept 的 record 就是它的参数表（相当于 locale 的参数表；conce
     - 5.2 里"没有现成 fact 可填时用 `[of t]`"的办法由这种写法取代（那个办法在参数是截断项时类型就对不上，评审指出）。5.2 属 C 区，已告诉 concept C。
     - 用 truncate congruence rule 时 trigger 交化好的那一条等式（用这种写法），不交"规则加两层截断合并的等式"让 ATP 自己拼【concept A1 定，已报作者】；`CONCEPT_TRUNCATE_CONG_PLAN.md` 4.4。
     - simproc 在所给的项上什么都不给时的报错【已定，作者 2026-11-21 03:35「批准文案」】：`No selector equation for "monoid.mult G"`（引号里是用户写的那个项）。
+    - 挂在 fact 上的写法从那条 fact 里读不出结构项时的报错【concept A1 定，2026-11-22 07:17 UTC，作者把它交给 concept A1 在讨论团队之后自定】：
+      两行，逐字在 10.1"`concept_selector` 挂在读不出结构项的 fact 上"一条。
+    - **类型正好是它从来源取的那一层的类型的实例，按名字拿它与来源之间的等式**
+      【concept A1 定，2026-11-22 07:28 UTC，作者把它交给 concept A1 在讨论团队之后自定。
+      讨论团队 `wf_b28b7eca-17f` 三个 agent 一致，结果在 `concept_A_prototype/discussion_Q1_result.json`。原型已实现并测过】：
+      把这个实例自己写进去。`[[concept_selector "sub.comm_monoid G H"]]` 给出
+      `concept (sub.comm_monoid ?G ?H) ⟹ sub.comm_monoid ?G ?H = sub.monoid ?G ?H`。
+      - **这一条扩大了上面作者批过的那句话**（"返回 simproc 在这个项上给出的那条等式，simproc 什么都不给时报错"）。
+        现在的规定：先看 simproc 给不给；simproc 什么都不给，而这个项是一个实例、它的类型正好是它从来源取的那一层的类型时，给它与来源之间的等式；两样都没有才报错。
+        原先拿得到等式的项，拿到的等式不变；变的只是原先报错的这一种项。simp 仍然不用这条等式改写（`CONCEPT_FACT_SEARCH_PLAN.md` 3.2）。
+      - 为什么是这种写法：把项写进去的写法，拿到的等式的左边就是写进去的那个项。
+        成员与来源之间的那一步本来带截断，如 `monoid.truncate (sub.group G H) = sub.monoid G H`；
+        `sub.comm_monoid G H` 的类型已经正好是 monoid 那一层的类型，截断是恒等，所以这一步的左边就是成员自己。
+      - 方向：成员在左，来源在右。作者 2026-11-21 11:38 写的是 `sub.monoid G H = sub.comm_monoid G H`，左右相反；
+        一个来源可以有几个类型相同的成员，来源当不了名字，所以取成员在左。
+      - 不限于 family：靠 `super = t` 取来源的实例同样。来源的类型比这一层宽时，右边是截断过的来源。
+        测过的例子：`wd.cgroup S`（`comm_group` 的实例，`super = S`，`S` 的扩展任意）给出
+        `⟦concept (wd.cgroup ?S); concept ?S⟧ ⟹ wd.cgroup ?S = group.truncate ?S`。
+      - 三种容易弄混的写法（都测过）：
+        带截断的 `[[concept_selector "group.truncate (wd.cgroup S)"]]` 拿到的是恒等那一条 `… = wd.cgroup ?S`，不是这一步，文档里要说"把截断去掉"；
+        类型更宽的成员单独写进去（`fx.group G H`）没有等式，报 `No selector equation for "fx.group G H"`；
+        成员的参数里有截断时（`fy.cgroup (group.truncate K) H`）先给的是成员自己的 truncate congruence rule 那一条。
+      - 没有采用的三种做法：
+        instance 命令为这条等式另绑一个 fact 名（C 区 5.2 规定命令不另绑名字；别的截断等式都没有名字，同一类等式就会有两种取法）；
+        调换截断 simproc 里各情形的先后（那一步带条件，条件证不出时截断留在原处，证得出时又丢掉用户写的是哪个成员）；
+        不给名字（用户每次要用 `C.equality` 自己证，Sledgehammer 拿不到）。
+    - **挂在 fact 上的写法里，selector 与那条 fact 的结构项对不上时**
+      【concept A1 定，2026-11-22 07:28 UTC，同上。讨论团队 `wf_f309b4d6-430` 三个 agent 一致，结果在 `concept_A_prototype/discussion_Q3_result.json`。原型已实现并测过】：
+      不另设文案，也不借用 `No selector equation`，报的就是 Isabelle 自己的类型错误。
+      `h[concept_selector f]` 的意思是 `[[concept_selector "f t"]]`，`t` 是从 `h` 读出的结构项；`f t` 照 Isabelle 读一个应用那样做类型检查。
+      所以同一个错误在两种写法下报的是同一段话。`No selector equation for "…"` 只用于类型通、但没有等式的项，如 `h[concept_selector group.sub]`。
+      - 例（实测）：`h: "concept int.group"`，`h[concept_selector ordered_group.ord]` 报的是下面这段；selector 不是函数时（`int.monoid`）第二段是 `operator not of function type`。
+
+        ```
+        Type unification failed: Clash of types "unit" and "(_, _) ordered_group.extension"
+
+        Type error in application: incompatible operand type
+
+        Operator:  ordered_group.ord :: (int, ??'a) ordered_group_scheme ⇒ (int, unit) order_scheme
+        Operand:   int.group :: (int, unit) group_scheme
+        ```
+      - 理由：作者在同类情形三次选了 Isabelle 自己的类型错误。
+        header 的 `assumes` 类型不对的（10.1 末尾"作废、不再需要文案的"）；
+        `CONCEPT_INSTANCE_CONTEXT_PLAN.md` 里的「此时直接复用 Isabelle 原本的报错不好吗？为什么要新造？」；
+        整个视图由一个类型不对的项给出时"就是普通的类型错误"（3.7）。
+      - 此前原型的做法（搭出类型不通的 `f t`，报 `No selector equation for "ordered_group.ord int.group"`）撤掉：
+        那句话作者批的时候例子是类型通的项，引号里放一个类型不通的项，是把它用到了没批过的地方，用户也看不出错在类型上。
+      - 随之的两点行为：用户给 selector 写的类型标注现在算数；第一行里会出现 `ordered_group.extension` 这样的内部类型名，这是 concept 类型上任何类型错误都有的，不是这里特有的。
     - 同一次批的还有 `[[truncate_cong "…"]]` 取不到规则时的两句，并定了用户可以用 `lemma [truncate_cong]: …` 手动登记规则；都记在 `CONCEPT_TRUNCATE_CONG_PLAN.md` 4.2 末尾与 4.2a。
 - "两个截断相等"不另给 lemma：把 `C.equality`（3.3）用在两个截断上，再用"读字段穿过截断"与统一规则化简即得（作者问「这个跟 monoid.equality 有什么区别呢？」，没有区别）。
 - 视图里面的截断（`hom.truncate` 只截主链，截不到视图 `A`、`B` 里的扩展）由用户写一个体内实例来做【作者问「我们其实可以在 concept hom 下写一个 concept_instance truncate': hom 来实现 truncate any hom 到 hom 对吗」，我答可以；下面的写法是我给的】：`concept_instance (in hom) truncate': hom where A = "carrier.truncate A"  B = "carrier.truncate B"  f = f`。不为此放开字段更新。
@@ -853,6 +901,25 @@ The type of "M"⌂ must be written in full: this statement does not determine "(
 
 `where` 右边有类型没定下来的那句（上文 A5 之后）与它的分工：那句管 concept 命令自己读的右边；这句管证明里的 `obtain`、`define`。
 
+`concept_selector` 挂在读不出结构项的 fact 上（3.5；例：`refl[concept_selector monoid.mult]`）
+【concept A1 定，2026-11-22 07:17 UTC。作者同日的原话：「按你建议来，建议单独 run Opus agent team 讨论，讨论后自主决定」。
+讨论团队 `wf_04c73b54-486` 的三个 agent 给出的文字逐字相同，结果在 `concept_A_prototype/discussion_Q2_result.json`。原型已照此实现并测过】：
+
+```
+Not a concept fact: "?t = ?t"⌂
+The expected form is "C t", such as "group int.group"
+```
+
+- `⌂` 指向用户写 `concept_selector` 的地方，与 `truncate_cong` 的那一句相同。
+- 引号里是那条定理的陈述，照 Isabelle 显示定理的样子印：schematic variable 带问号，上下文固定的变量不带。
+  A7、B 区的各句、stock Isabelle 拒绝一条定理时的报错都这样印。
+  `truncate_cong` 的那一句不带问号（`CONCEPT_TRUNCATE_CONG_PLAN.md` 4.2a，作者批的），是例外；这一句不照它。
+- 第二行是固定的文字。写 `C t` 而不写 `C ?t`：`t` 可以是任何结构项，包括 `int.group` 这样的常量，写成 `?t` 会让人以为必须是变量。
+- 加第二行的理由：只有第一行时用户知道错了、不知道该写什么
+  （作者对 C 区一稿文案的批评：「用户看了你这个报错根本不知道要怎么办啊，不可操作啊」）；`truncate_cong` 的那一句也是"应有的形状加一个例子"。
+- 第二行说的比实际接受的少，不会错拒：带前提的 fact、实例的 iff（`C t = _`）也接受；
+  谓词不查是不是 concept 的谓词，只要它的最后一个参数是结构。fact 在这里只用来带出结构项，它是否成立不被用到。
+
 <!-- 冻结主计划 CONCEPT_UNARY_PLAN.md 第 1961–1964 行 -->
 作废、不再需要文案的（2026-11-16）：裸类型 parent 带新字段（A1，裸类型写法已取消，类型检查自然报错）；`super` 用在不允许的地方（A8，`super` 不是项）；`super` 消不掉（A9，同上）；`global_form` 下结果带 hyps（`global_form` 的计划定了不检查，由内核报错）；类型那一层"实例传进来的 more 类型不对"（对 ML 调用方的防御，按"Isabelle/ML 层的用户可信"不做）；header `assumes` 写成 `order \<S>` 这类类型不对的，用 stock 的 "Type unification failed"。
 
@@ -929,6 +996,9 @@ A 区待拟的文案列在 11.2 开头那一条的第 7 项。2.5 说的"体内�
   4. 嵌在 concept 块里的 `context notes [[attr]] begin … end`：原版机制与 target 无关，应当同样限定在嵌套块内，要测。
   5. 块里的 `record`：本计划要它在 `global_form` 下跑（2.5），dot_syntax 说 `global_form` 现在没有 `record` 的入口；dot_syntax 的 record 钩子对这种 record 登记什么也没人定（块测试归 localized_record）。
 - 第 6 件（dot_syntax 的引擎闸）在 D 区文件 11.2。
+- 【2026-11-22：上面六件里的前五件推后到启用点号写法的时候】作者 2026-11-22 在会话 concept D 定了原型阶段先不启用 dot syntax
+  （07:50 UTC「确认不启用，但让它跑完，通知 agent concept A B C」；concept A1 在 concept D 的转录里核过）。
+  所以实现 concept 的命名 target 时不定这几件；原型里结构与字段写带层名的常量。公共的说明在 `CONCEPT_PLAN_INDEX.md`"实施方式"之后的一段。
 - B 区文件 11.2 里要 A 区跟着改或一起定的：
   - 【2026-11-20 08:56 UTC】下面这一条的前半已了结：2.3 的正文已按 B14 最后定下的结果改了（只放 `C_axioms` 一条），B14 现在写在 `CONCEPT_DEFINING_CONTEXT_PLAN.md`，不在 B 区文件 11.2。
   - B14 一条里作者已定的第 (7) 项（打开块时登记哪些 fact）与本文件 2.3 现在写的清单不一致，2.3 的正文尚未按它改；第 (9) 项引的作者原话只说 notation table。B14 一条在主计划冻结之后还在变：它"未定的"里列的几件（视图自己的 parent 与两层视图的 fact 进不进 intro table、挂不挂 `[intro!]`；这个过程的名字）作者 2026-11-19 冻结之后在会话 concept B 里陆续在定，第 (7) 项也会跟着改，都以 B 区文件为准（写这句话时 B 区文件尚未写入；作者那些话由 concept B 导出在 `concept_unary_partition_B_owner_messages_2026-11-19_after_fork.md`）。其中名字已定，与 2.3"打开时不激活"的措辞不再打架：作者 2026-11-19 11:25 UTC「建议改名为“opening the defining context of a concept” 你觉得如何？可以简称 opening the defining context」，concept B 请作者确认后 11:33 UTC「1. 确认」（拆分者在 concept B 的转录里核过这两句）。
