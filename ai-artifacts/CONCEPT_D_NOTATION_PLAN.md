@@ -809,6 +809,9 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
   打印时在几个 key 之间取舍的"先取本地最新声明的，再按 parent 从左到右"用的是同一个数：自己的条目按位置从大到小，并进来的按从小到大。它取代 6.3 里"每条另记着它的声明先后和它来自第几个 parent"。这也回答了 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 8.6"并进来的条目怎样打印"。
 - 只有类型自带的那一条的 key 不列：一个 key 至少有一个来源提供条目时才列，类型自带的那一条（名字则是已有的同短名常量）是它的最后一行。例：group 的块里不列 `+`，即使引入的某个 ring concept 顶替过它；`*` 列出 `magma.mul \<S>` 与 `times`。
 - 没有可列的时：`print_concept_notations` 恰好印一行（三种：表未设置；表已设置但不提供符号；带 `!` 时表已设置但既不提供符号也不提供名字），文案在 10.1。交互模式下自动打印在这几种情形什么都不印。撤回我此前拟的 "no concept notations in this context"：表未设置时每条语句仍按自己的 concept 假设读 notation，那句话会让人以为 notation 不起作用。
+- **命令可以带一个名字作参数**【作者 2026-11-22 15:15 UTC：「建议 print_concept_notations 可接受参数以列出某 concept/某 concept instance 的 notation table」；采纳，下面的细节是我定的】：`print_concept_notations group`、`print_concept_notations! int.group`、`print_concept_notations group.sub`。
+  参数是一个 concept 的名字或一个 concept instance 的名字，就是 `context` 命令能接的那些；印出来的正是在 `context 那个名字 begin … end` 里不带参数时印的那一份（同一个函数，作用在那个块会造出的 context 上）：concept 是来源 `(\<S>, C)`，实例是实例项在前、宿主在后。
+  不带参数时照旧印当前 context 的。名字认不出时的报错与 `context` 命令对同一个名字的报错相同，不另拟文案。
 - 例，ring 的块里：
   ```
   infixl ‹+› 65
@@ -1000,7 +1003,61 @@ type 层在读任何 header 文本之前就造好类型与 selector（A 区 2.1�
 **(8) 点号写法（只是设计，原型不启用 dot syntax）。** 小组建议 `G.x` 读成与 `x⇘G⇙` 完全相同，不再按 concept 逐个往 dot_syntax 的字段登记表里登记名字（refinement 盖住 parent 的名字时，两条登记的对象类型相同，dot_syntax 在登记时报错，而作者已定覆盖不报错）。
 这偏离 6.5（作者 2026-11-10、2026-11-15），**没有采纳，留作启用 dot syntax 时给作者的提案**。6.5 里"refinement 与 parent 共用 record 类型，两条登记的类型相同，dot_syntax 在登记时报错"这一后果因此是一个已知的、到时必须解决的问题。
 
-**小组列出、没有采纳、留给作者的两条放宽**（都要改作者定过的行为，规则本身不依赖它们）。
+**(9) 没有可用的 fact 时，把结构读成"拥有它的类型的那个 concept"的结构** 【作者 2026-11-22 14:52 UTC 对下面两条放宽：「你可以自主设计，最好 run Opus agent team 检查一下你的设计，看有没有你没有想到的」。我定为采纳第一条、不采纳第二条，自决。
+检查的小组 `wf_4bf893a4-cfb`（3 个提示词相同的 Opus 检查者加 1 个裁判）15:30 UTC 前回来，裁定在 `concept_D_no_fact_owner_rule_check_report_2026-11-22.md`：两条决定都成立；我第一稿的写法有六处要改，都可以由我定。下面是改过的写法；第一稿留在本条之后作记录】
+- **原则**：带下标的写法 `k⇘r⇙` 里，关于 `r` 的 concept fact 的表里都没有 key 名 `k` 时（一条 fact 都没有也算），把 `r` 读成好像它唯一的 concept fact 是"拥有 `r` 的类型的那个 concept"作用在 `r` 上：
+  那个 concept 的表里有 key 名 `k` 的条目，候选就是这些条目（符号有几个 type pattern 就是几条，在这一组里由类型挑）；没有，才照原来的按类型查。
+- **用词**（都是计划里已有的；第一稿用的"引入这个 record 类型的那个 concept"是我新造的，不用）。
+  **拥有类型的 concept**：对一个 concept，它自己加了叶子就是它自己，否则是它的 major parent 的那一个（原型里每个 concept 的 `owner` 一栏）。
+  **没有新叶子的 concept**：不声明 record 层、与拥有类型的那个 concept 共用类型的。有三种：refinement；建在代入了类型的 record 上的 refinement（`natm = "nat monoid" + assumes …`）；non-major parent 的叶子全由 `where` 给出的。
+- **做法：对"按类型查"的候选加三条规则**，写进 6.6 的 R2 与 6.7 的 E2，−200 的读法与引擎用同一个函数。三条都只用每个候选所属的 concept 的 `owner`，不去算 `r` 的类型归谁，所以没有任何一步要等 `r` 的类型。
+  (a) **按 concept 排除**：没有新叶子的 concept `C` 的表里 key 名 `k` 的条目，在拥有 `C` 的类型的那个 concept 的表里有 key 名 `k` 时，不作候选。它只依赖 `C` 与 `k`，在"key 名 ↦ 有它的 concept"的索引里就能算，和表一样缓存。
+  (b) **先后**：结构类型严格更具体的候选在前；两个候选的结构类型谁也不严格更具体时，出自拥有自己类型的 concept 的排在出自没有新叶子的 concept 的之前；此外没有先后。
+  (c) **按结构类型排除**：候选的 type pattern 不再能与出现处的类型合一时退出，照旧；另外，结构的类型一旦是排在它前面的某个候选的结构类型的实例，它也退出。这是把 6.4"只取最具体的那个类型上的条目"带进引擎，E2 此前没有这一条。
+- **这三条恰好给出上面的原则**：设类型 `T` 由 `O` 拥有。`O` 的表里有 `k` 时，(a) 去掉了共用类型的各个没有新叶子的 concept 的条目，剩下的都排在 `O` 的之后（(b)，或因为不如它具体），(c) 在 `O` 的 pattern 对不上时也把不如它具体的去掉；所以读到的正是 fact `O r` 会给的。`O` 的表里没有 `k` 时，(a)、(b) 不改变任何东西，照原来的查。
+- **例。**
+  `(in group) center` 与 `(in comm_group) center` 都有。`definition "foo G = center⇘G⇙"`，`G` 没有 fix：(a) 去掉 `comm_group.center`，剩下的都是 `group.center` 的类型实例，当场定成 `group.center G`（6.6 的 R2 (i)）。第一稿只在 `r` 的类型在 −200 已知时才加这一步，而这个例子里 `G` 的类型到最后也不是完全确定的（more 的位置是推断参数），所以第一稿下它仍然报歧义，这正是检查查出的最要紧的一处。
+  monoid 有 `pow`（`nat` 指数），group 按名字盖成 `int` 指数。`pow⇘G⇙ x (n::nat)`，`G` 由一个类型约束给出群的类型：(c) 把 `monoid.pow` 去掉，结果是 Isabelle 自己的类型错误，与 `fixes G` 时相同。没有 (c) 时引擎会因为 `group.pow` 的 pattern 对不上而悄悄取 `monoid.pow`，这个缺口在本条之前就有。
+  为什么要 (b)：monoid 没有 `foo`，`natm = "nat monoid" + assumes …` 声明了 `foo`，group 也声明了 `foo`；`G :: (nat, 'm) group_scheme`、没有 fact。原则给 `group.foo`；只有 (a) 时 `natm` 与 group 的结构类型互不可比，会报错。
+  作者的 `finprod` 的例子不变。group 自己没有 `y`、而 `comm_group` 与 `nilpotent_group` 各声明了 `y` 时，仍报那句歧义。
+- **符号按 key 名，不按 key**（第一稿写的是"符号按 key"，那在 −200 算不了，而且会破坏本条自己的道理）。
+  例：group 有 `*`（`'a ⇒ 'a ⇒ 'a`）；后来某个库加了 refinement `G_act`，体内 `notation act (infixl "*" 70)`，`act :: 'b ⇒ 'a ⇒ 'a`。按 key 的话 group 没有第二个 key，`x *⇘G⇙ y`（`x` 没有类型）就从读得出变成"类型未定"的报错，`(c::nat) *⇘G⇙ y` 则在普通群上悄悄读成 `G_act.act`。按 key 名则 group 有 `*`，候选只是 group 的。
+  随之的后果：只由某个没有新叶子的 concept 添的 type pattern，在拥有类型的 concept 已有这个符号的别的 pattern 时，要给出 fact 或写长名才用得上；6.6 的 R2 (ii) 此前会读它。R2 (ii) 里 module 的例子不受影响（module 加了字段，自己拥有类型）。
+- **建在代入了类型的 record 上的 refinement 也适用**：`definition (in monoid) units`，`natm` 又定义了 `units`；`M :: (nat, 'm) monoid_scheme`、没有 fact，读成 `monoid.units M`。类型 `nat monoid` 并不说 `M` 满足 `natm` 的假设。
+  此前 6.7 的 E2 把结构类型更具体的 `natm` 排在前、会读成 `natm.units M`；6.10 的 (5) 末尾"以 E2 为准"改为"以照本条改过的 E2 为准"。
+- **道理的范围**（第一稿说过头了）："不会因为别的库后来在某个 refinement 里再声明一次而变成报错"只在拥有类型的 concept 自己有 `k` 时成立。group 没有 `y`、只有 `comm_group` 声明时 `y⇘G⇙` 读成 `comm_group.y G`，之后再来一个 `(in nilpotent_group) y` 就成了那句歧义。
+- **代价**（都接受）。
+  用户心里想的若是 refinement 的那个，会悄悄得到拥有类型的 concept 的，到证明里才发现；改法是给出 fact 或写长名。
+  拥有类型的 concept 后来才声明 `k` 时，读法从某个 refinement 的条目（或从那句歧义）悄悄变成它的；这是祖先接手，在作者接受的"悄悄变化"之内。
+  拥有类型的 concept 的那个名字类型对不上时，用户得到的是 Isabelle 自己的 "Type unification failed"，不是列出 refinement 的常量的候选列表；与有 fact `group G` 时相同。
+  用户怎样写类型不起作用：`fixes G :: "'a comm_group"` 展开后就是 group 的类型，读的是 group 的条目。
+  类型印出来的名字与读法可以不同：`M` 的类型按 type 层的规定印成 `natm` 的名字，读到的却是 `monoid.units`。
+- **最后检查的文案**（6.7 的 E2 那一条的对应要补）：按类型查时，两个候选的结构类型谁也不严格更具体、pattern 相同而项不同，用已批的 "… bind … to different terms"；pattern 不同而都对得上，用作者 15:15 UTC 批的 "several notations … match … none of them is more specific"。此前这两种情形会落到"类型未定"那句，而类型其实是定了的。
+- **没有采纳的第二条**（互不相干的 concept 的声明按类型排）：它会用"有没有自己的 record 类型"这个与蕴含无关的性质，去推翻用户写出来的 concept fact；第一条只在没有任何写出来的 fact 说到 `k` 时才起作用，读的又是拥有类型的那个 concept 的，而它是共用这个类型的每个 concept 的祖先，所以没有多说类型没说的话。
+  另外的理由照旧：那句已批的 "satisfies several concepts…" 自己的例子（`cmult` 对 `omult`）会悄悄读成 ordered_group 的；符号也得跟着改。
+- **它改掉的**：作者 2026-11-15 的「同类型的几个 concept 之间不排序，绑的项相同就合并成一个，不同就报错」，现在只在拥有类型的 concept 自己没有这个 key 名时才用。
+- **随之要改的别处**（等正在跑的评审 `wf_508e7a28-b15` 回来后一并改，免得评审中途原文在变；在那之前这几处与本条不一致时以本条为准）：
+  6.6 的 R2 (i)、(ii) 与 6.7 的 E2 的先后、排除、最后检查三处，照上面的 (a)(b)(c) 写；
+  6.4 第一步第 4 条与"explicit form"一条里"同类型的几个 concept 之间不排序…剩多条就报错"的各句，加"拥有类型的 concept 没有这个 key 名时"；其中 `int.group` 的例子现在读成 group 的 `*`，constant1 对 constant2 的例子现在读成 constant1；
+  本节 (5) 里"`x⇘K⇙`，没有 fact"一条指到本条，`pow` 的反例改用两个 refinement（`nat` 与 `int` 指数）；
+  A 区文件 2.5 里"refinement 与 parent 类型相同，所以…绑的项不同时报错"一句不再成立，要告诉 concept A1。
+- **10.1 那句已批文案的例子**【作者 2026-11-22 15:37 UTC「你可以自决」】：`Ambiguous notation "*⇘G⇙"⌂: the context has no concept constraint about G, …` 措辞仍然对，但它原来举的例子（`group.mult G` 对 `cmult G`）不再出现。两种换法是仍作符号的例子、用 group 没有的符号，或改用名字 `y`；我取前一种（`⊙`，`comm_group` 绑到 `cmult`、`nilpotent_group` 绑到 `nmult`），因为这句批的是符号的文案，名字另有它的变体。10.1 已照改。
+- **检查顺带查出、不属本条的一处**：本节 (2) 里符号"先在条目里选"写得太宽，会让视图的条目盖住 major parent 的。例：`semiring = "'a monoid" + add: "'a comm_monoid" …`，`comm_monoid` 改绑过 `*`；视图带来的 `*` 的声明者 `comm_monoid` 是 magma 的后代，于是盖住 major parent 的 `*`，semiring 的 `x * y` 成了它的加法。
+  `concept_entailment` 说的是同一个结构的 concept 之间的关系，所以"在条目里选"只应在说同一个结构的来源之间做（major parent 与各条 `D \<S>` 假设说的都是 `\<S>`）；说不同结构的来源之间仍是先并的赢。名字不受影响，名字的来源都说 `\<S>`。同样等评审回来后改 (2)。
+
+**(9) 的第一稿**（检查之前的写法，已由上面取代，留作记录）【作者 2026-11-22 14:52 UTC 对下面两条放宽：「你可以自主设计，最好 run Opus agent team 检查一下你的设计，看有没有你没有想到的」；我定为采纳第一条、不采纳第二条，自决；**检查的小组还没有回来，回来之前本条是待检查的设计**】
+- **规则**：带下标的写法 `k⇘r⇙`，`r` 没有任何 concept fact（或有 fact 但那些 concept 的表里都没有 `k`）时，6.4 第一步第 4 条的"按类型查"之前先加一步：
+  找出引入 `r` 的 record 类型的那个 concept（每个 record 类型由恰好一条 concept 命令引入；refinement 只加假设、不加字段，与它共用这个类型），它的表里有 `k` 的条目（名字按名字，符号按 key）就取它；没有，才照原来的按类型查。
+  `r` 的类型还没定时照旧留作占位的参数，类型定了之后用同一条规则。
+- **道理**：没有 fact 时我们只知道 `r` 有这个类型，这恰好等于"只有引入这个类型的那个 concept 的 fact"。于是读法只由类型决定，不会因为别的库后来在某个 refinement 里再声明一次这个名字而变成报错。
+- 例：`(in group) center` 与 `(in comm_group) center` 都有；`G` 是群的类型、没有 fact。`center⇘G⇙` 此前报已批的 "… the concepts with the type … of G bind "center" to different terms"，现在读成 `group.center G`。
+  作者的 `finprod` 的例子不变：群类型的 `G` 没有 fact 时是 `group.finprod G`。
+  group 自己没有 `y`、而 `comm_group` 与 `nilpotent_group` 各声明了 `y` 时，仍照原来的规则，报那句歧义。
+- **它改掉的**：作者 2026-11-15 的「同类型的几个 concept 之间不排序，绑的项相同就合并成一个，不同就报错」，现在只在引入这个类型的 concept 自己没有这个 key 时才用。10.1 那句已批文案的措辞不变，但它举的例子（`group.mult G` 对 `cmult G`）不再出现，例子要换成上面 `y` 的那种。
+- **代价**：用户心里想的若是 refinement 的那个（`G` 其实是交换群，只是这里没有 fact），会悄悄得到引入类型的那个 concept 的，到证明里才发现；改法是给出 fact 或写长名。
+- **没有采纳的第二条**：互不相干的 concept 的声明按类型排、类型更具体的赢（见下面第 2 条）。理由：一个 concept 有没有自己的 record 类型，取决于它加不加字段，不取决于它在数学上是否更特殊；那句已批的 "satisfies several concepts…" 自己的例子（`cmult` 对 `omult`）会因此悄悄读成 ordered_group 的；符号也得跟着改。那里报错、让用户写长名是对的。
+
+**小组列出的两条放宽，原文**（规则本身不依赖它们；第 1 条已由上面 (9) 采纳，第 2 条不采纳）。
 1. 没有 fact 时，先按"拥有这个结构类型的那个 concept"的表读，那张表里没有这个名字才按类型查。例：`(in group) center` 与 `(in comm_group) center` 都有时，群类型的 `G` 没有 fact，`center⇘G⇙` 现在报已批的歧义，放宽后读成 `group.center G`。
    它改掉作者 2026-11-15 的「同类型的几个 concept 之间不排序，绑的项相同就合并成一个，不同就报错」与那句已批文案的例子。
 2. 互不相干的 concept 的声明按类型排：类型更具体的那个 concept 的声明赢。例：同时有 `group G` 与 `comm_monoid G` 两条 fact 时 `finprod⇘G⇙` 现在报已批的歧义，放宽后读成 `group.finprod G`。它去掉已批的 "satisfies several concepts…" 那句的例子（`cmult` 对 `omult`），符号也得跟着改。
@@ -1122,7 +1179,7 @@ concept C 定的方向：短写也读作命题；不为它设 `_concept_prop` �
 - parse translation 不能按模板逐个登记（合并时同名不同 stamp 会报错）；现在的设计只登记钩子和 `_concept_name_index` 一个，没有这个问题。
 - 开工前要核一遍：我们的 syntax constant 名（`_infix_star` 之类）有没有与 HOL、AFP 里已有的 syntax constant 重名。
 
-**合并时的 warning**（文案，自决，作者没有逐字看过；印在 `theory` 那一行，不带 `⌂`）：
+**合并时的 warning**（文案，自决；作者 2026-11-22 15:15 UTC「批准」，编号 D16；印在 `theory` 那一行，不带 `⌂`）：
 
 ```
 Notation "⊗" of theory "L2.Lattice" is read with infixl ‹⊗› 70 of theory "L1.Monoid" in this theory, not with its own mixfix annotation infixr ‹⊗› 65, because "L1.Monoid" comes through an earlier import
@@ -1138,18 +1195,19 @@ The following notations of theory "L2.Lattice" are read with the mixfix annotati
 
 只是排版不同时不打（(2) 定下之后）。
 
-**声明时的 warning**（文案，自决，作者没有逐字看过；每种模式都印；`⌂` 标这条声明自己的标注）：
+**声明时的 warning**（文案，自决；作者 2026-11-22 15:15 UTC 看过，编号 D15：问「是何时显示？」，并定「meet，magma 这些都要加双引号（一般地对所有文案都要这样）」；下面已照加；加过引号的写法他 15:36 UTC「D15 批准」）。
+何时显示：在声明处。一条 concept 命令里字段的 mixfix、或体内的一条 `notation`，它给某个符号写的优先级或结合方向与这个 theory 里这个符号已经生效的不同，就在这条命令上打一次；批构建和交互模式都印。`⌂` 标这条声明自己的标注。
 
 ```
-Concept lattice: notation "⋅" of field meet is read with infixl ‹⋅› 70 of concept magma, not with its own mixfix annotation infixr ‹⋅› 65⌂
+Concept "lattice": notation "⋅" of field "meet" is read with infixl ‹⋅› 70 of concept "magma", not with its own mixfix annotation infixr ‹⋅› 65⌂
 ```
 
-体内的 `notation` 时主语是 `notation "⋅" of join`。生效的模板来自被顶替的 stock notation 时，`of concept magma` 换成那个常量（`of less_eq`），它的标注按定界符与优先级重写出来，能写成 `infix`、`infixl`、`infixr` 的就写成那样（`infix ‹≤› 50`）。一条命令里有几条时：
+体内的 `notation` 时主语是 `notation "⋅" of "join"`。生效的模板来自被顶替的 stock notation 时，`of concept "magma"` 换成那个常量（`of "less_eq"`），它的标注按定界符与优先级重写出来，能写成 `infix`、`infixl`、`infixr` 的就写成那样（`infix ‹≤› 50`）。一条命令里有几条时：
 
 ```
-Concept lattice: the following notations are read with the mixfix annotations their symbols already have, not with their own:
-  "⋅"    infixl ‹⋅› 70 of concept magma, not infixr ‹⋅› 65⌂ (field meet)
-  "⊔"    infixl ‹⊔› 65 of concept semilattice, not infixr ‹⊔› 60⌂ (field join)
+Concept "lattice": the following notations are read with the mixfix annotations their symbols already have, not with their own:
+  "⋅"    infixl ‹⋅› 70 of concept "magma", not infixr ‹⋅› 65⌂ (field "meet")
+  "⊔"    infixl ‹⊔› 65 of concept "semilattice", not infixr ‹⊔› 60⌂ (field "join")
 ```
 
 **(7) Pure 里加一个去掉产生式的通用函数** 【作者 2026-11-22 14:22 UTC 对"要您定的第一件：给 Pure 加一个通用函数"答「这个你可以自主设计」；我定为加，设计如下，自决】
@@ -1237,20 +1295,22 @@ Candidates:
 Annotate an operand with 'a, or write the structure: "+⇘R⇙"
 ```
 
+【2026-11-22 15:36 UTC 作者：「更早批准的句子要补引号」。照当日定的规则"句子里提到的名字一律加双引号"，本节 2026-11-22 之前批准的各句里嵌在句子里的结构、常量、concept 名都补了双引号，别的字没有动；类型（如 `('a, 'm) group_scheme`）与候选列表里单独成行的项没有加，这是我对规则范围的读法，作者没有单独表态。补过的各处：本句与它的两个变体里的 `G`、`G.sub H`；下面带下标的四句里的 `G`、`magma`、`lattice`；"already bound" 那句里的 `group.inv`、`group`】
+
 ```
-The structure G in the premise "group G"⌂ has no determined type:
-G is not fixed in this context and has no type annotation
+The structure "G" in the premise "group G"⌂ has no determined type:
+"G" is not fixed in this context and has no type annotation
 Write "group (G :: ('a, 'm) group_scheme) ⟹ …", or fix it first:
   fixes G :: "('a, 'm) group_scheme"
 ```
 
-compound 情形首行换成 `The structure G.sub H in the premise "group (G.sub H)"⌂ has type (?'a, ?'m) group_scheme, which is not determined`，改法换成对整个项标注。类型变量名取不与语句已有的冲突者。
+compound 情形首行换成 `The structure "G.sub H" in the premise "group (G.sub H)"⌂ has type (?'a, ?'m) group_scheme, which is not determined`，改法换成对整个项标注。类型变量名取不与语句已有的冲突者。
 
 结构所在的不是 `⟹` 的前提、而是项列表里单独的一项时（`assumes "group G"`，即语句自己的假设，6.3）用下面的变体【作者 2026-11-16「批准」】：
 
 ```
-The structure G in "group G"⌂ has no determined type:
-G is not fixed in this context and has no type annotation
+The structure "G" in "group G"⌂ has no determined type:
+"G" is not fixed in this context and has no type annotation
 Write "group (G :: ('a, 'm) group_scheme)", or fix it first:
   fixes G :: "('a, 'm) group_scheme"
 ```
@@ -1265,12 +1325,14 @@ Notation "'_" is reserved and cannot be used for user constants
 
 2026-11-15 批准的一条（6.4）。explicit form 里用户写出的结构在上下文里和全局都没有 concept fact，按它的类型查到的候选来自同一个类型的几个 concept、绑的项又不同时的错误。逐字；候选每行是解析出的项和能选中它的那条 concept fact；`⌂` 是位置。第一行的 "constraint" 作者原稿写作 "constaint"，我按拼写错误记成 "constraint"，已当面说明、作者未提出异议：
 
+【例子 2026-11-22 换过，措辞一字未动（除当日补的引号）。原来的例子是 `"*⇘G⇙"`，候选 `group.mult G   if "group G"` 与 `cmult G        if "comm_group G"`；6.10 的 (9) 定下之后那种情形读成 `group.mult G`、不再报这句，只有拥有这个类型的 concept 自己没有这个符号、而共用它类型的两个 concept 各绑了一个时才报。换成哪种例子，作者「你可以自决」；我取仍作符号的例子，用 group 没有的符号 `⊙`】
+
 ```
-Ambiguous notation "*⇘G⇙"⌂: the context has no concept constraint about G,
-and the concepts with the type ('a, 'm) group_scheme of G bind "*" to different terms
+Ambiguous notation "⊙⇘G⇙"⌂: the context has no concept constraint about "G",
+and the concepts with the type ('a, 'm) group_scheme of "G" bind "⊙" to different terms
 Candidates:
-  group.mult G   if "group G"
-  cmult G        if "comm_group G"
+  comm_group.cmult G        if "comm_group G"
+  nilpotent_group.nmult G   if "nilpotent_group G"
 Write the intended term directly instead of the notation
 ```
 
@@ -1294,23 +1356,23 @@ If "carrier" is meant as a variable, fix it first
 explicit form，没有 concept constraint，结构的类型也定不下来，而表里有这个符号的 concept 类型各不相同：
 
 ```
-Ambiguous notation "*⇘G⇙"⌂: the context has no concept constraint about G, and the type of G is not determined
+Ambiguous notation "*⇘G⇙"⌂: the context has no concept constraint about "G", and the type of "G" is not determined
 Candidates:
-  magma.mul G      if G is a magma
-  lattice.meet G   if G is a lattice
-Annotate G with its type
+  magma.mul G      if "G" is a "magma"
+  lattice.meet G   if "G" is a "lattice"
+Annotate "G" with its type
 ```
 
 explicit form，没有 concept constraint，结构的类型是确定的，但这个类型上没有这个符号：
 
 ```
-Notation "⊑⇘G⇙"⌂ cannot be resolved: no concept with the type ('a, 'm) group_scheme of G provides "⊑"
+Notation "⊑⇘G⇙"⌂ cannot be resolved: no concept with the type ('a, 'm) group_scheme of "G" provides "⊑"
 ```
 
 explicit form，结构有好几条 concept constraint，最靠后代的 concept 不止一个、互不相干，绑的项又不同：
 
 ```
-Ambiguous notation "*⇘G⇙"⌂: G satisfies several concepts that bind "*" to different terms, and none of these concepts refines the others
+Ambiguous notation "*⇘G⇙"⌂: "G" satisfies several concepts that bind "*" to different terms, and none of these concepts refines the others
 Candidates:
   cmult G    from "comm_group G"⌂
   omult G    from "ordered_group G"⌂
@@ -1328,7 +1390,7 @@ Use a different name
 撞的是同一个 concept 自己已有的名字时，去掉中间那句：
 
 ```
-The name "inv" is already bound to group.inv in concept group
+The name "inv" is already bound to "group.inv" in concept "group"
 Use a different name
 ```
 
@@ -1336,7 +1398,18 @@ header 里的字段名、parent 的 qualifier 与 major chain 继承来的名字
 （上面两句 "The name … is already bound …" 因作者 2026-11-22 09:11 起关于常量覆盖的表态而待定，见 6.4"名字的带下标写法"与 11.2。）
 **2026-11-22 定（6.10 的 (6)）**：三行的那句（带 "Concept group inherits this name and cannot define it again"）撤掉，连同"header 里的字段名…与 major chain 继承来的名字重合时也用上面这句"那一条用法；两行的那句保留，范围限于同一个 concept 在同一个 theory 里把同一个名字声明两次。
 
-#### 自决的文案 【自决（作者 2026-11-22 08:41 UTC 授权）；讨论 `wf_10bfad0f-fd5` 的 T 包；**作者没有逐字看过**】
+#### 自决的文案 【自决（作者 2026-11-22 08:41 UTC 授权）；讨论 `wf_10bfad0f-fd5` 的 T 包；作者 2026-11-22 15:15 UTC 逐条看过，结果见下一段，各条已照改】
+
+**作者 2026-11-22 15:15 UTC 逐条看的结果**（我 14:46 之后把这批文案编了号列给他：A 是新的句子，B 是已批句子的变体，C 是 `print_concept_notations` 的三行，D 是 6.12 的两句 warning）。
+- 批准，一字未改：A1（没有候选对得上，「批准 A1 A2」）、A2（同一个来源里几条都对得上）、B7（"… not determined" 的变体，「批准」）、B8（fix 了但没写类型，「可以」）、B9（带下标的句子用于名字时的换词，「好」）、B11（视图的名字多一行提示，「好」）、C12（表未设置，「好」）、C14（什么都没有，「好」）、D16（theory 合并时的 warning，「批准」）。
+- 作者给了写法，照他的：A5（`f⇘G⇙`）、B6（没有被用作来源）、B10（有 fact 但那个 concept 没有这个符号）。
+- 作者说看不懂，要重拟：A3（concept constraint 的结构项里读不出）、A4（header 里同样的情形）。「"the structure of a concept constraint does not use the concept constraints of its own statement" 这是什么意思？」「the structure of an assumption of concept X does not use the assumptions of X 这个我也看不懂」。
+  15:36 UTC 他定了句式：用 B6 的两句，补半句解释（「可以。你补半句我后面说的解释也好」「A4 同理」）。补的半句的英文是我拟的，待他过目。
+- C13：作者给了句式，要我推荐一个比 names、identifiers 更好的说法；15:36 UTC「C13 批准 the names of fields, definitions and instances」。
+- D15：作者问何时显示（已答：声明处），并定了一条通用规则，见下面"适用于本节全部文案的规则"的最后一条；加了引号的写法 15:36 UTC「D15 批准」。
+- 15:36 UTC 另两句：「更早批准的句子要补引号」（已补）；「今天提交之后的这些改动可以提交」。
+- 15:37 UTC：10.1 那句 `Ambiguous notation "*⇘G⇙"⌂: the context has no concept constraint about "G", …` 的例子换成哪种，「你可以自决」；我取仍作符号的例子，见那一句上面的注。
+- 作者另提：`print_concept_notations` 可以带参数，列出某个 concept 或某个 concept instance 的表。采纳，写在 6.8 的 P2。
 
 裁判的报告：`concept_D_remaining_questions_reports_2026-11-22/package_T_judge.md`。上面已批的文案在它仍然为真的情形里一字不改；下面只是给后来的决定（表只设置一次、名字的带下标写法、最后检查时才报）造出的新情形加的变体，和此前待拟的几条。两处我没有照裁判的稿子，各自写明。
 
@@ -1347,8 +1420,11 @@ header 里的字段名、parent 的 qualifier 与 major chain 继承来的名字
 - 给用户的说法是 "write the structure: "…""，以及 "written without a structure"；文案里不出现 index、subscript 这两个词。
 - 列举带引号的几项：两项 `"a" or "b"`（作主语时 `"a"⌂ and "b"⌂`），三项及以上 `"a", "b" or "c"`（`"a"⌂, "b"⌂ and "c"⌂`）；单复数与 is/are 按个数算。
 - "if G is a …" 的冠词按 concept 名的首字母算（a、e、i、o 开头用 an）。
+- **句子里提到的名字一律加双引号**【已定，作者 2026-11-22 15:15 UTC，看 D15 时说：「meet，magma 这些都要加双引号（一般地对所有文案都要这样）」】：concept 名、字段名、常量名、theory 名、结构，嵌在句子里时都加双引号。候选列表里单独成行的项与类型、mixfix 标注不属于这一条。
+  本节今天拟的各条已照此改。更早批准的文案里没加引号的，我把清单列给了作者，他 15:36 UTC：「更早批准的句子要补引号」；已补，见本节开头"notation 解析的三条"第二句上面的注。这条规则适用于所有区，已写进公共文件第 10 节。
+  还有两处没有补，因为它们已不再用，留作记录的原文不动：带 "Concept group inherits this name and cannot define it again" 的三行那句，与并 parent 时的模板冲突 warning（T1.3）。
 
-**T1.1 类型已定、但没有候选对得上**（了结 10.2 的同名一项）。只对占位（有两个及以上候选的出现处）有这句；只有一个候选时 −200 当场代入，对不上是 Isabelle 自己的 "Type unification failed"。
+**T1.1 类型已定、但没有候选对得上**【作者 2026-11-22 15:15 UTC 批准（编号 A1）】（了结 10.2 的同名一项）。只对占位（有两个及以上候选的出现处）有这句；只有一个候选时 −200 当场代入，对不上是 Isabelle 自己的 "Type unification failed"。
 
 ```
 Notation "⊗"⌂ cannot be resolved: no candidate fits its type int ⇒ int ⇒ int
@@ -1365,20 +1441,20 @@ Candidates:
 If "inv" is meant as a variable, fix it first
 ```
 
-有看得见而没被用作来源的 concept constraint、且它在这个 key 上的条目的 type pattern 能与出现处的类型合一时，在列表之后加两行（下面"没有被用作来源"一条的那两行）。例：`lemma (in ring) assumes "group K" shows "(x::'b) * y = y * x"`：
+有看得见而没被用作来源的 concept constraint、且它在这个 key 上的条目的 type pattern 能与出现处的类型合一时，在列表之后加一行提示。
+这一行原来是两行（先说 `"group K"⌂ is not used for notation written without a structure here`）；作者把"没有被用作来源"那一条（T2.5）简化成只给提示之后，这里随之只留提示那一行，是我照他的改法顺带改的，他没有单独看过这一处。例：`lemma (in ring) assumes "group K" shows "(x::'b) * y = y * x"`：
 
 ```
 Notation "*"⌂ cannot be resolved: no candidate fits its type 'b ⇒ 'b ⇒ 'b
 Candidates:
   magma.mul \<S>  : 'a ⇒ 'a ⇒ 'a              (from "ring \<S>")
   times           : ?'a::times ⇒ ?'a ⇒ ?'a    (the original "*")
-"group K"⌂ is not used for notation written without a structure here
 Write the structure: "*⇘K⇙"
 ```
 
 列表列出这个占位的全部候选，按候选的先后；类型是报错那一刻出现处的类型。带下标按类型查的占位：没有任何候选的结构类型对得上 `r` 的类型时用已批的 "no concept with the type … of G provides"，否则用本句，首行引用户写的形式（`Notation "*⇘G⇙"⌂ …`、`The name "inv⇘G⇙"⌂ …`），每行候选末尾是 `(if G is a magma)`。
 
-**类型同时对得上同一个来源里的几条、没有一条更具体**（6.6 的 R4；裁判 R 包拟）：
+**类型同时对得上同一个来源里的几条、没有一条更具体**【作者 2026-11-22 15:15 UTC 批准（编号 A2）】（6.6 的 R4；裁判 R 包拟）：
 
 ```
 Ambiguous notation "⊗"⌂: several notations "⊗" match the type 'a ⇒ 'a ⇒ 'a of this occurrence, and none of them is more specific
@@ -1390,28 +1466,32 @@ Write the intended term directly instead of the notation
 
 名字的变体：`Ambiguous name "foo"⌂: several names "foo" match the type … of this occurrence, and none of them is more specific`，末行 `Write the intended term directly instead of the name`。
 
-**T1.2 concept constraint 的结构项里的 notation 解析不了，而同一条语句的另一条 constraint 提供它**（了结 10.2"前提里的结构项含解析不了的 notation"；规则在 6.6 的 R3）。只在有这样一条提供者时用；没有任何东西提供这个 key 时仍用已批的"没有任何候选"那两句。
+**T1.2 concept constraint 的结构项里的 notation 解析不了，而同一条语句的另一条 constraint 提供它**【句式已定，作者 2026-11-22 15:36 UTC；编号 A3、A4；补的半句的英文待他过目】（了结 10.2"前提里的结构项含解析不了的 notation"；规则在 6.6 的 R3）。只在有这样一条提供者时用；没有任何东西提供这个 key 时仍用已批的"没有任何候选"那两句。
+原稿的首行带一句解释（`… cannot be resolved: the structure of a concept constraint does not use the concept constraints of its own statement`；header 里是 `… the structure of an assumption of concept X does not use the assumptions of X`），作者 2026-11-22 15:15 UTC 说两句都看不懂。
+它们想说的是：`assumes "group G" and "group (sub H)"` 里，`sub` 写在第二条假设的括号里面，而读括号里面的东西时不看这条语句自己的各条 concept 假设（否则成循环），所以第一条假设提供的 `sub` 在这里用不上。这层道理不必告诉用户，告诉他怎么改就够了。
+重拟：语句里的情形与"没有被用作来源"（T2.5）用同一句，那是作者给的写法。
+作者 2026-11-22 15:36 UTC：「可以。你补半句我后面说的解释也好」；他说的解释是「推断不出 "group (sub H)" 中的 structure. 注意在解析 assumptions 时不会使用 concept 进行推导，你必须给全 concepts」；「A4 同理」。
+所以句式定了：T2.5 的两句，中间补半句解释。**半句解释的英文是我照他的中文拟的，他还没有看过英文**；我没有照字面写"解析 assumptions 时不用 concept"，因为那对别的假设不成立（`assumes "group G" and "x * y = z"` 里 `*` 正是靠 `group G` 读的），写成了"在这一条假设里面不用别的 concept constraint"：
 
 ```
-The name "sub"⌂ in "group (sub H)"⌂ cannot be resolved: the structure of a concept constraint does not use the concept constraints of its own statement
-Write the structure: "sub⇘G⇙"
-If "sub" is meant as a variable, fix it first
+The name "sub"⌂ cannot be resolved: inside "group (sub H)"⌂, the other concept constraints of the statement are not used. Write the structure: "sub⇘G⇙"; or if "sub" is meant as a variable, fix it first
 ```
 
 ```
-Notation "⊠"⌂ in "group (H ⊠ K)"⌂ cannot be resolved: the structure of a concept constraint does not use the concept constraints of its own statement
-Write the structure: "⊠⇘G⇙"
+Notation "⊠"⌂ cannot be resolved: inside "group (H ⊠ K)"⌂, the other concept constraints of the statement are not used. Write the structure: "⊠⇘G⇙"
 ```
 
-第一个 `⌂` 标出现处，第二个标那条 concept constraint（照用户写的样子引）。"Write the structure" 一行列出每个提供者。
-concept 的 header 里的变体（规则在 6.9 的 H1.2；header 里 `\<S>` 的带下标写法在来源的结构项里同样只用基础的表，所以不给 "Write the structure" 的提示；header 里没有 `fixes`，所以也不给 "fix it first"）。这一句不是裁判的原稿，是我照语句那句的句式改的：
+concept 的 header 里的情形（规则在 6.9 的 H1.2）。例：`concept 'a X = "'a monoid" + assumes cm: "comm_monoid \<S>" and u: "group units"`，`units` 是 `comm_monoid` 的名字、由假设 `cm` 带来。读 `u` 括号里面的东西时只用 major parent、自己的字段、视图，`cm` 带来的用不上；写 `units⇘\<S>⇙` 在这里同样用不上。能改的只有直接写出那个项，所以提示里把它印出来（提供者的条目代入 `\<S>`，按 stock 的形式印）：
 
 ```
-The name "units"⌂ in "group units"⌂ cannot be resolved: the structure of an assumption of concept X does not use the assumptions of X
-Write the intended term directly instead of the name
+The name "units"⌂ cannot be resolved: inside "group units"⌂, the other assumptions of the concept are not used. Write the term directly: "comm_monoid.units \<S>"
 ```
 
-符号的变体首行以 `Notation "⊗"⌂ in "…"⌂ cannot be resolved: …` 开头，末行 `… instead of the notation`。
+```
+Notation "⊗"⌂ cannot be resolved: inside "group (A ⊗ B)"⌂, the other assumptions of the concept are not used. Write the term directly: "magma.mul \<S>"
+```
+
+（作者「A4 同理」；补的半句同样是我拟的英文。）
 `where` 的右边解析不了时用已批的"没有任何候选"那两句，不另加行（H 包的裁判拟了一行说明，我没有采用：情形少见，说明又绕不开 field 与 parent 的说法）。
 
 【2026-11-22 14:28 UTC 之后：这条文案不再用。6.12 的 (2) 定下之后，concept 命令并 parent 时不再比模板；声明时与 theory 合并时各有一句新的 warning，在 6.12。下面原文留作记录。此前的注：这条文案的去留随 6.12 末尾第二件的回答；在 (a)、(b) 两种回答之下并 parent 时不会再有模板冲突，它用不到。theory 合并时的 warning 是另一句，在 6.12】
@@ -1442,27 +1522,33 @@ This context sets no concept notations: each statement reads notation through it
 
 （表未设置，带不带 `!` 都是这句。）
 
+（上面这句：作者 2026-11-22 15:15 UTC「好」，编号 C12。）
+
+表已设置、不带 `!`、没有符号但有名字时的一句【已定，作者 2026-11-22 15:36 UTC：「C13 批准 the names of fields, definitions and instances」，即下面代码块里的那一句】。我原来的稿子是 `No concept symbols in this context (names are printed by "print_concept_notations!")`。
+作者给了句式：`No concept symbols in this context. You may want to use "print_concept_notations!" to print identifiers.`，并说「这里不要叫 names，有点奇怪，但我觉得 identifiers 也不是很好，请推荐我更好的命名」。
+我的推荐是不另起一个词，直接说它们是谁的名字（与 T1.5 里 "a field, definition or instance named" 的说法一致；行末照通用规则不带句号）：
+
 ```
-No concept symbols in this context (names are printed by "print_concept_notations!")
+No concept symbols in this context. You may want to use "print_concept_notations!" to print the names of fields, definitions and instances
 ```
 
-（表已设置，不带 `!`，没有符号但有名字。）
+备选是 Isabelle 里现成的 short names：`… to print short names`。
 
 ```
 No concept notations in this context
 ```
 
-（表已设置，没有任何可印的。）
+（表已设置，没有任何可印的。作者 2026-11-22 15:15 UTC「好」，编号 C14。）
 
-**T1.5 下标前面的标识符不是名字类 key（`f⇘G⇙`）**。由 parse translation 在标识符的位置报（6.4"名字的带下标写法"已定只报错）：
+**T1.5 下标前面的标识符不是名字类 key（`f⇘G⇙`）**【作者 2026-11-22 15:15 UTC 给的写法（编号 A5）：「建议 The name "f"⌂ cannot be written with a structure "G": no concept has a field, definition or instance named "f"」；比我的稿子多了把用户写的结构引出来】。由 parse translation 在标识符的位置报（6.4"名字的带下标写法"已定只报错）；`"G"` 处印用户写在下标里的那个结构：
 
 ```
-The name "f"⌂ cannot be written with a structure: no concept has a field, definition or instance named "f"
+The name "f"⌂ cannot be written with a structure "G": no concept has a field, definition or instance named "f"
 ```
 
 下标前写限定名（`group.carrier⇘G⇙`）对不上 `id_position` 那条产生式，是 Isabelle 自己的语法错误。
 
-**T2.1 "the type ?'a of its operands is not determined" 的变体**（已批的措辞不变）。
+**T2.1 "the type ?'a of its operands is not determined" 的变体**【作者 2026-11-22 15:15 UTC「批准」，编号 B7】（已批的措辞不变）。
 - 已批的例子里第一行候选的项，按现行设计应是 `magma.mul (ring.add R)`（`ring.add R` 是视图，是个结构）；措辞不受影响。
 - 只有一个操作数：`the type ?'a of its operand is not determined`，提示 `Annotate the operand with 'a`。
 - 名字用 argument：`Ambiguous name "inv"⌂: the type ?'a of its argument is not determined`，`Annotate the argument with 'a`；几个参数时 `of its arguments`、`Annotate an argument with 'a`。
@@ -1485,47 +1571,52 @@ Candidates:
 Annotate the argument with 'a, or write the structure: "inv⇘G⇙"
 ```
 
-**T2.2 "The structure G … has no determined type" 的变体**。已批的三句对没有 fix 的 `G` 不变。它们现在在最后检查时报、条件见 6.6 的 R6；在 header 里见 6.9 的 H1.2。`G` fix 了但没有类型时（`Variable.def_type` 给 `dummyT`），已批的第二行 "G is not fixed in this context" 不真，用下面的变体；−200 不知道是 `fixes`、`for` 还是 `fix` 引入的 `G`，所以不给照抄的 `fixes` 行：
+**T2.2 "The structure G … has no determined type" 的变体**【作者 2026-11-22 15:15 UTC「可以」，编号 B8；句子里的 `G` 照它所仿的已批原文没有加引号，是否按新定的引号规则一并加，随那批更早的文案一起问作者】。已批的三句对没有 fix 的 `G` 不变。它们现在在最后检查时报、条件见 6.6 的 R6；在 header 里见 6.9 的 H1.2。`G` fix 了但没有类型时（`Variable.def_type` 给 `dummyT`），已批的第二行 "G is not fixed in this context" 不真，用下面的变体；−200 不知道是 `fixes`、`for` 还是 `fix` 引入的 `G`，所以不给照抄的 `fixes` 行：
 
 ```
-The structure G in the premise "group G"⌂ has no determined type:
-G is fixed in this context without a type annotation
-Write "group (G :: ('a, 'm) group_scheme) ⟹ …", or give G this type where it is fixed
+The structure "G" in the premise "group G"⌂ has no determined type:
+"G" is fixed in this context without a type annotation
+Write "group (G :: ('a, 'm) group_scheme) ⟹ …", or give "G" this type where it is fixed
 ```
+
+（2026-11-22 15:36 UTC 作者令更早批准的句子补引号之后，这一句随它所仿的原文一起补了。）
 
 语句自己的假设的变体相同，去掉 ` ⟹ …`。compound 那句里的 `G.sub H` 是启用 dot syntax 之后的样子，原型印成 `group.sub G H`，句式不变。
 
-**T2.4 带下标的四句的变体**（已批的措辞不变）。
+**T2.4 带下标的四句的变体**（已批的措辞不变）【作者 2026-11-22 15:15 UTC：第一点「好」（B9）；第二点改成他给的写法（B10）；第三点「好」（B11）】。
 - 名字：`Ambiguous notation "k⇘G⇙"⌂` 换成 `Ambiguous name "k⇘G⇙"⌂`；`Notation "k⇘G⇙"⌂ cannot be resolved` 换成 `The name "k⇘G⇙"⌂ cannot be resolved`；`instead of the notation` 换成 `instead of the name`；理由里引的 key 是裸名字（`bind "inv"`、`provides "le"`）。
 - `G` 有 concept fact、但最靠后代的 concept 的表里没有这个 key 而落到按类型查时（6.4 第一步第 3 条），"the context has no concept constraint about G" 不真，那半句换成那几条 fact：
 
+  作者：「这里直接 Ambiguous notation "÷⇘G⇙"⌂: "monoid G"⌂ does not provide "÷" 就够了」。首行因此只到这里，不再接 "and the concepts with the type … bind … to different terms"：
+
   ```
-  Ambiguous notation "÷⇘G⇙"⌂: "monoid G"⌂ does not provide "÷",
-  and the concepts with the type ('a, 'm) group_scheme of G bind "÷" to different terms
+  Ambiguous notation "÷⇘G⇙"⌂: "monoid G"⌂ does not provide "÷"
   ```
 
-  两条 fact 时 `"a G"⌂ and "b G"⌂ do not provide …`，三条及以上 `"a"⌂, "b"⌂ and "c"⌂ do not provide …`。"…, and the type of G is not determined" 那句同样替换。
+  我的读法（他没有单独说）：首行之后的候选列表与末行照已批的原文不变。
+  两条 fact 时 `"a G"⌂ and "b G"⌂ do not provide …`，三条及以上 `"a"⌂, "b"⌂ and "c"⌂ do not provide …`。"…, and the type of G is not determined" 那句的首行同样只留到 `do not provide "÷"`。
 - "no concept with the type … provides" 那句，对名字、且被查的 concept 有一个视图的 concept 提供这个 key 时，加第二行（视图的名字不并进表，`le⇘K⇙` 因此报错）；只显示第一个这样的视图，只在报错的路上算：
 
   ```
-  The name "le⇘G⇙"⌂ cannot be resolved: no concept with the type ('a, 'm) ordered_group_scheme of G provides "le"
-  "le" is a name of the field ord of G; write the structure: "le⇘ord⇘G⇙⇙"
+  The name "le⇘G⇙"⌂ cannot be resolved: no concept with the type ('a, 'm) ordered_group_scheme of "G" provides "le"
+  "le" is a name of the field "ord" of "G"; write the structure: "le⇘ord⇘G⇙⇙"
   ```
+
+  第二行里的 `ord` 与 `G` 照新定的引号规则加了双引号；第一行的 `G` 在作者 15:36 UTC 令更早批准的句子补引号之后也补了。
 
 **T2.5 "没有任何候选"两句的变体：有看得见的 concept constraint 提供这个 key，但它没有被用作来源**（表只设置一次造出的情形，如证明里的 `assume "group K"`、已设置的表下面语句的前提）。已批的两句在"看得见的 concept fact 都不提供这个 key"时一字不改；它们上面的说明改读为：这个位置的来源列表里（表已设置时是 context 的来源列表，未设置时是这条语句自己的来源）没有任何 concept 提供这个符号，它也没有原常量。
 
+作者 2026-11-22 15:15 UTC 给的写法（编号 B6；「建议直接 Notation "⊗"⌂ cannot be resolved. Write the structure: "⊗⇘K⇙"」「The name "carrier"⌂ cannot be resolved. Write the structure: "carrier⇘K⇙"; or if "carrier" is meant as a variable, fix it first」）。我原来的稿子首行带一句解释（`… cannot be resolved: "ring K"⌂ is not used for notation written without a structure here`），不要了：
+
 ```
-Notation "⊗"⌂ cannot be resolved: "ring K"⌂ is not used for notation written without a structure here
-Write the structure: "⊗⇘K⇙"
+Notation "⊗"⌂ cannot be resolved. Write the structure: "⊗⇘K⇙"
 ```
 
 ```
-The name "carrier"⌂ cannot be resolved: "group K"⌂ is not used for names written without a structure here
-Write the structure: "carrier⇘K⇙"
-If "carrier" is meant as a variable, fix it first
+The name "carrier"⌂ cannot be resolved. Write the structure: "carrier⇘K⇙"; or if "carrier" is meant as a variable, fix it first
 ```
 
-两条 fact：`"ring K"⌂ and "ring L"⌂ are not used …`、`Write the structure: "⊗⇘K⇙" or "⊗⇘L⇙"`。
+两条 fact 提供它时：`Write the structure: "⊗⇘K⇙" or "⊗⇘L⇙"`（这一处是我照他的句式写的）。
 哪些 fact 算（T1.1、T1.2 与本条共用）：语句自己的 concept constraint（syntactic destruction 找到的），和经 assumption destruction 从用户写下的东西进入证明 context 的 concept fact；全局的 fact、激活进来的 fact、带 schematic 变量的 fact 不算。
 一条 fact 算数的条件：按"某个结构项的某个 key 的条目"那个函数，它的结构在这个 key 上有条目，而它没有给这个出现处贡献候选。先后：语句自己的按来源的先后，然后是 context 里的按进入的先后。
 
