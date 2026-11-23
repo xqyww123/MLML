@@ -27,6 +27,8 @@
 - **结构项的头**：结构项最外层的那个常量或变量。`sub.group G H` 的头是 `sub.group`，`G` 的头是 `G`。只看头，不看参数。
 - **规则**：intro table 里的一个条目；结论是一个 concept 目标。不带前提的规则也叫事实。construction rule 不在其中（4.1）。
 - **concept 前提**：规则的前提里形如 `C' t'` 的那些。**非 concept 条件**：规则的其余前提。
+  - 2026-11-23 起，外面包着 `⋀`、`⟹` 的也算：前提 `⋀xs. H₁ ⟹ … ⟹ Hₙ ⟹ C' t'` 是 concept 前提，只要 `H₁ … Hₙ` 里没有一条的结论是 concept fact
+    （例：`Q ?x ⟹ group ?x`、`⋀i. group (?G i)`）。有的话它整条是非 concept 条件（例：`⋀H. group H ⟹ group (?f H)`）。怎样闭合它、为什么这样分，见 4.1。
 - **带条件的规则**：有非 concept 条件的规则。只有 concept 前提的规则不算带条件。
   作者 11-20 04:21：「注意一点，我上面说的“带条件”指的是带有非 concept 条件」。
   截断等式带的 `concept (…)` 条件是另一回事，本文件里总写作"带 `concept` 条件"。
@@ -237,9 +239,11 @@ theory 数据与上下文数据两部分的分法、条目的 mask 都不变；"
       但一条激活结果的后续工作（上面"2026-11-22 改了其中两处"里的那两样）可以还欠着：它被上限 `concept_extraction_limit` 拦下时记在一张表里，
       以后别的 fact 碰到同一条表项时接着做。所以表里可能暂时少几条由后续工作才得到的条目。搜索同样不替它补：
       到了上限不出 warning（作者 11-22 15:19：「确认上限停下工作时完全不出 warning」），搜索看到的就是当时表里有的。
-    - 判断"有没有 concept 前提"的函数：登记与搜索用同一个，只认自己就是 `C' t'` 的前提（第 0 节的术语"concept 前提"）；`(⋀i. group (?G i)) ⟹ …`、`(Q ?x ⟹ group ?x) ⟹ …` 这样的前提是非 concept 条件。
-      concept B 2026-11-23 03:1x UTC 问是用这个还是用看 HHF 结论的 `Concept.is_concept_prop`，concept A1 照术语表答了前者；
-      函数在 Pure 的 `Concept` 里，名字是 concept B 定的 `Concept.concept_of_fact`、`Concept.is_concept_fact`，proof method 那边仍用 `is_concept_prop`。它要认 base 谓词 `concept`。
+    - 判断"有没有 concept 前提"的函数：登记与搜索用同一个，就是第 0 节的术语"concept 前提"，2026-11-23 04:19 UTC 起照 4.1 末条：
+      外面包着 `⋀`、`⟹` 而里面是 concept fact 的也算，除非外面的假设里有 concept fact。
+      （同日 03:1x UTC concept B 问时 concept A1 先答的是"只认自己就是 `C' t'` 的前提"，一小时后作者改了，那个答案作废。）
+      它不是 Pure 里现成的 `Concept.is_concept_prop`（那个只看最里面的结论，不看外面的假设）；concept B 04:2x UTC 起名 `Concept.concept_of_premise`、`Concept.is_concept_premise`。
+      proof method 那边仍用 `is_concept_prop`。它要认 base 谓词 `concept`。
 - 作者 11-20 16:31 问过 concept B"只有一个 concept 前提的 intro rule 是不是也进激活"；concept B 建议不进、仍放 intro table，作者 11-20 16:53：「赞同」。
   这一条说的是规则进不进激活列表，与上一条（登记时做不做激活）是两件事，15:27 的决定没有改它。
 - **补强**【已定，作者 11-21 03:34、05:09、05:22 对 concept B，concept A1 在它的会话转录里核过；机制在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 2.5，以那里为准】。
@@ -635,6 +639,33 @@ concept A1 曾提议"靠带 `concept` 条件的截断等式转过来的那一步
   例：`comm_group ?K ⟹ iso ?K (f ?G) ⟹ comm_group (f ?G)`。登记时不报错（用户规则的前提形状不设限制，B 区 7.3）；concept A1 11-20 07:42 向作者说过。
 - 只出现在非 concept 条件里的变量没有问题：那些条件原样交给用户。
 
+**外面包着 `⋀`、`⟹` 的 concept 前提**【已定，作者 2026-11-23】。
+- 来由：concept B 2026-11-23 问，登记 `[concept_intro]` 规则时判断"有没有 concept 条件"要与搜索用同一个判断，`⋀i. group (?G i)`、`Q ?x ⟹ group ?x` 这样的前提算不算。
+  concept A1 先照第 0 节原来的定义答了"不算、留给用户"。作者 04:10 UTC：
+  「`Q G ⟹ group G` 我想是可以理解的，整个算法照旧视其为 `group G`，只是所有从中得到的条件全部带有 Q G 这个前提，不好吗？」
+  concept A1 答这个办法成立，并报了下面"外面的假设是 concept fact"那一种情形与两种处理；作者 04:19 UTC：「点头。」
+  （他点头的两条：`Q G ⟹ group G` 与 `⋀i. group (G i)` 都算 concept 前提、照他的办法做；外面的假设是 concept fact 的那种，初版仍留给用户。后一条与 `⋀` 那一半是 concept A1 提的。）
+- **判断**：前提 `⋀xs. H₁ ⟹ … ⟹ Hₙ ⟹ B`（`B` 外面不再有 `⋀`、`⟹`）是 concept 前提，当且仅当 `B` 是 concept fact `C' t'`，并且没有一条 `Hᵢ` 自己的结论是 concept fact。
+  没有 `⋀`、`⟹` 时这就是原来的定义。`Hᵢ` 的"结论"同样是剥掉它外面的 `⋀`、`⟹` 之后的那一句。
+- **怎样闭合**：把 `xs` 换成上下文里没有的新的固定变量，去证 `C' t'`，与任何一条 concept 前提一样（4.2 的距离与规则数、4.3 的解法表都照旧）。搜索不看 `H₁ … Hₙ`。
+  解出来之后，这条规则取用这个解法时，把它留下的每个条件 `c` 换成 `⋀xs. H₁ ⟹ … ⟹ Hₙ ⟹ c`；留下的是一个"或"时，整个"或"包在里面（交给用户时照 4.2 写成 `∀`、`⟶`）。
+  - 对：由 `⋀xs. Hs ⟹ c₁`、…、`⋀xs. Hs ⟹ cₖ` 与 `c₁ ⟹ … ⟹ cₖ ⟹ C' t'` 推得出 `⋀xs. Hs ⟹ C' t'`。
+  - 为什么搜索不必知道 `Hs`：搜索从不去证非 concept 的东西，只把它们留给用户；`Hs` 的用处是让用户证留下的条件时能用上它们，包上去正好做到。
+  - 解法表记的是 `C' t'` 自己的解法，不带外面这一层；包是在取用的地方做的，所以表与"只做匹配"都不受影响。
+  - 变量：只出现在 `Hs` 里的 schematic 变量与只出现在非 concept 条件里的一样，没有问题。`C' t'` 里匹配之后还没有着落的变量照上面那一条，这个前提闭合不了。
+- **外面的假设里有 concept fact 的，初版整条算非 concept 条件，留给用户**。例："`f` 把群映到群"的前提 `⋀H. group H ⟹ group (?f H)`。
+  - 理由：照上面的办法去证 `group (f H)` 时搜索手里没有 `group H`，通常闭合不了；而 concept 前提闭合不了这条规则就整条用不上，比留给用户更差。
+    留给用户时，用户对这个子目标再写一次 `concept_fact`：proof method 作用在子目标上会用子目标自己的前提（B 区 7.1）。
+  - 以后要让搜索自己闭合它时的做法（没有采用，记在这里）：证里面的目标时把这些假设当作多出来的已知事实。
+    带着额外假设解出的目标不能记进公用的解法表，搜索要多一块机制。
+- **对登记的含义**（B 区、`CONCEPT_DEFINING_CONTEXT_PLAN.md` 2.2）：登记用同一个判断。`(⋀i. group (?G i)) ⟹ group (prod ?G)` 有 concept 条件，登记时不激活；
+  `(⋀H. group H ⟹ group (?f H)) ⟹ X (g ?f)` 没有 concept 条件，登记时激活，激活出的条目带着这条非 concept 条件。
+- **没有跑过**：4.3 的模型里规则的前提是没有内部结构的原子，没有这种前提。上面"对"的那一步是纸面上的推理。
+  `prove` 怎样由解法造出定理归 B 区（包上这一层是 `Subgoal` 那两个导出函数做的同一类事），concept A1 已通知 concept B。
+- **实现要记下的**（concept B 04:2x UTC 提的，还在它的签名草稿里、没有定稿）：换 `xs` 用的那些新的固定变量与换过之后的 `Hs`，是搜索取这条前提作目标时定的，
+  要与这条前提的解法一起存下来，`prove` 用的必须是同一批；这些名字要与目标的、与同一次搜索里别处换出来的都不同。
+  这样的推导写不成 OF 链，`name_of` 用后备 attribute。
+
 ### 4.2 方案的距离
 
 **原则**【已定】。作者 14:50：「我意识到直接计算距离并不是最好的，一个没有任何 condition 的 concept fact 应当被认为是 0 距离。距离只对 non-concept conditions 有意义」；
@@ -715,6 +746,7 @@ concept A1 曾提议"靠带 `concept` 条件的截断等式转过来的那一步
 
 **目标的距离与生效距离**。顶层目标的距离是 0，规则数是 0。在距离为 `d`、规则数为 `n` 的目标上用 `R`：
 1. `R` 的每条 concept 前提（连同 3.2 (c) 额外补的）成为一个新目标：距离是 `d + leap`，规则数是 `n + 1`。
+   外面包着 `⋀`、`⟹` 的 concept 前提，成为新目标的是它里面的那一句 `C' t'`（4.1 末条）。
    - 例外【作者 11-20 14:32「采用」】：前提说的就是目标自己的结构项（实例化之后与 `t` 写法相同），而且它的 concept 是 `C` 或 `C` 的祖先，这个前提的距离保持 `d`。
    - 理由：目标蕴含这个前提，它不可能多要。这与实例自己的规则 leap 为 0 是同一个理由。
 2. `R` 带条件时，生效距离加 `d + leap`。不管带几个条件，只加一次（作者 11-20 10:15「按一次」）。
@@ -1170,7 +1202,8 @@ type goal = {dist: int (*目标的距离*), steps: int (*目标的规则数*), p
    没有采用的做法是"只拦剥得掉的"：那样同样形状的规则对一个 concept 能登记、对另一个不能，取决于它推没推出 truncate congruence rule，而推不出时是不出声的；表的不变式也多一个例外。
    经过：concept A1 11-20 约 16:50 向作者讲过并建议扩，11-20 17:21 再报；作者 11-21 02:11 要求讲一下，讲完后 11-21 02:16：「按你建议来」。
    文案怎么填也在那次定了：变量那一格填截断里面的变量，结论那一格填用户写的结论。上面的例子印出来是
-   `Users are not allowed to declare a concept_intro rule whose conclusion is about an arbitrary comm_group structure. The ?G in your "comm_group (group.truncate ?G)" must not be a variable`。
+   `Users are not allowed to declare a concept_intro rule whose conclusion is about an arbitrary "comm_group" structure. The ?G in your "comm_group (group.truncate ?G)" must not be a variable`。
+   （2026-11-23：concept 名那一格加了双引号，照 B 区文件 10.1 现在的写法；这句文案归 B 区，以那里为准。）
    B 区跟着改（6.2 第 7 项）。
 3. （concept A1 定，11-20 17:20：算上）**阶段一的"有没有规则"把靠截断转过来的规则也算上**（第 5 节）。
    例：family `int_add` 里有 `int_add.group` 与 `int_add.ocg`，没有人声明过 `int_add: comm_group`；定义 `concept_instance int: ring where … add = int_add.group …`，义务里出现 `comm_group int_add.group`。
@@ -1617,3 +1650,6 @@ B 区 11.2"truncate 三件事"第 (1) 件问的是 `P.truncate t` 算不算第�
 - 2026-11-23 03:21：2.1 第六类照 concept B 03:1x UTC 的通知补了三处（它转述的作者 2026-11-22 14:16、15:19、17:14 的原话在它的转录里核过）：
   激活结果的后续工作（成了实例项的下一轮接着拆、换了 concept 的下一轮补充激活）；selector Simpset 化简时收进来的前提不拆、不激活；
   "进表的条目，它的激活做过"加一处例外（后续工作可以被上限拦下、以后接着做）。另记下判断"有没有 concept 前提"的函数是哪一个（照第 0 节的术语，concept A1 答 concept B 的）。搜索的算法没有因此改。
+- 2026-11-23 04:2x：作者 04:10、04:19 定了外面包着 `⋀`、`⟹` 的 concept 前提怎样处理：算 concept 前提，照旧证里面的那一句，留下的条件各包上外面那一层；
+  外面的假设里有 concept fact 的初版仍留给用户。改了第 0 节"concept 前提"的定义，4.1 加了一条，4.2"目标的距离与生效距离"第 1 项加一句，2.1 里上一条记的那个函数照改。
+  这是搜索的算法的一处扩充：距离、解法表、何时停都没有改；模型里没有这种前提，没有跑过。

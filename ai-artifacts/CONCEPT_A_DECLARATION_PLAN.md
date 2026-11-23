@@ -210,6 +210,25 @@ concept ('a, 'b) C = "'a Base"
   - **怎么判断"在 concept 下"**【已定，作者 2026-11-14】：不是消费者去认 concept，而是 `global_form` 受一个**开关**控制——`Config.declare_bool` 建的布尔 Config（不走 `Attrib.setup_config_bool`，用户没有 attribute 可写），concept target 的 `setup` 里设为真（`Local_Theory.init` 是 `thy |> setup |> init_target`，`reset`、`end_nested` 回到的都是 setup 之后的 target context，所以每一层都看得到、跨 `end_nested` 不丢，`local_theory.ML:167, 416-420, 452-456`）；实例上下文（分册第 1 节）同样设；`Local_Theory.global_form`、`global_form_result` 开着才取假设、关着恒等，不另加无条件版本。
     - 消费者因此不认识 concept，入口处一行无条件的 `Local_Theory.global_form`。
   - **九个入口全部并进 `global_form` 这个 feature**【已定，作者 2026-11-14】：`definition`（`Pure.thy`）、`record`（`record.ML`）、`datatype`（`bnf_lfp.ML`）、`codatatype`（`bnf_gfp.ML`）、`primrec`（`bnf_lfp_rec_sugar.ML`）、`primcorec`（`bnf_gfp_rec_sugar.ML`）、`datatype_compat`（`bnf_lfp_compat.ML`）、`copy_bnf`（`bnf_lift.ML`）、`bnf`（`bnf_def.ML`）；入选判据就是上面那条"证明全由包或内核生成、用户插不进 fact"，作它的 README 的一句话。
+    - **2026-11-23 实现时的改动**（做法、实测与讨论在 `contrib/global_form/ai-artifacts/GLOBAL_FORM_PLAN.md` 第 8 节，以那里为准；下面引的作者的话是他 2026-11-23 对 concept A1 说的）：
+      - 清单现在是六个：`definition`、`datatype`、`codatatype`、`primrec`、`datatype_compat`、`copy_bnf`。
+      - `bnf` 拿掉【已定，05:25 UTC「赞同 bnf 从清单里拿掉」】：它的各条公理由用户证。`lift_bnf` 本来就不在清单里，同理。
+      - `primcorec` 拿掉【已定，05:25 UTC「primcorec 不留」】：互斥条件不平凡而定义又不是顺序式时，它用上下文的 `auto` 去证，与 `fun` 被排除的理由同类。
+      - `copy_bnf` 留着【已定，05:25 UTC「copy_bnf 留在清单里」】。它对块里 `typedef` 出来的类型会失败（实测）；随下一条，块里不再有这种类型。
+      - `record` 的那一行不在 `global_form` 里：在那棵树里 `record` 还是 theory 层的命令，没有可包的地方；做 `localized_record` 时加在那里
+        【作者 04:2x UTC「写 memory 记一下，之后做 local record 的时候要包」】。
+      - **块里（concept 的块、实例上下文）的 `typedef` 不被支持：只写进文档，代码里不拦**【已定，作者 05:25 UTC：
+        「既然如此，建议禁止在 concept (instance) context 中写 typedef，因为这是无意义的」；05:3x UTC 对"怎样禁止"：「我建议 做法二：只写进文档，代码里不拦」「因为 local theory 下的 typedef 本身就不合理」】。
+        "既然如此"指 concept A1 报的事实：块里的 `typedef`，集合不能提到 `\<S>`，类型参数不能是块里固定的类型变量，集合里的类型变量又必须都是类型参数，所以它定义的类型与块无关（实测，2.6 的记录）。
+        它取代上面"`typedef`（非空证明）…不包，规则照常带 `C ?S`"里 `typedef` 的那一半：代码上仍是不包、带前提，只是这种用法不被支持。
+        写了会怎样：`typedef` 本身成功，定理带 `C ?S`；之后同一个块里对它写 `copy_bnf` 会失败（并行时是 theory 末尾不带位置的 `future_result: bad hyps`）。
+        给用户的话（草稿，待作者批，写进用户文档讲块的那一节）：
+        > Inside a concept block or an instance context, `typedef` is not supported. A type cannot depend on the structure of the block, so nothing is lost by writing the `typedef` before the block.
+      - **判据的措辞**【作者 05:25 UTC：「你可以自决」；concept A1 定】：
+        一个命令在 `global_form` 之下运行，当且仅当它不向用户要证明，它的证明也不去上下文的规则集里找 fact（如 `auto`、`simp` 用上下文的 simpset）；
+        它用到的 fact 只有描述它所处理的类型的那些（typedef 的定理、登记的 BNF、datatype 自己的规则）。入选之后，交给它一个依赖块的假设的这类 fact，属于不支持的用法（不检查）。
+        - 照这句：`bnf`、`lift_bnf`、`typedef`、`function` 的 `termination` 向用户要证明；`fun`、`primcorec`、`inductive`（`monos`）去上下文的规则集里找；所以都不入选。
+        - 清单以作者定的为准。这句话之下有一处已知的出入：`copy_bnf` 对 quotient 类型走的那条路用到上下文的 simpset（讨论里核查的一方读源码得的，`bnf_lift.ML` 约 1649、1779 行；没有量）。
     - 那边计划的「只碰 Pure、对 HOL 零改动」「消费者只有 local_datatype 的 datatype/codatatype」要改；它的测试在自己的树上用 `tests/` 里只供测试的命令开开关、stock locale 下跑；按第 9 节的新链，local_datatype 排在 global_form 之后，它将来合并 base 时会在 `bnf_lfp.ML`、`bnf_fp_def_sugar.ML` 碰到一行冲突。
   - 实现时通知 global_form 与 local_datatype 两边的 agent（作者 2026-11-14）。
 - `notation t (infix "+")` 往本 concept 的 notation table 登记，可覆盖已有 key（6.3）。`t` 可以是复合项：ring 体内 `notation add.mul (infix "+")` 的意思是把 `+` 绑定到 `magma.mul (ring.add \<S>)` 这个复合项（作者 2026-11-15 的说法；`add.mul` 先由 `add` 解析成视图项、再由 dot_syntax 取 `.mul`，解析没有问题；这种 notation 怎么打印回 `+` 见 6.4"打印"）。refinement（与 major parent 共用 record 类型的 concept）同样可以声明任何 notation，包括覆盖继承来的 key【已定，作者 2026-11-15「依旧允许 refinement concepts 声明任何的 notations，包括 override」】。后果在 6.4：refinement 与 parent 类型相同，所以 explicit form `x *⇘G⇙ y` 在上下文里和全局都没有 `G` 的 concept fact、而同类型的几个 concept 绑的项不同时报错（文案 10.1）。
@@ -267,8 +286,14 @@ concept ('a, 'b) C = "'a Base"
 - 声明 concept 时不为同名的 locale 发 warning（公共文件第 9 节留的那个问题）。不改 Isabelle 的源码，不 hide stock 的名字，不绑占位的 fact。
 - concept 有自己的名字空间（kind 是 `concept`）。`context C begin`、`(in C)` 的名字先在里面解析；认不得的名字原样放过，由 Isabelle 当 locale 去解析，所以既不是 concept 也不是 locale 的名字得到的仍是 `Undefined locale`。
 - 查找链里放的是带 theory 名的完整前缀，不放裸的 qualifier。否则块里的短名会抓到 stock locale 的同名 fact（`monoid` 的块里 `intro` 会读成 `Groups.monoid.intro`）。
-- 别的 theory 里重开的块证的 lemma，全名带那个 theory 的名字（`T2.monoid.foo`）。所以链上每个 concept 放的是"存过它的 fact 的每个 theory 各一个前缀"，由命令记下哪些 theory 存过；
-  先后是 ancestor 多的 theory 在前，再按名字。不采用"一律挂在 concept 的全名下"：两个互不 import 的 theory 各证一条同名的 lemma 时，合并会报重复。
+- 别的 theory 里重开的块证的 lemma，全名带那个 theory 的名字（`T2.monoid.foo`）。所以链上每个 concept 放的是"存过它的 fact 的各个前缀"，由命令在存的时候记下；
+  先后是 ancestor 多的 theory 的在前，再按名字。不采用"一律挂在 concept 的全名下"：两个互不 import 的 theory 各证一条同名的 lemma 时，合并会报重复。
+  【2026-11-23 照代码评审 `review_concept_package_1` 的 K1、K2 与复审 `review_concept_package_2` 的 L1 改准，concept A1 定并已报作者（06:4x UTC）：
+  - 块自己的 concept 那一段里，**当前这个块的前缀恒在**，不等它存下第一条 fact：否则别的 theory 里第一次打开的块读不到自己刚证的 lemma（K1）。用户看不出差别，没有 fact 的前缀什么也解析不出。
+  - 前缀取自 target 给块里的 fact 起名用的那个 naming（theory 的 naming 加 concept 这一段），不是"theory 名接 concept 名"拼出来的：
+    theory 的 naming 多一段路径时（HOL 自己用的 `setup ‹Sign.mandatory_path "alg"›`），块里的 fact 叫 `T.alg.C.foo`，前缀也是 `T.alg.C`（L1）。
+    所以一个 theory 在两种 naming 下都存过同一个 concept 的 fact 时记两个前缀；说"每个 theory 各一个"不准，是"存过 fact 的各个前缀"。
+  - "ancestor 多的在前"用的那个数在存前缀的时候一并记下（存它的 theory 有多少 ancestor），排序只读数据（K2）。】
 - 要知道的后果：
   - concept 叫 `order`、`ring`、`lattice`、`field` 时，`context order begin` 打开的是 concept 而不是 type class（class 也是 locale）；要 class 写 `context Orderings.order begin`。
   - concept 的 fact 盖住 stock 的同名 fact（如 `order.trans`）；concept 没有而 locale 有的带前缀的名字（`monoid.intro`、`monoid.left_neutral`）在 theory 层仍读成 locale 的定理。
@@ -662,6 +687,14 @@ concept 的 record 就是它的参数表（相当于 locale 的参数表；conce
 5. **`concept_instance`。**
    - 目标处写 concept 连同它的类型参数。`for` 子句、`if K: "…"` 里的类型照写的读，可以写类型缩写，那是没有扩展的结构；要接受任意扩展就写全名，或不写类型（`for` 变量不写类型时照 Isabelle 原来的行为，推断出最一般的类型）。
    - more：`where` 里可以写 `more = …`，右边是任何类型对得上的项，`for` 的参数与 `undefined` 也行；不写取 `unit`。它不算"`where` 没给的字段一律报错"（2.5）里的字段。
+     **family 的成员不许设置 `more`，它恒为 `()`**【已定，作者 2026-11-23 07:37 UTC「1. 取」；family 之外的实例照上一句】。
+     理由是他 07:32 UTC 的话：「family 语境下，more 自然就对应着此 family 之后的那些 concepts 的实例，那为什么此时能让用户去设置？」
+     上一句里的两种用法（`more = \<S>.more`、`more = m for m`）都是体内实例，体内没有 family，所以不受影响。写了时报（作者 07:42 UTC 给的句子，`⌂` 指 `where` 里的那个 `more`）：
+     `Cannot assign the field "more"⌂ to int.group, a member of a family "int", because the field is determined by the further members in the family`
+     随之：family 里后继与所接的成员之间的等式恒是 `L.truncate (a.C xs) = a.P xs`，右边不带截断；
+     "所接成员的类型里有 layer 定不下来的类型变量"那个缺陷（2026-11-23 探针 `Define_Member_Probe.thy` 复现的：`simp` 与 `truncate_eq` 抛内部异常）在命令能造出的情形里不再出现。
+     讨论小组（`discussion_open_type_member_result.json`）的"取 `unit`"做法因此不用。`名字: "t"` 在 family 里要求 `t` 的类型就是这个成员的类型（作者 07:37 UTC「3. 赞同你的建议」；归 concept C，已通知）。
+     上一句里"`undefined` 也行"是 concept A1 2026-11-21 展开作者的话时写的；不写类型时它的类型成为常量的类型变量，这在 family 之外没有害处（没有后继去接它）。
      体内实例不默认继承宿主的 more，要继承就写 `more = \<S>.more`；在 concept `C` 的体内 `\<S>.more` 是 `C.more \<S>`，类型是 `C` 自己的 row variable，结果的 more 槽类型随之相同。
      它只在结果与宿主是同一个类型时才有意义（`sub`、`normal`）；`quotient`、`ring` 体内的 `ideal: comm_group` 不要写。more 给得不合适时定义实例不报错。细节在"依据"第 4 条下面。
    - selector simproc 怎样读存在 more 槽里的叶子（实例自己的 more 与视图的 more 同样处理），在"依据"第 4 条下面。
@@ -1018,12 +1051,16 @@ The field ord.carrier⌂ of x is already specified by og2 itself as "UNIV"; it c
 `where` 右边的类型和字段的类型不符（A4，header 与 `concept_instance` 共用）；`super = t` 的变体（类型加引号，作者「A4 加」）。**`of` 后面写用户在这条命令里给它起的名字**【已定，作者 2026-11-18「好」；起因是作者问下文"已被 parent 自己定死"那句"这里第一个 og2 是不是应该写 x?"】：header 里是这个 parent 的 qualifier（下面例子里的 `og`、`subog` 都按这个读：`og` 是 qualifier，`ord.le` 是这个 parent 里的路径），实例里是实例的名字；3.11 第 11–13 句"给了两次"同样。
 
 ```
-The field ord.le⌂ of og expects type "'a ⇒ 'a ⇒ bool", but the given value "λx y. x" has type "'a ⇒ 'a ⇒ 'a"
+The field ord.le⌂ of og expects type "'a ⇒ 'a ⇒ bool", but the assigned value "λx y. x" has type "'a ⇒ 'a ⇒ 'a"
 ```
 
 ```
-super⌂ of subog stands for its group part, of type "('a, 'm) group_scheme", but the given value "H" has type "'a set"
+"super"⌂ of subog stands for its group part, of type "('a, 'm) group_scheme", but the assigned value "H" has type "'a set"
 ```
+
+【2026-11-23 07:47 UTC 作者「> give 的自查 / 按你建议来」：两句里的 `the given value` 改成 `the assigned value`，第二句句首的 `super` 加双引号。
+起因是他 07:37、07:42 UTC 的话：「你为什么总喜欢说 "give" 这里恰当吗？」「别的你用 "give" 的地方也要自查一下，我一直都觉得很怪了」。给字段写值，英文说 assign（他 11-18 批的那句就是 `The assignment of the field …`）。
+第二句的路径不止一段时（如 `o2.super`）同样整个加双引号。类型层 3.11 第 10 句里的 `2 given, 1 expected` 不改（说的是写了几个类型参数，他同意）。】
 
 `where` 右边用了排在后面的 parent、用了没有定义的名字（A5，作者的措辞）：
 
