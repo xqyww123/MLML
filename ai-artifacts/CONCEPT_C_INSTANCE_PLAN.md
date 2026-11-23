@@ -120,9 +120,9 @@ end
     【已定，作者 2026-11-22 11:59 UTC 对 concept E：「赞同视图和不带参数的全局实例，声明时自动做，不用再写命令」「赞同带参数的实例不自动，import_concept 只留给它们作显式开关」；
     concept C 在 concept E 的转录里核过；规则在 E 区文件 `CONCEPT_E_IMPORT_PLAN.md` 5.3"导入处与触发"，以那里为准。此前本条写的是"不导入"】。
     "带参数"按参数表判：参数表不空就是带参数的，`if x: "类型"` 引入的参数也算，不看写没写 `for`；体内实例恒算带参数的（与 11.2 的 C14 同一个判法；评审 `wf_3a1e11c4-c4f` 的 R11）。
-    带条件而不带参数的全局实例（如 `if p: "prime (37::nat)"`）也在自动导入之列。它裸名上绑的是 iff，副本里的 concept 前提不能由它消掉；
-    这时副本带着前提 `concept x`：导入处的 concept fact 由给出它的那条定理提供，带条件的导入处的副本前提是 `concept t`
-    （E 区文件 5.3"副本怎样做"；作者 2026-11-22 17:05 UTC 对 concept E：「> 做副本的函数与 of_concept」「整体采纳，接受偏离的那半句照小组的读法」，concept C 在它的转录里核过；评审的 R7 由此有了答案）。
+    带条件而不带参数的全局实例（如 `concept_instance f: field … if p: "prime (37::nat)"`）算不算这里的"不带参数"、因而自动导入，没有定：E 区在等作者（E 区文件 11.5"等作者的"）。
+    它裸名上绑的是 iff，副本里的 concept 前提不能由它消掉。E 区现在的写法是：副本带着前提 `concept f`，给出导入处 concept fact 的定理是 `f.of_concept`
+    （E 区文件 5.3"副本怎样做"；做副本的函数作者 2026-11-22 17:05 UTC 对 concept E 采纳：「> 做副本的函数与 of_concept」「整体采纳，接受偏离的那半句照小组的读法」，concept C 在它的转录里核过；评审的 R7 问的就是这一处）。
   - "登记 dot 访问"这一步原型阶段不做，设计不变【作者 2026-11-22 在 concept D 的会话里定原型先不启用 dot syntax，07:50 UTC：「确认不启用，但让它跑完，通知 agent concept A B C」；
     concept D 转来，concept C 在它的转录里核过；全文在 `CONCEPT_PLAN_INDEX.md`"实施方式"之后的一段】。
     本文件里用点号写的例子（`G.sub H`、`more = \<S>.more`）说的是设计；原型与测试里写成 `group.sub G H`、`group.more \<S>`。
@@ -131,6 +131,14 @@ end
   - 原因：Isar 里一条命令要么交目标、要么开块。证明结束时回到命令之前的那一层（`Pure/Isar/toplevel.ML` 的 `end_proof`），无处再开块；
     先开块再证，块里还没有实例的 fact、iff、intro rule；concept 的块里更不能再开有名字的块（`begin_main_target` 只接受 theory 层，`toplevel.ML:529-547`）。
   - 实例上下文在命令结束之后用 `context C.x begin … end` 打开（分册第 1 节）；体内实例写在 concept 的块里时，要等那个块结束之后。
+  - **不带 `(in …)` 的 `concept_instance` 不能写在实例上下文之内：报错**【已定，作者 2026-11-23 05:33 UTC：「赞同 报错并指路」；文案他随后定为只有一句、不带指路的第二句，10.1】。
+    带 `(in …)` 的照 `命令 (in N) …` 已定的意思读（11.2 末尾）：`(in group)` 写在 `context group.normal` 里，是先离开这个上下文、在 group 的块里跑这条命令，得到 group 的体内实例，
+    命令里用不到实例上下文固定的变量；`(in group.normal)` 指的是实例上下文，同样报这一句（这两句是 concept C 由已定的规则推出的，2026-11-23 的 reader 指出此前没有写）。
+    命令只有两种落脚处：theory 层（得到全局实例），concept 的块里或带 `(in C)`（得到 `C` 的体内实例）。`context group.normal begin concept_instance quotient: … end` 这种写法报错。
+    用户要的东西写在外面：宿主是外面那个实例的宿主 concept，上下文固定的变量成为 `for`，上下文假设的那条成为一条 `if`
+    （`concept_instance (in group) quotient: … if normal: "normal N" for N`，得到 `group.quotient \<S> N`）。报错里不印这个改写。
+    没有采用的另一种读法：把实例上下文当宿主，得到 `group.normal.quotient \<S> N`。那是一种新的实例（宿主是另一个实例，不是 concept），
+    它的宿主前提、查找链、notation 与导入都要各区另定规则；同样的结构用上面的写法已经写得出来。现在报错，以后要放开不破坏已有的文本。
   - 关键字的种类（`thy_goal` 或 `thy_goal_defn`）是实现细节，原型时定。
 - **命令是 VCG**（作者 2026-11-17「此处我们讨论的只是 VCG」）：它只负责生成证明义务交给用户，不考虑用户证不证得出；自动的部分全部跑完后，才把剩下的子目标一次交给用户。
 
@@ -151,7 +159,7 @@ end
     拆它们时照运行时的规则，每条 fact 各有一个计数；声明实例时做的拆（第 7 步的激活）不设上限、不报错、不出 warning
     （concept B 的停机设计，`CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.3；作者 2026-11-22 15:19 UTC 对 concept B：「确认上限停下工作时完全不出 warning」，concept C 核过）。
     所以 `concept_instance` 里没有关于上限的 warning 要打。
-  - 它和实例上下文不是同一套假设：实例上下文只假设实例自己的 fact 一条（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节），而这里实例的 fact 正是要证的。
+  - 它和实例上下文不是同一套假设：实例上下文至多假设一条，即 `concept (实例项)`，实例没有任何条件时不假设（分册第 1 节；`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节），而这里实例的 fact 正是要证的。
   - 用第 2 步交回的等式加这些假设得到 `concept X`，记进上下文，进 intro table 的上下文部分；这一步总能做成。这条等式不在 selector Simpset 里（4.1）。
   - `rewrites` 的等式在这个上下文里读（5.2）：这时常量已经有了，等式里可以写新实例自己。
   - 命令陈述的命题通常是 `D X`，加上每条 `rewrites` 等式的义务，形状是"实例的 concept fact ⟹ 等式"（5.3，作者 2026-11-18）。义务列表按 aconv 去重【已定，作者 2026-11-14】。
@@ -252,10 +260,12 @@ end
     它的名字是实例名加 `of_concept`，如 `group.sub.of_concept : concept (group.sub ?G ?H) ⟹ group (group.sub ?G ?H)`
     【已定，作者 2026-11-21 08:27 UTC 对 concept B：「> 那条定理叫什么」「建议 group.sub.of_concept」；concept C 在 concept B 的转录里核过】。
     它不进 intro table，只供补强用和用户按名字手动用（作者同一条消息：「实例存着的那条定理按你建议来」；`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.5 节）。
-    导入也用它：体内实例作导入处时，它就是给出导入处 concept fact 的那条定理；不定义常量的成员用它自己的 fact（E 区文件 5.3"`of_concept` 的细节"，作者 2026-11-22 17:05 UTC 对 concept E 采纳）。
+    导入也用它：体内实例作导入处时，它就是给出导入处 concept fact 的那条定理；不定义常量的成员用它自己的 fact（E 区文件 5.3"副本怎样做"里"这套做法是一个函数"一条，作者 2026-11-22 17:05 UTC 对 concept E 采纳）。
     `of_concept` 因此是保留名，`if` 子句不能叫这个名字，命令在声明处报错（concept B 的读法，它说向作者说过、作者没有异议）；文案已定，10.1。
     它由命令做出，做好后交类型层存进实例的记录（concept A1 2026-11-21 经 concept B 转告；类型层自己做不出，它没有关于谓词 `D` 的事实）：
-    隐藏字段的等式 `concept (实例 ?参数) = ⟨if 合取⟩` 给出各条 `if`，再接实例自己的规则；不带 `if` 的实例它就是 `D 实例` 这条定理本身。
+    隐藏字段的等式 `concept (实例 ?参数) = ⟨if 合取⟩` 给出各条 `if`，再接实例自己的规则。
+    它对每个有自己常量的实例都是 `concept (实例项) ⟹ D (实例项)` 这个形状：实例的隐藏字段是 `True` 时，就是 `D (实例项)` 加上一条恒成立的前提
+    （2026-11-23 写准，讨论小组 `wf_05f96e85-445` 的挑毛病一方：此前这里写的"不带 `if` 的实例它就是 `D 实例` 这条定理本身"对体内实例不成立，也会让补强与 `[xOF …]` 两种用法对不同的实例要分情形）。
     用户手写 `group.sub.closed[xOF s]` 时，`s` 是 `group (G.sub H)` 或 `monoid (G.sub H)` 都可用（xOF 接受后代的 fact 填祖先的前提，归 concept A1）。
   - 把蕴含交给类型层：调 `Concept_Type.add_implication`（入口的名字与分两次交的做法是 concept A1 定的，类型层计划 3.13）。类型层拿到之后，截断等式才能只带实例一个条件（5.6）。都不给用户添证明义务。
     family 的成员、所接的 `a.P` 的隐藏字段不是 `True` 时：`concept (a.C ?xs) ⟹ concept (a.P ?xs)`。它从第 3 步陈述的 `A` 做出来（评审的 R1，讨论小组 Q_R1）：
@@ -263,7 +273,7 @@ end
     把 `A` 导出到义务的上下文之外，得到"新成员的各条条件 ⟹ `P (a.P ?xs)`"；
     用做 `of_concept` 的那个函数把各条条件换成一个前提 `concept (a.C ?xs)`（各条条件由 destruction lemma 从它取回）；
     再接上 `concept_entailment` 里 `P ?S ⟹ concept ?S` 那一行。
-    新成员自己没有条件时，给结论补上恒成立的前提 `concept (a.C ?xs)`，因为入口要的是恰好带一个前提的定理。
+    新成员自己没有条件时结果照样带着前提 `concept (a.C ?xs)`（它恒成立）：做 `of_concept` 的那个函数总是交回带这一条前提的定理，入口要的也正是恰好带一个前提的定理。
     `a.P` 的隐藏字段是 `True` 时什么都不交：类型层从那个隐藏字段自己就得到 `concept (a.P 参数)`。
     family 之外写了 `名字: "t"` 的实例：`concept (实例项) ⟹ concept t`，从第一条 `名字` 条件做出来
     （讨论小组 Q24 已定，`ai-artifacts/concept_unary_C_probes/design_teams_2026-11-22/DECISIONS.md`；类型层要为它记第三种来源，`CONCEPT_INSTANCE_WHERE_PLAN.md` 第 3 节第 5 项末条）。
@@ -283,6 +293,7 @@ end
     等式存下的同一刻也加进 selector Simpset【已定，作者 2026-11-22 15:17 UTC 对 concept E：「赞同 rewrites 等式放进 selector Simpset」，concept C 在 concept E 的转录里核过；E 区文件 5.3"selector Simpset"一段的最后一条】。
   - **激活**（机制以 concept B 的 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.4 节为准，那份文件 2026-11-21 02:18 UTC 定稿）：
     命令在实例的上下文里把实例的 fact 交给 assumption destruction，它的最后一步是激活；激活出的 fact 带着实例的原前提导出到 intro table 的 theory 数据【已定，作者 2026-11-20 16:11 UTC 对 concept B 的这个读法答「确认」】。
+    实例的隐藏字段是 `True` 时上下文什么都不假设（分册第 1 节 assumes 一条，2026-11-23 定），激活出的条目就是不带前提的 fact，如 `int_mod` 的条目不带 `concept (int_mod ?n)`。
     激活做的事：把实例所属 concept 的激活列表（header 里说别的结构的假设拆出的 concept fact）对这个实例实例化、用 selector Simpset 化简。
     作者 2026-11-20 15:52 UTC 对 concept A1 的"theory 数据那部分也要做激活"答：「是的，在定义 concept_instance 时候做」（concept C 核过转录）。
     激活出的条目不起名，条目本身留在 intro table【已定，作者 2026-11-21 02:48 UTC 对 concept B：「赞同声明实例时激活出的条目不起名，条目本身留在 intro table」】；用户要用时自己拿 concept 的 `X.q` 和实例的规则拼。
@@ -332,8 +343,9 @@ end
 - `import_concept`【已定，作者 2026-11-10；11-11 收窄；2026-11-22 再收窄】：纯导入命令。目标是带参数的实例，即参数表不空的全局实例（`if x: "类型"` 引入的参数也算）与体内实例；必须先经 `concept_instance` 定义。
   视图 parent 在 `concept` 声明时自动导入，不带参数的全局实例在 `concept_instance` 证明结束时自动导入，都不经它
   【2026-11-22 再收窄：作者 11:59 UTC 对 concept E，原话见本节开头"导入"一条；E 区文件 `CONCEPT_E_IMPORT_PLAN.md` 5.3"导入处与触发"，以那里为准】。
-  体内实例不论写没写 `for` 都算带参数的（它的结构项带着宿主的变量；这是 concept E 的读法，作者的话里举的是 `sub`）。
-  对已经自动导入的实例与视图写这条命令是否允许，E 区还没有定（E 区文件 5.3"保持最新"）。
+  体内实例不论写没写 `for` 都算带参数的（它的结构项带着宿主的变量；这是 concept E 的读法，作者的话里没有举例，`sub` 是 concept E 向他提议时举的）。
+  对不带参数的全局实例写这条命令是允许的，什么都不做；视图仍然写不出来，命令的参数不放宽（E 区文件 5.3"保持最新"）。
+  前一半偏离作者"只留给"带参数的实例那句话，是 concept E 定的，在等作者。
   同一个实例再写一次是补齐 concept 后来新增的规则，不报错（同一处）。接受 `(in C)`。语义见 5.3，命名见 5.6。
   "11-11 收窄"的出处（concept E 2026-11-22 核到，concept C 在同一份转录里核过）：作者 2026-11-11 07:33 UTC「我认为对于 non-major parents 需要自动 import，在定义 the concept 时做」。
   "视图自动导入"是作者逐字说的；"`import_concept` 的目标只剩体内实例和全局实例"是当时那个会话由它推出、当面讲过的后果，作者没有异议，不是他逐字说的。
@@ -460,7 +472,7 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
     判断用的上下文从 theory 另建：固定 `\<S>` 与 `for` 变量，只假设用户写的条件。宿主的块里的假设（宿主的 fact，header 的各条假设拆出来的东西）不在里面，否则判断恒为"推得出"。
     所以判断看得到的是 theory 里存下的内容（激活列表、导出的条目、`[concept_intro]` 登记、truncate congruence rule、导入副本），加上它自己拆用户的条件放进去的条目。
     这两句是对上面"这时上下文里还没有宿主的 fact"的说明，2026-11-22 答 concept B 时写明，不是新的决定。
-    concept B 的停机设计里判断的做法就是这一种（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.3 表后第三条；concept B 照授权定，作者没有单独表态；
+    concept B 的停机设计里判断的做法就是这一种（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.3 表后"判断宿主前提用的上下文"一条；concept B 照授权定，作者没有单独表态；
     那份设计写进计划是作者 2026-11-22 17:14 UTC 准的：「可以把停机方案写进计划」，concept C 在 concept B 的转录里核过）：
     用户写的每条条件照写的先后各作为一次拆，由 `Thm.assume` 交进去，不经 `note_thmss`；然后对 `C \<S>` 跑从不展开带条件规则的那个搜索。
     这几次拆不设上限、不报错，所以判断的结论不随配置项 `concept_extraction_limit` 变。
@@ -570,6 +582,8 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
   - 比较时到达 selector Simpset 的步数上限（B 区文件 7.1）不算"不同"，是第三种结果：报错说这两个值比不出来，不报"值不一致"的那两句
     【concept B 2026-11-22 定，`ai-artifacts/concept_B_open_questions_2026-11-22/Q01_resolution_v7.md` 的 R5；文案作者 2026-11-23 02:52 UTC 已批，在 10.1"同一个字段的两个值比不出来"】。
     报错里要印经节点读出或沿 `super` 取来的值时，读它的那一次调用若到达上限，就照写的样子印。
+    一个字段有三个及以上的值、有的比出了不同、有的比不出来时，报"值不一致"的那一句，只列比出不同的那几个值；"比不出来"只在这个字段没有任何一对比出不同时才报
+    （concept C 定，2026-11-23 的 reader 指出此前这种情形两句都适用）。
   - 存下的值（定义里用的那个）依次取：沿用来的值；`super = t` 给的值；别的直接给的值里书写在先的那个；经映射来的第一个值，照书写的先后；`others` 的值。
     沿用来的排第一，family 的 truncate 等式才是按定义成立的；`super` 的排在别的直接给的值前面是同一个道理，它那一部分的来源等式也要按定义成立；
     直接给的排在经映射来的前面，用户写的字段一步就读回原样。
@@ -871,7 +885,7 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
 
   - **命令怎么用它**（作者 2026-11-17 提出，做法经讨论定下）。命令是 VCG：只负责生成证明义务交给用户，不考虑用户证不证得出（作者「此处我们讨论的只是 VCG」）。全部自动跑完后才把剩下的子目标一次交给用户。
     1. 证明上下文里固定 `for` 变量、把 `sub.group` 的各条 `if` 子句作为假设引入（5.1）。
-       它和实例上下文不是同一套假设：实例上下文只假设实例自己的 fact 一条（作者 2026-11-18/19，`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节），而这里实例的 fact 正是要证的，所以假设的是宿主的 fact 与各条 `if` 子句。此前这里写的"和打开 `sub.group` 的实例上下文是同一套变量和假设"随之更正（2026-11-20）。
+       它和实例上下文不是同一套假设：实例上下文至多假设实例自己的 fact 一条（作者 2026-11-18/19，`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节；实例没有条件时不假设，分册第 1 节），而这里实例的 fact 正是要证的，所以假设的是宿主的 fact 与各条 `if` 子句。此前这里写的"和打开 `sub.group` 的实例上下文是同一套变量和假设"随之更正（2026-11-20）。
     2. 由实例自己的隐藏字段等式加这些假设得到 `concept (sub.group G H)`，这一步总能做成。
     3. 命令陈述两条命题：第一条是 `monoid (sub.monoid G H) ⟹ group (sub.group G H)`，第二条是"祖先实例成立"本身，`monoid (sub.monoid G H)`。
        【2026-11-22 改，concept C 定：评审 `wf_3a1e11c4-c4f` 的 R1；作者 16:11 UTC：「请你 run Opus agent team 讨论，然后自主设计决定」；讨论小组 `wf_d4b3e1ec-a94` 的 Q_R1，挑毛病一方的结论是成立】
@@ -916,6 +930,16 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
   同一导入处两层同名 fact（group 和 monoid 都有 `foo`）时，短名归最具体的层、祖先的只能写全 `int.group.monoid.foo`——和 `context group` 里短名指 group 的、`monoid.foo` 才是祖先的，同一规则。
   体内导入同理 `ring.add.monoid.assoc`，视图 qualifier `add` 必写（否则 `ring.assoc` 会撞上乘法的 `assoc`）。两个 binding 的做法作者否决（Sledgehammer 多名字）。
   `ord.order.le_refl` 这种来源 concept 与视图自己的 concept 同名的全名看着重复，但那一节可省略、用户和 Sledgehammer 看到的都是 `ord.le_refl`，不做特例。
+  **`E` 那一节取"这条规则登记在哪个 concept 名下"**【concept C 2026-11-23 定；作者 05:36 UTC 对这一处：「你可以自决」。起因是 E 区的讨论小组（`Q9_challenge.md` 的 D4）；
+  它在下面两种少见的写法上改了上面"`E` 是声明该 fact 的 concept"的字面，平常的 lemma 不受影响】：
+  系统存一条规则时照它的第一条前提把它归到某个 concept 名下（E 区的做法），导入时就是经这份登记找到它的；`E` 取这个 concept。
+  平常的 lemma 在 group 的块里证，名字前缀是 `group`，第一条前提也是 `group ?S`，两种取法相同。
+  - 在 group 的块里给 monoid 的定理起别名（`lemmas bar [concept_export] = monoid.assoc`）：它的前提是 `monoid ?S`，登记在 monoid 名下，对纯幺半群实例也适用。
+    副本叫 `int.monoid.monoid.bar`、`int.group.monoid.bar`，短名 `int.monoid.bar`、`int.group.bar`。
+    照字面取 `group` 的话，`int.monoid` 名下会出现 `group` 一节，重名时"短名归更具体的 concept"也排不出先后（`group` 不在 `int.monoid` 的查找链里）。
+    代价：副本的全名（`…monoid.bar`）对不上原来的名字 `group.bar`；短名不受影响。
+  - theory 层证的 lemma，后来在 group 的块里 `declare gl [concept_export]`：没有哪个 concept 声明过它，照字面取不出 `E`；它的前提是 `group ?G`，登记在 group 名下，副本叫 `int.group.group.gl`，短名 `int.group.gl`。
+  这样 `E` 对每条规则都有定义，而且总在导入处的查找链里。
   2026-11-22 随导入的新设计改的三点（E 区文件 `CONCEPT_E_IMPORT_PLAN.md` 5.3，以那里为准；作者的三句话都是对 concept E 说的，concept C 在它的转录里核过）：
   - 只有标了 `[concept_export]` 的 lemma 的副本有名字，其余副本不起名【作者 11:30 UTC：「name binding 只有标记为 `[export]` 时才会」；
     这个 attribute 他 17:10 UTC 改名为 `[concept_export]`：「此外建议把 `[export]` 重命名为 `[concept_export]`」】。
@@ -936,7 +960,9 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
   - 做法（E 区，一个函数管所有绑副本的地方）：绑一条副本之前，查它不写 `E` 时会占的名字；这个名字已经指着一条不是"本处副本"的 fact 时，这条副本的 `E` 设成必写，它只叫 `X.E.n`。
     否则照旧可省。
     两条副本之间谁占短名，2026-11-22 由 concept E 另定（上一条末尾第三点），它取代 concept C 此前在这里定的"副本之间互不相让，仍是从根到叶登记、最新登记的胜"。
-    为了分得清"是不是本处的副本"，导入处的登记表要列出这一处的每条副本，视图处的副本与随宿主的体内 fact 带过来的副本也在内。
+    为了分得清"是不是本处的副本"，导入处的登记表要列出这一处的每条副本，视图处的副本也在内。
+    此前这里还写着"随宿主的体内 fact 带过来的副本"：2026-11-22 起体内 `import_concept` 的副本不随 concept 带走（concept E 定，等作者），经视图到达的规则每次导入现算，不再有"带过来的副本"。
+    经视图到达的 `[concept_export]` 副本的名字见 E 区文件 5.3"副本的登记"。
     副本的名字里 `E` 以下各节照原 fact 的写法保留，连同哪几节必写；不能从全名重新拼（那样每一节都成了可省的，内层导入处定下的"必写"在外层就丢了）。
   - 反过来的先后（先有副本，后在 `context X` 里证出一条同名的 lemma）不用另做什么：最新登记的胜，短名归这条 lemma，副本仍可写成 `X.E.n`。只有实例上下文里的 fact 会晚于副本出现。
   - 不给任何提示。
@@ -945,7 +971,8 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
     先绑自己的 fact `A.x.foo`、后绑 `E` 可省的副本：`A.x.foo` 与带 theory 名的写法都读成副本，自己的那条在这个 theory 里没有任何写法叫得出。
     先绑自己的、后绑 `E` 必写的副本：`A.x.foo` 是自己的那条；副本叫 `A.x.E.foo`。
     先绑 `E` 可省的副本、后绑自己的：`A.x.foo` 是自己的那条（印出来带 theory 名，读回去仍是它）；副本印成 `A.x.E.foo`。
-    带过来的副本，各节照原样保留"必写"时只有带齐那几节的名字读得到；都设成可省时外层的短名也读得到它（所以不能从全名重新拼）。
+    名字有好几节的副本 `N.G.sub.G2.ic`（concept E 2026-11-23 更正，此前这一句把结果写反了）：`N` 必写、其余各节可省时，`N.ic` 读得出；
+    各节全可省（用 `Binding.qualified_name` 从全名重新拼）时只有 `ic` 读得出，`N.ic` 读不出。所以不能从全名重新拼。
     两个互不导入的 theory 合并的那种情形没有测。
   - 讨论小组另提的一条：同一处的几条副本之间，短名归查找链上排在前面的那一层，不管 lemma 是什么时候添的。
     concept C 当时没有采用、转给了 E 区；concept E 2026-11-22 照作者 11:15 UTC 对它的授权采用了它（上一条末尾第三点）。
@@ -1100,6 +1127,14 @@ Cannot declare the family "int"⌂ because 2 instances are already named "int":
   "int"⌂ defined in "Int_A" as an instance of "group"
   "int"⌂ defined in "Int_B" as an instance of "ring"
 Use another name for the family
+```
+
+`concept_instance` 写在实例上下文之内（5.1"`concept_instance` 不能写在实例上下文之内"）
+【已定，作者 2026-11-23 05:36 UTC：「直接说 "concept_instance⌂ cannot be used inside the context of the instance "group.normal"" 就够了，不需要第二句」；
+concept C 的草稿还有一行教用户怎样改写到外面，他删掉了】：
+
+```
+concept_instance⌂ cannot be used inside the context of the instance "group.normal"
 ```
 
 在 family 里插入祖先（5.6"不得插入祖先"）【已定，作者 2026-11-18；C 区】。
