@@ -6,6 +6,10 @@
 - rev 4（2026-11-13）：**同步稿**。写入 rev 3 之后作者的全部裁定、第二轮评审（`wf_e55250cc-cd8`，修改后通过）的处置、与 unary concept 会话对过的语义、新增探针的结果；第 9 节列全部未定问题。包的定位在这一版变了（0.1 第 23–26 条）：它只为 concept 服务，对外只留两个入口。新的"一次调用"那一层的设计还是草稿、尚无探针（3.2、3.3、3.8、3.9），本稿的目的是不让任何决定只留在对话里。写完后由本会话通读、再由一个 Opus agent 对照会话记录校对，校对指出的问题已改入（第 10 节末）。
 - rev 5（2026-11-16）：本计划改由 unary concept 会话维护（作者「我建议把 concept record 相关的工作全都划归到你这里」，0.1 第 31 条）；写入作者当日对第 9 节的裁定（0.1 第 32–39 条）和新 feature `concept` 的决定；过时的状态与归属随之更正。没有新的探针，已定的设计没有改动。下文的"本会话""我"在 rev 4 及以前指原来的 concept record 会话，rev 5 新写的部分指 unary concept 会话。
 - 2026-11-18/19（未另编 rev 号）：0.1 加第 70–77 条（第 74–77 条在表里的排列不是编号顺序：75、77、76、74）。其中第 75–77 条推翻或改动了此前的多处：`truncate` 放给用户（第 75 条；改动第 5、9、18、43 条，3.5、3.7、3.9、第 2 节）；类型的打印按模式匹配、一律印全名（第 76 条；改动第 33 条，3.4，第 6 节测试第 4 项）；类型缩写读成 `('a, _) C_scheme`、视图可带 row variable、more 变量叫 `'\<e>`（第 77 条；改动第 8、45、57 条，3.1 第 13 项，3.4，3.8，3.12）。各处加了指回的话，正文没有重写；待定的事集中在 concept 计划 11.2 开头那一条。
+- 2026-11-23（未另编 rev 号，十七续，08:0x UTC）：四件，都在 3.8、3.9、3.11 里各加了一段：
+  (1) **family 的成员不许设置 `more`**（作者 07:37 UTC 定；3.9）；(2) 隐藏字段里放什么写准（concept C 定的，3.8）；
+  (3) 两句文案里 `the given value` 改 `the assigned value`、带 `super` 的路径加双引号（作者 07:47 UTC；3.11）；(4) `concept_holds` 进接口（3.9）。
+  (1)(3) 的代码在工作副本里改了、还没有构建过；(4) 已实现并测过；写这一条时都还没有提交。
 - 2026-11-22（未另编 rev 号，十六续，08:31 UTC）：3.9 末尾加"同一个字段经几条路得到值"（规则是 concept C 定的，这里记本层的做法；已实现并测过），3.8 相应加一句；
   3.13 里"第 4a 步"改成"第 4b 步"（concept C 调了步骤的先后）。
 - 2026-11-22（未另编 rev 号，十五续，08:08 UTC）：3.13"声明时存什么"里 family 的表加一段：theory 合并时的检查怎样实现（照 C 区定稿的文案；已实现并测过）。
@@ -553,6 +557,15 @@ rev 3 里的本层单射性 `(Abs x = Abs y) = (x = y)`（`inject`）：第二�
 - 【rev 5 作废，作者 2026-11-16】~~不带 qualifier 的第二项及以后的 parent（`+ "'a comm_monoid"`）只是一条 assumption，条件是相对 major parent 没有新字段；对应 `assumed_parents`，本包只做这个检查。~~ 改为 `assumes cm: "comm_monoid \<S>"`，属于命令那一层的 `assumes`，本包不再参与；类型不对时由类型检查报错（concept 计划 2.1）。
 
 **`_constraint`**：每个根自动带（rev 6：每个值在 base 那一层带，3.4）；视图重建的根填 `True`；全局实例填 `True`；带参数的实例填 `if` 各子句的合取（concept 计划 4.1）。
+【2026-11-23 写准，concept C 定并通知（它的 `CONCEPT_INSTANCE_CONTEXT_PLAN.md` 第 1 节）：分界在实例有没有条件，不在它是不是全局、带不带参数。
+没有任何条件时放 `True`；只有一条条件时就是那一条本身；否则是各条条件照下面的先后的合取：体内实例先是宿主的谓词，再是 `名字: "项"` 的条件，再是各条 `if`。
+体内实例总带着宿主的谓词，所以它的隐藏字段从不是 `True`；带参数而没有任何条件的全局实例（如 `int_mod n`）是 `True`。
+【同日再改准（concept C 定，C 区文件 5.2"体内实例的宿主前提"；作者 11:56 UTC 对 concept A1 接受了它偏离此前原话的三处）：上面两行里"体内实例先是宿主的谓词""总带着宿主的谓词"不再成立。
+体内实例存的是实例的前提表各条的合取：用户写的各条条件照书写的先后（`名字: "项"` 的在前，然后各条 `if`）；用户写的条件推不出宿主的谓词时，最前面加上它，推得出时不加。
+体内实例的隐藏字段仍然从不是 `True`：没有条件时存宿主的谓词，有条件时至少存一条用户写的条件。
+本层的接口不变：合取照旧由命令拼好经 `define_instance` 的 `constraint` 传进来，本层原样存下。】
+合取由命令拼好传进来（`define_instance` 的 `constraint`），本层原样存下、不改写；"是不是字面的 `True`"由 `Concept_Type.concept_holds` 判（3.9）。
+唯一的条件就是字面的 `True`（`if c: "True"`）的实例算没有条件，不为它另设检查。】
 
 **视图的 `concept (C.q ?c)`**【rev 6，0.1 第 66 条】：本层在声明视图时证出 `concept (C.q ?S) = True`，由它得到一条不带前提、没有名字的 fact `concept (C.q ?c)`，交给命令那一层登记进 intro table（只在 `concept` 这个 key 下，concept 计划 7.3 第 (2) 类）。
 
@@ -570,6 +583,22 @@ ordered_group.equality:
 视图整体相等算一个前提，匿名叶子由此包含进来；隐藏的 base 分量不出现，由头两个前提保证两边都为真。头两个前提用的是谓词 `C`，它由命令那一层定义，所以这条定理在谓词定义之后才能陈述；两层之间怎么交接属于入口的形状，原型里定。用户在 concept 体内写 `lemma equality` 会与它重名，报 concept 计划 10.1 名字冲突的那句（这一点是维护者提 `C.equality` 时附带说的；作者批的是名字与"每个拥有类型的 concept 绑一次"，对这一点没有单独表态）。
 
 ### 3.9 实例【语义以 concept 计划 5.2、5.4、3.5、3.6 为准；本包的实现未实测】
+
+**2026-11-23 加的两条**
+- **family 的成员不许设置 `more`，它恒为 `()`**【已定，作者 2026-11-23 07:37 UTC「1. 取」；原话与经过在 A 区计划讲 `concept_instance` 的那一条里】。family 之外的实例照旧可以在 `where` 里写 `more`。
+  - `define_instance` 在 `family` 不是 `NONE` 而 `where` 里有 `more` 子句时报（作者 07:42 UTC 给的句子，`⌂` 指那个 `more`）：
+    `Cannot assign the field "more"⌂ to int.group, a member of a family "int", because the field is determined by the further members in the family`
+  - 随之：所接成员的类型就是"它的参数 ⇒ 它的 concept 的类型、扩展为 `unit`"，新成员与它在共有的层上的类型匹配能定下它的每个类型变量；
+    family 里的来源等式右边不带截断（`L.truncate (a.C xs) = a.P xs`）。此前为"所接成员带着 `more`"写的几处随之去掉：
+    不定义常量的成员"`more` 也照所接成员的读、比"、所接成员的 `more` 里留开的类型变量在上下文里固定住（第五轮复审的 V1）。
+  - 起因（留作出处）：2026-11-23 的探针 `concept_A_prototype/Define_Member_Probe.thy` 复现了一处缺陷——所接成员的 `more` 的类型留开时（`more = "undefined"`），
+    记下的来源项带着 schematic 类型变量，之后截断的 simproc 与 `truncate_eq` 抛内部异常。讨论小组（`discussion_open_type_member_result.json`）建议给那个类型变量取 `unit`；
+    作者问到根上（family 里 `more` 本来就对应后面的成员，为什么能让用户设），定了上面这条，取 `unit` 的做法不用。
+  - 仍可能的一种来路不经命令：ML 层的调用者让一个比 `L` 更深的成员去提供 `L`（本层的规矩是成员提供它的类型里还没有人提供的各层）。那时更深的层自己的类型参数定不下来。
+    命令照 C 区 5.6"common base 必须有自己的常量"不会这样调；ML 层的调用者可信，本层不查。`covering` 的 `exact` 一栏为假说的就是这种提供者，所以这一栏留着。
+- **`Concept_Type.concept_holds: Proof.context -> term -> thm option`** 进了接口（concept C 要的：命令三处与 E 区做副本的函数要用同一个判断）：
+  `t` 的隐藏字段是字面的 `True` 时交出定理 `concept t`，`t` 是实例或视图项，外面套着截断也认；带条件的实例交 `NONE`。
+  它看的是字面，不是证不证得出。函数本身 2026-11-22 做 `truncate_eq` 的整理时已是"由隐藏字段等式代入之后判"；这次只是放进签名并加了测试（`Selector_Name_Test.thy` 末尾）。
 
 【rev 5 注】本节前三条按链常量写成，已过时：链常量 2026-11-14 作废，一条命令只定义一个常量（concept 计划 5.6）。现行的说法是：同一 family 下已有祖先的实例时，没给的字段沿用它的值、给了的必须与它 aconv 相等，祖先实例与本次实例之间由 `truncate` 等式联系（rev 6：任一边带 `if` 子句时带两个 `concept _` 条件，0.1 第 64 条；2026-11-21 改为看隐藏字段、不看有没有 `if`，第 80 条 (c)，被沿用的成员按层取，第 80 条 (d)；作者同日 08:37 定了 family 的规则之后它恒是那一层自己的常量、是真正的祖先）；`where super = X` 表示从该层起不在当前 family 下定义实例（concept 计划 3.5 第 2 条）。实现时按现行的说法写，本节在两个入口定形时一并改写。
 
@@ -647,8 +676,14 @@ ordered_group.equality:
    `Extra type variables 'b, 'c in concept "foo": every type variable must be a type parameter of the concept`
 4. 【2026-11-18：保留名加上 `truncate`，同一句文案，0.1 第 75 条；它与 `super` 一样也管 parent 的名字】字段取名 `more`：
    `Illegal field name "more" in concept "foo": this name is reserved`
-5. parent 的类型实参不满足 sort 要求：
-   `Ill-sorted type argument for parent concept "ordmon" in concept "foo": 'b does not have sort order, as the type parameter 'a of "ordmon" requires`
+5. parent 或类型是 concept 的字段，其类型实参不满足 sort 要求：
+   `Ill-sorted type "'b ordmon" in concept "foo": 'b does not have sort order, as the type parameter 'a of "ordmon" requires`
+   【2026-11-23 11:20 UTC 作者「1. 批准」：这一句是改过的。引号里的 `'b ordmon` 是那一项的类型所指的 concept 连同它的类型实参，照 Isabelle 印类型的样子印
+   （与"has no field named"那一句里 `v.super: "'a monoid"` 的印法相同）。平常的写法下它就是用户写的字样；两种情形下不同：类型实参里用了 type synonym 的，印的是展开之后的；
+   带名字的项写成带 `_scheme` 的全名的，印的是不带 `_scheme` 的那个名字、不带 row variable。
+   （这一句说明此前写成"用户在 header 里写的那个类型，原样印出"，说得太满；`concept_package.ML` 第五次评审的 R3 指出，代码不改。）
+   此前是 `Ill-sorted type argument for parent concept "ordmon" in concept "foo": …`；它在类型是 concept 的字段上也印（实测 `concept 'b p4 = x: "'b om"`），
+   而作者同日定了"parent 只指第一个不带名字的那一项"，所以不再说 parent concept。concept A1 的第一版建议 `… for concept "om" in concept "p4"` 他说看不懂（两个 concept 挤在一起），故改成印类型。】
 6. 类型参数哪儿都没用到【2026-11-18 作者改简：去掉 "or of a parent"（作者「我觉得是不是就够了」，我答够了：出现在 major parent 类型实参里的参数，也出现在某个继承来的字段的类型里，因为 major parent 声明时过了同一条检查）；此前是 `… must occur in the type of a field or of a parent`】：
    `Unused type parameter 'b of concept "foo": a type parameter must occur in the type of a field`
    `Unused type parameters 'b, 'c of concept "foo": a type parameter must occur in the type of a field`
@@ -656,15 +691,21 @@ ordered_group.equality:
    这里的"字段"包括继承来的字段和视图里没被 `where` 给出的字段，与下面变体里 "no field actually uses it" 的"字段"同义。
 
    【2026-11-18，0.1 第 70 条】上面两句只报哪儿都没出现的参数（自己字段的类型里、所有 parent 的类型里都没有）。参数不在 major parent 的类型实参里、也不在任何存下来的字段的类型里，但出现在某些带 qualifier 的 parent 的类型里时，报下面的变体。例：`concept ('a,'b) pl = "'a group" + x :: 'a + o: "'b order" where carrier = "UNIV"  le = "λx y. True"`。按参数个数与 parent 个数分四版；句中列的是参数出现在其类型里的那些 parent，写用户起的 qualifier；major parent 不会出现在句中，因为出现在它的类型实参里就算用到了：
-   `Unused type parameter 'b of concept "pl". Although 'b occurs in the type of the parent "o", no field actually uses it`
-   `Unused type parameter 'b of concept "pl". Although 'b occurs in the types of the parents "o", "p", no field actually uses it`
-   `Unused type parameters 'b, 'c of concept "pl". Although 'b, 'c occur in the type of the parent "o", no field actually uses them`
-   `Unused type parameters 'b, 'c of concept "pl". Although 'b, 'c occur in the types of the parents "o", "p", no field actually uses them`
+   `Unused type parameter 'b of concept "pl". Although 'b occurs in the type of the field "o", every field of "o" that uses it is assigned by "where"`
+   `Unused type parameter 'b of concept "pl". Although 'b occurs in the types of the fields "o", "p", every field of "o", "p" that uses it is assigned by "where"`
+   `Unused type parameters 'b, 'c of concept "pl". Although 'b, 'c occur in the type of the field "o", every field of "o" that uses them is assigned by "where"`
+   `Unused type parameters 'b, 'c of concept "pl". Although 'b, 'c occur in the types of the fields "o", "p", every field of "o", "p" that uses them is assigned by "where"`
+
+   【2026-11-23 11:11 UTC 作者「#4 批准」：上面四句是改过的。他同日定了"parent 只指第一个不带名字的那一项，带名字的项都叫字段"
+   （公共文件术语表前"parent 与字段（field）两个词的分工"）。此前四句是 `… occurs in the type of the parent "o", no field actually uses it` 等；
+   只把 parent 换成 field 会读成"在字段 o 的类型里出现、却没有字段用它"，所以后半句改成说出原因：`o` 里用到这个参数的字段都由 `where` 给出了，新 concept 里没有存下用到它的东西。
+   他批的是 concept A1 报的第一版（一个参数、一个字段）；另三个单复数版本照同一改法，concept A1 把实测印出的样子报了他。
+   本条上下文里写的"带 qualifier 的 parent"照旧读作"类型是 concept 的字段"。】
 
    （句末不带句号：作者 2026-11-18「可以统一没有句号结尾」，concept 所有报错都如此，见 concept 计划 10.1 开头。）两种参数同时有时，一个错误里印两行，上面两句的在前、变体在后【作者 2026-11-18 要看完整例子；看了之后改简了第一行的句子、定了句号，对印两行没有提出异议，我按此记为已定，已向作者报告】。例：`concept ('a, 'b, 'c) pl = "'a group" + x :: 'a + o: "'b order" where carrier = "UNIV"  le = "λx y. True"` 报
    ```
    Unused type parameter 'c of concept "pl": a type parameter must occur in the type of a field
-   Unused type parameter 'b of concept "pl". Although 'b occurs in the type of the parent "o", no field actually uses it
+   Unused type parameter 'b of concept "pl". Although 'b occurs in the type of the field "o", every field of "o" that uses it is assigned by "where"
    ```
 
 兜底的（concept 命令或 Isabelle 的类型读入通常会先报）：
@@ -672,6 +713,8 @@ ordered_group.equality:
 8. `Duplicate field "carrier" in concept "foo"`；多个时 `Duplicate fields "carrier", "one" in concept "foo"`
 9. `Unknown parent concept "bar" in concept "foo"`
 10. `Bad number of type arguments for parent concept "bar" in concept "foo": 2 given, 1 expected`
+    【2026-11-23：第 9、10 两句不随用词改。经 `concept` 命令到不了它们（实测：Isabelle 读类型时先报 `Undefined type name: "bar"`、`Bad number of arguments for type constructor: …`），
+    只有直接调 ML 接口的人见得到；concept A1 建议不改，作者 11:20 UTC 批的只是第 5 句。】
 
 同一个字段被给了两次（3.8）：
 （2026-11-18 作者「赞同保留」：第 11–13 句末尾加 `⌂`，指向第二处赋值，即用户该删掉的那一处；原型代码评审 `wf_0f8cd71e-123` 指出代码已这样印而原文没有；`of` 后面写用户起的名字，见主计划 10.1 A4 一条。）
@@ -686,6 +729,10 @@ ordered_group.equality:
 
 实例里与已有链常量不一致（concept 计划 10.1 已批，现由本包报）：
 14. ``The field carrier of int.group has been defined as UNIV, but here you specified a different value `{x. True}` ``
+
+【2026-11-23】A 区的 A4 两句（`where` 右边的类型不符；逐字在 concept 计划 10.1）里 `the given value` 改成 `the assigned value`，带 `super` 的路径加双引号（作者 07:47 UTC「按你建议来」）。
+上面第 10 句的 `2 given, 1 expected` 不改。新的一句（family 的成员写了 `more`）见 3.9 开头。
+因到达步数上限拿不到规则或等式时，报的仍是已批的 `No truncate congruence rule for …`、`No selector equation for …`，不另拟、不写原因（作者 07:28 UTC 对 concept B「不另拟」）。
 
 新的一层还需要、尚未拟的文案见第 9 节第 9 条。【rev 5，0.1 第 46 条】其中 A 区的已定，逐字见 concept 计划 10.1 末尾：路径找不到字段（A3；【rev 6，0.1 第 59 条】它第二行的字段清单只列真正的字段，parent 的 concept 有显式的 major parent 时加半句 `; super stands for its monoid part.`，`super` 写在没有显式 major parent 的 parent 上也报这一句）、右边类型不符（A4，含 `super = t` 的变体）、右边用了排在后面的 parent 或未定义的名字（A5）；第 4 句扩到 `super` 与 parent 的名字（A6）。"不带 qualifier 的 parent 带来了新字段"随裸类型写法取消而作废；"实例传进来的 more 类型不对"按"Isabelle/ML 层的用户可信"不查；实例相关的两句（没给全的字段、整个 parent 由已有实例给出时字段不一致）到 C 区再拟。
 
@@ -774,6 +821,8 @@ concept A1 取舍后写在这里；下面的行号指原型。本节里凡是说
      【2026-11-21 改：这里原来写"那只在顺带定义祖先的常量时出现"，不对，讨论团队 `wf_8fd40a78-8e9` 指出】。
    - 实例的记录里另存一样，供"怎么算"第 2a 步用：**实例成立，则它的某个结构参数成立**，`concept (c ?xs) ⟹ concept ?xᵢ`，按参数位置存。
      体内实例对宿主总有一条（隐藏字段里有宿主的谓词）；带参数的全局实例，`if` 子句说了某个参数的 concept 时有一条。由命令交进来（`add_implication` 的另一种用法），不给用户添义务。
+     【2026-11-23：体内实例对宿主的那一条仍然总有，但理由改了：隐藏字段里不一定存着宿主的谓词（3.8 `_constraint` 一段的注），
+     命令由实例的 `ambient`（`concept (实例项) ⟹ C ?S`，两种情形下都有）接上宿主谓词到 `concept` 的蕴含做出它。交进来的定理与入口都不变。】
      没交进来时只是少接上一些转换，不会接错。
    - 搜索计划 2.5 的"`super` 是第 i 个参数"与"相连的键"都不另存，由 `source` 算出来，不另存两处就不会对不上：
      前者就是 `kind = Super` 且 `term` 是这个实例的第 i 个参数。

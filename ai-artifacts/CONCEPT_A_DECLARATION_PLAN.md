@@ -222,7 +222,7 @@ concept ('a, 'b) C = "'a Base"
         "既然如此"指 concept A1 报的事实：块里的 `typedef`，集合不能提到 `\<S>`，类型参数不能是块里固定的类型变量，集合里的类型变量又必须都是类型参数，所以它定义的类型与块无关（实测，2.6 的记录）。
         它取代上面"`typedef`（非空证明）…不包，规则照常带 `C ?S`"里 `typedef` 的那一半：代码上仍是不包、带前提，只是这种用法不被支持。
         写了会怎样：`typedef` 本身成功，定理带 `C ?S`；之后同一个块里对它写 `copy_bnf` 会失败（并行时是 theory 末尾不带位置的 `future_result: bad hyps`）。
-        给用户的话（草稿，待作者批，写进用户文档讲块的那一节）：
+        给用户的话（concept A1 定：作者 2026-11-23 10:03 UTC「交给你自决了」；写进用户文档讲块的那一节，那份文档现在还没有）：
         > Inside a concept block or an instance context, `typedef` is not supported. A type cannot depend on the structure of the block, so nothing is lost by writing the `typedef` before the block.
       - **判据的措辞**【作者 05:25 UTC：「你可以自决」；concept A1 定】：
         一个命令在 `global_form` 之下运行，当且仅当它不向用户要证明，它的证明也不去上下文的规则集里找 fact（如 `auto`、`simp` 用上下文的 simpset）；
@@ -233,6 +233,9 @@ concept ('a, 'b) C = "'a Base"
   - 实现时通知 global_form 与 local_datatype 两边的 agent（作者 2026-11-14）。
 - `notation t (infix "+")` 往本 concept 的 notation table 登记，可覆盖已有 key（6.3）。`t` 可以是复合项：ring 体内 `notation add.mul (infix "+")` 的意思是把 `+` 绑定到 `magma.mul (ring.add \<S>)` 这个复合项（作者 2026-11-15 的说法；`add.mul` 先由 `add` 解析成视图项、再由 dot_syntax 取 `.mul`，解析没有问题；这种 notation 怎么打印回 `+` 见 6.4"打印"）。refinement（与 major parent 共用 record 类型的 concept）同样可以声明任何 notation，包括覆盖继承来的 key【已定，作者 2026-11-15「依旧允许 refinement concepts 声明任何的 notations，包括 override」】。后果在 6.4：refinement 与 parent 类型相同，所以 explicit form `x *⇘G⇙ y` 在上下文里和全局都没有 `G` 的 concept fact、而同类型的几个 concept 绑的项不同时报错（文案 10.1）。
 - `concept_instance x: D where … for a: A`【已定，作者 2026-11-10】定义**一个**全局常量 `C.x :: C ⇒ A ⇒ D`，隐含 `for \<S>` 和 `if "C \<S>"`；结果继承 `\<S>` 的 `more`（3.6）【这半句 2026-11-21 作废：不再默认继承，要继承就手写 `more = \<S>.more`，不写时结果的 more 是 `unit`，3.7"现行的规定"第 5 条】；登记 dot 访问 `c.x` 表示 `C.x c`（走 dot_syntax 的字段登记表）；把裸名 fact `C.x` 绑定为实例的 iff（5.2，作者 2026-11-16 改；此前绑的是分开前提的 intro rule，它现在只在 intro table 里；祖先不静态绑定，由 `concept_fact` 推）；除此之外不定义别的常量、不绑定别的 fact、不导入。`x` 不得与 C 的 notation table 里已有的任何标识符重合，重合报错；从祖先继承来的名字也算，后代不能重新定义祖先已有的体内实例名，要换一个名字（3.6，作者 2026-11-16）。`concept_instance (in C) x: …` 与之等价，是在体外定义带参数实例的推荐写法；TAT 的节点给 `in` 一个字段。每个 `concept_instance`（体内的、全局带参数的、全局不带参数的）自动得到一个可打开的上下文，证明结束后用 `context C.x begin … end` 打开；`concept_instance` 命令本身只交证明目标，不带 `begin`（2026-11-18 改，C 区评审 C1，作者在 concept C 的会话里「C1 赞同评审建议」，我在它的会话记录里核对过；细节见 5.1），见 `CONCEPT_INSTANCE_CONTEXT_PLAN.md` 第 1 节【已定，作者 2026-11-12；2026-11-17 起它与 concept 的块是同一种命名 target，不再是 light locale，A 区评审 A1，第 9 节】。体内实例 `where` 没给的字段**一律报错**，不继承 `\<S>` 的同名字段【已定，作者 2026-11-14，否决 11-12 的继承提案：按名继承等于假定 `\<S>` 与结果 concept 是同一个 concept，`concept_instance (in ring) ideal: comm_group where carrier = I for I` 按名字拿到的 `mult` 是乘法、要的是加法】；4.3 的 `sub` 例子因此写全 `mult = mult  one = one  inv = inv`（右边是体内字段的短名，不需要 `super`）。文案待拟（10.2）。【拆分时加的指路：这句文案已定（作者 2026-11-18），在 C 区文件第 10 节"实例没给全字段"一条。】
+  【2026-11-23：上一条里"隐含 `if "C \<S>"`"现在是有条件的。用户写的条件已经推得出 `C \<S>` 时，它不再列进实例的条件，隐藏字段里也不存；推不出时照旧。
+  这是 concept C 定的（C 区文件 5.2"体内实例的宿主前提"，判断怎么做也在那里），它偏离 2026-11-10 的这一句，作者 2026-11-23 11:56 UTC 对 concept A1：「2. 接受」。
+  `for \<S>`、常量的类型与参数（宿主仍排第一）都不变。】
 - （本节讲 non-major parent 的 lemma 在 `concept` 声明时自动导入的那一条，在 E 区文件的 2.5。）
 
 ### 2.6 `concept` 命令与它的块：实现时定下的各点（2026-11-22）
@@ -281,6 +284,24 @@ concept ('a, 'b) C = "'a Base"
   全局形式是用户写的命题原样、前面加前提 `C ?\<S>`，由 atomize 的那条等式换回来，不做 rulify：用户写成 `∀x. P x ⟶ Q x` 的，全局形式里仍是这个样子。
   印出来的 schematic 变量是 `?\<S>`；本文件别处写的 `?S` 是简写。
 - **名字**：与 parent 规则重名、或在拥有类型的 concept 里叫 `equality`，报 10.1 的 A7；重复报 A11。字段的名字、concept 自己的名字、`intro`、`axioms`、`C_axioms` 都不拦。
+- **名字相撞时怎么办，归成一条规则**【已定，作者 2026-11-23 09:36 至 10:03 UTC，逐点答的；文案在 10.1"名字相撞"一组】：
+  系统替用户造的名字被再用一次时报错；用户自己写的名字之间相撞，照 Isabelle 平常的规矩，至多给一个 warning。
+  系统造的名字指：第一个不带名字的 parent 的规则（`C.⟨它的 concept 名⟩`）、类型是 concept 的字段 `q` 的规则（`C.q`）、`C.equality`、常量 `C.truncate`。
+  下面的例子里 `ordered_group` 的第一个 parent 是 `group`，它有一个类型是 concept 的字段 `ord`。
+  - header 的假设叫 `group`、`ord` 或 `equality`：报 A7（上一条，原来就有）。
+  - header 里类型是 concept 的字段叫 `group`：报错，10.1 的"You cannot name a field as …"第一句。类型是普通类型的字段叫 `group` 不拦：
+    它只造出常量 `C.group`，不造同名的定理，没有相撞（作者 09:53 UTC「只拦真正相撞的」）。
+  - 拥有自己类型的 concept 里，类型是 concept 的字段叫 `equality`：报错，同一句式的第二句（作者 10:03 UTC 批）。类型是普通类型的字段叫 `equality` 同样不拦。
+  - 声明这个 concept 的 theory 里，块里的 lemma 叫 `group`、`ord` 或 `equality`：全名就是那条规则的全名，报 A7。
+  - 别的 theory 里重开的块里，lemma 的名字与声明时造出的任何一条定理相同（第一个 parent 的规则、类型是 concept 的字段的规则、`equality`、header 里用户写的假设）：
+    全名不撞（带那个 theory 的名字），lemma 照常存下，此后短名读成新的这一条；给一个 warning，不拒绝（作者 09:36 UTC「这里我建议是报警」）。
+    warning 只在上下文可见时印，照 Isabelle 印 warning 的惯例。
+  - 声明这个 concept 的 theory 里，块里的 lemma 与 header 里用户写的假设同名：全名相撞，得到 Isabelle 自己的 `Duplicate fact declaration`，不另拟文案
+    （作者 09:36 UTC「这个你最多给个警报」；这里全名相同，存不下去，所以连 warning 也轮不到）。
+  - 别的 theory 里的块里，lemma 与另一个 theory 的块里证的 lemma 同名：这是查找链本来的用法（本 theory 的在前），不出声。
+  - 拥有自己类型的 concept 的块里定义或缩写一个叫 `truncate` 的常量（`definition`、`abbreviation`、`fun` 等凡经块的"定义常量"入口的）：报错，10.1 的常量那一句
+    （作者 09:57 UTC「赞同拦下 abbreviation truncate」）。不拥有自己类型的 concept（如 `comm_group`）的块里照常可以。
+  - 实现：前两种报错在 `declare` 里、读完各项的类型之后查；lemma 的两种在块存 fact 的入口（`notes`）开头查；常量的在块的 `foundation` 与 `abbrev` 两个入口开头查。
 
 **同名的 locale**（讨论 T3）【concept A1 定】
 - 声明 concept 时不为同名的 locale 发 warning（公共文件第 9 节留的那个问题）。不改 Isabelle 的源码，不 hide stock 的名字，不绑占位的 fact。
@@ -294,6 +315,10 @@ concept ('a, 'b) C = "'a Base"
     theory 的 naming 多一段路径时（HOL 自己用的 `setup ‹Sign.mandatory_path "alg"›`），块里的 fact 叫 `T.alg.C.foo`，前缀也是 `T.alg.C`（L1）。
     所以一个 theory 在两种 naming 下都存过同一个 concept 的 fact 时记两个前缀；说"每个 theory 各一个"不准，是"存过 fact 的各个前缀"。
   - "ancestor 多的在前"用的那个数在存前缀的时候一并记下（存它的 theory 有多少 ancestor），排序只读数据（K2）。】
+  【2026-11-23 第三次评审 `review_concept_package_3` 的 M1，concept A1 照裁判的建议定并已报作者（09:0x UTC）：
+  - 块自己的 concept 那一段里，**当前这个块的前缀不但恒在，而且恒在最前**，不参加"ancestor 多的在前、再按名字"的排序。
+    一个 theory 在两种 naming 下各存过同一个 concept 的 fact 时（上面 L1 的情形），按排序当前块的前缀可能排在同一个 theory 的另一个前缀之后，
+    块里刚证的 lemma 的短名会读到另一个前缀下的同名旧 lemma；放在最前就不会。】
 - 要知道的后果：
   - concept 叫 `order`、`ring`、`lattice`、`field` 时，`context order begin` 打开的是 concept 而不是 type class（class 也是 locale）；要 class 写 `context Orderings.order begin`。
   - concept 的 fact 盖住 stock 的同名 fact（如 `order.trans`）；concept 没有而 locale 有的带前缀的名字（`monoid.intro`、`monoid.left_neutral`）在 theory 层仍读成 locale 的定理。
@@ -541,7 +566,10 @@ concept 的 record 就是它的参数表（相当于 locale 的参数表；conce
          是真正的祖先实例，它的类型正好到 `L`。本条找来源的规则不变。】
        - **这一步带什么条件，看隐藏字段，不看有没有 `if`**【评审 `wf_cdfbbd33-fa9` 的修改意见】：截断不动隐藏字段，所以等式两边各带一个条件 `concept X`；
          `X` 的隐藏字段等式（4.1，存在实例的记录里）是 `= True` 时，这一边的条件当场由它消掉。是 `True` 的只有全局不带 `if` 的实例和视图节点。
-         体内实例总带着宿主前提，没有 `if` 也有条件。例：`dual` 是 ordered_group 体内的实例，写 `where super = \<S>`、没有 `if`，
+         体内实例总带着宿主前提，没有 `if` 也有条件。
+         【2026-11-23 改准（C 区文件 5.2"体内实例的宿主前提"；作者 11:56 UTC 接受）：体内实例的隐藏字段从不是 `True`——没有条件时存宿主谓词，
+         有条件时至少存一条用户写的条件；宿主谓词本身只在用户写的条件推不出它时才存。下面 `dual` 的例子没有条件，不受影响。】
+         例：`dual` 是 ordered_group 体内的实例，写 `where super = \<S>`、没有 `if`，
          `group.truncate (ordered_group.dual S) = group.truncate S` 两边的隐藏字段分别是 `ordered_group S` 与 `S` 自己的，哪一边都没有 `= True` 的隐藏字段等式（`S` 是变量，什么都没存），
          所以类型层单独证出的这一步带两个条件 `concept (ordered_group.dual S)` 与 `concept S`（探针测过）。
          类型层没有关于谓词的事实（4.1），自己不能由 `ordered_group S` 推出 `concept S`；命令把这条蕴含交进来之后只剩前一个条件，见下一条。
@@ -554,6 +582,8 @@ concept 的 record 就是它的参数表（相当于 locale 的参数表；conce
          上一条写两个，是因为类型层单独只证得出统一的形状；`ordered_group S ⟹ concept S` 是关于谓词的事实，命令那一层有。定下来的做法两条：
          (1) 体内实例写 `super = \<S>` 时，命令把 `concept (实例项) ⟹ concept S` 交给类型层。它由实例的隐藏字段等式与宿主谓词到 `concept` 的蕴含得到，不给用户添义务；
              入口与 family 里交"后代成员成立，则被它沿用的成员成立"的是同一个（类型层计划 3.13 的 `add_implication`）。
+             【2026-11-23：这条蕴含改由实例的 `ambient`（`concept (实例项) ⟹ C ?S`，4.1）接上宿主谓词到 `concept` 的蕴含得到。
+             隐藏字段里不一定存着宿主谓词了（上面 2026-11-23 的注），而 `ambient` 在两种情形下都有、陈述相同。交给类型层的那条定理不变。】
          (2) 凡是存着这样一条蕴含的，给 simp 用的、用户看到的截断等式只带实例那一个条件：
              `concept (ordered_group.dual S) ⟹ group.truncate (ordered_group.dual S) = group.truncate S`；
              family 里是 `concept (sub.group G H) ⟹ monoid.truncate (sub.group G H) = sub.monoid G H`。
@@ -889,6 +919,12 @@ concept A1 02:24 向作者报了自己的理解（A 区剩下的问题里只属�
 - 全局实例的常量：`True`，`concept int.group = True`。
 - 带参数的实例：`if` 子句的合取（含参数的 concept fact），如 `concept (group.sub G H) = (group G ∧ closed ∧ one_in ∧ inv_closed ∧ subset)`。
 - 视图重建的节点：`True`，`concept (ordered_group.ord S) = True`。
+- 体内实例【2026-11-23 加；concept C 定，C 区文件 5.2"体内实例的宿主前提"；作者 11:56 UTC 对 concept A1 接受了它偏离此前原话的三处】：
+  存的是**实例的前提表**各条的合取，只有一条时就是那一条。这张表是用户写的各条条件照书写的先后（`名字: "项"` 带的各条在前，然后各条 `if`）；
+  用户写的条件推不出宿主谓词 `C \<S>` 时，最前面加上它，推得出时不加。没有条件的体内实例存的就是宿主谓词。
+  上一行 `group.sub` 的例子属于推不出的情形（它的条件都不是 concept fact），所以最前面有 `group G`。
+  推得出的例子：`normal`（`where subgroup: "sub N" if conj: …`），存 `concept (group.normal G N) = (group (group.sub G N) ∧ (∀x h. …))`，没有 `group G`。
+  裸名上的 iff、intro table 里实例自己的规则、xOF 的位置，都照同一张表（下面各条）。
 
 效果：每个带参数实例的 intro rule 成为 iff，`group (group.sub G H) ⟷ group G ∧ closed ∧ …`。
 - **2026-11-21：destruction lemma 的前提写成 `concept (实例项)`，每个实例另存一条 `concept (实例项) ⟹ D (实例项)`**【已定，作者 2026-11-21 03:34 UTC 对 concept B，concept A1 在它的会话转录里核过；全文在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 2.5】。
@@ -909,10 +945,19 @@ concept A1 02:24 向作者报了自己的理解（A 区剩下的问题里只属�
   `rewrites` 也是保留名（2026-11-21）：一个实例的全部 `rewrites` 等式另绑成一个 fact `rewrites`（`int.group.rewrites`、体内 `group.sub.rewrites`），全文在 E 区文件 5.3。
   作者 2026-11-21 02:17 UTC 对 concept maintain：「赞同rewrites 作保留名，用户起同名时报错」（concept A1 在它的会话转录里核过）。
   `rewrites` 是关键字，用户要加引号才写得出 `if "rewrites": …`（concept maintain 在 stock Isabelle2026 上测的）。
+  【2026-11-23（C 区文件 5.2"体内实例的宿主前提"）：`ambient` 在体内实例上永远有，名字与陈述不变（`concept (C.x ?S ?a) ⟹ C ?S`），在各条 destruction lemma 里排第一。
+  宿主谓词在实例的前提表里时，它是隐藏字段等式的一个投影（与此前相同）；不在表里时，先由隐藏字段等式取出用户写的各条条件，再接判断交回的那条定理 `w₁ ⟹ … ⟹ wₙ ⟹ C ?S`。
+  `实例名.of_concept` 的陈述不变；它的做法是把证出的 `D X` 的每条前提经陈述它的那条 destruction lemma 换成 `concept X`（`C ?S` 经 `ambient`）。】
 - 这批 destruction lemma 按 `concept_instance` 命令定义出的常量的名字索引，是 assumption destruction（分册第 2 节）的全部规则来源；视图没有 destruction lemma。
 - 【2026-11-21：又可以写了。`if G: "'a group"` 合法，指没有扩展的群；要接受任意扩展写全名。3.7"现行的规定"第 5 条。下面 2026-11-19 的注作废。】【2026-11-19：下面的糖里不许再写 `'a group`，要写全，如 `if G: "('a, 'm) group_scheme"`，3.7。】5.2 的糖 `if G : "'a group"` 展开成带名子句 `if G: "group G"`，destruction lemma 叫 `sub.group.G`；用户自己写了同名子句报重名【已定，作者 2026-11-12】。
 - **iff 绑定到实例的裸名上**【已定，作者 2026-11-16「我建议只绑 group.sub…把 iff 绑到 group.sub，不再绑 group.sub.iff」】：`thm group.sub` 是 `group (group.sub ?G ?H) ⟷ group ?G ∧ (∀x y. x ∈ ?H ⟶ y ∈ ?H ⟶ x * y ∈ ?H) ∧ … ∧ ?H ⊆ carrier`。
   - 右边是宿主前提加各条 `if` 子句按声明顺序的合取，子句里的 `⋀`、`⟹` 写成 `∀`、`⟶`，也就是本节 `_constraint` 存的内容（这个形式作者 2026-11-16 确认：「确认实例 iff 的确切形式」）。
+    【2026-11-23 改：右边是实例的前提表各条的合取（本节"这个字段里填什么"的"体内实例"一行），所以"宿主前提"那一项只在用户写的条件推不出它时才有。
+    例 `normal`：`group (group.normal ?G ?N) ⟷ group (group.sub ?G ?N) ∧ (∀x h. …)`，手写时是 `group.normal[xOF s c]`（此前是 `[xOF g s c]`）。
+    这偏离 2026-11-16 确认的形状里"宿主前提"那一项，作者 2026-11-23 11:56 UTC：「1. 接受」；xOF 少一个位置：「3. 接受」。
+    保留的：声明的先后、`∀`/`⟶` 的写法、"也就是本节 `_constraint` 存的内容"、不挂 attribute、绑在裸名上。
+    同一段声明在内容不同的 theory 里可以判出不同的结果（判断用的是声明那一刻 theory 里登记着的规则），两种都正确；是哪一种看 `thm C.x`。
+    xOF 的位置照存下的这张表：用户写的某条条件本身是合取时，不能按 `∧` 拆 iff（那样位置比表里的条数多），实现在 A 区的 `rule_attributes.ML`，还没有改。】
   - 只有带前提的实例有（体内实例、全局带 `if` 的实例）；没有前提的实例裸名上仍是原子 fact。
   - **不挂任何 attribute**（作者「不挂 [simp]，iff 不挂任何 attribute」）：挂 `[simp]` 会把假设里的 `group (G.sub H)` 改写成合取，而 assumption destruction、intro table、contextual notation table 的来源都靠这个形状
     （2026-11-22 改：此前这里写的是 dynamic notation table，它已由 contextual notation table 取代，D 区文件 6.3）。
@@ -973,9 +1018,20 @@ Illegal concept name "ring_scheme": names ending with "_scheme" are reserved for
 <!-- 冻结主计划 CONCEPT_UNARY_PLAN.md 第 1734–1799 行 -->
 **header 里的字段名、parent 的 qualifier 也不许与 major chain 继承来的名字重合**，用上面这句（带中间那句）【已定，作者 2026-11-18「赞同你的建议」；原型代码评审 `wf_0f8cd71e-123` 的意见】。继承来的名字指 major chain 上所有祖先的字段和带名字的 parent。例：`concept 'a foo = "'a group" + carrier :: "'a set"` 报 `The name "carrier" is already bound to monoid.carrier in concept monoid` 等三行。此前代码只查 header 各项之间的重名（3.11 第 8 句）：与继承名重名时，有的报 Isabelle 内部的 "Duplicate fixed variable(s)"，有的被接受，但路径解析和读右边对同一个名字指谁不一致。实现上两处共用一张名字表。
 
+【2026-11-23 12:11 UTC 作者再次确认这一条：「赞同 A 区照旧不许同名」「字段不能放开」。
+起因：他 2026-11-22 在 concept C 的会话里定了"常量覆盖必须接受"，说的是体内的 definition；concept C 的讨论小组把"header 的字段也可以与祖先的同名"推成它的一个后果，
+D 区文件 6.10 的 (6) 一度照此写了"三行文案撤掉，连同它在 header 字段上的用法"（`concept_package.ML` 第五次评审指出两份计划对不上）。concept D 确认那半句不是作者的话，已收回。
+所以：常量覆盖只管体内的 definition 与体内实例的名字（D 区文件 6.10 的 (6)）；header 的字段名与带名字的项的名字照本条查，三行的那句照旧用。】
+
 **A 区的报错文案【已定，作者 2026-11-16，逐字】**。引号里的名字、项、类型填实际的；`⌂` 同上。
 
 **语法错误一律报 "Bad syntax"，并给出正确写法的例子**（作者「我建议类似这种情况直接统一报错：Bad Syntax, 然后把正确的语法实例给出来」；首句措辞作者定；例子里一律印真实的条件，作者「必须的」；末尾提示保留，作者「留吧，挺好的」）。实现：在命令的解析器外面包一层，解析失败时换成这段文字，`⌂` 指向解析失败的那个词。`where` 跟在不带名字的 parent 后面、无名的 `if` 子句、无名的 header `assumes` 都由语法拦下，归这一句（作者「A2、A10、A13 都并进 "Bad syntax"」）。**2026-11-17 加两种**（A 区评审 A9.1，作者「A9.1 赞同你的建议」）：带名字但类型不是 concept 的项（字段）后面跟了 `where`；带 qualifier 的 parent 后面跟了 mixfix。这两种要读完类型才看得出是字段还是 parent，所以不是解析器拦下的，而是读完类型后由命令报同一句，`⌂` 指向那个 `where` 或那个 mixfix（位置是我定的实现细节）。parent 不接受 mixfix，要符号就在体内用 `notation`（2.1）。
+
+**2026-11-23 放宽"一律"**【已定，作者 08:18 UTC「按你建议来」，答的是 concept A1 报的代码评审 `review_concept_package_1` 的 K5，裁判与 concept A1 的建议相同】：
+- 报 `Bad syntax` 的是 concept 命令自己的语法出的错：`=`、项与项之间的 `+`、名字后面的 `:` 与 `::`、`where` 与它的各条、`assumes` 与 `and`、假设的名字等。
+- Isabelle 自己的子语法内部出的错保留 Isabelle 自己的报错：mixfix 标注、类型参数里的 sort、attribute 的参数、`(is …)`。
+  理由：那些报错指得出错在子语法里的哪一处；换成 `Bad syntax` 加一个 concept 的例子，用户反而看不出错在哪里。
+- `and` 之后少了名字的假设属于前一种，报 `Bad syntax`（K5 本身：此前只有第一条假设少名字时报 `Bad syntax`，后面的报 `Outer syntax error`）。
 
 ```
 Bad syntax⌂. The correct syntax of concept is:
@@ -983,8 +1039,11 @@ Bad syntax⌂. The correct syntax of concept is:
     + ord: "'a order" where carrier = carrier
     + norm :: "'a ⇒ real"
     + assumes mono: "x ⊑⇘ord⇙ y ⟹ x * z ⊑⇘ord⇙ y * z"
-The first parent has no name; every later parent and every assumption has one
+The parent has no name; every field and every assumption has one
 ```
+
+【2026-11-23 11:11 UTC 作者「#1 批准」：末行随"parent 只指第一个不带名字的那一项、带名字的项都叫字段"的用词改成上面这样
+（公共文件术语表前"parent 与字段（field）两个词的分工"）。此前是 `The first parent has no name; every later parent and every assumption has one`。】
 
 ```
 Bad syntax⌂. The correct syntax of concept_instance is:
@@ -1000,22 +1059,25 @@ Every if clause has a name
 
 header `where` 左边的路径找不到字段（A3，作者改定的措辞）：
 
+【2026-11-23 11:06 UTC 作者「批准 #2」：这一句头上的 `The parent` 改成 `The field`，随"带名字的项都叫字段"的用词。下面各例都已照改；
+实例的 `where` 用的是同一个函数，所以实例里带路径的那一句同样以 `The field` 开头（C 区文件第 10 节的例句由 concept C 改）。】
+
 ```
-The parent ord: "'a order" of concept og has no field named foo⌂
+The field ord: "'a order" of concept og has no field named foo⌂
 Its fields are carrier, le
 ```
 
 第二行的清单怎么列【已定，作者 2026-11-17「赞同 清单只列真正的字段，super 单独用半句说明它指什么」】：只列真正的字段，即这个 parent 的字段（含它从 major chain 继承来的）和它自己的带名字的 parent 的名字。`super` 不进清单，因为它只是其中几个字段的合称（`g: "'a group"` 上的 `super` 就是 `carrier`、`mult`、`one` 那一部分），并排列出来会被读成另一个字段。清单只有一个字段时第二行用单数 `Its field is carrier`（作者 2026-11-18「好」，单复数按个数算）。parent 的 concept 有显式的 major parent 时，清单后面加半句说明 `super` 指什么，沿用作者 11-16 批的说法 "stands for its … part"：
 
 ```
-The parent g: "'a group" of concept X has no field named foo⌂
+The field g: "'a group" of concept X has no field named foo⌂
 Its fields are carrier, mult, one, inv; super stands for its monoid part
 ```
 
 parent 的 concept 没有显式的 major parent（直接建在 base `concept` 上）时没有这半句。用户在这种 parent 上写了 `super`，就是同一句、名字填 `super`，不单设文案（作者 2026-11-17「我认为第二点可以这样定了」，3.5）：
 
 ```
-The parent ord: "'a order" of concept og has no field named super⌂
+The field ord: "'a order" of concept og has no field named super⌂
 Its fields are carrier, le
 ```
 
@@ -1028,14 +1090,14 @@ The concept concept has no field named foo⌂
 It has no fields
 ```
 
-**路径不止一层时**【已定，作者 2026-11-18「按你建议来」】：`The parent ` 后面写走到出错那个结构为止的完整路径，冒号后面是那个结构的类型，第二行列的是同一个结构的字段，所以两行永远说同一个结构。例：`v: "'a ordered_group" where ord.foo = …` 报
+**路径不止一层时**【已定，作者 2026-11-18「按你建议来」】：`The field ` 后面写走到出错那个结构为止的完整路径，冒号后面是那个结构的类型，第二行列的是同一个结构的字段，所以两行永远说同一个结构。例：`v: "'a ordered_group" where ord.foo = …` 报
 
 ```
-The parent v.ord: "'a order" of concept X has no field named foo⌂
+The field v.ord: "'a order" of concept X has no field named foo⌂
 Its fields are carrier, le
 ```
 
-`v: "'a group" where super.foo = …` 报 `The parent v.super: "'a monoid" of concept X has no field named foo⌂`，第二行列 monoid 的字段。路径只有一段时就是上面已批的例句，一字不变；实例里同样（下面实例的那一句：路径第一段就找不到时仍是 `The concept group has no field named foo`）。
+`v: "'a group" where super.foo = …` 报 `The field v.super: "'a monoid" of concept X has no field named foo⌂`，第二行列 monoid 的字段。路径只有一段时就是上面已批的例句，一字不变；实例里同样（下面实例的那一句：路径第一段就找不到时仍是 `The concept group has no field named foo`）。
 
 （实例的 `where` 左边路径找不到字段、实例没给全字段、在 family 里插入祖先这三条文案，在冻结主计划里排在这里，现在在 C 区文件第 10 节。）
 
@@ -1124,12 +1186,52 @@ Use a different name
 理由：这是一次真的重名（体内 `definition truncate` 的全名就是 `C.truncate`），不是保留字段名那一种；不处理的话用户看到的是 Isabelle 内部的重复声明报错。
 不拥有自己类型的 concept（如 `comm_group`）没有系统的 `C.truncate`，体内可以照常定义叫 `truncate` 的东西。
 
+【2026-11-23 09:57 UTC 作者把这一句改定为一行，上面两行的那一版作废：「"The constant name "truncate" is already bound to the constant monoid.truncate." 就够了」。
+行末不带句号（公共文件第 10 节的规矩）。同一条消息：「赞同拦下 abbreviation truncate」，所以块里的 `abbreviation truncate` 也报这一句。
+别的 theory 里重开的块里同样报（那里全名不撞，不报的话会被接受，此后 `truncate` 在块里指谁就乱了）。范围见 2.6"名字相撞时怎么办"。】
+
+```
+The constant name "truncate" is already bound to the constant monoid.truncate
+```
+
 名字和 parent 规则重名（A7；header 的 `assumes` 名、体内 lemma 名、体内实例名；2026-11-17：体内 `lemma equality` 与 `C.equality` 重名也用这一句，这是我提 `C.equality` 时附带说的，作者批的是名字与"每个拥有类型的 concept 绑一次"，对这一点没有单独表态）：
 
 ```
 The name "group" is already bound to the fact ordered_group.group: ordered_group ?S ⟹ group ?S
 Use a different name
 ```
+
+A7 管到哪里【2026-11-23，随 2.6"名字相撞时怎么办"写准】：header 的假设名、声明这个 concept 的 theory 里块里的 lemma 名，与系统造的规则
+（第一个 parent 的规则、类型是 concept 的字段的规则、`C.equality`）全名相同时报这一句。别的 theory 里的块里的同名 lemma 不报这一句，报下面的 warning。
+
+**名字相撞的另外三句**【已定，作者 2026-11-23，逐字；规则在 2.6"名字相撞时怎么办"】
+
+类型是 concept 的字段叫第一个 parent 的 concept 的名字（作者 09:57 UTC：「You cannot name a parent as "group" as the name "group" is reserved for the base of the concept "bigroup" 就这样了」）；
+拥有自己类型的 concept 里，类型是 concept 的字段叫 `equality`（作者 10:03 UTC「批准」）：
+
+```
+You cannot name a field as "group"⌂ as the name "group" is reserved for the base of the concept "bigroup"
+```
+
+```
+You cannot name a field as "equality"⌂ as the name "equality" is reserved for a fact of the concept "bigroup"
+```
+
+- 【2026-11-23 11:06 UTC 作者改定：「#5 You cannot name a field as "group"⌂ as the name "group" is reserved for the base of the concept "bigroup"」。
+  此前两句写的是 `a parent`（上面引的 09:57、10:03 UTC 的原话），批在"parent 只指第一个不带名字的那一项"的用词定下之前。
+  `equality` 的那一句同样改成 `a field`：concept A1 报了"同样改"，他没有另说。】
+- `⌂` 放在第一个引号里的名字之后、指向 header 里那个名字（最初是 concept A1 加的；11:06 UTC 他自己写的句子里已经带着它）。
+- 句子说的是 `a field`，检查的范围没有变：只拦类型是 concept 的字段，类型是普通类型的字段叫 `group` 或 `equality` 不拦
+  （2.6"名字相撞时怎么办"；concept A1 11:0x UTC 向他说明了这一点）。
+
+别的 theory 里重开的块里，lemma 的名字与声明时造出的一条定理相同（warning，不拒绝；作者 09:57 UTC「批准」）：
+
+```
+The theorem name "group"⌂ hides the existing fact ordered_group.group⌂
+```
+
+- 第一个 `⌂` 指向新 lemma 的名字，第二个指向被遮住的那条 fact 声明的地方。
+- 作者 09:36 UTC：「且记一下：TAT 也要报警」，记在 `CONCEPT_TAT_NOTES.md` 末尾。
 
 假设重名（A11，作者「name "closed" has already been used in another assumption: <expression>」的改写；实例的 `if` 子句与 header 的 `assumes` 共用；第二个 `⌂` 指向先用了这个名字的那一条，糖 `G : 'a group` 生成的情形由此自然说明）：
 
