@@ -19,6 +19,7 @@
 ### 3.6 `more` 槽 【已定】
 
 - **实例的 `more` 由用户在 `where` 里写，不写就是 `unit`；体内实例不再默认继承宿主的 `more`**【已定，作者 2026-11-21 02:45 UTC 对 concept A1：「确认取消默认继承 more、不写时取 unit、more 放开成 where 里可以写的名字」；A 区文件 3.7 开头第 4 件】。
+  - family 的成员除外：它不许设置 `more`（本节下面"family 的成员不许设置 `more`"一条，2026-11-23）。
   - 要继承宿主的扩展，写 `more = \<S>.more`。在 concept `C` 的体内 `\<S>.more` 是 `C.more \<S>`，类型是 `C` 自己的 row variable；写了它，结果的 more 槽类型随之相同，如 `group.sub :: ('a, 'm) group_scheme ⇒ 'a set ⇒ ('a, 'm) group_scheme`。
   - 不写时结果的 more 是 `unit`，`group.sub :: ('a, 'm) group_scheme ⇒ 'a set ⇒ ('a, unit) group_scheme`：结果是一个没有扩展的群，宿主的扩展字段不带过来。
   - 全局实例同样：想保留参数 `K` 的扩展写 `more = "group.more K"`。带 row variable 的视图的 more 写 `A.more = …`。
@@ -29,6 +30,12 @@
     同类型时也不是一定要写：拓扑子群应取子空间拓扑，不能照抄宿主的 `opens`。
   - 类型那一层照传进来的 more 造值、不核对它（"Isabelle/ML 层的用户可信"，10.1 末尾），实例常量的类型随 more 的类型而定。
   - 它取代作者 2026-11-12 定的默认规则"结果的 scheme 类型与宿主的完全相同时 more 取 `C.more \<S>`，否则 `()`"。本文件与分册里 `sub`、`subog` 一类结果与宿主同类型的例子，凡要用在带扩展的结构上的，都要写 `more = \<S>.more`（`quotient` 不在此列，见上一条；此前这里把它也列了进来，2026-11-21 更正）。
+- **family 的成员不许设置 `more`，它恒为 `()`**【已定，作者 2026-11-23 07:37 UTC 对 concept A1：「1. 取」，取的是 concept A1 提的这条规则；concept A1 转来，作者的原话 concept C 在它的转录里核过】。
+  - 作者的理由（07:32 UTC）：「我能理解非 family 的写 more 可能是有用的，但 family 语境下，more 自然就对应着此 family 之后的那些 concepts 的实例，那为什么此时能让用户去设置？」
+  - family 之外的实例照旧可以在 `where` 里写 `more`（上一条）。
+  - family 的成员写了 `more = …` 时报错，由类型层的入口报（concept A1，代码还没有改）。文案是作者给的，在 10.1。
+  - family 的成员写 `名字: "t"` 时，`t` 的类型必须正好是这个成员的类型，没有扩展（作者同日「3. 赞同你的建议」；`CONCEPT_INSTANCE_WHERE_PLAN.md` 第 3 节第 5 项"family 的成员"一条）。
+  - 随之变简单的：family 的每个成员的类型正好是它所声明的 concept 的类型；新成员与所接的 `a.P` 之间的截断等式恒是 `L.truncate (a.C 参数) = a.P 参数`，右边不带截断（5.6"继承按 record 的层定"）。
 - `if` 子句与 `for` 子句里的 concept 参数的类型【2026-11-21 改，A 区文件 3.7 开头第 1、2 件，5.2】：照写的类型读。
   `if G: "('a, 'm) group_scheme"` 或 `for G :: "('a, 'm) group_scheme"`：参数可以是任意扩展的群，more 槽是用户写的那个类型变量。
   `if G: "'a group"` 或 `for G :: "'a group"`：类型缩写处处是扩展为 `unit` 的类型，参数是没有扩展的群。这两处都可以写类型缩写，Isabelle 这一层不报错也不发 warning；"必须写全"的检查挪到 TAT 的接口层。
@@ -175,7 +182,7 @@ end
   - 不定义常量的成员没有 `X`，这一步对它是：假设 `concept (a.P 参数)`（`a.P` 的隐藏字段是 `True` 时没有这条假设），目标是 `D (a.P 参数)` 加 `rewrites` 的义务；
     没有"本次实例自己的等式"，也不引入"祖先实例成立"（它已经在假设里）。规则在 5.6"refinement 的成员定义什么"。
   - 写了 `名字: "t"` 的实例，在进入阶段一之前先把目标里的新实例换成 `t`（`CONCEPT_INSTANCE_WHERE_PLAN.md` 第 3 节第 4 项）；陈述了 `A` 时，换的是第一条陈述的结论。
-    family 的成员写了 `名字: "t"` 时照样换。换用的等式 `concept X ⟹ X = t` 在 family 里除了"结果的 `more` 取自 `t`"之外，
+    family 的成员写了 `名字: "t"` 时照样换。换用的等式 `concept X ⟹ X = t` 在 family 里除了"两边的 `more` 都是 `()`"（2026-11-23 起 `t` 的类型必须正好是这个成员的类型，3.6）之外，
     还要用到 L 及以下各字段与 `t` 上同名字段相同的那几条定理：这些字段是沿用 `a.P` 的，定义时与 `t` 的比较过（5.4），比较得到的定理存在实例的记录里（复审 `wf_a9bd937b-0fd` 的 T1）。
 - **第 4 步：阶段一，照语法把目标拆开。** 这一阶段不用 `concept_fact` 去证义务本身。
   - 做法：对目标 `D X` 作用 `D` 的 construction rule（7.3），再用 selector Simpset 改写一次，得到 `D` 自己的公理与若干条 concept 子目标 `P obj`。
@@ -705,7 +712,7 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
   - 一条命令定义的常量恒以命令里写的 concept 命名。concept C 提过"没有 `int.monoid` 时由 `int: comm_monoid` 定义出一个叫 `int.monoid` 的常量"，作者改定为报错，不采用。
   - 不带 `if` 子句、带参数时【已定，作者 2026-11-21 10:40 UTC「赞同你的建议」；13:05 UTC 对"照旧不定义常量"答「对」】：义务在 `a.P` 自己的条件之下证，fact 带着前提 `concept (a.P 参数)`。
     例：已有带条件的 `frac.ring D`，`concept_instance frac: field for D` 绑定 `frac.field : concept (frac.ring ?D) ⟹ field (frac.ring ?D)`。全局不带参数时这条前提消掉，就是上面的 `comm_monoid int.monoid`。
-    这条前提带不带，2026-11-22 10:20 UTC 起按 `a.P` 的隐藏字段判，不按有没有参数判【concept C 定，待作者过目；讨论小组 `wf_c55b5899-cc4` 的 Q10 与 Q12 都这样建议】：
+    这条前提带不带，2026-11-22 10:20 UTC 起按 `a.P` 的隐藏字段判，不按有没有参数判【concept C 定；作者 2026-11-22 13:33 UTC 对这一条在内的十二条答「那我就不看了」（11.2）；讨论小组 `wf_c55b5899-cc4` 的 Q10 与 Q12 都这样建议】：
     `a.P` 的隐藏字段不是 `True` 时带，是 `True` 时不带。这与截断等式带什么条件的判法相同（下面"继承规则"）。
     按参数判在两种情形下不对：`a.P` 不带参数而带条件时（下面第 12 问允许这种实例），不带前提的 `R a.P` 命令证不出来；
     `a.P` 带参数而不带条件时（`int_mod.ring n`），前提 `concept (int_mod.ring ?n)` 恒成立，是多余的。
@@ -780,23 +787,22 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
     family 按写下的 qualifier 认（`sub` 在每个 theory 里是同一个字符串），两处各自写的 `concept_family sub` 在合并时算同一个 family。
     5.2 的"每个 (qualifier, concept) 至多一个常量"由此成为"每个名字 `a.C` 至多指一个成员"，定义时与合并时都成立。
     要 concept A1 配合：`define = false` 时也登记名字（现在这个分支不改 theory）；入口收成员的名字。
-    只有这一处冲突时的文案已批，在 10.1；与层的冲突或别的名字冲突合成一条的写法还是 10.2 的草稿。
+    只有这一处冲突时的文案已批，在 10.1；与层的冲突或别的名字冲突合成一条的写法作者 2026-11-23 07:58 UTC 也已批，在 10.1（个数为一、同一个 family、只有名字冲突的变体同日 08:02 UTC 批）。
 - **继承按 record 的层定**【已定，作者 2026-11-21「C8 赞同你的建议」，C 区评审 C8】。它取代下面"继承规则"一条里选对象的办法"取其中离 `C` 最近的祖先的实例"。
   同日稍后收窄：被沿用的成员恒是所接那一层自己的常量 `a.P`（上面"common base 必须有自己的常量"）；本条里选成员的办法、两个例子与借用 fact 的写法随之改过。
   - 层：每个拥有自己类型的 concept 在 record 类型里占一层。例：group 的类型是 monoid 那一层（carrier、mult、one）加 group 自己的一层（inv）。
-    family 的一个成员覆盖一层，指这一层在这个成员所声明的 concept 的类型里。成员的 `more` 槽里带着的东西不算 family 的层
-    【后半句是 concept C 定的，评审 `wf_3a1e11c4-c4f` 的 R12；作者 2026-11-22 16:11 UTC 对评审的意见：「不需要跟我讨论的我全部交给你」】。
-    `more` 槽里带着东西的成员有两种：写了 `more = …` 的；写了 `where 名字: "t"` 而 `t` 的类型比所声明的 concept 宽的（结果的 `more` 取自 `t`，`CONCEPT_INSTANCE_WHERE_PLAN.md` 第 3 节第 5 项）。
-    例：family `sub` 里只有 `sub.monoid`，再写 `sub: comm_monoid where s: "other.group G H"`，结果带着群的那一层，但它只覆盖 monoid 那一层；之后的 `sub: group` 不算插入祖先，照常接受。
+    family 的一个成员覆盖一层，指这一层在这个成员所声明的 concept 的类型里。
+    成员的类型正好是它所声明的 concept 的类型，`more` 槽恒为 `()`（2026-11-23 起 family 的成员不许设置 `more`，3.6）。
+    此前这里另有半句"成员的 `more` 槽里带着的东西不算 family 的层"（concept C 定，评审 `wf_3a1e11c4-c4f` 的 R12）与它的两种情形、一个例子；这样的成员现在写不出来，那半句不再有对象。
+    那个例子（family `sub` 里的 `sub: comm_monoid where s: "other.group G H"`）现在是类型错误：`other.group G H` 的类型比这个成员的类型宽（`CONCEPT_INSTANCE_WHERE_PLAN.md` 第 3 节第 5 项"family 的成员"一条）。
     base `concept` 那一层不算这里的层（2026-11-21 澄清，A 区再审 `wf_101cfee5-ab7`，concept A1 转来；已报作者）：它只有隐藏字段，隐藏字段不比较，每个成员的类型里都有它，没有什么可沿用。
     所以只在 base 层相交的两个成员之间不沿用、不登记截断等式、不查参数与类型的条件，如 `int.order` 与 `int.ring`、`int.order` 与 `int.ordered_group`。
     不这样说的话，找 L 时照字面总会停在 base 层，"不接在任何层上时不沿用"永远用不上：先有 `int.order` 再写 `int: ring where super = int_mult.monoid …`，`int.ring` 会在 base 层得到一个无关的来源 `int.order`。
   - 规则：`a.C` 接在层 L 上时（L 怎么定，见上面"common base 必须有自己的常量"），被沿用的成员是 L 自己的常量 `a.P`。
-    `a.C` 在 L 及以下各层的字段必须与 `a.P` 的一致（两个值怎么比见 5.4"同一个字段经两条路给到时怎么比"），没给的沿用 `a.P` 的；登记 truncate 等式 `L.truncate (a.C 参数) = L.truncate (a.P 参数)`（`a.P` 的类型正好到 L 时右边就是 `a.P 参数`；它的 `more` 里带着东西时才要截断，复审 `wf_a9bd937b-0fd` 的 T2）。`a.C` 不接在任何层上时不沿用、不登记。
+    `a.C` 在 L 及以下各层的字段必须与 `a.P` 的一致（两个值怎么比见 5.4"同一个字段经两条路给到时怎么比"），没给的沿用 `a.P` 的；登记 truncate 等式 `L.truncate (a.C 参数) = a.P 参数`（`a.P` 的类型恒正好到 L，右边不带截断：2026-11-23 起 family 的成员不许设置 `more`，3.6；此前为 `a.P` 的 `more` 里带着东西的情形，右边写成 `L.truncate (a.P 参数)`）。`a.C` 不接在任何层上时不沿用、不登记。
     不带 `if` 的 refinement 成员没有自己的常量，只做字段的核对，不登记等式。
-    带条件的 refinement 成员有自己的常量。它的类型通常正好到 L，这时截断在它上面是恒等（A 区 3.5 的恒等优先，concept A1 2026-11-22 定为不调换），它与 `a.P` 之间的等式见上面"refinement 的成员定义什么"。
-    它的 `more` 取自别处时类型比 L 宽（上面"层"一条的第二种），这时截断不是恒等，照类型比 L 深的成员处理。
-    类型正好到 L 时，它的义务里 L 那一部分照样关得掉，办法 2026-11-22 改了【concept C 定，作者 06:59 UTC 授权，讨论小组 Q4；取代复审 M2 写的"靠匹配时的转换关掉"】：
+    带条件的 refinement 成员有自己的常量。它的类型正好到 L（2026-11-23 起恒如此，3.6），截断在它上面是恒等（A 区 3.5 的恒等优先，concept A1 2026-11-22 定为不调换），它与 `a.P` 之间的等式见上面"refinement 的成员定义什么"。
+    它的义务里 L 那一部分照样关得掉，办法 2026-11-22 改了【concept C 定，作者 06:59 UTC 授权，讨论小组 Q4；取代复审 M2 写的"靠匹配时的转换关掉"】：
     construction rule 的 parent 前提一律是截断形式，这一部分是 `P (L.truncate (a.C 参数))`；在这个成员自己的义务证明里，它"沿来源走一步"的等式先于恒等生效，
     把它化成 `P (a.P 参数)`，然后照下面"命令怎么用它"第 4 步关掉。全文在 5.1 第 4 步"取自来源的那一部分，怎样不必重证公理"。照计划推的，没有实测。
     例外：`P` 没有 truncate congruence rule 时，construction rule 里这条前提留的是裸的 `P \<S>`（5.1 第 4 步），上面的规则对不上，这一部分照 5.1 拆成公理、由用户重证。
@@ -812,9 +818,11 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
     - family 的"层 ↦ 常量"表在类型层；theory 合并时的检查就是这张表的合并函数。
     - 命令调 `Concept_Type.define_instance` 之前先用两个查询：`own_layer`（给 family 与 concept，交回拥有这个 concept 类型的那一层，连同那一层的条目，没有条目也交回层）；
       `covered_layer`（从那一层起往祖先一侧第一个有条目的层）。条目带着成员常量的全名与"类型是不是正好到这一层"。
+      这一栏为假，是提供这一层的成员比这一层深：family 里只有 `a.og` 时问 monoid 那一层，交回的是 `a.og` 与"不是正好"；上面"common base 必须有自己的常量"靠它判断。
+      2026-11-23 起它为假只剩这一种来路，成员自己带着 `more` 而显得更宽的那一种不再有（3.6；concept A1 同日说明）。
       命令据此照上面"判断的先后"决定定义常量、不定义常量还是报错；报错由命令出。类型对不上时由入口报 10.1 那四行；参数表（名字与先后）由命令先查，在 `super` 之前。
     - `define_instance` 收成员的名字与 `define: bool`：`define` 为假时不定义常量（不带 `if` 的 refinement 成员），把 `where` 给的字段与 `a.P` 的核对后交回 `a.P` 的记录，theory 不变。
-      结果里带着被沿用的成员、L 与截断等式。`more` 写成 `where` 里的一条；`where` 里有 `super` 时来源取它右边的项，所以"`super` 给的正是 `a.P`"的情形要命令先把那条子句去掉。
+      结果里带着被沿用的成员、L 与截断等式。`more` 写成 `where` 里的一条（family 的成员带这一条时入口报错，3.6）；`where` 里有 `super` 时来源取它右边的项，所以"`super` 给的正是 `a.P`"的情形要命令先把那条子句去掉。
     - 字段与来源的值怎么比，concept A1 临时做成两边用 selector Simpset 化简后相同就通过；这是 11.2 的 C2，作者没有定。
     - `P.truncate` 的 simproc 沿实例的来源走一步，family 里的来源就是 `a.P`。
     - `CONCEPT_FACT_SEARCH_PLAN.md` 2.4：family 里只用得到"后代成立则祖先成立"的蕴含；它由命令证出后交给类型层，见 5.1 第 7 步"把蕴含交给类型层"。
@@ -856,7 +864,7 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
       新成员的条件推不出它时，用户在证明里看到一条证不出的目标（如手里只有 `group G` 而要证 `comm_monoid G`）。
   - 参数表不同时的报错文案已批，在 10.1"family 里新成员的参数表与被沿用的成员的不同"。
   - 字段：`a.C` 在 L 及以下各层的字段与 `a.P` 的一致，没给的沿用。隐藏字段不比较，它存的是各自的 `if` 合取（见下）。
-  - 据此登记 truncate 等式 `L.truncate (a.C 参数) = a.P 参数`；`a.P` 的类型比 L 宽时右边是 `L.truncate (a.P 参数)`（上面"继承规则"开头）。它由 `L.truncate` 的 simproc 现场合成，装进 selector Simpset 与系统的 simpset，配 Sledgehammer 的 fact trigger，不绑到 Facts 名字空间
+  - 据此登记 truncate 等式 `L.truncate (a.C 参数) = a.P 参数`（`a.P` 的类型恒正好到 L，2026-11-23 起右边不再有带截断的情形，3.6）。它由 `L.truncate` 的 simproc 现场合成，装进 selector Simpset 与系统的 simpset，配 Sledgehammer 的 fact trigger，不绑到 Facts 名字空间
     【2026-11-18/19，3.5 开头；作者「要不就统一走 selector Simpset, the simproc, and the sledgehammer trigger？」】。
   - selector Simpset 里另有统一规则 `C (P.truncate t) ⟷ C t`（3.5）。在义务 `monoid (monoid.truncate 新实例)` 上它和本条等式都可用：simplifier 先改写里面的，等式的条件消得掉时结果与下面的流程相同，消不掉时义务变成 `monoid 新实例`（concept A1 2026-11-19 告知，是读规则的结论，没有实测）。
     它对 5.1 的两个阶段和下面"命令怎么用它"的流程有什么影响，2026-11-22 由两个讨论小组重新分析过（Q3、Q4）：
@@ -1104,12 +1112,21 @@ The field "others" of "int.ring" is specified twice⌂
 
 `名字: "t"` 与别的子句同写（规则是作者 2026-11-22 07:06 UTC 定的，`CONCEPT_INSTANCE_WHERE_PLAN.md` 第 2 节第 8 项）
 【已定，作者 2026-11-22 12:46 UTC「批准第 7 条」】。例：`where submonoid: "sub.monoid G H"  carrier = "H"`。
+批的时候句中是 `already gives every field of`。作者 2026-11-23 07:37 UTC 对 concept A1 说赋值不要说 give；concept C 自查出这一处，建议改成 `specifies`，作者 07:58 UTC：「5. 点头」。
 
 ```
-Cannot specify "carrier"⌂ because submonoid: "sub.monoid G H"⌂ already gives every field of "sub.comm_monoid"
+Cannot specify "carrier"⌂ because submonoid: "sub.monoid G H"⌂ already specifies every field of "sub.comm_monoid"
 ```
 
 多写了几条时把它们都列在前面，两条用 and 连，三条及以上写成 `"carrier"⌂, "mult"⌂ and "one"⌂`：`Cannot specify "carrier"⌂ and "mult"⌂ because …`。
+
+family 的成员写了 `more = …`（3.6"family 的成员不许设置 `more`"）【已定，作者 2026-11-23 07:42 UTC 对 concept A1 给的句子；concept A1 转来，原话 concept C 在它的转录里核过】。
+作者打的 `determiend` 由 concept A1 改成 `determined`，已向他说明。`int.group` 不带引号，照他的原样。
+`⌂` 指 `where` 里那个 `more`；`int.group` 是新成员的名字，`"int"` 是 family 的名字。由类型层印（`define_instance` 在 family 里见到 `more` 子句时）。
+
+```
+Cannot assign the field "more"⌂ to int.group, a member of a family "int", because the field is determined by the further members in the family
+```
 
 `concept_family x`，而 `x` 已经是一个普通全局实例的名字（5.6；规则是作者 2026-11-22 10:35 UTC 定的：「…要报错」）【已定，作者 2026-11-22 12:25 UTC「8. 批准」；草稿出自讨论小组 Q11】。
 第一个 `⌂` 是 `concept_family` 里的名字，第二个是那个实例的定义处。那个实例在当前 theory 里时：
@@ -1258,7 +1275,30 @@ Cannot merge theories "A" and "B": they disagree on "sub.comm_monoid"
 You must define "sub.comm_monoid" only once, in a theory that both "A" and "B" import
 ```
 
-它与层的冲突或别的名字冲突同时出现时合成一条的写法还是草稿，在 10.2。
+它与层的冲突或别的名字冲突同时出现时合成一条【已定，作者 2026-11-23 07:58 UTC「4. 批准」；他看的是首行、末行与"中间每处一段，写法与已批的两句相同"】。
+首行只报个数；每处一段，段首是那一部分或那个名字，段内各行与单独出现时的相同；末行是固定的一句。下面例子的中间各段是照已批的两句拼的：
+
+```
+Cannot merge theories "A" and "B": they disagree on 2 parts of families and 2 names
+  the monoid part of the family "int" (common base: "int.monoid")
+    "A" uses "int.group"⌂ defined in "A"
+    "B" uses "int.ring"⌂ defined in "Ring_Base"
+  the monoid part of the family "nat" (common base: "nat.monoid")
+    "A" uses "nat.monoid"⌂ defined in "Nat_A"
+    "B" uses "nat.monoid"⌂ defined in "Nat_B"
+  "sub.comm_monoid"
+    "A" uses "sub.comm_monoid"⌂ defined in "A"
+    "B" uses "sub.comm_monoid"⌂ defined in "B"
+  "sub.comm_group"
+    "A" uses "sub.comm_group"⌂ defined in "A"
+    "B" uses "sub.comm_group"⌂ defined in "B"
+You must define each common base, and each name only once, in a theory that both "A" and "B" import
+```
+
+照这一句算出的三种变体【已定，作者 2026-11-23 08:02 UTC「批准」；concept C 拟】：
+个数为一时首行里写 `1 part of a family`、`1 name`，如 `they disagree on 1 part of a family and 2 names`；
+层的冲突都在同一个 family 时照上面多处冲突的写法，如 `they disagree on 2 parts of the family "int" and 1 name`；
+只有名字冲突、两个及以上时，首行是 `they disagree on 2 names`，末行是 `You must define each name only once, in a theory that both "A" and "B" import`。
 
 `if` 子句起名 `of_concept`（5.1，保留名）【已定，作者 2026-11-21 09:10 UTC「批准of_concept 保留名的文案」；句式照 A 区 10.1 已批的 `ambient` 那一句】：
 
@@ -1307,6 +1347,7 @@ Check your type declarations
 被沿用的成员的类型比 L 深时的变体【已定，作者 2026-11-21 对 concept C 报的"请你看的三处"答「批准」】。例：已有 `int.group`，新写的 `int: ring` 在 nat 上，L 是 monoid 那一层。第一行说的是那个成员的 monoid 部分，下面两行各印截到 L 的类型。
 同日稍后注：common base 的规则定下之后，下面例子里的状况（被沿用的成员比 L 深）在 family 里遇不到了，现在先报 common base 的错。
 这个变体的措辞仍然用得上【已定，作者 2026-11-22 06:53 UTC 在 concept A1 的会话里，对它问的"已有成员自己的类型比拿来比的类型宽时，它那一行写成 `the L part of Y`，可以吗"答「2. 按你建议来吧」；concept A1 转来，concept C 在它的转录里核过】：
+2026-11-23 注：family 的成员不许设置 `more` 之后（3.6），被沿用的成员的类型恒正好到 L，下面这种情形经命令遇不到了。类型层照旧印它：ML 层的调用者让一个更深的成员去提供浅的层时仍会走到（concept A1 同日说明）。
 被沿用的成员自己的类型比拿来比的类型宽时（它的 `more` 不是 `unit`，如写了 `more = monoid.more G` 的成员），第一行与它那一行都写成 `the L part of Y`。措辞照下面这个例子：
 
 ```
@@ -1377,9 +1418,7 @@ reader（2026-11-22）主张留着它：10.1 那一句的两行函数类型里�
 同一个字段的几个值比不出来的那一句 2026-11-23 已批，在 10.1（concept B 的草稿作者没看懂，换了一版）。
 
 两个 theory 各自定义了同名的成员、而它不占任何一层（5.6"不占任何一层的成员也要查"；讨论小组 Q7）。只有这一处冲突时的那一句已批，在 10.1。
-它与层的冲突或别的名字冲突同时出现时合成一条，这种写法作者没有看过，是草稿：
-首行只报个数（`they disagree on 2 parts of families and 2 names`），每处一段，段首是那一部分或那个名字，
-末行是固定的一句 `You must define each common base, and each name only once, in a theory that both "A" and "B" import`。只有名字冲突时首行是 `they disagree on 2 names`。
+它与层的冲突或别的名字冲突同时出现时合成一条的写法，连同个数为一、同一个 family、只有名字冲突三种变体，2026-11-23 都已批，在 10.1。
 
 ## 11. 待定问题（本文件只收 C 区的）
 
@@ -1484,7 +1523,7 @@ concept C 认为可以不看的十二条：「那我就不看了」。它们是�
   上面的例子里 hom 那一层两边都有、类型实参不同，它算"被 `x.hom` 覆盖"，然后由这个类型条件报错；不能算"没被覆盖"而继续往下找，那样 `x.semigroup_hom` 会带着自己的一套 hom 层字段定义出来，违反"每一层只有一份字段值"。
   类型层的做法：取公共层时按层名比，再对类型实参做匹配，匹配失败处报这一句。建议采纳，与类型条件一起定。
 - **C9 短写 `"sub K"` 作命题、有多个候选时变成类型错误**。
-  【2026-11-22 已定方向（concept C 定，授权见上，讨论小组 `wf_69f6f583-b0a` 的 Q8；待作者过目）：短写也读作命题。
+  【2026-11-22 已定方向（concept C 定，授权见上，讨论小组 `wf_69f6f583-b0a` 的 Q8；作者 2026-11-22 13:33 UTC 对这一条在内的十二条答「那我就不看了」）：短写也读作命题。
   做法在 D 区的解析里，由 concept D 定稿：命题整个是一个名字（或符号）带着参数时，在解析的那一步给每个候选分别判断，
   候选是带齐参数的 `concept_instance` 常量或视图常量的，就给它包上它的 concept 谓词，别的候选不动，然后照常由类型在候选之间挑。不为这种情形另设占位。
   小组核对了本条的例子：照 D 区现在的规则，`context group.sub` 里 `sub` 只剩一个候选，这个例子本身已经不出问题；出问题的是别的名字真有几个候选的时候。
@@ -1522,7 +1561,7 @@ concept C 认为可以不看的十二条：「那我就不看了」。它们是�
   用户怎样按名字拿到 `concept (sub.comm_monoid ?G ?H) ⟹ sub.comm_monoid ?G ?H = sub.monoid ?G ?H`：已了结，用 `[[concept_selector "sub.comm_monoid G H"]]`
   （concept A1 2026-11-22 定，作者 07:04 UTC 交给它定；已写进 5.2 与 5.6）。
 - **不定义常量的成员的 fact 带不带前提 `concept (a.P 参数)`，按什么判**（第三次复审 `wf_a7596a78-c9c` 的 N1 留下的一点）。
-  【2026-11-22 10:20 UTC concept C 定为按隐藏字段判，写在 5.6"refinement 的成员定义什么"，待作者过目。下面是定之前的记录。】
+  【2026-11-22 10:20 UTC concept C 定为按隐藏字段判，写在 5.6"refinement 的成员定义什么"；作者 2026-11-22 13:33 UTC 对这一条在内的十二条答「那我就不看了」。下面是定之前的记录。】
   现在的写法按参数判：`a.P` 带参数就带这条前提，不带参数就没有（5.2、5.6；作者 2026-11-21 10:40 UTC 批的例子是带条件的 `frac.ring D`）。
   `a.P` 带参数而不带任何条件时，这条前提恒成立。
   例：`concept_instance int_mod: ring … for n`（没有 `if`），再写 `concept_instance int_mod: comm_ring for n`，
@@ -1572,9 +1611,9 @@ concept C 认为可以不看的十二条：「那我就不看了」。它们是�
   【下面第一点 2026-11-22 09:23 UTC 作者答了：删掉，「这纯粹是过度设计」，已写进 5.6。】
   参数的 concept 那项检查（5.6"判断的先后"4c）要不要干脆删掉：`a.P` 对 G 的条件反正会作为义务里的条件到用户面前；
   现在的规则会拒掉一个证得出的声明（`a.P` 要 `comm_monoid G`，新成员写了 `group G` 又另写了交换律），不写 `group G` 反而通过。concept C 的看法：留着，常见的错能早报、报得清楚。
-  已批的 `super` 文案在带参数的 family 里是否印成 `… must be sub.monoid G H`（现在的例句都不带参数）。
+  已批的 `super` 文案在带参数的 family 里是否印成 `… must be sub.monoid G H`（现在的例句都不带参数）。【已照印，写在 10.1"`must be` 后面是带着参数的项"一句；concept C 定】
   `others` 从不比较的一个后果：`int: ring where others = int_mult.monoid  add = int_add.group` 两边 carrier 不同时不报错，只是认不出 monoid 那一层整个取自 `int_mult.monoid`，monoid 的公理留给用户。
-  已批的"字段值不一致"那一句没有 `⌂`，旧值不加引号、新值用反引号（reader 的观察，不是异议）。
+  已批的"字段值不一致"那一句没有 `⌂`，旧值不加引号、新值用反引号（reader 的观察，不是异议）。【那一句后来照引号的规则改过，两个值都在双引号里（10.1）】
 - **体内实例的宿主前提被用户写的条件推得出时不写**（5.2，作者 2026-11-21 12:25 UTC 提出，2026-11-22 05:24 UTC 定了判断的办法）。还没有定的：
   不靠深度与广度上限的 assumption destruction 本身：2026-11-22 已定稿，在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 4A 节，判断不再等它。
   2026-11-22 定下的两点（5.2 同一条）：判断用的上下文从 theory 另建、只假设用户写的条件；判断里对 selector Simpset 的调用限步数、不限时间，结论不随机器变，`simp_depth_limit` 不固定。
@@ -1582,7 +1621,7 @@ concept C 认为可以不看的十二条：「那我就不看了」。它们是�
   `ambient` 与别的 destruction lemma 的先后（A 区 4.1 没有规定；它决定用户自己写了 `g: "group \<S>"` 时实例上下文里哪个名字被绑上）；
   xOF 的位置随之变（`group.normal[xOF s c]` 不再有填宿主前提的第一个位置），B 区与公共文件里"`name_of` 填宿主前提"的说法要跟着改；
   原来列在这里的"只由 `where 名字: "项"` 带来条件的实例算不算带 `if`"已定：算（作者 2026-11-22 06:37 UTC，5.6"refinement 的成员定义什么"）。
-- **C13 `if K: "类型"` 与有名字的子句 `if K: "group K"` 在词法上相同**：2026-11-21 全部定下，写在 5.2；"不是 concept 类型"那句报错的文案也已定（10.1）。只剩"用户自己的类型缩写"那种情形的一句待作者批（10.2）。下面是定之前的记录。
+- **C13 `if K: "类型"` 与有名字的子句 `if K: "group K"` 在词法上相同**：2026-11-21 全部定下，写在 5.2；"不是 concept 类型"那句报错的文案也已定（10.1）。"用户自己的类型缩写"那种情形的一句作者 2026-11-22 12:20 UTC 也已批（「1. 批准」），在 10.1。下面是定之前的记录。
   已定（作者 2026-11-21 03:00 UTC 对 concept B：「赞同 C13 先按类型读，读不成再按命题读」，写在 5.2）：字符串先按类型读，读成 concept 的类型就是引入结构的写法，读不成类型就是有名字的命题。类型缩写在这里合法，读作扩展为 `unit` 的类型。
   没定的两点，作者那句话没有说到：
   (1) 读成一个不是 concept 类型的类型时（如 `if x: "nat set"`）。评审建议报错、不退回去当命题读；否则 `nat set` 会被当成关于自由变量 `nat`、`set` 的命题悄悄收下。要一条新文案，草稿见 10.2。
