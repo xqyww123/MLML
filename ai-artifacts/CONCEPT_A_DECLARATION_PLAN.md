@@ -390,6 +390,18 @@ concept ('a, 'b) C = "'a Base"
 - **还缺的一块，不在 concept 这棵树里**：2.5 定的"`definition` 等九个入口包在 `global_form` 里跑"与那个开关还没有做（读源码：私有树里除 `local_theory.ML` 自己之外没有一处调 `global_form`；
   `global_form` 这个 feature 的第 2 版只提供了函数本身）。所以现在块里 `definition dbl` 得到的 `dbl_def` 带着前提 `C ?\<S>`（实测：`pointed ?\<S> ⟹ pointed.dbl ?\<S> ?x = …`）。
   那是 `global_form` 那个 feature 里的改动，由谁做要作者定。
+- 【2026-11-23 12:4x UTC：上一条说的那一块到位了，以下取代它】
+  - 开关与六个入口在 `global_form` 的树里做了（它的提交 `5a9a011`；2.5"2026-11-23 实现时的改动"）。它经 base 的链到 concept 的树：
+    作者 11:46 UTC 下令把 `generic_mksimps` 的 base 从 `dot_syntax` 换成 `global_form`（`dot_syntax` 在 Isabelle2026 上还没有自己的提交），
+    `generic_mksimps` 的树合并了它（`d7a6103`），concept 的树再合并 `generic_mksimps`（作者 11:20 UTC 许可；合并提交 `59cf128`）。
+    下一条那一行代码在 `contrib/concept` 的 `336d26f`，代码评审 `wf_e9d5e119-699` 通过。
+  - **concept 的 target 在 `setup` 里把开关打开**：`Config.put Local_Theory.global_form_enabled true`，设在 target 自己的上下文里，所以块的每一层、重开的块都有它。
+    不设不行：合并之后 `Local_Theory.global_form_result` 只在开关开着时才把假设放到一边，而块存定理（`notes` 的 `export`）与 declaration 的 morphism 都靠它；
+    不设时"重新声明的 fact 按原样存"那条路失效（实测：bundle 里装的不再是规则本身）。
+  - 效果（实测，真正的 `concept` 块里）：`definition` 的定义定理不带块的前提（`pointed.dbl ?\<S> ?x = …`，`pointed.two = 2`）；
+    `datatype`、`primrec` 存下的定理也不带（`pointed.tr.inject`、`pointed.sz.simps`）；代码生成器在块外跑得动它们（`lemma "pointed.two = 2" by eval`）。
+    `fun`、`function`、`inductive`、`typedef` 不在那六个入口里，存下的定理照旧带 `C ?\<S>`（2.5 的判据）。
+  - 一处使用上的不便，随"没有人挂在钩子上"而来：`datatype` 的构造子在块里也只有长名，同一个块里接着写的 `primrec` 要写 `sz pointed.tr.Lf = 0`。D 区挂上 `Defined` 之后才有短名。
 
 **块里别的操作**（讨论 T5，三个一致）【concept A1 定】
 - `abbreviation`：成为一个全局的 abbreviation 常量 `C.sq`，参数照 stock 的规则（右边用到的固定变量，块里就是 `\<S>`），用用户写的 print mode；块里不留本地的 abbreviation。
