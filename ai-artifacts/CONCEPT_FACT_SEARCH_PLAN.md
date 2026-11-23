@@ -208,6 +208,12 @@ theory 数据与上下文数据两部分的分法、条目的 mask 都不变；"
   激活是 assumption destruction 对每个叶子 concept fact 的最后一步，不再另有"打开 concept 的块"这种机制；
   激活出的 fact 不再走 assumption destruction；simp 收前提那一路也做激活，已经激活过的不再做；
   激活出的 fact 只进 intro table，不挂 `[intro!]`、不作 notation 的来源。
+  - 2026-11-22 改了其中两处（concept B 2026-11-23 03:1x UTC 告知；机制在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 4A 节，以那里为准；下面引的作者原话 concept A1 在它的会话转录里核过）：
+    - "激活出的 fact 不再走 assumption destruction"有了例外：一条激活结果化简之后结构项的头变了、成了实例项的，下一轮接着拆它
+      （作者 11-22 17:14 对「激活结果化简后若成了实例项，下一轮接着拆它」：「相信你」）；补强给它换了 concept 的，下一轮做补充激活（同一条消息对「补充激活放在下一轮做」：「好」）。
+      那份文件把这两样叫一条激活结果的**后续工作**（4A.3）。
+    - "simp 收前提那一路也做激活"不再成立：selector Simpset 自己化简时收进来的前提，只补强后放进 simplifier 的本地表，不拆、不激活
+      （作者 11-22 17:14：「接受selector Simpset 化简时收进来的前提，只放进表，不拆、不激活」；那份文件 4A.6）。
 - **用户用 `[concept_intro]` 登记的定理与导入进来的副本，登记时做不做激活**（11-21 15:27 改，11-22 03:57 定全；机制在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 2.2，以那里为准）。
   看的是规则有没有 concept 前提（作者的叫法是"concept 条件"），不是有没有前提。
   - 没有 concept 前提的（不带前提的事实，或只带非 concept 条件的规则）：登记时做激活
@@ -227,6 +233,13 @@ theory 数据与上下文数据两部分的分法、条目的 mask 都不变；"
     "前提里的变量在化简后的结论里不出现""结论的结构项剥掉截断之后是变量"这两种照样不进表。
   - 对搜索的含义：表里没有 concept 前提的条目，它结论的 concept 的激活一定做过，搜索不必为"表里有这条、它的激活却没有做"另作处理；
     有 concept 前提的用户规则没有做过激活，这是已定的做法，搜索不替它补。
+    - 一处例外（2026-11-22 起，concept B 告知，`CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.3、4A.5）："激活做过"说的是激活本身，也就是整张激活列表，它从不做到一半。
+      但一条激活结果的后续工作（上面"2026-11-22 改了其中两处"里的那两样）可以还欠着：它被上限 `concept_extraction_limit` 拦下时记在一张表里，
+      以后别的 fact 碰到同一条表项时接着做。所以表里可能暂时少几条由后续工作才得到的条目。搜索同样不替它补：
+      到了上限不出 warning（作者 11-22 15:19：「确认上限停下工作时完全不出 warning」），搜索看到的就是当时表里有的。
+    - 判断"有没有 concept 前提"的函数：登记与搜索用同一个，只认自己就是 `C' t'` 的前提（第 0 节的术语"concept 前提"）；`(⋀i. group (?G i)) ⟹ …`、`(Q ?x ⟹ group ?x) ⟹ …` 这样的前提是非 concept 条件。
+      concept B 2026-11-23 03:1x UTC 问是用这个还是用看 HHF 结论的 `Concept.is_concept_prop`，concept A1 照术语表答了前者；
+      函数在 Pure 的 `Concept` 里，名字是 concept B 定的 `Concept.concept_of_fact`、`Concept.is_concept_fact`，proof method 那边仍用 `is_concept_prop`。它要认 base 谓词 `concept`。
 - 作者 11-20 16:31 问过 concept B"只有一个 concept 前提的 intro rule 是不是也进激活"；concept B 建议不进、仍放 intro table，作者 11-20 16:53：「赞同」。
   这一条说的是规则进不进激活列表，与上一条（登记时做不做激活）是两件事，15:27 的决定没有改它。
 - **补强**【已定，作者 11-21 03:34、05:09、05:22 对 concept B，concept A1 在它的会话转录里核过；机制在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 2.5，以那里为准】。
@@ -1601,3 +1614,6 @@ B 区 11.2"truncate 三件事"第 (1) 件问的是 `P.truncate t` 算不算第�
 - 2026-11-22 04:24：第 0 节"可用的规则"一条里提到 dynamic notation table 的那句加注：它已由 contextual notation table 取代（作者 2026-11-22 在 concept D 的会话里定，D 区文件 6.3）。只改这一句的指路。
 - 2026-11-22 05:40：2.1 第六类里"登记时做不做激活"一条照作者 03:57 对 concept B 的决定定全（转录里核过）：看有没有 concept 前提，没有的登记时激活，有的不激活；实例照旧。
   由只带非 concept 条件的用户规则激活出的条目各栏怎样记是 concept A1 定的（与声明实例时激活出的同类，标记由同一个"声明时的判断"定）。搜索的算法没有因此改。
+- 2026-11-23 03:21：2.1 第六类照 concept B 03:1x UTC 的通知补了三处（它转述的作者 2026-11-22 14:16、15:19、17:14 的原话在它的转录里核过）：
+  激活结果的后续工作（成了实例项的下一轮接着拆、换了 concept 的下一轮补充激活）；selector Simpset 化简时收进来的前提不拆、不激活；
+  "进表的条目，它的激活做过"加一处例外（后续工作可以被上限拦下、以后接着做）。另记下判断"有没有 concept 前提"的函数是哪一个（照第 0 节的术语，concept A1 答 concept B 的）。搜索的算法没有因此改。

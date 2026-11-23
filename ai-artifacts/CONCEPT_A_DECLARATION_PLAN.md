@@ -201,6 +201,8 @@ concept ('a, 'b) C = "'a Base"
 
 - `definition double where …` 生成全局常量 `monoid.double`，第一个参数是 `\<S>`，导出 `monoid.double ?\<S> ?x = …`，**无 concept 前提**：它和 `datatype`、`codatatype`、`record`、`primrec`、`primcorec` 及 BNF 家族其余声明命令（`datatype_compat`、`copy_bnf`、`bnf`）在 concept target 下都包在 `global_form` 里跑【已定，作者 2026-11-11】，判据是"证明全由包或内核生成、用户插不进 fact"。
   - `fun`、`function`（`termination` 由用户证）、`inductive` 一族（`monos`）、`typedef`（非空证明）、`free_constructors`、`lift_definition`、`lemmas`、`declare` 不包，规则照常带 `C ?S`。
+    - 对 `lemmas`、`declare` 这半句的准确说法（2026-11-23，`CONCEPT_BLOCK_NOTES_PLAN.md` 评审通过后补）：它们重新登记的定理，前提 `C ?S` 带且只带一次；
+      本来就不依赖块的定理不带（块里 `declare group.assoc [simp]` 登记的就是 `group.assoc` 本身）。规则在那份文件第 3 节。
   - **`fun`、`inductive` 定为不包**【已定，作者 2026-11-16「我建议 fun 和 inductive 定下来不包」】。
   - 讨论中查明的事实（我读的源码，未实测）：`fun` 的两段自动证明用的是上下文的规则集（`fun.ML:154-165`：模式完备性是 `auto_tac ctxt`，终止性是上下文的 `termination_simp` 加 `auto`），concept 的公理经上下文里带 hyp 的 `C \<S>` 就可能被用上（例：欧几里得整环体内 `gcd` 的终止性靠公理 `norm (a mod b) < norm b`），在 `global_form` 下用上就报错（`global_form` 计划 §3.6），所以此前说 `fun`"用户插不进 fact"不对；`inductive` 的证明都是 forked 的（`Goal.prove_sorry`、`Goal.prove_future`，`inductive.ML:400、427、471、548、769`），"先包着跑、失败再不包"对它不成立，错误到 join 时才出现。
   - 不包之后规则多一条前提 `C ?S`，`induct`、`cases` 对它的识别和 `consumes` 计数由 Pure 那部分已有的机制处理（第 9 节）。
@@ -278,30 +280,113 @@ concept ('a, 'b) C = "'a Base"
     这个功能我决定 fork 你的 session 去派你的 fork 去做」。它不归本会话做，由作者 fork 出的会话做；公共文件 11.5 里"在 TAT 里禁用整个 locale 系统"那一条与它有关。
 
 **块里的定理怎样存**（讨论 T4）
-- **方案已另写成文件 `CONCEPT_BLOCK_NOTES_PLAN.md`（2026-11-22，正在评审）；本段与它不一致的地方以那份文件为准。**
-  它定了本段留着没定的两处：不带 hyps 的定理原样存的做法（在"把假设暂时放到一边"的状态下调 stock 的导出，再抄回规则标签）；"第一条前提正是块的假设时先消掉"仍然没定。
+- **方案已另写成文件 `CONCEPT_BLOCK_NOTES_PLAN.md`（2026-11-22 写，2026-11-23 03:29 UTC 评审通过）；本段与它不一致的地方以那份文件为准。**
+  `notes` 与 `declaration` 的细节以那份文件第 3 节、第 6 节为准；它要的四处 Isabelle 源码改动 2026-11-23 已在私有树里做了。
+  它定了本段留着没定的两处：不带 hyps 的定理原样存的做法（在"把假设暂时放到一边"的状态下调 stock 的导出，再抄回规则标签）；"第一条前提正是块的假设时先消掉"定为不做（那份文件第 11 节）。
 - 计划此前漏掉的一件：块里按名字拿到的是全局形式，所以 `lemmas bar = foo`、`declare foo [simp]` 交去存的定理已经带着前提，照 stock 的导出会再贴一遍，得到 `C ?S2 ⟹ C ?\<S> ⟹ …`。
 - 【作者 2026-11-22 10:57 UTC 同意动 Isabelle 的源码，设计交给 concept A1，方案要单独写一个文件、走评审：「赞同。我交给你去自主设计，但要把方案写到单独一个文件里走评审」。
-  那个文件还没有写；下面是讨论小组一致的做法，定稿以那个文件为准】做法是 light_locale 用过的：`Local_Theory` 里加一个通用的标记"这条命令只是重新登记已有的定理"，
+  那个文件是 `CONCEPT_BLOCK_NOTES_PLAN.md`；下面是讨论小组当时一致的做法，与那个文件不一致处以它为准】做法是 light_locale 用过的：`Local_Theory` 里加一个通用的标记"这条命令只是重新登记已有的定理"，
   `lemmas` 与 `declare`（`specification.ML` 一处）、bundle（`bundle.ML` 两处）设它；带着这个标记来、又没有 hyps 的定理只把固定变量泛化、原样存，其余一律照 stock 导出。
-  另要 `generic_target.ML` 把 `thm_definition` 导出。它不随证明是否并行而变：stock 的那一支不看 hyps，带标记的命令不证明东西。
+  另要 `generic_target.ML` 把 `thm_definition` 导出。它不随证明是否并行而变（stock 的那一支不看 hyps；带标记的命令交来的定理，hyps 一般不随并行而变），
+  只有一种例外：块里本地 `interpretation` 的定理再登记时（下面"块里别的操作"里 `interpretation` 一条）。
   它改了 2.5"`lemmas`、`declare` 不包，规则照常带 `C ?S`"的字面意思：前提带且只带一次，本来不依赖块的定理不带（块里 `declare group.assoc [simp]` 登记的就是 `group.assoc` 本身）。
 - 【concept A1 定】`notes` 交回给调用方的是本地形式，与 stock 相同。`Specification.theorem` 会拿交回的定理再记一次总名，`fun`、`inductive` 等包拿交回的定理接着算，交回全局形式两者都会坏。
 - 【concept A1 定】attribute 在块的上下文里（带查找链）用 `Attrib.partial_evaluation` 算一次。改写定理的那部分（`OF`、`of`、`rule_format`…）作用在证出来的本地陈述上、导出之前，
   所以 `lemma foo [OF bar]: "A ⟹ B"` 里 `OF` 填的是 `A`，与 locale 相同；声明性的那部分（`simp`、`intro`…）作用在存下的全局定理上，theory 一次、块的每一层各一次。
 - 【concept A1 定】块里不再用本地名字把全局定理记一次：短名由查找链解析到 `C.foo`。2.3 与公共文件第 9 节说的"在块里再 note 一次"只留"让 attribute 在块里生效"这一半。
 - 【concept A1 定】嵌套的无名 `context fixes … assumes … begin` 里，按名字拿到的也是全局形式（那一层的假设成了前提）；`end` 之后相同。
-- 【concept A1 定】`declaration` 操作：theory 那一份用上面同一条导出规则；开着的块里是本地的包数据，与 stock 的 theory target 相同；重开的块只看得到 theory 那一份。
-  后果：`fun` 的自动终止性证明在声明块里照常；在重开的块里 `termination` 要点名函数。`declare [[…]]` 走的是 `notes`，对整个 theory 生效，块关了还在。
+  **初版不支持块里嵌套的无名 context**【已定，作者 2026-11-22 15:42 UTC：「我建议初版先不支持嵌套 context，这些设计请保留，之后再考虑激活」】：
+  关于它的设计与实测保留在 `CONCEPT_BLOCK_NOTES_PLAN.md` 第 7 节，初版不激活。concept A1 的读法（等作者纠正）：指块里再写的任何无名 `context … begin`；代码里不检查、不报错，文档里写明不支持。
+- `declaration` 操作：包数据不重放（作者 2026-11-22 13:01 UTC）；搬定理用上面同一条导出规则；
+  **每个 declaration 都照样抄进 theory，也进块的每一层**，与 stock 的 theory target 相同【已定，作者 2026-11-22 16:00 UTC：「是的，我建议 全部照样抄进 theory。」】。
+  后果（细节在 `CONCEPT_BLOCK_NOTES_PLAN.md`）：块里 `datatype`、`primrec` 的 code 设置进 theory，块关了之后 `value`、`export_code` 可用（实测）；
+  块里 `named_theorems`、`attribute_setup`、`method_setup` 起的短名只在定义的块里认，之后写 `C.foo`【作者同一条：「可接受」】；
+  `inductive_cases`、`inductive_simps` 在块里不能用，记作初版的已知限制【作者 16:01 UTC：「记一下吧，之后可以考虑修复以支持 concept」】。
+  bundle 的名字同样只在定义的块里按短名认，别处写 `C.b`【作者 16:16 UTC：「赞同同样接受，不另做处理」】。
+- **块里按名字取到的仍是全局形式，短名长名都一样**（2.3，没有变）。作者 2026-11-22 13:01 UTC 提过"写短名时自动消掉开头的 concept 前提"，14:42 UTC 给那个 attribute 起名 `in_concept`；
+  `CONCEPT_BLOCK_NOTES_PLAN.md` 的第二轮评审指出它的几个后果（按短名删除声明落空、印的名字与取到的定理对不上、要在 Pure 取定理处接钩子）之后，他撤回了：
+  16:06 UTC「我建议取消 in_concept 改为 `of_concept _`」，16:08 UTC「我提议取消短名自动 of_concept 而是要求用户手写 of_concept / 短名还是走 global form」。
+  所以要本地形式时用户手写 `foo[of_concept _]`（E 区的 attribute，`_` 指块自己的结构）；同一条里他另定 xOF 填 concept 前提时也做 case 分解，与 `of_concept` 一致（归 `rule_attributes.ML`）。
+- **函数包的数据只在定义函数的块里可用，而且中间不能隔带 `(in …)` 的命令**（带 `(in …)` 的命令会让块从 theory 重建；`CONCEPT_BLOCK_NOTES_PLAN.md` 6.2）：
+  - `fun` 的自动终止性证明在定义函数的块里照常。
+  - **`termination` 必须写在定义函数的那个块里**（作者 2026-11-22 13:01 UTC：「可接受，termination 必须在同一个块里去做。」；
+    16:00 UTC：「可以假设 termination 总是在 function 之后，总是在一个块中」）；别处写属于不被支持的用法，不检查、不报错（实测：抛内部异常）。
+    本段原来写的"在重开的块里 `termination` 要点名函数"实测不成立。
+  - **`fun_cases` 离开定义函数的块对块里的每个函数都不能用**，不用 `\<S>` 的也是（实测）；用到 `\<S>` 的函数在定义的块里也不能用（stock 的 locale 同样）。
+    【作者 2026-11-23 02:21 UTC：「接受 fun_cases 的限制比我说的大」】
+- `declare [[…]]` 走的是 `notes`，对整个 theory 生效，块关了还在。
 - 接受并写进文档的一处：块里 `lemma foo` 证完时 Isar 印的是本地的陈述，`thm foo` 给的是全局形式（改它要动 Pure 的 `specification.ML`）。
-- 没定、留给原型试的："待存的定理第一条前提正好是块的假设时，先把它消掉再导出"（使 `lemma "C \<S> ⟹ P"` 与重开的块里 `termination` 得到的定理只带一次前提）。
+- 不做（2026-11-22 定，`CONCEPT_BLOCK_NOTES_PLAN.md` 第 11 节；此前写的是"没定、留给原型试的"）："待存的定理第一条前提正好是块的假设时，先把它消掉再导出"。
+  它管的只是两种少见的写法（用户自己把 `C \<S>` 写进陈述；`[OF …]` 里用全局形式），这两种各有不用它的写法；重开的块里的 `termination` 已定为不支持。
+
+**target 自己的 `define` 与 `abbrev`**（2026-11-23）【concept A1 定；实测，`concept_A_prototype/command_dev/build17.log`；还没有送评审】
+- 做法：复用 stock 的 `Generic_Target.define` 与 `Generic_Target.abbrev`，只换其中"在 theory 里落地"的那一步：
+  定义走 `Generic_Target.background_foundation`，abbreviation 走 `Sign.add_abbrev`（用用户写的 print mode）；
+  stock 的 theory target 接着做的两件不做：给块的各层加短名的缩写，给 theory 声明 mixfix。新常量的参数照 stock 的规则（算参数的就是 stock 的那段代码）。
+- 与公共文件第 9 节"`define`"一条的关系：那里定的是"不留本地绑定"，理由是 stock 把新名字绑成本地的固定变量、会抢在名字类条目之前被解析。
+  查下来那个本地的名字只活到这条命令结束：每条命令结束时工作 context 被复位（读源码，`Target_Context.switch_named_cmd` 交回的收尾函数是 `Local_Theory.reset`）。
+  所以不必为了去掉它而重写 `define`；已定的性质"声明块与重开的块行为相同"成立。
+  实测：`definition dbl …` 之后，同一个块里与重开的块里 `dbl` 都读成一个没有固定的自由变量，`pointed.dbl \<S>` 读得到；`abbreviation sq` 同样。
+  同一条命令之内（如 `function` 交给用户证的目标里）新名字是本地变量，这与 stock 的每一种 target 相同，各个包也只在这种形状下被用过。
+- 钩子 `Concept_Package.Defined`：块里每定义或缩写一个没有 concealed 的常量调一次，给出 concept 的名字、用户写的 binding 与 mixfix、"常量作用在它的参数上"这个项。
+  登记块里的短名与 dot 访问的一方（notation 那一层、dot_syntax）挂在它上面；本文件 2.2、公共文件第 9 节说的"登记什么"由它们照做。
+  - 是不是 concealed 按常量在名字空间里的登记判：函数包是用 context 的命名把内部常量设成 concealed 的，binding 上看不出来（读源码，`function_core.ML`）。
+  - 实测交来的：`definition dbl`、`definition two`（带着 mixfix）、`abbreviation sq`；`fun pw` 交来 `pw_sumC`、`pw_dom`、`pw`（`pw_graph`、`pw_rel` 是 concealed 的，不交）；`inductive ev` 交来 `ev`。
+    这与公共文件第 9 节里作者看过的那份清单（`fun` 带来 `pow_dom`、`pow_sumC`）一致。
+- mixfix 不在 theory 里声明，只交给钩子；没有人挂在钩子上时它不起作用（上面"mixfix 写在块里的 `definition`、`abbreviation` 上"一条）。
+- 没有人挂在钩子上时，块里定义的常量只能写长名 `C.d \<S>`。`termination` 因此写成 `termination "C.f \<S>"`（实测通过）；
+  `CONCEPT_BLOCK_NOTES_PLAN.md` 的探针里 `termination q1` 能写短名，是因为探针用的是 stock theory target 的 `define`，它给块加了缩写。
+- 实测通过的（真正的 `concept` 块里）：`definition`、带 mixfix 的 `definition`、`abbreviation`、`fun`、`function` 连同 `termination`、`inductive`，以及用到 `pw.simps` 的一条 lemma。
+- **还缺的一块，不在 concept 这棵树里**：2.5 定的"`definition` 等九个入口包在 `global_form` 里跑"与那个开关还没有做（读源码：私有树里除 `local_theory.ML` 自己之外没有一处调 `global_form`；
+  `global_form` 这个 feature 的第 2 版只提供了函数本身）。所以现在块里 `definition dbl` 得到的 `dbl_def` 带着前提 `C ?\<S>`（实测：`pointed ?\<S> ⟹ pointed.dbl ?\<S> ?x = …`）。
+  那是 `global_form` 那个 feature 里的改动，由谁做要作者定。
 
 **块里别的操作**（讨论 T5，三个一致）【concept A1 定】
 - `abbreviation`：成为一个全局的 abbreviation 常量 `C.sq`，参数照 stock 的规则（右边用到的固定变量，块里就是 `\<S>`），用用户写的 print mode；块里不留本地的 abbreviation。
-- 块里对 stock locale 的 `interpretation`：照 stock 是到块结束为止的本地 interpretation，不用写代码；重开的块里要再写一次。
+- **块里对 stock locale 的 `interpretation` 照 stock**：到块结束为止的本地 interpretation，不用写代码，也不为它改 Isabelle 的源码
+  【已定，作者 2026-11-22 13:41 UTC：「允许，把上面这一处记成已知的例外」】。
+  - 经过：`CONCEPT_BLOCK_NOTES_PLAN.md` 的评审（N2）指出下面那条例外；作者 12:50 UTC 先定「concept context 内不准 interpretation」；
+    13:28 UTC 他问「如果我们允许在 concept 块中写 interpretation 会怎样呢？有什么问题呢？」，concept A1 实测后报了三条路（不准；允许并记作例外；允许并在登记时给定理补上块的假设），他取了第二条。
+    12:50 的决定与为它拟的三句报错都作废；下一条里两句报错的提示"Use interpretation instead …"保持原样。
+  - **已知的例外**（探针 `concept_A_prototype/block_interp_probe/`）：这样的 interpretation 若证明没有用到块的假设，它的定理再经 `lemmas`、`declare` 或 bundle 登记时，
+    存成什么样子取决于 interpretation 的那条证明有没有并行跑：并行跑的存成带前提 `C ?\<S>` 的，没有并行跑的存成不带前提的。两种都是正确的定理。
+    量过的是批量构建：默认设置下那条证明并行（带前提）；`parallel_proofs=0` 与单线程 `threads=1` 下不并行（不带前提）。打开 proof terms 时也不并行（读源码）。
+    例：`interpretation n: loc id`，`lemmas t = n.f_twice` 存成 `mono ?\<S> ⟹ id (id ?x) = ?x` 或 `id (id ?x) = ?x`。
+  - 不受影响的（实测，三种设置下相同）：证明用到块的假设的 interpretation，定理再登记后恰带一条前提；用 interpretation 的定理证出来的 lemma 恰带一条前提；块重开之后这些定理不在了。
+  - **哪一边不被支持**【已定，作者 2026-11-22 14:33 UTC，纠正 concept A1 对他 13:40 UTC「不能接受 parallel_proofs=0」一句的读法】：
+    「不能接受 parallel_proofs=0 指的是，我们必须允许用户开或者不开 parallel_proofs，必须支持。但不使用 G \<S> 的 interpretation 是不被支持的，只是代码里我们不做检查也不写报错」。
+    所以：证明并行与不并行两种运行方式都必须支持；不被支持的是"证明不用块的假设的 interpretation"这种用法，代码里不检查、不报错。
+    concept A1 原来的读法（"concept 不支持在 `parallel_proofs=0` 下构建"）是错的，作废。
+    14:35 UTC 把 `Concept_Command_Dev` 与 `Concept_A_Test` 两套测试在 `-o parallel_proofs=0` 下各跑了一遍，都通过。
+  - **要明确告诉用户**【作者 2026-11-22 13:42 UTC：「可以在某处明确告知用户，不利用 C \<S> 的 interpretation 会有问题，强烈不建议这么做」】：
+    写进用户文档讲块的那一节（文档还没有）。不做运行时的 warning：并行证明的结果带着全部假设，从定理上看不出证明用没用到块的假设，
+    而且块里的 `interpretation` 不经过 target，要拦就得加上面取消的那处源码改动。
+    文字（concept A1 14:36 UTC 报的一版，作者 14:42 UTC 批了：「> 告知用户的那段英文 / 好」；`C` 到时换成文档里例子的 concept 名）：
+    > Inside a concept block, an interpretation whose proof does not use the assumption of the block is not supported. It is neither checked nor reported.
+    > When a fact of such an interpretation is declared again by `lemmas`, `declare` or a bundle, the stored theorem has the premise `C ?S` if proofs run in parallel,
+    > and no such premise if they do not; a theory may then build under one setting of `parallel_proofs` and fail under the other.
+    > Write such an interpretation outside the block, or use `interpret` inside a proof.
+
+    上面这一版已被下面的定稿取代。`CONCEPT_BLOCK_NOTES_PLAN.md` 的第二轮评审（15:28 UTC 回来，M3）指出它按"构建设置"说不准确：
+    决定结果的是 interpretation 的那条证明有没有并行跑，而这在默认设置下也因前端而异（读源码，没有量）：多线程的批量构建里整条证明并行；
+    编辑器里只有直接接在目标后面的 `by` 并行，`apply … done` 不并行；经 Isa-REPL 执行的命令从不并行（AoA 走的是 REPL）。
+    concept A1 把这件事报给作者，作者 16:05 UTC：「交给你了，请你自决」。
+
+    **定稿**【concept A1 定，2026-11-22 16:06 UTC，照作者的委托；16:0x UTC 逐字报给了他】：
+    > Inside a concept block, an interpretation whose proof does not use the assumption of the block is not supported. It is neither checked nor reported.
+    > When a fact of such an interpretation is declared again by `lemmas`, `declare` or a bundle, the stored theorem may or may not get the premise `C ?S`,
+    > depending on how the proof of the interpretation was run (for example, in parallel or not).
+    > Write such an interpretation outside the block, or use `interpret` inside a proof; a lemma proved from its facts is not affected.
+
+    取舍：什么不被支持，照作者 14:33 UTC 的原话（"不用块的假设的 interpretation"），没有采用评审建议的更宽的说法（"块里 interpretation 的定理一律不要再登记"）；
+    后果那一句不再提 `parallel_proofs` 这个设置，只说"取决于那条证明怎样跑的"，举"并行与否"为例（这一点量过，前端之间的差别没有量，所以不写进去）；
+    末尾加了量过的一句：用它的定理证出来的 lemma 不受影响。
+  - 没有采用的第三条路（实测可行）：登记时给 interpretation 的每条定理补上 context 的全部假设作 hyps，两种构建就都存成带前提的；它要在 Isabelle 的源码里加一处扩展点。
 - 块里的 `global_interpretation` 与不带名字的 `sublocale` 报错（在它们的证明结束时报，与 stock 的 `Not possible in locale target` 同一个时刻）：
   `global_interpretation cannot be used in concept monoid` / `Use interpretation instead, whose facts last until the end of this context, or write global_interpretation outside the concept`；
   `sublocale cannot be used in concept monoid: a concept is not a locale` / `Use interpretation instead, whose facts last until the end of this context`。
+- **块里的 `simproc_setup` 尚不支持**【已定，作者 2026-11-22 15:56 UTC：「明确写为 concept 尚不支持」】，文档里明确写。
+  concept A1 的读法（等作者纠正）：与 `interpretation` 那条、嵌套 context 一样，代码里不检查、不报错。
 - stock 里五处问"当前的 target 是 theory 还是 locale"的代码，在 concept 的块里都按"两者都不是"；其中 `time_fun`（`HOL/Library/time_commands.ML`）在块里不能用，记作已知的限制。
 - 块里别的要自己开块的命令（`instantiation`、`class`、`locale`、嵌套的 `concept`、有名字的 `context D begin`）得到 stock 的 `Bad context for command`。
 - mixfix 写在块里的 `definition`、`abbreviation` 上：交给 notation 那一层；它没加载时不起作用。
