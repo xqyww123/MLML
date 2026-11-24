@@ -6,6 +6,30 @@
 - rev 4（2026-11-13）：**同步稿**。写入 rev 3 之后作者的全部裁定、第二轮评审（`wf_e55250cc-cd8`，修改后通过）的处置、与 unary concept 会话对过的语义、新增探针的结果；第 9 节列全部未定问题。包的定位在这一版变了（0.1 第 23–26 条）：它只为 concept 服务，对外只留两个入口。新的"一次调用"那一层的设计还是草稿、尚无探针（3.2、3.3、3.8、3.9），本稿的目的是不让任何决定只留在对话里。写完后由本会话通读、再由一个 Opus agent 对照会话记录校对，校对指出的问题已改入（第 10 节末）。
 - rev 5（2026-11-16）：本计划改由 unary concept 会话维护（作者「我建议把 concept record 相关的工作全都划归到你这里」，0.1 第 31 条）；写入作者当日对第 9 节的裁定（0.1 第 32–39 条）和新 feature `concept` 的决定；过时的状态与归属随之更正。没有新的探针，已定的设计没有改动。下文的"本会话""我"在 rev 4 及以前指原来的 concept record 会话，rev 5 新写的部分指 unary concept 会话。
 - 2026-11-18/19（未另编 rev 号）：0.1 加第 70–77 条（第 74–77 条在表里的排列不是编号顺序：75、77、76、74）。其中第 75–77 条推翻或改动了此前的多处：`truncate` 放给用户（第 75 条；改动第 5、9、18、43 条，3.5、3.7、3.9、第 2 节）；类型的打印按模式匹配、一律印全名（第 76 条；改动第 33 条，3.4，第 6 节测试第 4 项）；类型缩写读成 `('a, _) C_scheme`、视图可带 row variable、more 变量叫 `'\<e>`（第 77 条；改动第 8、45、57 条，3.1 第 13 项，3.4，3.8，3.12）。各处加了指回的话，正文没有重写；待定的事集中在 concept 计划 11.2 开头那一条。
+- 2026-11-24（未另编 rev 号，二十，14:0x UTC 写）：**给搜索用的五处接口**（用它们的是 concept B 的下层文件与以后的 `concept_search.ML`）。都已实现、评审、提交：`contrib/concept` 的 `50faedb`、`5c57ba0`。
+  接口是 concept A1 与 concept B 2026-11-24 来回定的；concept A1 09:31 UTC 报了作者，请他准许写进计划，**作者 13:59 UTC：「准许」**。
+  (1) **`Concept_Type.may_rewrite: Proof.context -> term -> bool`**：selector Simpset 会不会改这个项的预检查（搜索计划 3.1 第 1 步要的那个）。
+      - 约定：它答假时，`selector_rewrite`、`selector_conv` 一定不改这个项（β、η 之外）。答真只是"可能改"。
+      - 判定：项里有常量 `c`（类型 `T`），而 selector Simpset 的某条改写规则、simproc、congruence procedure 或 congruence rule 的左边以 `c` 为头，且 `T` 是 `c` 在那个左边里的类型的实例。
+        selector Simpset 里有左边的头不是常量的规则时（例：把头是 `Free` 的局部假设加了进去），一律答真。
+      - 比 concept B 起初要的（"项里有常量是某个 simproc 或规则左边的头"）多算两样，都是为了让"答假"可靠。
+        congruence rule 的头也算：selector Simpset 留着的 congruence rule（如 `⟶` 的）让 simplifier 把一边当已知去改另一边；例：`x = y ⟶ y = x` 被改成 `x = y ⟶ y = y`，里面没有任何 selector。
+        连类型一起看：各层有一个 simproc 的左边是 `L.more X = L.more Y`（`add_split`），头是 `=`；不看类型的话任何含等式的项都答真。
+      - 它不看调用处的前提：本层只把上下文的前提放进 simplifier 的前提表（供消条件用），不当改写规则；没有规则用得上时，前提改不动项。
+      - 实现：这张"头"的表（常量名 ↦ 它在各个左边里的类型）与 simpset 成对存在 `Selector_Simpset` 里，惰性计算。这一对只由 `with_heads` 一个函数造（初值、theory 合并、`map_selector_simpset`），所以表不会过时。
+        一次重算是 simpset 大小的线性，其中 `Simplifier.dest_ss` 整理 simproc 的那一步按 simproc 的个数是平方（没有实测）。
+  (2) **`Concept_Type.dest_truncation: theory -> term -> (string * term) option`** 与 **`Concept_Type.key_of: theory -> term -> string option`**：本层已有的两个函数，原样导出，concept B 的下层文件不另写一份。
+      `dest_truncation` 认出 `P.truncate u`，交回 `(P, u)`。`key_of` 是搜索计划 2.1 的键：截断之下，family 的成员取 family 名，否则取头上的常量；头不是常量时没有键。
+  (3) **`Concept_Type.trace: bool Config.T`**：选项 `concept_fact_trace`（B 区 7.1，布尔，默认关）在本层声明，`Concept_Fact` 把它再导出为 `trace`。本层自己现在不读它。
+      - 本层要印的只有一行：一个受限的单元到达步数上限时（"十八"第 (2) 项）。**这一行的文案与用哪条通道印都还没有定。**
+        concept A1 09:31 UTC 报的拟稿是首行 `the selector Simpset stopped: it reached its bound of 1000 simplifier steps.` 加一行说当时在做什么（六种写法）。
+        作者 13:59 UTC：「这个文案很好，甚至有点过度好了，让我不确定是否需要如此多的细节。而且更有帮助的其实是说明 concept_fact 的什么部分会受到影响，可能会导致什么（但这真的不是必须的）」。
+        concept A1 照此另拟一版精简的再报他；他批定之前代码里不印。
+      - `truncate_eq` 接不上时由本层印原因（3.13 里 concept B 2026-11-21 提的要求）第一版不做：concept B 2026-11-24 08:4x UTC 选的。
+        它的匹配函数在一条规则被去掉时自己印一行，本层每次都印会把那些行淹掉；以后要细的原因时，改成另给一个函数让它去取。
+  (4) **`truncate_eq` 交回的等式与额外前提是 β-η 范式**：3.13 契约那一段 2026-11-24 的注。
+  (5) 测试：`Reading_Test.thy` 末尾一节（`may_rewrite`）、`Truncate_Eq_Test.thy` 的 `E.in_form` 与末尾三例。变异 `mutate35.py` 26 个，全部被测试抓住（`mutants35_results.txt`）。
+      评审 `wf_baad68ee-3e3`（完整）、`wf_15c47db9-460`（再审）、`wf_e7f4cf56-a45`（小评审）：代码都判正确，判给 concept A1 的三处是测试缺情形与注释，已补。
 - 2026-11-23（未另编 rev 号，十九，16:4x UTC 写，17:0x 至 17:1x UTC 照校对改过，17:2x 至 17:3x UTC 照第二轮校对再改，2026-11-24 01:4x UTC 照方案评审改、02:0x UTC 照第三轮校对改，
   03:3x 至 04:1x UTC 照复审改写 3.15、05:0x UTC 照第四轮校对改、06:0x UTC 照第三轮评审改）：**类型层声明一层之后的证明，要像 `record` 包那样只用抽象层的定理**【作者定的方向，实现交给 concept A1】。
   "抽象层"是作者的词，指：一个值写成构造常量作用在它的各个分量上，加上"selector 作用在这样的值上等于那个分量"这一类等式（第 (4) 项）。
@@ -1064,6 +1088,7 @@ val linked_keys: theory -> string -> string list
   **契约：项一级说接得上的，定理一定造得出。** 所以"与截断可交换"那种等式头一次碰到某个 `P` 时要当场推出并缓存，推不出就当作接不上；别的各步用的都是声明时已经存好的定理。
   开着 `concept_fact_trace` 时，接不上的调用要能说出一句原因（哪里没有交点、哪个参数位置没有规则、哪个 `concept` 两头都推不到），第一版可以只说"接不上"
   （这两条是 concept B 2026-11-21 同意匹配函数一律调本函数时提的要求）。
+  【2026-11-24：说原因这一条第一版不做，concept B 自己选的，见文件头"二十"第 (3) 项。】
   `reached`：由 `concept t` 推不推得出 `concept s'`（"怎么算"第 6 步，从 `{t}` 起算）。搜索数 leap 只看它（搜索计划 4.2"一步的 leap"）【2026-11-21 加】。
   它只在规则带前提、而且规则是系统标安全的或 concept 距离是 0 时才影响 leap，所以也可以做成惰性的值。
 - `add_implication`：命令证完"来源成立"那条义务后，把 `concept (c ?xs) ⟹ concept (来源)` 交进来（搜索计划 2.4、6.2 第 2 项）。
