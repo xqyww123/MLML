@@ -31,44 +31,58 @@
 「把此 concept_instance 的 if clauses 导入」，现在叫展开 `if` 子句，不叫导入（第 2 节）。现行的规定是下面各条：
 
 - **fixes**：`for` 列出的全部变量，体内实例再加宿主 `\<S>`。作者确认 literally 是所有实例：全局带参数实例 `concept_instance sub: group where … if G: "group G" and … for G H` 打开成 `context sub.group`，fixes `G`、`H`；全局不带参数实例 `context int.group begin … end` 没有 fixes。
-  宿主一侧现在怎么做，以 `CONCEPT_DEFINING_CONTEXT_PLAN.md`（2026-11-21 定稿）第 3 节与第 5 节第 6 项为准：宿主的 `group \<S>` 就是从 `sub_axioms` 拆出来的一条普通 concept fact（名字 `ambient`），和别的拆出的 concept fact 一样进 intro table、照常走 assumption destruction 的最后一步（那份文件第 2.2 节）。不另为宿主做什么：不打开宿主 concept 的上下文。宿主只作为从实例的 fact 拆出来的 depth 1 的来源参与裸写的读法，同名同 type pattern 时让给实例（下面 notation 一条）。
-- **assumes**【2026-11-20 改，照 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节，那里引了作者的原话】：至多假设实例自己的 fact 一条（实例没有任何条件时不假设，见下面"假设不假设，看实例有没有条件"），名字是 `sub_axioms`（作者「5. 赞同 sub_axioms」）。
-  **这条 fact 的名字是实例名的最后一节加 `_axioms`**【已定，作者 2026-11-23 约 04:05 UTC：「1. 同意 实例名最后一节加 _axioms」；评审 `wf_c20d5d96-07b` 的 K1 指出此前只有 `group.sub` 有名字】：
-  `context group.sub` 里是 `sub_axioms : group (\<S>.sub H)`；`context sub.group` 里是 `group_axioms : group (sub.group G H)`；`context int.group` 里是 `group_axioms : group int.group`；
-  `context int.comm_monoid` 里是 `comm_monoid_axioms : comm_monoid int.monoid`。它是本地的名字，不带前缀。
-  **真正假设的是 `concept (\<S>.sub H)`，名字 `sub_axioms` 绑的是由它推出的 `group (\<S>.sub H)`**【已定，作者 2026-11-21 05:35 UTC 对 concept B：「建议在块中最初假设的就是 concept (\<S>.sub H)，但绑定的是 group (\<S>.sub H)」；`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节第 1 项】。
-  做法（concept B 向作者讲的，没有试过，实现归 concept C）：块假设 `concept (\<S>.sub H)`，接上实例存着的那条 `concept (实例项) ⟹ group (实例项)`（主计划 5.1）得到 `group (\<S>.sub H)`，绑在 `sub_axioms` 上；交给 assumption destruction 的是这条 `group (\<S>.sub H)`，下面拆出的部分、名字都不变。
+  宿主一侧现在怎么做，以 `CONCEPT_DEFINING_CONTEXT_PLAN.md`（2026-11-21 定稿）第 3 节与第 5 节第 6 项为准：宿主的 `group \<S>` 就是从 `sub_axiom` 拆出来的一条普通 concept fact（2026-11-23 起它没有本地名字，见下面 assumes 一条"拆出的部分不起名"），和别的拆出的 concept fact 一样进 intro table、照常走 assumption destruction 的最后一步（那份文件第 2.2 节）。不另为宿主做什么：不打开宿主 concept 的上下文。宿主只作为从实例的 fact 拆出来的 depth 1 的来源参与裸写的读法，同名同 type pattern 时让给实例（下面 notation 一条）。
+- **assumes**【2026-11-20 改，照 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节，那里引了作者的原话】：至多假设实例自己的 fact 一条（实例没有任何条件时不假设，见下面"假设不假设，看实例有没有条件"），名字是 `sub_axiom`（作者当时批的是「5. 赞同 sub_axioms」；2026-11-24 改名，见下一行）。
+  **这条 fact 的名字是实例名的最后一节加 `_axiom`**【已定，作者 2026-11-24 04:59 UTC：「实例上下文里的 _axioms 要随块里的改名改成 _axiom」】：
+  此前是加 `_axioms`（他 2026-11-23 约 04:05 UTC：「1. 同意 实例名最后一节加 _axioms」；评审 `wf_c20d5d96-07b` 的 K1 指出更早只有 `group.sub` 有名字）；
+  concept 的块里那一条 2026-11-23 16:30 UTC 由 `C_axioms` 改名 `C_axiom`（他对 concept A1：「group_axioms 要改名 group_axiom」），这里随它改。
+  `context group.sub` 里是 `sub_axiom : group (\<S>.sub H)`；`context sub.group` 里是 `group_axiom : group (sub.group G H)`；`context int.group` 里是 `group_axiom : group int.group`；
+  `context int.comm_monoid` 里是 `comm_monoid_axiom : comm_monoid int.monoid`。它是本地的名字，不带前缀。
+  **真正假设的是 `concept (\<S>.sub H)`，名字 `sub_axiom` 绑的是由它推出的 `group (\<S>.sub H)`**【已定，作者 2026-11-21 05:35 UTC 对 concept B：「建议在块中最初假设的就是 concept (\<S>.sub H)，但绑定的是 group (\<S>.sub H)」；`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节第 1 项】。
+  做法（concept B 向作者讲的，没有试过，实现归 concept C）：块假设 `concept (\<S>.sub H)`，接上实例存着的那条 `concept (实例项) ⟹ group (实例项)`（主计划 5.1）得到 `group (\<S>.sub H)`，绑在 `sub_axiom` 上；交给 assumption destruction 的是这条 `group (\<S>.sub H)`，下面拆出的部分不变。
   它改的是 2026-11-18 定的"假设的是 `group (\<S>.sub H)`"。
-  对它走标准的 assumption destruction（第 2 节）：拆出的部分起不带前缀的本地名字，宿主的 fact 叫 `ambient`，各条 `if` 子句叫 `closed`、`conj`，concept 形状的子句 `foo` 往下是 `foo.closed`、`foo.ambient`。
+  对它走标准的 assumption destruction（第 2 节）。**拆出的部分不起名**【已定，作者 2026-11-23 对 concept B：16:14 UTC「那我现在建议干脆一个都不绑定了，直接统一走 `[of_concept]`」，
+  16:23 UTC「确认 实例上下文里的短名也不绑」；concept B 转来，原话 concept C 在它的转录里核过】。
+  拆出的 concept fact 照旧进 intro table、照旧激活，只是没有名字；各条 destruction lemma 的先后（`ambient` 第一，然后各条条件）仍然管拆的次序。
+  此前这里写的是：拆出的部分起不带前缀的本地名字，宿主的 fact 叫 `ambient`，各条 `if` 子句叫 `closed`、`conj`，concept 形状的子句 `foo` 往下是 `foo.closed`、`foo.ambient`。
   **假设不假设，看实例有没有条件**【concept C 2026-11-23 定。它是评审 `wf_c20d5d96-07b` 的裁判提的放宽；作者 04:13 UTC：「建议 run an Opus agent team 检查会不会有问题，若验证通过则准许你自决」；
   核查小组 `wf_05f96e85-445` 三人与挑毛病一方的结论都是带修正通过，这里写的是带上修正之后的规则。它放宽的是此前"带参数而没有任何条件的全局实例也假设 `concept (实例项)`"的规定，别的各种实例不变】：
   - 记 `t` 为实例项（不定义常量的成员是所接成员的 `a.P 参数`）。上下文取实例存着的那条从 `concept t` 到 `D t` 的定理：有自己常量的是 `x.of_concept`，不定义常量的成员是它自己的 fact。
   - 这条定理带前提 `concept t`、而 `t` 的隐藏字段是字面的 `True` 时：用类型层的那个判断当场消掉前提，上下文什么都不假设。
     这条定理带前提、隐藏字段不是 `True` 时：假设 `concept t`，用它消掉前提。这条定理本来就不带前提时（成员所接的 `a.P` 的隐藏字段是 `True`）：什么都不假设。
-  - 得到的 `D t` 绑在 `<最后一节>_axioms` 上，交给 `destruct_assms`。导出仍是 stock 的：上下文假设了 `concept t`，lemma 就带这一条前提；没有假设，lemma 就不带前提。
+  - 得到的 `D t` 绑在 `<最后一节>_axiom` 上，交给 `destruct_assms`。导出仍是 stock 的：上下文假设了 `concept t`，lemma 就带这一条前提；没有假设，lemma 就不带前提。
   - "隐藏字段是字面的 `True`"与截断等式带不带条件、`rewrites` 等式带不带前提、成员的 fact 带不带前提用的是同一个判断（类型层的 `concept_holds`，要 concept A1 把它放进接口），四处由此不会走样。
-    它看的是字面，不是证不证得出：`if p: "prime (37::nat)"` 证得出，但仍算有条件。隐藏字段里放的是：没有任何条件时 `True`；否则是各条条件照写的先后的合取（体内实例先是宿主谓词）。
-    体内实例总带着宿主谓词，所以它的隐藏字段从不是 `True`。
+    它看的是字面，不是证不证得出：`if p: "prime (37::nat)"` 证得出，但仍算有条件。隐藏字段里放的是：没有任何条件时 `True`；否则是各条条件照写的先后的合取，只有一条时就是那一条。
+    体内实例在用户写的条件推不出宿主谓词时，最前面先是宿主谓词（concept C 定，2026-11-23；C 区文件 5.2"体内实例的宿主前提"）。
+    体内实例没有条件时存的是宿主谓词（没有条件就没有东西可以推出它），有条件时至少存一条用户写的条件，所以它的隐藏字段从不是 `True`。
   - 各种实例照这条规则的结果：
     体内实例（`group.sub`）、带条件的全局实例（带不带参数都一样，如 `f: field … if p: "prime (37::nat)"`）：假设 `concept t`，lemma 导出成 `concept (…) ⟹ …`。与此前相同。
     既没有参数也没有条件的全局实例（`int.group`）：不假设。与此前相同。
-    带参数而没有任何条件的全局实例（`concept_instance int_mod: ring … for n`）：不假设，`int_mod_axioms : ring (int_mod n)`，lemma 导出时不带前提。**这是唯一变了的一种**，此前它假设 `concept (int_mod n)`、lemma 带着这条恒成立的前提。
+    带参数而没有任何条件的全局实例（`concept_instance int_mod: ring … for n`）：不假设，`int_mod_axiom : ring (int_mod n)`，lemma 导出时不带前提。**这是唯一变了的一种**，此前它假设 `concept (int_mod n)`、lemma 带着这条恒成立的前提。
     family 里不定义常量的成员（`int.comm_monoid`、带参数的 `frac.field`）：固定它自己的 `for` 变量；所接成员带条件时假设 `concept (a.P 参数)`，不带时不假设。与 C 区文件 5.6 已有的规则相同。
     它的查找链是 `[int.comm_monoid, int.monoid]`：自己的名字在前，后面是同一个结构项上、concept 是它祖先的那些成员（concept B 2026-11-22 定）。
   - 一种边角：唯一的条件就是字面的 `True`（`if c: "True"`）的实例算没有条件。不为它另设检查。
   - 证明结束时的激活在同一个上下文里做，所以没有条件的实例激活出的条目是不带前提的 fact（C 区文件 5.1 第 7 步）。
   - 这条规则归 B 区的专题文件；concept B 2026-11-23 已照此改了 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节第 1、4 项与 2.4、2.5，两处一致。
   它取代作者 2026-11-12 的裁定"实例自己的 fact 不作 assumption，假设宿主的 `C \<S>` 加各条 `if` 子句"（作者 2026-11-18「我建议：删除"实例上下文要假设宿主的 group \<S>"，三种打开方式无论哪种都是对 group.sub 进行 destruction 走标准的 assumption destruction」）。
-- **notation**【2026-11-20 改，照 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节第 7 项】：按 fact 写出来的样子读（D 区 6.3 的 syntactic destruction）。读的是绑在 `sub_axioms` 这类名字上的那条 fact，如 `group (\<S>.sub H)`（真正假设的 `concept (…)` 不带 notation）。所以实例的结构项（`\<S>.sub H`、`sub.group G H`、`int.group`）depth 0，宿主 `\<S>` 是从它拆出来的、depth 1。
+- **notation**【2026-11-20 改，照 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节第 7 项】：按 fact 写出来的样子读（D 区 6.3 的 syntactic destruction）。读的是绑在 `sub_axiom` 这类名字上的那条 fact，如 `group (\<S>.sub H)`（真正假设的 `concept (…)` 不带 notation）。所以实例的结构项（`\<S>.sub H`、`sub.group G H`、`int.group`）depth 0，宿主 `\<S>` 是从它拆出来的、depth 1。
   同类型同符号时实例胜，`x * y` 指实例的运算，`\<S>` 的运算写 `x *⇘\<S>⇙ y`。
   **名字与符号一样，先读实例的**【已定：由上面的规则推出；作者 2026-11-23 约 04:05 UTC 对 concept C 报的这个后果答「2. 认可」；评审 `wf_c20d5d96-07b` 的 K2】：
   `context group.sub` 里裸写的 `carrier` 是子群的 carrier，即 `H`；宿主的写 `carrier⇘\<S>⇙`。裸写的 `sub K` 是 `H` 的子群。
   后果：HOL-Algebra 里 `(in subgroup) subset: "H ⊆ carrier G"` 这类 lemma 搬过来时，右边要写成 `carrier⇘\<S>⇙`。此前这里为同一个结果设的例外"打开的那个实例的结构项级别比宿主深一层"（作者 2026-11-12）不再需要。对 `sub` 的运算两者无差别（carrier 不同，见上）（`mult (\<S>.sub H) = mult \<S>` 由 simp 得到；2026-11-17 起它不是存着的 simp 等式，由 selector simproc 现场合成，主计划 5.2），对 `quotient` 类型不同本来就分得开，对 `opp`（乘法反过来）这种才真有区别。后果：`context int.group` 里 `x * y` 是 `group.mult int.group x y`，simp 后 `x + y`。原则："打开一个实例就是在这个结构里面工作"，与 `context group` 里 `*` 指 `\<S>` 同一原则。
 - **名字**：体内 `definition foo` 得全局常量 `group.sub.foo`，参数是 `\<S>`、`H` 里右边用到的那些（2026-11-17 起照 stock 的规则，主计划第 9 节；只用到 `H` 时是 `group.sub.foo ?H`）（全局实例同理，是 `for` 变量里右边用到的那些；`int.group.foo` 没有参数）；lemma 导出为 `group.sub.bar : concept (group.sub ?G ?H) ⟹ …`（2026-11-21 改，上下文真正假设的是 `concept (…)`，见上面 assumes 一条；此前写的是 `group (group.sub ?G ?H) ⟹ …`），只有**这一条** concept 前提（上下文里唯一的假设，stock 的导出直接给出；2026-11-20 改，此前写的是"全部假设按 4.1 的 iff 折成这一条"），和体内 lemma 的 `group ?S ⟹ …` 一样是单条前提，`rule`、`concept_fact` 照旧。查找链（`default_fact_qualifiers`）是 `[group.sub, group, monoid, …]`。
-  短名先按上下文自己的 fact 读，再按查找链试（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节第 8 项；2026-11-23 照评审的 K2 改，此前这里写的是"`closed` 先命中 `group.sub.closed`"）：
-  块里的 `closed` 首先是从 `sub_axioms` 拆出的本地 fact，它带着上下文的假设、没有前提；`group.sub.closed` 是它导出后的全局形式，前提是 `concept (group.sub ?G ?H)`，要它就写全名。
-  group 自己若有同名的 fact，要写 `group.closed`——这就是作者说的"binding name 覆盖 G 中已有的"，是 fact 名字空间的遮蔽（作者 2026-11-12 确认），不复制任何 fact。从 `sub_axioms` 拆出的本地 fact `closed`（2026-11-20 改，此前写的是"本地 assumption `closed`"）导出的全局形式就是 4.1 的 destruction lemma `group.sub.closed`，同一条东西的两个形式。
-  2026-11-21 起 destruction lemma 的前提写成 `concept (实例项)`：`group.sub.closed : concept (group.sub ?G ?H) ⟹ …`（作者 2026-11-21 对 concept B，`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.5 节；此前这里写的是 `group (group.sub ?G ?H) ⟹ …`）。块里真正假设的也是 `concept (\<S>.sub H)`（上面 assumes 一条），所以块里的 lemma 导出后前提同样是 `concept (group.sub ?G ?H)`，块里的 `closed` 导出后的全局形式仍然就是 `group.sub.closed`，"同一条东西的两个形式"照旧成立。
+  短名照查找链读（2026-11-23 16:23 UTC 起，上面 assumes 一条"拆出的部分不起名"）：块里的 `closed` 落到查找链上的全局形式，即 4.1 的 destruction lemma `group.sub.closed`，它的前提是 `concept (group.sub ?G ?H)`。
+  要不带前提的本地形式，写 `closed[of_concept _]`，与 concept 的块里 `assoc` 的规矩一致：实例上下文里 `_` 指这个实例的结构项 `t`。
+  规则要的前提是 `concept t` 时（destruction lemma，如 `closed`），用上下文假设的那一条；要的是 `D t` 时（如 `inv_inv[of_concept _]` 要 `group t`），用由它推出、绑在 `<最后一节>_axiom` 上的那条。
+  实例没有任何条件时上下文什么都不假设：`D t` 是实例自己的 fact，`concept t` 由 `Concept_Type.concept_holds` 给出。
+  出处与状态：`closed[of_concept _]` 这个写法是 concept B 2026-11-23 16:1x UTC 向作者列"实例上下文里的短名也不绑"那一项时带的，作者 16:23 UTC 确认的是那一整项，没有单独说过 `_`。
+  上面三行说的它怎样做，是 concept E 的读法，写在 E 区文件 `CONCEPT_E_IMPORT_PLAN.md` 5.3"导入处与触发"末条。
+  它查不查登记表还没有定：concept E 2026-11-23 提议 `r[of_concept _]` 就是省去写项的 `r[of_concept "D t"]`、连同查登记表（实例上下文可以本身是一个导入处，现做一条与取回存下的一条会不同），列在 E 区 11.5 等作者。
+  要指别的结构时写 concept fact 的项，如 `group.sub.closed[of_concept "group (group.sub G K)"]`；手上有 fact 的名字时用 xOF，如 `group.sub.closed[xOF s]`
+  【已定，作者 2026-11-23 16:30 UTC 对 concept E：「没错，r[of_concept "P"] 就是：先用 concept_fact 证出 P，再照 xOF 的做法用这条 fact 去填 r 的第一条 concept 前提」；concept E 转来，原话 concept C 在它的转录里核过】。
+  此前这里写的是"短名先按上下文自己的 fact 读，再按查找链试"，块里的 `closed` 首先是从 `sub_axioms` 拆出的本地 fact（2026-11-23 早些时候照评审的 K2 写的）；现在上下文里没有这条有名字的本地 fact 了。
+  group 自己若有同名的 fact，要写 `group.closed`——这就是作者说的"binding name 覆盖 G 中已有的"，是 fact 名字空间的遮蔽（作者 2026-11-12 确认），不复制任何 fact：查找链上 `group.sub` 排在 `group` 的前面。
+  2026-11-21 起 destruction lemma 的前提写成 `concept (实例项)`：`group.sub.closed : concept (group.sub ?G ?H) ⟹ …`（作者 2026-11-21 对 concept B，`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.5 节；此前这里写的是 `group (group.sub ?G ?H) ⟹ …`）。块里真正假设的也是 `concept (\<S>.sub H)`（上面 assumes 一条），所以块里的 lemma 导出后前提同样是 `concept (group.sub ?G ?H)`，与 `group.sub.closed` 的前提一致。
 - **`if` 里别的 concept 参数**（`if K: "group K"` 的 K）：不导入任何东西。它是一条 assumption，K 因此成为 notation 候选、`concept_fact` 能关 `group K`；通用 lemma 以 `?S := K` 直接作用于它。导入只对有名字的实例做（主计划 5.3），K 不是。
 - **和手写一个 light locale 的差别**（作者的说法：「跟其直接写成的 locale 形式的区别就只在于 group.sub 这个 default qualifier」；我数出三处，前两处是同一件事的两面）：谓词不是新造的 `subgroup G H` 而是已有的 `group (group.sub G H)`；查找链带着宿主的链；实例结构项的 notation 胜过宿主的（见上面 notation 一条）。其余（fixes、唯一的假设即作者说的 the locale axiom、体内 definition 以右边用到的固定变量为参数、名字落在 `group.sub.` 下）和 locale 一样。开销是常数的：没有任何 fact 被复制。
 - **常量的短名**（作者问；11-14 改）：块内裸写 `foo`。块外写带下标的 `foo⇘sub⇘G⇙ H⇙`，或全名 `group.sub.foo G H`；实例项是 notation 的来源的地方也可以裸写（D 区文件 6.3、6.4）。
@@ -80,6 +94,24 @@
 ---
 
 ## 2. assumption destruction（展开 `if` 子句）【已定，作者 2026-11-12；2026-11-14 推广为统一机制并定名】
+
+【**2026-11-23 改：assumption destruction 一个名字都不绑。**（concept B 写）
+作者 16:14 UTC 对 concept B：「那我现在建议干脆一个都不绑定了，直接统一走 `[of_concept]` 你觉得如何？」；
+16:23 UTC：「确认 concept_implications 也没有了」「确认 实例上下文里的短名也不绑」；写入的许可是 16:45 UTC。全文在专题文件 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.1 节"不起名"。
+现在：拆出的 concept fact 照旧进 intro table、照旧激活；拆出的不是 concept fact 的条件不留在上下文里。
+用户要某一条时写全局的 destruction lemma：`group.sub.closed[xOF s]`，或 `group.sub.closed[of_concept "group (G.sub H)"]`（E 区文件 5.3）；实例上下文里写 `closed[of_concept _]`（第 1 节）。
+本节下面凡是讲名字的文字都作废，留作经过，没有逐句改写。下面列的是主要的几处，不全：
+- "本质"里"以该 fact 的名字作 qualifier 命名：`sub.closed`、…、`sub.ambient : group G`"。
+- 凡写着"起名"的括号，如"（拆、进 intro table、激活、起名、`[intro!]` 都照旧）""管第一阶段（起名、……）"；凡写着"条件进 `concept_implications`"的地方。
+- concept 的块假设的那条 fact 2026-11-23 由 `C_axioms` 改名 `C_axiom`（作者 16:30 UTC 对 concept A1）；本节仍写 `C_axioms` 的地方是旧名。
+- "接口"里 record 的字段 `note`，与调用处的表里 `note` 那一栏：现在哪个调用处都不起名。
+- "对象"一条里讲 `∀` 与 `⋀` 起名差别的几行：现在都不起名，那处差别没有了。
+- "规则"一条里"陈述相同的两条只有先到的 `ambient` 起名"，与 `s.ambient`、`s.ambient.closed` 这些名字。拆的次序与递归不变。
+- "去重"一条里"不起名（`note s2 = s` 不会得到 `s2.closed`）"与"先无名后有名"。
+- "命名"一条整条：`s.closed`、`s.ambient`、`concept_implications`。
+- "名字"一条里上下文中的 `sub.closed`、`sub.ambient`、`sub.ambient.closed`。全局的 destruction lemma 的名字 `group.sub.closed`、`group.sub.ambient` 不变。
+- "header 的 `assumes` 在 concept 的块里怎样进来"一条里 (b) 的 `X.sub.closed`、`X.sub.ambient`，与"块外不变"里"之后钩子照常给出 `s.closed` 等"。
+  A 区现行文件里没有 `X.sub.closed` 这两个名字；要这些部分写 `group.sub.closed[xOF X.sub[xOF a]]`。】
 
 **本质**：一条形如 `group (G.sub H)` 的 concept fact 进入上下文时，按 4.1 它等价于实例 `sub` 的全部 `if` 子句加宿主前提，于是用实例的 destruction lemma（`group.sub.closed`、`group.sub.ambient`…）把它们一条条拆出来，以**该 fact 的名字**作 qualifier 命名：`sub.closed`、`sub.one_in`、`sub.inv_closed`、`sub.subset`、`sub.ambient : group G`。作者把它定名为 **assumption destruction**。header 的 `assumes`（原本节）、实例上下文的 `if` 子句（第 1 节）、proof 里的 `assume`、`lemma … assumes`、`obtain`、`case`、匿名的 `context fixes … assumes … begin` 块、以及 `have` 推出的本地 concept fact，全部是同一机制的调用处。
 
@@ -132,10 +164,11 @@
   - 计数：每条进来的 fact 各有一个，不再按 name binding。第一行是一个 name binding 里的每条定理，后两行是每条前提。上限是配置项 `concept_extraction_limit`。任何调用处都不出 warning。
   - 表里后两行是内部调用：只走第一遍，用较严的检查（2026-11-23 起，那份文件第 4A.1 节"放到一边的"一条）；
     各有自己的"走过第一阶段的命题的集合"与"被上限拦下的工作"的表，调用结束就丢；外层上下文里被上限拦下的工作在里面不接着做。
-    （2026-11-23 起，被上限拦下的工作有两样：被上限拦下的关系 fact 与欠着后续工作的激活结果；规则的产出在两遍里都计数，默认上限 300。那份文件第 4A.3、4A.5 节。）
+    （2026-11-23 起，被上限拦下的工作有三样：被上限拦下的关系 fact、欠着后续工作的激活结果、实例项没有拆的 concept fact；规则的产出在两遍里都计数，默认上限 300。那份文件第 4A.3、4A.5 节。）
     最后一行里后备 attribute 的命题的前提与 proof method 的子目标前提走同一条路，所以也算内部调用（concept B 的读法；那份文件第 4A 节开头"内部调用"一条）。
   - simp 的本地假设那一行有一处例外：selector Simpset 自己化简时，处理器不调 `destruct_assms`，只把收进来的 concept fact 前提补强后放进 simplifier 的本地表（那份文件第 4A.6 节）。
-  - 表里没有的调用处，不设上限、也不报错的：定义 concept 时算激活列表、声明实例、在 theory 里登记或导入、`concept_instance` 判断要不要宿主前提（那份文件第 4A.3 节的表）。
+  - 表里没有的调用处，不设上限、也不报错的：定义 concept 时算激活列表、声明实例、在 theory 里登记或导入（那份文件第 4A.3 节的表）。
+    `concept_instance` 判断要不要宿主前提的那一处，上限是固定的常数 50，也不报错（2026-11-23 改，此前也列在不设上限的里面；那份文件第 4A.3 节"判断宿主前提的上限"）。
   - 表里没有的调用处，照运行时每条 fact 各有一个计数的：在证明里登记（`note … [concept_intro]`）；打开实例上下文时交进来的 fact；`concept_instance` 证义务的证明上下文里的各条。
   - 登记时是直接调用，四个开关全关（那份文件第 2.2 节"登记时的激活怎样做"）。
   - assumption destruction 的 trace（检查让一条命题不再往下走、上限停下工作时印什么）还没有写，配置项名也没有定（那份文件第 4A.10 节）。
@@ -198,6 +231,8 @@
   【作者 2026-11-22 13:26 UTC：「好」。concept B 13:16 向他说的是：`assume s: "⋀i. group (G.sub (H i))"` 现在会起名字，写成 `∀i.` 的仍然不起名，想要名字的用户写 `⋀i.` 或 `… for i`】
   这个差别来自上一行作者 2026-11-16 的决定加上 Isar 的规范化。评审的裁判提过一种消除它的改法，没有采用：把那个决定收窄到合取（去 `∀` 只得一条 fact，不会重名），三种写法就都起名。
 - **规则**只来自 `concept_instance`：隐含宿主前提的 `C.x.ambient` 和每条 `if` 子句的 destruction lemma（主计划 4.1），按 `concept_instance` 命令定义出的常量的名字索引；视图没有。
+  （2026-11-23 注，concept B；先后是 concept C 定并转告的，C 区 5.2）拆一个实例项时各条 destruction lemma 照声明的先后用：`ambient` 永远有、排第一，然后是各条条件，照写的先后。
+  陈述相同的两条（用户写了 `if g: "group \<S>"` 时的 `ambient` 与 `g`）只有先到的 `ambient` 起名（专题文件 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节第 3 项）。
   递归在接口函数 `destruct_assms` 内部显式做（2026-11-18 改；此前写的是"递归靠钩子重入"，`note` 为假的调用处没有重入可靠；`note` 为真时 note 出去的东西仍会触发钩子，已在表里，被去重跳过）：拆出的 `s.ambient : group (G.sub H1)` 自己又是一条以实例常量为头的 concept fact、接着拆，得 `s.ambient.closed`、`s.ambient.ambient`，到对象是变量（头不是 `concept_instance` 命令定义出的常量）时停。
   例：`s : group ((G.sub H1).sub H2)` 抽出 `s.ambient : group (G.sub H1)`、`s.ambient.ambient : group G`，条件两组：外层在 `(G.sub H1, H2)` 上的 `s.closed`…，内层在 `(G, H1)` 上的 `s.ambient.closed`…；`H1`、`H2` 是集合，不产生 concept fact。
 - **去重**【2026-11-18 改，B 区评审 B11、B12（我自决的修正，裁判要求的复审尚未做；比法本来就是我自决的）】：
@@ -213,7 +248,7 @@
   下面是原文：key 是被 destruct 的命题本身，存放处就是 intro table 的上下文部分那张 Net。没有 schematic 变量的命题按 aconv 比；带 schematic 变量的 concept fact（`group (G ?i)`，见上面"对象"一条）按"只差 schematic 变量改名"比，即两条命题互相能匹配就算同一条（2026-11-16 补，此前这里写的是"aconv；无 schematic 变量"；比法由我自决）。
   钩子先查，命题已在就整条跳过——不 destruct、不起名（`note s2 = s` 不会得到 `s2.closed`）。嵌套块的 context 从外层派生，Net 一并继承，块结束自动丢弃。
   "先无名后有名"的别扭处（`assume "group (G.sub H)"` 之后再 `assume s: "group (G.sub H)"`，`s.closed` 不存在、条件只在 `concept_implications` 里）作者接受。
-- **命名**，各种上下文一套（从合取或 `∀` 拆出的部分例外，不起名，见上面"对象"一条末尾）：有名的 `s` 逐条 `s.closed`、`s.ambient`、`s.ambient.closed`；**没有** `s.implications`（否则同一批定理两个名字，作者否决）；无名假设的条件追加进 **`concept_implications`**（2026-11-16 起 header 的 `assumes` 与实例的 `if` 子句都必须有名字，主计划 2.1、4.1，所以无名假设只来自证明里的 `assume`、`have … if`、`obtain` 等，以及从合取或 `∀` 拆出的部分），同名重新绑定（像 `this`，本地 fact 名字空间允许遮蔽，嵌套块里的追加只在块内可见）；全部有名时 `concept_implications` 不存在。钩子用 `Proof_Context.note_thmss`（本地）而不是 `Local_Theory.notes`（会写全局 fact、同名第二次报 "Duplicate fact declaration"）。
+- **命名**【2026-11-23 整条作废：一个名字都不绑，见本节开头】，各种上下文一套（从合取或 `∀` 拆出的部分例外，不起名，见上面"对象"一条末尾）：有名的 `s` 逐条 `s.closed`、`s.ambient`、`s.ambient.closed`；**没有** `s.implications`（否则同一批定理两个名字，作者否决）；无名假设的条件追加进 **`concept_implications`**（2026-11-16 起 header 的 `assumes` 与实例的 `if` 子句都必须有名字，主计划 2.1、4.1，所以无名假设只来自证明里的 `assume`、`have … if`、`obtain` 等，以及从合取或 `∀` 拆出的部分），同名重新绑定（像 `this`，本地 fact 名字空间允许遮蔽，嵌套块里的追加只在块内可见）；全部有名时 `concept_implications` 不存在。钩子用 `Proof_Context.note_thmss`（本地）而不是 `Local_Theory.notes`（会写全局 fact、同名第二次报 "Duplicate fact declaration"）。
 - **destruct 出的 concept fact** 进 intro table 的上下文部分（第 4 类条目），并挂 `[intro!]`（同主计划 2.3 对上下文 concept fact 的处理；只在 `safe_intro` 为真的调用处，即钩子与块打开时，见上面"接口"）；`if` 子句的条件**不**挂 `intro!`（`closed : ⋀x y. x ∈ H ⟹ y ∈ H ⟹ x * y ∈ H` 作 safe intro 会让 `auto` 遇到 `a * b ∈ H` 就不可逆地拆成 `a ∈ H`、`b ∈ H`，证明走别的路时无谓地败）。
 - **不查 hyps**：条目带来源假设的 hyps，`global_form` 取走假设期间照样在表里；按主计划第 1 节的原则不加检查。
 - concept 声明块里要导出成全局 `X.s.closed` 的那份由 `concept` 命令另做，不经钩子。原本节下面的细则（改写、层级、名字、不导入 lemma 库）保留如下，是这个机制在 header 处的样子。
@@ -283,7 +318,8 @@
 - 一条命令写在实例上下文之内（`context group.sub begin … end` 里）是什么意思，没有定（评审 `wf_c20d5d96-07b` 的 K3 列了三条，另两条已定，见下）：
   `import_concept x`：`x` 相对于谁。归 E 区，已告 concept E。
   评审同时列出的"不带 `(in …)` 的 `concept_instance`"已定：不能写在实例上下文之内，报错（作者 2026-11-23 05:33 UTC「赞同 报错并指路」，文案他随后定为只有一句；C 区文件 5.1 与 10.1）。
-  `r[of_concept _]` 不在此列：它只在 concept 的块里能用，别处是报错（E 区文件 5.3）。
+  `r[of_concept _]` 2026-11-23 有了着落：实例上下文里可以写，`_` 指这个实例的结构项、用上下文的假设；concept 的块与实例上下文之外才报错（第 1 节"名字"一条；E 区文件 5.3）。
+  此前这里写的是"它只在 concept 的块里能用，别处是报错"。
   评审同时列出的 `notation` 已定：写实例自己的表（第 1 节开头"与 concept 的块不同的"）。
 - 实例上下文假设不假设东西，改成看实例有没有条件：concept C 2026-11-23 照作者的授权定（不是作者逐条批的），写在第 1 节 assumes 一条"假设不假设，看实例有没有条件"。
   核查小组留下的、不是这条规则引起的三处未定：不在 family 里的全局实例的上下文（`context int_mod`、`context f`）的查找链没有写明（B 区）；

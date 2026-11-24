@@ -10,6 +10,12 @@
 - 文中的"C 区评审 C⟨n⟩"指 C 区对抗式评审（2026-11-18，workflow `wf_b5a58505-a4a`）的意见编号。它没有单独的报告文件，记录在 `/home/qiyuan/.claude/projects/-home-qiyuan-Current-MLML/6eea425e-36e9-435b-872a-644ff9e41100/subagents/workflows/wf_b5a58505-a4a/journal.jsonl`（concept C 的冻结回复给的位置，文件存在）。
 - **实现由谁写**【已定，作者 2026-11-21 02:23 UTC 对 concept A1：「批准此分工」；`CONCEPT_FACT_SEARCH_PLAN.md` 6.2 第 13 项】：concept C 写 `concept_instance` 命令的流程，声明时调用 concept B 做成函数的激活与"声明时的判断"（5.1）；intro table、搜索与 `concept_fact` 的各种身份归 concept B；类型层提供的几样（`concept_entailment`、截断等式的函数等）归 concept A1。
   何时动手听作者的：作者 2026-11-21 01:52 UTC 对 concept A1 说的是「若无异议后稍后准备实现」。A 区与 C 区在类型层与命名 target 上的分界见公共文件"实施方式"一段后面。
+  `concept_instance` 的原型等 concept A1 与 concept B 的原型都写好再开工【已定，作者 2026-11-23 07:56 UTC 对 concept C：「我不是跟你说过了要等 concept A B 吗？」】。
+- **parent 与字段两个词**【已定，作者 2026-11-23 10:03 UTC 对 concept A1，concept C 在它的转录里核过；全文在公共文件第 0 节表前"parent 与字段（field）两个词的分工"】：
+  parent 只指 major parent；header 里带名字的项一律叫字段，其中类型是 concept 的那一种写成"类型是 concept 的字段"，不另起名字。"视图"仍是内部的词，用户可见的文字里不出现。
+  本文件此前写的"带名字的 parent""non-major parent""带 qualifier 的 parent"照这个意思读，没有逐处改；2026-11-23 10:03 UTC 之后新写的文字用新的说法。
+  规则的叫法随之定了【作者 2026-11-23 11:17 UTC 对 concept A1：「赞同叫"字段 ord 的规则"」，concept C 在它的转录里核过】：`ordered_group ?S ⟹ order (ordered_group.ord ?S)` 是字段 ord 的规则，
+  parent rule 只指第一个 parent 的那条，如 `ordered_group ?S ⟹ group ?S`。本文件此前把前一种叫"视图的 parent 规则"的地方照此读。
 
 ---
 
@@ -58,10 +64,12 @@
   - 后代需要自己的实例的两种情形。一，后代要更多的条件和更强的宿主：假设 monoid 体内有子幺半群的实例，它不带 `inv_closed`，从 `group (monoid.sub G H)` 出发 assumption destruction 拆出的宿主 fact 是 `monoid G`、得不到 `group G`；ring 同理，还要 H 对加法和取负封闭。
     二，后代加的数据要随 carrier 变：拓扑群的 `opens` 在子群上应是子空间拓扑，照抄宿主的得到的不是拓扑群。
     后代的这个实例可以与祖先的同名，也可以另起名字（`monoid.submonoid`、`group.subgroup`、`ring.subring`）。
-  - 落在 A 区与 C 区的三个后果（concept C 向作者报告；第二个他 2026-11-22 12:53 UTC 答「4. 好」）：
-    header 的字段可以与祖先的字段同名，`where` 的路径里一段名字指最近的那个，被盖住的写 `super.carrier`；
-    同一个 concept 在后来的 theory 里再声明同一个名字，新的盖住旧的，连 `definition (in group) inv`（`inv` 是 group 自己的字段）也被接受，此后 `inv` 与 `group.inv` 指新的常量；
-    `others = t` 按"同一个叶子、或同一条路径"配字段，不按字段的短名配（一个节点里现在可以有两个同名的叶子）。
+  - 落在 A 区与 C 区的后果（concept C 向作者报告；他 2026-11-22 12:53 UTC 答「4. 好」）：
+    同一个 concept 在后来的 theory 里再声明同一个名字，新的盖住旧的，连 `definition (in group) inv`（`inv` 是 group 自己的字段）也被接受，此后 `inv` 与 `group.inv` 指新的常量。
+  - 覆盖只管 `definition` 与体内实例这类常量，不管字段【已定，作者 2026-11-23 12:11 UTC 对 concept A1：「赞同 A 区照旧不许同名」「字段不能放开」；concept C 在它的转录里核过】：
+    header 的字段照旧不许与继承来的名字同名（A 区 10.1，作者 2026-11-18 定）。
+    此前这里还列着两个后果，现在收回：一是"header 的字段可以与祖先的字段同名，`where` 的路径里一段名字指最近的那个，被盖住的写 `super.carrier`"，那是讨论小组推出来的，不是作者的话；
+    二是"`others = t` 按同一个叶子、或同一条路径配字段，不按字段的短名配"，它的理由是"一个节点里可以有两个同名的叶子"，这个理由不再成立。
   - 它取代 2026-11-16 的"后代不能重新定义祖先已有的体内实例名"（作者当时「A4 好」），以及 2026-11-22 早些时候 concept C 定的两条（声明时双向检查、theory 合并时拒绝）。
     这三条都不要照着实现；旧文字在讨论记录 `ai-artifacts/concept_unary_C_probes/ancestor_constants_discussion_2026-11-21.md`（不提交）。
   - **叠在祖先的带参数实例上建：用 `super = t`，"分开写"**【已定，作者 2026-11-16「赞同采用"分开写"」】。作者的例子（右边的 `sub H` 加了引号：`where` 各项用空格分隔、不加引号的项只能是单个词（2.1），作者原来写的 `super = sub H` 解析不了；A 区评审 A9.3，作者 2026-11-17「A9.3 对是的，必须加引号」）：
@@ -155,6 +163,7 @@ end
   - 读名字、目标 concept `D`、`for` 变量、各条 `if` 子句、`= 项` 与 `where` 的各条子句（5.2、5.4，`CONCEPT_INSTANCE_WHERE_PLAN.md`）。`rewrites` 的等式这时不读，到第 3 步才读。
   - 名字在 family 里时，照 5.6"判断的先后"决定这条声明是定义常量、不定义常量、还是报错；没写类型的参数在这里由所接的成员推断。
   - 同一个字段经几条路给到时照 5.4"同一个字段经两条路给到时怎么比"比；字段没给全时报错（10.1）。
+  - 体内实例：宿主前提是不是由用户写的条件推得出，在这一步的末尾判断（5.2"体内实例的宿主前提"）。它要先于第 2 步，因为隐藏字段里放不放宿主谓词由它定。
 - **第 2 步：定义常量。**
   - 命令调类型层的 `Concept_Type.define_instance`。常量叫什么、是哪一类、类型怎样定，见 5.2 与 5.6；family 的成员沿用所接成员的字段（5.6）。
   - 类型层在定义时交回本次实例自己的那条等式 `concept X = …`（`X` 是本次实例，4.1），第 3 步要用。
@@ -165,7 +174,9 @@ end
     这些假设经 assumption destruction 进 intro table（分册第 2 节）。
     拆它们时照运行时的规则，每条 fact 各有一个计数；声明实例时做的拆（第 7 步的激活）不设上限、不报错、不出 warning
     （concept B 的停机设计，`CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.3；作者 2026-11-22 15:19 UTC 对 concept B：「确认上限停下工作时完全不出 warning」，concept C 核过）。
-    所以 `concept_instance` 里没有关于上限的 warning 要打。
+    所以 `concept_instance` 里没有关于这个上限的 warning 要打。搜索的次数上限 `concept_fact_user_limit` 是另一个上限，碰到它要出 warning，见第 5 步。
+    运行时的上限是配置项 `concept_extraction_limit`，默认 300；规则的产出在第一遍、第二遍里都计数（两遍见 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.2）
+    【作者 2026-11-23 05:27 UTC 对 concept B：「赞同 两遍都计数」「我建议的默认值是 300」，concept C 在它的转录里核过】。
   - 它和实例上下文不是同一套假设：实例上下文至多假设一条，即 `concept (实例项)`，实例没有任何条件时不假设（分册第 1 节；`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节），而这里实例的 fact 正是要证的。
   - 用第 2 步交回的等式加这些假设得到 `concept X`，记进上下文，进 intro table 的上下文部分；这一步总能做成。这条等式不在 selector Simpset 里（4.1）。
   - `rewrites` 的等式在这个上下文里读（5.2）：这时常量已经有了，等式里可以写新实例自己。
@@ -230,6 +241,11 @@ end
     它既关最底下那一项，也证带条件的等式的 `concept _` 前提（由 simplifier 的 prover 调到它，5.2"带条件的 selector 等式"、5.3；例见 5.4 的 `id_hom`、5.6）。
   - **selector Simpset 的每一次调用有步数上限**（规则在 B 区文件 `CONCEPT_B_FACT_PLAN.md` 7.1"selector Simpset 的一次调用有步数上限"，concept B 2026-11-22 16:40 UTC 写入，以那里为准；限的是步数，不是时间）。
     阶段一的改写、"沿来源走一步"的那条规则、5.6"命令怎么用它"第 4 步的化简，都经那个带上限的入口用。
+    上限是 1000 步【已定，作者 2026-11-23 14:36 UTC 对 concept A1：「好的，定 1000」，concept C 在它的转录里核过】；命令不设、不改这个数。
+    入口在类型层（concept C 与 concept A1 2026-11-23 约定，名字是它定的；代码在 `contrib/concept` 的提交 `bb907cb`）：
+    `Concept_Type.selector_simp_tac : Proof.context -> thm list -> int -> tactic` 化简第 i 个子目标，子目标自己的 `⟹` 前提照 `asm_full_simp_tac` 收进来，
+    定理表是只在这一次调用里加的改写规则（"沿来源走一步"的那条就这样加），到达上限时子目标原样留下、不失败；
+    `Concept_Type.selector_rewrite : Proof.context -> cterm -> thm option` 交回化简的等式，`NONE` 是到达上限。
     到达上限的那一次调用交回它的输入：这一处就当没有改写，照改写之前的样子往下拆，或把子目标原样留下。
     不出 warning【作者 2026-11-22 16:15 UTC 对 concept B：「> 到步数上限时出不出 warning」「建议不出」；concept C 在 concept B 的转录里核过】。
   - 否决的：先试 `concept_fact` 再构造（作者 2026-11-13 UTC「也就是说，我不赞同“递归之前先试一次 concept_fact”」）；
@@ -241,6 +257,11 @@ end
   - 成功时留下的是所用规则的非 concept 条件（如实例的 `if` 条件），不去证。
   - 留下的条件可能带"或"：方案的生效距离大于 0 时，每个目标留下的是几个距离最小的方案的条件的"或"，个数上限是配置项 `concept_fact_max_solution_number`，默认 10
     （那份文件 4.2、6.2 第 11 项；concept A1 2026-11-20 通报，concept C 没有复核）。
+  - 碰到搜索的次数上限 `concept_fact_user_limit` 时出 warning，告诉用户【已定，作者 2026-11-24 对 concept B：04:04 UTC「在命令的 warning 里说一句」，
+    04:16 UTC「干脆做成 concept_fact 的参数好了，然后 the users' concept_fact tactic 以及 concept_instance 用的都始终开启」；concept B 转来，原话 concept C 在它的转录里核过】。
+    做法：B 区的 tactic 函数（`concept_fact_tac`，签名还在重拟）带一个参数管这件事，命令调它时始终开着；用户的 `by concept_fact` 也始终开着，simp 里的调用与 trigger 关着。不设配置项。
+    出的是 B 区文件 10.1 已批的两句（`Tactic concept_fact gave up after using concept_intro rules 30 times …` 与 `Tactic concept_fact stopped collecting alternative solutions …`），由 B 区的函数出，命令不另拟文案。
+    它不改另两处的不出声：selector Simpset 的一次调用到达步数上限（第 4 步），拆假设到达 `concept_extraction_limit`（第 3 步）。
 - **第 6 步：把剩下的子目标作为一个目标交给用户。**
   - 先后（评审建议，concept C 采用）：先是公理，再是祖先实例的 `if` 条件（5.6），最后是 `rewrites` 的义务。它就是第 3 步各条陈述的先后，不另排。
 - **第 7 步：证明结束的那一刻才做的事。** 这张单子是按有自己常量的实例写的。
@@ -248,6 +269,8 @@ end
     原因：激活出的条目是用 selector Simpset 化简之后存下的，自动导入的副本也用它改写。
     这个实例自己的 `rewrites` 等式，以及只带一个条件的截断等式（蕴含交进去之后才有），若晚于激活或导入才进来，存下的条目与副本的形式以后再也查不到，而且没有任何报错。
     绑定 destruction lemma 在存下 `rewrites` 等式之前（存下的等式是用它们做出来的，11.2 的 C15）。
+    做出 destruction lemma（`ambient` 在内）与 `of_concept` 也在交蕴含、绑定裸名上的 iff、登记 intro rule 之前（2026-11-23，5.2"体内实例的宿主前提"）：
+    iff 与规则由 `of_concept` 做出，`of_concept` 经 destruction lemma 做出，`super = \<S>` 的蕴含用 `ambient`。
     绑定裸名上的 fact 与登记 intro rule 在自动导入之前（E 区的要求）；它们相对于激活的先后归 B 区，没有定（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 8 节第 3 项）。
   - 这一步做出的东西都绑在、声明在 theory 层，不经宿主 concept 的 target，命令写在宿主的块里时也是
     【concept E 定，2026-11-22 16:18 UTC 通知；依据是作者对它的授权，14:30 UTC「这里你可以自主设计，最好跟 Opus agent team 讨论一下看有没有你没想到的问题」、14:38 UTC「交给小组一并设计」，concept C 在它的转录里核过；
@@ -270,7 +293,9 @@ end
     导入也用它：体内实例作导入处时，它就是给出导入处 concept fact 的那条定理；不定义常量的成员用它自己的 fact（E 区文件 5.3"副本怎样做"里"这套做法是一个函数"一条，作者 2026-11-22 17:05 UTC 对 concept E 采纳）。
     `of_concept` 因此是保留名，`if` 子句不能叫这个名字，命令在声明处报错（concept B 的读法，它说向作者说过、作者没有异议）；文案已定，10.1。
     它由命令做出，做好后交类型层存进实例的记录（concept A1 2026-11-21 经 concept B 转告；类型层自己做不出，它没有关于谓词 `D` 的事实）：
-    隐藏字段的等式 `concept (实例 ?参数) = ⟨if 合取⟩` 给出各条 `if`，再接实例自己的规则。
+    做法（2026-11-23 改写，concept C 定，讨论小组 `wf_fefdbde2-f6a`；这一句不在上面作者那个决定之内）：证完的 `D X` 离开义务的上下文时带着各条条件作前提，体内实例还带着 `C ?S`；
+    每条前提经陈述它的那条 destruction lemma 换成 `concept (实例项)`，`C ?S` 经 `ambient`。实例的规则与 iff 再由它与隐藏字段的等式做出（5.2"体内实例的宿主前提"）。
+    此前这里写的是"隐藏字段的等式给出各条 `if`，再接实例自己的规则"。两种做法做出的 `of_concept` 陈述相同；差别是旧做法要先有规则，现在规则由 `of_concept` 做出。
     它对每个有自己常量的实例都是 `concept (实例项) ⟹ D (实例项)` 这个形状：实例的隐藏字段是 `True` 时，就是 `D (实例项)` 加上一条恒成立的前提
     （2026-11-23 写准，讨论小组 `wf_05f96e85-445` 的挑毛病一方：此前这里写的"不带 `if` 的实例它就是 `D 实例` 这条定理本身"对体内实例不成立，也会让补强与 `[xOF …]` 两种用法对不同的实例要分情形）。
     用户手写 `group.sub.closed[xOF s]` 时，`s` 是 `group (G.sub H)` 或 `monoid (G.sub H)` 都可用（xOF 接受后代的 fact 填祖先的前提，归 concept A1）。
@@ -285,7 +310,7 @@ end
     family 之外写了 `名字: "t"` 的实例：`concept (实例项) ⟹ concept t`，从第一条 `名字` 条件做出来
     （讨论小组 Q24 已定，`ai-artifacts/concept_unary_C_probes/design_teams_2026-11-22/DECISIONS.md`；类型层要为它记第三种来源，`CONCEPT_INSTANCE_WHERE_PLAN.md` 第 3 节第 5 项末条）。
     下面两种与上面两种由同一个函数做：从一条在义务的上下文里成立的定理 `Q u` 出发，把前提换成 `concept (实例项)`，再接 `Q ?S ⟹ concept ?S`。
-    体内实例写 `super = \<S>` 时：`concept (实例项) ⟹ concept S`【作者 2026-11-21 07:29 UTC 对 concept A1「赞同你的建议」所含的一条，concept A1 转告】；由实例的隐藏字段等式接上"宿主谓词 `?S` ⟹ `concept ?S`"得到。
+    体内实例写 `super = \<S>` 时：`concept (实例项) ⟹ concept S`【作者 2026-11-21 07:29 UTC 对 concept A1「赞同你的建议」所含的一条，concept A1 转告】；由 `ambient` 接上"宿主谓词 `?S` ⟹ `concept ?S`"得到（2026-11-23 改：宿主谓词不一定存在隐藏字段里，5.2；此前写的是"由实例的隐藏字段等式接上"）。
     concept A1 2026-11-21 另提了一种："实例成立，则它的某个结构参数成立"，`concept (c ?xs) ⟹ concept ?xᵢ`，按参数位置交；体内实例对宿主总有一条，带参数的全局实例在 `if` 子句说了某个参数的 concept 时有一条。
     这一种是它的新设计，没有实测、没有评审（类型层计划 3.13）；concept C 同意由命令来交，是两个会话之间的约定，不是作者的决定。
   - **存下 `rewrites` 等式**（5.3）【已定，作者 2026-11-20 对 concept maintain：15:18 UTC「1. 建议直接登记为 simp. 且需要给它们一个 name binding，请起草名字」，16:01 UTC「赞同 int.group.rewrites」】：
@@ -300,7 +325,12 @@ end
     等式存下的同一刻也加进 selector Simpset【已定，作者 2026-11-22 15:17 UTC 对 concept E：「赞同 rewrites 等式放进 selector Simpset」，concept C 在 concept E 的转录里核过；E 区文件 5.3"selector Simpset"一段的最后一条】。
   - **激活**（机制以 concept B 的 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.4 节为准，那份文件 2026-11-21 02:18 UTC 定稿）：
     命令在实例的上下文里把实例的 fact 交给 assumption destruction，它的最后一步是激活；激活出的 fact 带着实例的原前提导出到 intro table 的 theory 数据【已定，作者 2026-11-20 16:11 UTC 对 concept B 的这个读法答「确认」】。
+    "原前提"指实例上下文的那一条假设 `concept (实例项)`，不是 5.2 说的实例的前提表（2026-11-23 写明）。
+    命令在声明时用的这个实例上下文从 theory 建起，不嵌在宿主的块里：嵌在块里的话，导出时会经过块的 `C_axiom`，把 `C ?S` 加回前提【concept C 定，2026-11-23；讨论小组 `wf_fefdbde2-f6a` 指出此前没有写明】。
     实例的隐藏字段是 `True` 时上下文什么都不假设（分册第 1 节 assumes 一条，2026-11-23 定），激活出的条目就是不带前提的 fact，如 `int_mod` 的条目不带 `concept (int_mod ?n)`。
+    导出什么（concept B 2026-11-23 定，是论证的、没有实测；`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.4 节"2026-11-22 停机的设计对这一节的三处"的第三项。
+    concept B 同日告知它的复审 `ai-artifacts/concept_destruction_plan_rereview_2026-11-23.md` 判这条线成立；concept C 没有通读那份报告）：
+    上下文什么都不假设时，除了激活出的 fact，还导出这次拆放进 intro table 的全部条目；上下文有假设时只导出激活出的 fact，不多导出。
     激活做的事：把实例所属 concept 的激活列表（header 里说别的结构的假设拆出的 concept fact）对这个实例实例化、用 selector Simpset 化简。
     作者 2026-11-20 15:52 UTC 对 concept A1 的"theory 数据那部分也要做激活"答：「是的，在定义 concept_instance 时候做」（concept C 核过转录）。
     激活出的条目不起名，条目本身留在 intro table【已定，作者 2026-11-21 02:48 UTC 对 concept B：「赞同声明实例时激活出的条目不起名，条目本身留在 intro table」】；用户要用时自己拿 concept 的 `X.q` 和实例的规则拼。
@@ -442,7 +472,7 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
       `h` 里读不出结构时报两行的 `Not a concept fact: …`（文案在 A 区 10.1）。
       把成员本身写成项，得到同一类型的两个成员之间的等式：`[[concept_selector "sub.comm_monoid G H"]]` 给出
       `concept (sub.comm_monoid ?G ?H) ⟹ sub.comm_monoid ?G ?H = sub.monoid ?G ?H`（5.6"refinement 的成员定义什么"）。`concept_instance` 命令不为这条等式绑 fact 名。
-    - **trigger 的范围**【已定，作者 2026-11-17「赞同 R6 附带的放宽」】：除了"selector 和实例常量同时出现"，视图常量作用在任何结构项上时也触发，包括块里的 `\<S>`，例如 `ordered_group.ord[OF ordered_group_axioms, concept_selector order.carrier]` 给出 `order.carrier (ordered_group.ord \<S>) = monoid.carrier \<S>`；Sledgehammer 于是在 `simp` 本来就有映射等式的地方也拿得到它们。2026-11-21 起范围加上含截断的项与统一规则（A 区文件 3.5 开头"凡是走 simproc 的等式都必须有对应的 fact trigger"）。
+    - **trigger 的范围**【已定，作者 2026-11-17「赞同 R6 附带的放宽」】：除了"selector 和实例常量同时出现"，视图常量作用在任何结构项上时也触发，包括块里的 `\<S>`，例如 `ordered_group.ord[OF ordered_group_axiom, concept_selector order.carrier]` 给出 `order.carrier (ordered_group.ord \<S>) = monoid.carrier \<S>`；Sledgehammer 于是在 `simp` 本来就有映射等式的地方也拿得到它们。2026-11-21 起范围加上含截断的项与统一规则（A 区文件 3.5 开头"凡是走 simproc 的等式都必须有对应的 fact trigger"）。
   - **带条件的 selector 等式**【两步的做法：已定，作者 2026-11-17；其中第 1 步 2026-11-22 去掉，见本条下面】。绝大多数 selector 等式是从定义直接算出来的，没有条件。
     带条件的有三种（2026-11-22 更正，此前写的是"只有一种"，即下面第一种）：
     5.4 里用参数或依赖参数的项填一整块时的整体等式，如 `concept K ⟹ group_hom.G (id_hom K) = K`；沿来源的截断等式与 `super` 的截断等式（5.6）；带前提的 truncate congruence rule 给出的结果。
@@ -469,32 +499,87 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
   - `concept_instance` 里写的 `rewrites` 等式不受影响，照旧登记为 simp（5.1）。
 - intro rule 由 `concept_instance` 给出，存在 intro table 里。
   - **实例的裸名上绑一条 fact**【已定，作者 2026-11-11 定裸名；2026-11-16 改绑的内容】：没有前提的实例绑 intro rule 本身，如全局 family 实例 `x.D : D (x.D)`（`D` 是 refinement 又不带条件时是 `x.D : D (x.P)`，`P` 是拥有这个类型的 concept；`x.P` 的隐藏字段不是 `True` 时是 `x.D : concept (x.P ?xs) ⟹ D (x.P ?xs)`，是 `True` 时没有这条前提，5.6）；有前提的实例（体内实例、全局带 `if` 的实例）绑它的 **iff 形式**（4.1），体内 `C.x : D (C.x ?S ?a) ⟷ C ?S ∧ ⟨各条 if 子句⟩`，无 family 的全局带参数实例 `x` 同理。
+    体内实例的 iff 里 `C ?S` 那一项只在用户写的条件推不出它时有（下面"体内实例的宿主前提"，2026-11-23）。
     此前这里绑的是分开前提的 `C.x : C ?S ⟹ if 前提 ⟹ D (C.x ?S a)`；它现在**只存在于 intro table 里，没有名字**（作者 2026-11-16 引了这句并据此定 xOF 的改造，第 9 节）。它另按有没有 `if` 子句声明成 `[intro]` 或 `[intro!]`（已定 2026-11-18，见下文"实例的 intro rule 挂哪个 classical attribute"那句）。
-  - **体内实例的宿主前提：用户写的条件已经推得出它时，不写进规则**【方向与判断的办法已定，之后改什么未定；作者 2026-11-21 12:25 UTC 提出，2026-11-22 05:24 UTC 定办法】。
+  - **体内实例的宿主前提：用户写的条件已经推得出它时，不写进规则**【方向与判断的办法已定：作者 2026-11-21 12:25 UTC 提出，2026-11-22 05:24 UTC 定办法；判为推得出之后改什么，2026-11-23 由 concept C 定，见本条"判为推得出之后改什么"】。
     作者：「如果 group \<S> 已经在例如 group (\<S>.sub H) 中被蕴含了，是不是我们可以合并掉 group \<S>？我认为 concept_instance 的自动化设施需要有一个确定性的关于此的推理」；对算法的要求是「确定性且 efficient」。
     例：`concept_instance (in group) normal: group where subgroup: "sub N" if conj: … for N`。照上面的形状，规则是 `group ?G ⟹ group (group.sub ?G ?N) ⟹ conj ⟹ group (group.normal ?G ?N)`；第一个前提由第二个推得出（`group.sub.ambient`）。
     判断的办法：先把用户写的条件（各条 `if`，以及 `where 名字: "项"` 带的那一条）交给 assumption destruction 连同激活拆开，这时上下文里还没有宿主的 fact（作者「赞同先拆用户写的条件，再把宿主的 fact 放进上下文」）；
     然后对 `C \<S>` 跑 `concept_fact`，证得出就判为推得出（作者「建议要跑 concept_fact 的搜索，所以基本上是完整的 assumption destruction + activation + concept_fact」）。
-    它依赖不靠深度与广度上限的 assumption destruction（concept B 的停机设计，2026-11-22 定稿，`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 4A 节）；新的拆解要能对一组假设单独跑一遍（作者：「对」）。命令证义务时本来就要拆这些条件，判断几乎不添成本。
+    它依赖不靠深度与广度上限的 assumption destruction（concept B 的停机设计，2026-11-22 定稿，`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 4A 节）；新的拆解要能对一组假设单独跑一遍（作者：「对」）。
+    判断用的上下文是另建的（下一行），所以它多出的成本是把用户写的条件再拆一遍、再做一次搜索（2026-11-23 改准；此前这里写"判断几乎不添成本"）。
     判断用的上下文从 theory 另建：固定 `\<S>` 与 `for` 变量，只假设用户写的条件。宿主的块里的假设（宿主的 fact，header 的各条假设拆出来的东西）不在里面，否则判断恒为"推得出"。
     所以判断看得到的是 theory 里存下的内容（激活列表、导出的条目、`[concept_intro]` 登记、truncate congruence rule、导入副本），加上它自己拆用户的条件放进去的条目。
     这两句是对上面"这时上下文里还没有宿主的 fact"的说明，2026-11-22 答 concept B 时写明，不是新的决定。
     concept B 的停机设计里判断的做法就是这一种（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.3 表后"判断宿主前提用的上下文"一条；concept B 照授权定，作者没有单独表态；
     那份设计写进计划是作者 2026-11-22 17:14 UTC 准的：「可以把停机方案写进计划」，concept C 在 concept B 的转录里核过）：
     用户写的每条条件照写的先后各作为一次拆，由 `Thm.assume` 交进去，不经 `note_thmss`；然后对 `C \<S>` 跑从不展开带条件规则的那个搜索。
-    这几次拆不设上限、不报错，所以判断的结论不随配置项 `concept_extraction_limit` 变。
+    这几次拆的上限固定为 50【已定，作者 2026-11-23。先对 concept A1 定为 30：11:56 UTC「建议仅在此处，固定 the 宽度 limit 为 30，这样对于用户（默认 300）会更加安全」，12:11 UTC「定」；
+    14:35 UTC 对 concept B 改成 50：「那里的 limit 我原本说的是 30，现在也建议调整到 50」。两处 concept C 都在转录里核过】。
+    数的东西与 `concept_extraction_limit` 相同，每条条件各自算；它不可配置；到了就停，不报错、不出 warning（这三点是 concept A1 报给作者的读法；怎样数归 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.3）。
+    被上限拦下的后果只是 `C \<S>` 证不出、判为推不出，宿主前提照旧留着。上限是固定的常数，所以判断的结论仍不随配置项 `concept_extraction_limit` 变。
+    此前这里写的是"这几次拆不设上限、不报错"。
     判断里对 selector Simpset 的每次调用限的是步数、不是时间（B 区文件 7.1），所以同一份输入、同一个 theory 内容判出来的结论每次相同，不随机器与负载变。
     `simp_depth_limit` 不在这些调用里固定【作者 2026-11-22 15:29 UTC 对 concept B：「> selector Simpset 的 depth」「那我觉得不用做了，别过度设计」；concept C 在 concept B 的转录里核过】：
     判断的结论只在用户把它设成 0 或极小的值时才会变。
-    没有定的是判为推得出之后具体改什么，有两种说法，都没有经作者批：
-    只改规则与裸名上的 iff，隐藏字段照旧存宿主谓词（concept C）；
-    规则、iff、隐藏字段由同一张前提表生成，隐藏字段里也不写宿主谓词（设计小组；它的理由是 A 区 4.1 说 iff 就是隐藏字段存的东西，`CONCEPT_FACT_SEARCH_PLAN.md` 说规则的名字是对 iff 做 xOF，三者得一致）。
-    两种说法都保留 `C.x.ambient`，名字与陈述不变、改为推出来的；证明义务与实例上下文不变。
-    命令导出规则与激活条目时要自己消掉宿主前提，不能走 target 的 assumption export：它把每条假设都加回前提（`Pure/assumption.ML:48-49`，读源码的结论，没有运行）。
+    **判为推得出之后改什么**【concept C 定，2026-11-23；作者 07:56 UTC：「赞同开一个 Opus 讨论小组核查后定」；讨论小组 `wf_fefdbde2-f6a`，三份方案一致，挑毛病一方的四处修正都采纳；偏离作者此前原话的三处列在下面，作者 11:56 UTC 都接受了】：
+    - 实例的前提表：用户写的各条条件，照书写的先后（`名字: "项"` 带的各条在前，然后各条 `if`）；判为推不出时最前面加宿主谓词 `C \<S>`，判为推得出时不加。
+      它不是 simplifier 的前提表（B 区 7.1、E 区 5.3 里说的"前提表"是那一个）；本文件说到这张表都写"实例的前提表"或"这张表"。
+      用户写的条件从不删、不换序，即使其中一条是多余的。
+      这张表不是激活出的条目所带的东西：那些条目带的是 `concept (实例项)` 一条前提（5.1 第 7 步"激活"）。
+    - 隐藏字段、裸名上的 iff、intro table 里的规则都照这张表造，不照别的。隐藏字段存表里各条的合取，只有一条时就是那一条；
+      iff 是 `D (C.x ?S ?a) ⟷ ⟨那个合取⟩`；规则是 `⟨表里各条⟩ ⟹ D (C.x ?S ?a)`；xOF 的位置就是表里各条，照先后。
+      用户写的某条条件本身是合取时，现在的 xOF 按 `∧` 拆 iff，位置会比表里的条数多；要它照存下的这张表拆才对得上，已告 concept A1（2026-11-23）。
+      表存在哪里、怎么取【concept C 与 concept A1 2026-11-23 约定，是两个会话之间的接口；类型层已照此实现，`contrib/concept` 的提交 `bb907cb`】：存在类型层的实例记录里。
+      命令把表交给 `Concept_Type.define_instance` 的参数 `premises: term list`，每一项是表里的一条，已经写成隐藏字段里的样子，用实例的参数表示。
+      类型层照它拼出隐藏字段的值（空表是 `True`，一条就是那一条，几条是右结合的合取 `e₁ ∧ (e₂ ∧ … ∧ eₙ)`）并把表原样存下；`get_instance` 交回的记录里有 `premises: term list`，另有拼好的 `constraint: term`。
+      xOF 遇到 `D (c args) ⟷ R`、`c` 查得到时，取表的条数 n，沿 `R` 的右脊正好拆 n - 1 次，某一条本身是合取时不被拆开；n 是 0 或 1 时不拆；查不到的照原来的办法。
+      唯一的一条是字面的 `True`（`if c: "True"`）时拼出来仍是 `True`，照旧算没有条件（`concept_holds` 的判法不变），不另设检查（concept A1 提的）。
+    - 判断做在 5.1 第 1 步的末尾、第 2 步之前，因为隐藏字段是 `Concept_Type.define_instance` 的输入。
+      判为推得出时判断交回一条定理 `w₁ ⟹ … ⟹ wₙ ⟹ C ?S`，`w₁ … wₙ` 是用户写的全部条件，照表里的先后；推导没用到的条件是一条空前提，所以这条定理的陈述只由声明决定。
+    - destruction lemma 在两种结果下名字与陈述都相同：`C.x.ambient : concept (C.x ?S ?a) ⟹ C ?S`，加上用户写的每条条件一条。命令声明它们的先后是 `ambient` 第一，然后是用户写的各条条件，照表里的先后。
+      `C \<S>` 在表里时 `ambient` 是隐藏字段等式的一个投影（与此前相同）；不在表里时，先由隐藏字段等式取出用户写的各条条件，再接判断交回的那条定理。判断交回的定理只用在这一处。
+    - 各条定理怎样做出：证完的 `D X` 照普通的办法离开义务的上下文，带着 `C ?S` 与用户写的各条条件作前提；
+      5.1 第 7 步做 `of_concept` 的那个函数把每条前提经陈述它的那条 destruction lemma 换成 `concept X`（`C ?S` 经 `ambient`），得到 `of_concept`；
+      规则与 iff 再由 `of_concept` 与隐藏字段等式做出，所以它们的前提正是存下的那张表。判断的结果只经 `ambient` 进来，不另写一个专门去掉宿主前提的导出函数。
+    - 不变的：常量、它的类型与参数（宿主仍排第一）；证义务的上下文（照旧假设 `C \<S>` 与用户写的条件）与证明义务；实例上下文；`of_concept` 的陈述；导入副本；存下的 `rewrites` 等式的前提；
+      截断等式带的条件（体内实例的隐藏字段从不是 `True`：没有条件时存宿主谓词，有条件时至少存一条用户写的条件）；classical attribute 照旧按有没有用户写的条件定。
+      没有条件时判断总是推不出：判断用的上下文里什么都没有假设，而没有规则能对一个变量下结论（B 区 7.3 第 (3) 类）。
+    - 不存标记，不加提示，不加检查。结束提示印的 iff 与 `thm C.x` 显示是哪一种结果。
+    - 例 `normal`（`where subgroup: "sub N" if conj: … for N`，判为推得出）：表是 [subgroup, conj]；隐藏字段 `concept (group.normal G N) = (group (group.sub G N) ∧ (∀x h. …))`；
+      iff `group.normal : group (group.normal ?G ?N) ⟷ group (group.sub ?G ?N) ∧ (∀x h. …)`；规则 `group (group.sub ?G ?N) ⟹ (⋀x h. …) ⟹ group (group.normal ?G ?N)`；
+      `group.normal.ambient : concept (group.normal ?G ?N) ⟹ group ?G` 照旧；手写时是 `group.normal[xOF s c]`（此前是 `[xOF g s c]`）。
+      `sub` 的条件都不是 concept fact，判为推不出，全部照旧。
+    - 用户自己写了宿主的 fact（`if g: "group \<S>" and p: "…"`）：判为推得出，表是 [g, p]，iff 的右边是 `group ?S ∧ ⟨p 的内容⟩`。`C.x.ambient` 与 `C.x.g` 陈述相同，两条全局的 destruction lemma 都在。
+      实例上下文里两个名字都不绑：2026-11-23 16:23 UTC 起 assumption destruction 不绑任何名字（作者对 concept B，分册第 1 节 assumes 一条"拆出的部分不起名"）。
+      `ambient` 排第一只管拆的次序：先到的那条走第一阶段，后到的因为陈述相同被跳过（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 2.1"去重"）。
+      此前这里写的是"实例上下文里被绑上名字的是 `ambient`，`g` 这个名字不绑"，并标着要报作者；名字不再绑之后这个问题没有了。
+    - 判断不是逻辑蕴含，它是那个从不展开带条件规则的搜索：两条条件合起来才推得出宿主、宿主只在视图之下，这类情形判为推不出，宿主前提照旧留着。
+    - 结果随声明处 theory 的内容而定，定下之后不变：之后登记的规则与 theory 合并都不改变已声明的实例。
+      同一段声明在内容不同的 theory 里可以得到不同的 iff、规则与 xOF 位置，两种都正确；照另一种形状手写的 `C.x[xOF …]` 得到普通的报错。
+    - 没有采用的两种。只改规则与 iff、隐藏字段照旧存宿主谓词（concept C 原先的说法）：用户看到的完全相同，但要维护两张表，
+      A 区 4.1 说 iff 的右边"也就是本节 `_constraint` 存的内容"，搜索计划说"隐藏字段存的正是这条规则的前提"，这两句会变假；判断的结果还要进到规则与 iff 里。
+      只有 intro table 里的规则去掉宿主前提、iff 与隐藏字段不动：保住了 iff 的原样，但规则的名字是对裸名做 xOF、求值后要正好是这条规则
+      （`CONCEPT_FACT_SEARCH_PLAN.md` 2.1），这时对不上；`thm C.x` 还印着 `C ?S` 而搜索用的规则没有它。
+    - 偏离作者此前原话的三处【作者已接受：concept A1 把这三处连同例子 `normal` 原样报他，他 2026-11-23 11:56 UTC 答「1. 接受」「2. 接受」「3. 接受」，concept C 在 concept A1 的转录里核过】：
+      iff 的右边在判为推得出时没有宿主那一项（A 区 4.1，作者 2026-11-16 确认的是"宿主前提加各条 `if` 子句"；保留的是声明的先后、`∀`/`⟶` 的写法、右边"也就是本节 `_constraint` 存的内容"、不挂 attribute、绑在裸名上）；
+      体内实例隐含的 `if "C \<S>"`（A 区 2.5，2026-11-10）变成有条件的，隐藏字段里也不存；
+      xOF 少一个位置。
+      三句已定的话在判为推得出时不能同时成立：规则不带 `C ?S`（本条的标题）；规则的名字是对裸名做 xOF；iff 的右边是"宿主前提加各条 `if` 子句"（A 区 4.1）。
+      放弃的是第三句里"宿主前提"那一项；A 区 4.1 同一句的后半"也就是本节 `_constraint` 存的内容"保留。
+    - 别的区要跟着改的已告 concept A1 与 concept B：A 区 2.5、3.5、4.1；类型层计划讲隐藏字段内容的两处；搜索计划 2.3 判断条目安全与否的那一步改成读 destruction lemma；
+      `CONCEPT_DEFINING_CONTEXT_PLAN.md` 2.4、2.5、4A.3 与第 5 节第 1、3 项；B 区文件 7.1、7.3 里 `name_of` "填宿主前提"的说法。
+      公共文件第 0 节 `ambient` 一行与第 9 节讲 xOF 的一条，concept C 已各加一句。
+    - 照计划推的，没有实测。实现前要做的探针：判断交回的定理正好以所假设的条件为前提；隐藏字段的合取与 Pure 形式的前提来回转换；
+      第 7 步那个函数作用在带着块里 `C_axiom` 的 `D X` 上（块内与 `(in C)` 两种）；声明时的实例上下文从 theory 建起、导出的条目只带 `concept (实例项)`。
     一个 Opus 小组 2026-11-21 做过设计（workflow `wf_6e476249-993`）。它的判断办法只沿 `ambient` lemma 走，作者认为太弱（「我感觉太弱了」），没有采用；
-    全文在 `ai-artifacts/concept_unary_C_probes/host_premise_design_team_final_2026-11-21.md`（不提交）。待定的几点见 11.2。
+    全文在 `ai-artifacts/concept_unary_C_probes/host_premise_design_team_final_2026-11-21.md`（不提交）。它关于"判为推得出之后改什么"的主张里，被采用的是隐藏字段、iff、规则照同一张表造，以及 `ambient` 的名字与陈述不变；
+    它另写一个专门的导出函数、`of_concept` 照旧法做的两点没有采用。
   - 用户要引入 `D (C.x S a)` 时有三种写法：`proof concept_fact`；`C.x[xOF …]`（第 9 节）；`unfolding C.x`。
-    `proof concept_fact` 用实例的 intro rule，宿主前提由它闭合，各条 `if` 条件留成子目标。宿主前提闭合不了时它失败，不留部分进展，这时用后两种写法（2026-11-20 改，`CONCEPT_FACT_SEARCH_PLAN.md` 4.1；此前写的是"7.1 的契约：宿主前提递归去证，`if` 条件留成子目标"）。
+    `proof concept_fact` 用实例的 intro rule：规则里的 concept 前提全部由它闭合，不是 concept fact 的条件留成子目标。
+    concept 前提指宿主前提（它在规则里时），以及用户写的条件里本身是 concept fact 的，如 `subgroup: "sub N"` 带的 `group (group.sub G N)`。
+    有一条 concept 前提闭合不了时它失败，不留部分进展，这时用后两种写法（`CONCEPT_FACT_SEARCH_PLAN.md` 4.1"concept 前提必须全部闭合才算方案""非 concept 条件留给用户"）。
+    2026-11-23 照那一节写准；此前这里写的是"宿主前提由它闭合，各条 `if` 条件留成子目标"（2026-11-20），再早是"7.1 的契约：宿主前提递归去证，`if` 条件留成子目标"。
   - 常量名和 fact 名是两个名字空间，`thm int.group` 读作"int.group 是群"；和导入副本 `int.group.assoc` 并存。
   - 体内实例的祖先 fact（`monoid (group.sub ?G ?H)`）**不**静态绑定，由 `concept_fact` 推。不再有 `.intro` 名，也不另绑 `.iff`（日常只用 destruction lemma，4.1）。
   - 除了 5.2 到这里为止说到的常量和 fact，命令不定义别的常量、不绑定别的 fact。
@@ -503,7 +588,7 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
     - (a) 全局不带参数的实例，`group int.group`，`[intro!]`（就是上面那条原子 fact，原已定）；
     - (b) 全局带参数、不带 `if` 的实例，例如 `concept_instance int_mod: ring … for n` 的 `ring (int_mod ?n)`，含变量但没有前提，`[intro!]`（作者「赞同全局带参数、不带 if 的实例（例如 ring (int_mod ?n)），含变量但没有前提，挂 [intro!]」）；
     - (c) 体内不带 `if` 的实例，规则只有宿主前提，`C ?S ⟹ D (C.x ?S ?a)`，`[intro!]`（作者「确认你上一条消息里那张界线表。但建议 体内不带 if 的实例，只有宿主前提，也算有前提，挂 [intro!]」，我那张表里这一类原来写的是 `[intro]`；它的结论经 `ambient`（4.1）反推出唯一的前提，用了不丢失可证性）；
-    - (d) 带 `if` 的实例，体内的 `C ?S ⟹ ⟨各条 if⟩ ⟹ D (C.x ?S ?a)` 与全局的 `⟨各条 if⟩ ⟹ D (x ?a)`，都是分开前提、只在 intro table 里、没有名字的规则（(c) 的那条也是这一种，只是没有 `if` 前提），挂 `[intro]`（作者「我认为挂还是要挂的，但可以有条件的只挂 `[intro]` 无条件的挂 `[intro!]`」）。
+    - (d) 带 `if` 的实例，体内的 `C ?S ⟹ ⟨各条 if⟩ ⟹ D (C.x ?S ?a)`（`C ?S` 只在用户写的条件推不出它时有，上面"体内实例的宿主前提"）与全局的 `⟨各条 if⟩ ⟹ D (x ?a)`，都是分开前提、只在 intro table 里、没有名字的规则（(c) 的那条也是这一种，只是没有 `if` 前提），挂 `[intro]`（作者「我认为挂还是要挂的，但可以有条件的只挂 `[intro]` 无条件的挂 `[intro!]`」）。
     - 依据（Isabelle2026 源码，路径相对 `contrib/Isabelle2026/src`；探针 `ai-artifacts/concept_unary_C_probes/Intro_Priority_Probe.thy`，在 stock HOL 上，不含 concept，不提交）：classical reasoner 先按类别排，safe rule（`[intro!]`）整类先于普通 rule（`[intro]`），一条 safe rule 用上后不回头换别的规则（`Provers/classical.ML:581-595`、`:645-650`）；
       `blast` 也先试 safe rule，用上的那条没有实例化目标里的未知量时不回头换别的规则，实例化了未知量时回溯后还会换（`Provers/blast.ML:936-1005`）；
       同一类内部按会产生的新子目标个数从少到多，个数相同时后声明的先试（`Pure/bires.ML:86-102`、`:204-207`，`classical.ML:268-269`）；`[intro! n]` 里的数字不影响这个顺序。
@@ -511,7 +596,7 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
       两条都是 `[intro]`、前提少的那条走不通时，`auto`、`blast` 都回溯到另一条证完。这一组不论先试哪条都会成功，所以它实测到的是会回溯；`[intro]` 之间"前提少的先试"是读源码的结论。
       所以带 `if` 的规则若挂 `[intro!]`，会堵死用户另写的、条件更容易而不能反推的普通规则，而它没有名字，用户无法用 `del:` 局部去掉；挂 `[intro]` 没有这个问题。
     - **接受的后果**：
-      - (1) 带 `if` 的规则只在 `auto` 的搜索阶段用，那个阶段要么把目标完全证掉、要么不留任何进展（`Provers/clasimp.ML:147-159`；实测：前提证不出时 `apply auto` 失败、目标原样），所以 `auto` 不会把 `if` 条件拆给用户看，要看就写 `apply concept_fact`（宿主前提闭合得了时；否则见上面"三种写法"）；
+      - (1) 带 `if` 的规则只在 `auto` 的搜索阶段用，那个阶段要么把目标完全证掉、要么不留任何进展（`Provers/clasimp.ML:147-159`；实测：前提证不出时 `apply auto` 失败、目标原样），所以 `auto` 不会把 `if` 条件拆给用户看，要看就写 `apply concept_fact`（规则里的 concept 前提闭合得了时；否则见上面"三种写法"）；
       - (2) 普通 rule 用合一而不是匹配（safe 步骤用 `Bires.bimatch_from_nets_tac`，普通步骤用 `Bires.biresolve_from_nets_tac`，`classical.ML:581-588`、`:645-646`，读源码的结论），目标的结构项是未知量（如 `group ?X`）时会被实例化成实例项去试，可回溯，和 2.3 里原子 fact 在非 safe 阶段的行为同类；
       - (3) 体内不带 `if` 的规则挂了 `[intro!]`，用户另写的、结论相同的普通 `[intro]` 规则要到 safe 阶段之后才有机会，那时目标已变成等价的宿主 fact `C S`，那条规则已经对不上它；
         实测（探针第六组，2026-11-18 08:27 UTC；规则 `Q3 n ⟹ V n` 挂 `[intro!]`，`Q1 n ⟹ V n` 挂 `[intro]`）：`auto` 把 `Q1 5 ⟹ V 5` 变成 `Q1 5 ⟹ Q3 5` 就停下，没有证掉，而 `[intro]` 那条规则本来一步可证。
@@ -520,9 +605,9 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
         `clarify` 用三种 safe rule：不带前提的，恰好产生一个子目标的，产生两个子目标而其中一个当场关掉的（`classical.ML:601-623`），(a)(b)(c) 三类都在其中；
         实测（同一组）：`clarify` 把 `V 5` 变成 `Q3 5`，`safe`、`blast` 证完 `V 0`；
         parent 规则仍不进 classical reasoner，`monoid (group.sub G H)` 照旧靠 `concept_fact`（2.3）。
-    - **和 `concept_fact` simproc 的先后**（作者问「auto 中会先调用我们的 simproc，之后再这些 intro rules 是吗？」，是）：`auto` 最先对所有目标跑 simp，各条 `if` 条件都能由 simp 证掉时目标在那里就证完，这些规则不出场；simproc 证不出目标有两种原因：某条 `if` 条件要靠 simp 之外的推理，或者 `concept_fact` 推不出宿主前提；这些规则补的就是这一部分。
-      `auto` 的搜索阶段先试 `blast`（不跑 simp，拆出的宿主前提只能靠 `⟹` 左边的前提、`[intro!]` 的 fact 和这些规则自己证）。
-      `blast` 不成再试一种深度搜索：先把 safe 步骤走完，之后每个普通步骤先试 simp，回溯时再试普通规则（`addss` 是 `addbefore`，即 `simp APPEND' 普通步骤`，`clasimp.ML:50-53`、`:136-141`）；simp 那一支里 simproc 能经 parent 规则证宿主前提。
+    - **和 `concept_fact` simproc 的先后**（作者问「auto 中会先调用我们的 simproc，之后再这些 intro rules 是吗？」，是）：`auto` 最先对所有目标跑 simp，各条 `if` 条件都能由 simp 证掉时目标在那里就证完，这些规则不出场；simproc 证不出目标有两种原因：某条 `if` 条件要靠 simp 之外的推理，或者 `concept_fact` 推不出规则里的 concept 前提（宿主前提，或用户写的 concept 条件）；这些规则补的就是这一部分。
+      `auto` 的搜索阶段先试 `blast`（不跑 simp，拆出的 concept 前提只能靠 `⟹` 左边的前提、`[intro!]` 的 fact 和这些规则自己证）。
+      `blast` 不成再试一种深度搜索：先把 safe 步骤走完，之后每个普通步骤先试 simp，回溯时再试普通规则（`addss` 是 `addbefore`，即 `simp APPEND' 普通步骤`，`clasimp.ML:50-53`、`:136-141`）；simp 那一支里 simproc 能经 parent 规则证这些 concept 前提。
       直接写 `blast`、`fast` 时从头到尾不跑 simp，只有这些规则与 `[intro!]` 的 fact 可用。
   - simp 一侧统一由 `concept_fact` simproc 经 intro rule 加条件改写推出（7.1）。
 - `_constraint` 不拆分【已定，作者 2026-11-11】：它的用途是让 `group (group.sub G H)` 推出每条 `if`；全局实例这个字段为 `True`，带参数实例一步建整个 record、这个字段填完整 `if` 合取（2026-11-17 起它在 base `concept` 那一层，4.1）；3.6 曾有"后代叠在 parent 的带参数实例上再加条件"的提案，它会碰到单字段不够；作者 2026-11-16 定为用 `super = t` "分开写"（3.6）：新实例的 `_constraint` 是它自己的 `if` 合取、不沿用 `t` 的，所以一个字段仍然够。
@@ -586,6 +671,7 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
     - family 里这条命令自己写的 `super` 与沿用来的值之间不比较，归 5.6"判断的先后"里的 `super` 检查。
   - 其余凡是一个叶子有两个及以上的值，每个值都与"存下的值"比较；两条子句直接给同一个叶子、同一条路径写了两次、两条 `more = …`，都在内。隐藏字段不比较。
     类型层计划 3.11 的"给了两次"三句（第 11 至 13 句）因此在实例里不再用到；header 里的 `where` 是否也照此放过归 A 区，已告 concept A1。
+  - 比较在类型层的 `define_instance` 里做；concept A1 2026-11-23 照下面这条把比较做成三种结果（`compare_values`：相同、不同、到达上限比不出来），代码在 `contrib/concept` 的提交 `bb907cb`。
   - 比较时到达 selector Simpset 的步数上限（B 区文件 7.1）不算"不同"，是第三种结果：报错说这两个值比不出来，不报"值不一致"的那两句
     【concept B 2026-11-22 定，`ai-artifacts/concept_B_open_questions_2026-11-22/Q01_resolution_v7.md` 的 R5；文案作者 2026-11-23 02:52 UTC 已批，在 10.1"同一个字段的两个值比不出来"】。
     报错里要印经节点读出或沿 `super` 取来的值时，读它的那一次调用若到达上限，就照写的样子印。
@@ -799,7 +885,8 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
     所以只在 base 层相交的两个成员之间不沿用、不登记截断等式、不查参数与类型的条件，如 `int.order` 与 `int.ring`、`int.order` 与 `int.ordered_group`。
     不这样说的话，找 L 时照字面总会停在 base 层，"不接在任何层上时不沿用"永远用不上：先有 `int.order` 再写 `int: ring where super = int_mult.monoid …`，`int.ring` 会在 base 层得到一个无关的来源 `int.order`。
   - 规则：`a.C` 接在层 L 上时（L 怎么定，见上面"common base 必须有自己的常量"），被沿用的成员是 L 自己的常量 `a.P`。
-    `a.C` 在 L 及以下各层的字段必须与 `a.P` 的一致（两个值怎么比见 5.4"同一个字段经两条路给到时怎么比"），没给的沿用 `a.P` 的；登记 truncate 等式 `L.truncate (a.C 参数) = a.P 参数`（`a.P` 的类型恒正好到 L，右边不带截断：2026-11-23 起 family 的成员不许设置 `more`，3.6；此前为 `a.P` 的 `more` 里带着东西的情形，右边写成 `L.truncate (a.P 参数)`）。`a.C` 不接在任何层上时不沿用、不登记。
+    `a.C` 在 L 及以下各层的字段必须与 `a.P` 的一致（两个值怎么比见 5.4"同一个字段经两条路给到时怎么比"），没给的沿用 `a.P` 的；登记 truncate 等式 `L.truncate (a.C 参数) = a.P 参数`。`a.C` 不接在任何层上时不沿用、不登记。
+    等式的右边不带截断，因为 `a.P` 的类型恒正好到 L：2026-11-23 起 family 的成员不许设置 `more`（3.6）。此前为 `a.P` 的 `more` 里带着东西的情形，右边写成 `L.truncate (a.P 参数)`。
     不带 `if` 的 refinement 成员没有自己的常量，只做字段的核对，不登记等式。
     带条件的 refinement 成员有自己的常量。它的类型正好到 L（2026-11-23 起恒如此，3.6），截断在它上面是恒等（A 区 3.5 的恒等优先，concept A1 2026-11-22 定为不调换），它与 `a.P` 之间的等式见上面"refinement 的成员定义什么"。
     它的义务里 L 那一部分照样关得掉，办法 2026-11-22 改了【concept C 定，作者 06:59 UTC 授权，讨论小组 Q4；取代复审 M2 写的"靠匹配时的转换关掉"】：
@@ -1022,6 +1109,8 @@ The field "carrier" of "int.group" has been defined as "UNIV", but here you spec
 ```
 
 这一句用于有沿用来的值的字段，每个字段一行，一字不改；一个字段有几个不同的值时印书写在先的那一个。
+`has been defined as` 后面那个沿用来的值印成 selector Simpset 化简之后的样子，化简到达上限时照成员存着的样子印（实现约定，concept C 与 concept A1 2026-11-23；与下面"来自结构的值印成化简之后的样子"是同一条规矩）。
+例：成员是用 `ord = int.order` 定义的，印的是 `"(≤)"`，不是 `"order.le int.order"`。
 值不是由写在这个字段自己路径上的子句给的时，后面加一行说它从哪里来【已定，作者 2026-11-22 12:25 UTC「5. 批准」】。行里的第二句只在值是经映射来的时候印：
 
 ```
@@ -1030,7 +1119,8 @@ The value comes from "add"⌂. The concept "ring" itself specifies "add.carrier"
 ```
 
 节点自己存着这个叶子时（`ord = t` 给的 `ord.le`）只有第一句：`The value comes from "ord"⌂`；来自 `名字: "t"` 时是 `The value comes from "submonoid"⌂`。
-子句写在通到同一个叶子的另一条路径上时也算"不是写在字段自己的路径上"，这一行照印；路径经过 header 的映射时带第二句，不经过时（`super.carrier = v`）只有第一句（reader 第三遍补的一种情形）：
+子句写在通到同一个叶子的另一条路径上时也算"不是写在字段自己的路径上"，这一行照印；路径经过 header 的映射时带第二句，不经过时（`super.carrier = v`）只有第一句（reader 第三遍补的一种情形）。
+一条路径经过不止一个 header 的映射才到这个字段时，第二句每个映射印一遍，由内到外，各以 `. ` 接在前一句后面（concept A1 2026-11-23 实现时定，作者没有看过）：
 
 ```
 The field "carrier" of "int.ordered_group" has been defined as "UNIV", but here you specified a different value "{x. True}"
@@ -1071,6 +1161,8 @@ Cannot tell whether the two values of the field "carrier" of "int.ring" are the 
 
 各行的写法同上一段。经节点读出的值照写的样子印，它正是化简不出来的那个。
 值有三个及以上时首行写 `the values`，不写 `the two values`（单复数照个数算；这个变体是 concept C 定的，作者没有看过）。
+存下的值是 family 沿用来的那个时，它没有子句、没有位置：那一行写字段自己的路径、不带 `⌂`，值照成员存着的样子印（concept A1 2026-11-23 实现时定，作者没有看过）。
+这时两行在用户眼里路径相同，分不出哪一行不是自己写的；要说清得加字，留给作者回来时看。
 一条命令里一个字段比不出来、另一个字段的值不同时，合成一条报错，各占一段。
 
 <!-- 冻结主计划 CONCEPT_UNARY_PLAN.md 第 1800–1839 行 -->
@@ -1084,10 +1176,13 @@ Its fields are "carrier", "mult", "one", "inv"; "super" stands for its monoid pa
 第二行的列法与半句同 A3。路径进到某个视图里才找不到（`concept_instance int: ordered_group where ord.foo = …`）时用上面 A3 的原句，`of concept` 后面是实例所属的 concept，冒号后面是那个结构在这个实例里的实际类型【2026-11-18 作者「赞同你的建议」；与"路径不止一层时"那条"冒号后面是那个结构的类型"一致】：
 
 ```
-The parent ord: "int order" of concept "ordered_group" has no field named "foo"⌂
+The field ord: "int order" of concept "ordered_group" has no field named "foo"⌂
 Its fields are "carrier", "le"
 ```
 
+上面第二段的头原来是 `The parent ord: …`。照 2026-11-23 定的用词（本文件开头"parent 与字段两个词"）改成 `The field ord: …`：
+同一句在 A 区是 A3，作者 2026-11-23 11:06 UTC 对 concept A1 批了改后的 `The field ord: "'a order" of concept og has no field named foo⌂`（「批准 #2」，concept C 在它的转录里核过）。
+这一句由类型层印，实例的 `where` 带路径时也用它；路径为空时的 `The concept "group" has no field named "foo"⌂` 不变。
 上面两段的第二行与 A3 共用列法；concept A1 2026-11-23 03:00 UTC 答复两边都取这里的写法（句子里的名字带引号，"the monoid part" 里的 concept 名不加）。
 A 区已批的文案它要先列给作者；在那之前类型层的代码印的仍是不带引号的样子，逐字比对类型层输出的测试先照旧的样子比。
 
@@ -1113,6 +1208,7 @@ The field "others" of "int.ring" is specified twice⌂
 `名字: "t"` 与别的子句同写（规则是作者 2026-11-22 07:06 UTC 定的，`CONCEPT_INSTANCE_WHERE_PLAN.md` 第 2 节第 8 项）
 【已定，作者 2026-11-22 12:46 UTC「批准第 7 条」】。例：`where submonoid: "sub.monoid G H"  carrier = "H"`。
 批的时候句中是 `already gives every field of`。作者 2026-11-23 07:37 UTC 对 concept A1 说赋值不要说 give；concept C 自查出这一处，建议改成 `specifies`，作者 07:58 UTC：「5. 点头」。
+本节前面 `The same field … is given different values` 及它的变体也用了这个词；那是作者自己给的句子，已向他说明，没有动。
 
 ```
 Cannot specify "carrier"⌂ because submonoid: "sub.monoid G H"⌂ already specifies every field of "sub.comm_monoid"
@@ -1297,7 +1393,7 @@ You must define each common base, and each name only once, in a theory that both
 
 照这一句算出的三种变体【已定，作者 2026-11-23 08:02 UTC「批准」；concept C 拟】：
 个数为一时首行里写 `1 part of a family`、`1 name`，如 `they disagree on 1 part of a family and 2 names`；
-层的冲突都在同一个 family 时照上面多处冲突的写法，如 `they disagree on 2 parts of the family "int" and 1 name`；
+两处及以上的层冲突都在同一个 family 时照上面多处冲突的写法，如 `they disagree on 2 parts of the family "int" and 1 name`；
 只有名字冲突、两个及以上时，首行是 `they disagree on 2 names`，末行是 `You must define each name only once, in a theory that both "A" and "B" import`。
 
 `if` 子句起名 `of_concept`（5.1，保留名）【已定，作者 2026-11-21 09:10 UTC「批准of_concept 保留名的文案」；句式照 A 区 10.1 已批的 `ambient` 那一句】：
@@ -1346,8 +1442,8 @@ Check your type declarations
 
 被沿用的成员的类型比 L 深时的变体【已定，作者 2026-11-21 对 concept C 报的"请你看的三处"答「批准」】。例：已有 `int.group`，新写的 `int: ring` 在 nat 上，L 是 monoid 那一层。第一行说的是那个成员的 monoid 部分，下面两行各印截到 L 的类型。
 同日稍后注：common base 的规则定下之后，下面例子里的状况（被沿用的成员比 L 深）在 family 里遇不到了，现在先报 common base 的错。
+2026-11-23 注：family 的成员不许设置 `more` 之后（3.6），被沿用的成员的类型恒正好到 L，"自己的类型比拿来比的类型宽"这种情形经命令也遇不到了。类型层照旧印它：ML 层的调用者让一个更深的成员去提供浅的层时仍会走到（concept A1 同日说明）。
 这个变体的措辞仍然用得上【已定，作者 2026-11-22 06:53 UTC 在 concept A1 的会话里，对它问的"已有成员自己的类型比拿来比的类型宽时，它那一行写成 `the L part of Y`，可以吗"答「2. 按你建议来吧」；concept A1 转来，concept C 在它的转录里核过】：
-2026-11-23 注：family 的成员不许设置 `more` 之后（3.6），被沿用的成员的类型恒正好到 L，下面这种情形经命令遇不到了。类型层照旧印它：ML 层的调用者让一个更深的成员去提供浅的层时仍会走到（concept A1 同日说明）。
 被沿用的成员自己的类型比拿来比的类型宽时（它的 `more` 不是 `unit`，如写了 `more = monoid.more G` 的成员），第一行与它那一行都写成 `the L part of Y`。措辞照下面这个例子：
 
 ```
@@ -1603,6 +1699,8 @@ concept C 认为可以不看的十二条：「那我就不看了」。它们是�
 - **讨论小组第二批留给作者的几点**：
   header 的字段现在只查 major chain 上祖先的字段与带名字的 parent（A 区 10.1，作者 2026-11-18 定）；祖先的体内 definition 与体内实例不查。
   例：monoid 体内有 `definition double`，再写 `concept 'a group = "'a monoid" + double :: …` 现在通过，group 的字段盖住 monoid 的 `double`。小组建议与体内实例用同一个检查；这要改 A 区已定的那一条。
+  【2026-11-23：作者对 concept A1 定了「赞同 A 区照旧不许同名」「字段不能放开」（3.6）。那句话说的是字段与继承来的字段、带名字的项同名；
+  字段与祖先体内的 `definition` 同名的这一种他没有说到，A 区现在的检查不查它。concept C 读作照旧、不加这项检查，07:2x UTC 报过他，他没有表态。】
   不带条件的 refinement 成员在两个 theory 里各证一次（都是 `int.comm_monoid : comm_monoid int.monoid`），现在定为合并时报错；
   作者 2026-11-22 09:19 UTC 答了：「fact 本身可以放过，但 concept_instance int: comm_monoid 定义不能」，照报，已写进 5.6。
   导入之后在 `context group.sub` 里写 `group.closed`，得到的是 `group.sub` 的那条副本，不是 group 的一般 lemma；分册第 1 节写着"group 的那条要写 `group.closed`"（作者 2026-11-12 确认）。
@@ -1614,7 +1712,10 @@ concept C 认为可以不看的十二条：「那我就不看了」。它们是�
   已批的 `super` 文案在带参数的 family 里是否印成 `… must be sub.monoid G H`（现在的例句都不带参数）。【已照印，写在 10.1"`must be` 后面是带着参数的项"一句；concept C 定】
   `others` 从不比较的一个后果：`int: ring where others = int_mult.monoid  add = int_add.group` 两边 carrier 不同时不报错，只是认不出 monoid 那一层整个取自 `int_mult.monoid`，monoid 的公理留给用户。
   已批的"字段值不一致"那一句没有 `⌂`，旧值不加引号、新值用反引号（reader 的观察，不是异议）。【那一句后来照引号的规则改过，两个值都在双引号里（10.1）】
-- **体内实例的宿主前提被用户写的条件推得出时不写**（5.2，作者 2026-11-21 12:25 UTC 提出，2026-11-22 05:24 UTC 定了判断的办法）。还没有定的：
+- **体内实例的宿主前提被用户写的条件推得出时不写**（5.2，作者 2026-11-21 12:25 UTC 提出，2026-11-22 05:24 UTC 定了判断的办法）。
+  【2026-11-23 全部已定（concept C 定，作者 07:56 UTC：「赞同开一个 Opus 讨论小组核查后定」，讨论小组 `wf_fefdbde2-f6a`），写在 5.2 同一条的"判为推得出之后改什么"：
+  隐藏字段、iff、规则照同一张实例的前提表造，判为推得出时三处都没有宿主谓词；`ambient` 在 destruction lemma 里排第一；xOF 的位置随表。偏离作者此前原话的三处他 11:56 UTC 都接受了（对 concept A1，concept C 核过）。下面是定之前的记录。】
+  当时还没有定的：
   不靠深度与广度上限的 assumption destruction 本身：2026-11-22 已定稿，在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 4A 节，判断不再等它。
   2026-11-22 定下的两点（5.2 同一条）：判断用的上下文从 theory 另建、只假设用户写的条件；判断里对 selector Simpset 的调用限步数、不限时间，结论不随机器变，`simp_depth_limit` 不固定。
   判为推得出之后改什么：隐藏字段里还写不写宿主谓词，裸名上的 iff 跟着怎么变（它偏离作者 2026-11-16 确认的 iff 形状，A 区 4.1）；

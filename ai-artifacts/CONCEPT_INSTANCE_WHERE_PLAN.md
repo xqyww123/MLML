@@ -40,6 +40,7 @@
    - 这种写法还带一条名为 `名字` 的条件，内容是这个项的 concept fact 成立（上例是 `subgroup: group (\<S>.sub N)`）【已定】。
      它原是 concept B 15:01 的读法；作者 2026-11-22 05:24 对 concept C 确认：「where subgroup: "sub N" 是同时让"N 是子群"成为新实例的一条条件」。
      所以 `normal` 的 intro rule 里有前提 `group (group.sub ?G ?N)`，从"`N` 是正规子群"推得出"`N` 是子群"（destruction lemma `group.normal.subgroup`）。
+     这条前提已经推得出宿主的 `group ?G`，所以 `normal` 的规则里没有 `group ?G` 这条前提（concept C 定，2026-11-23；C 区文件 5.2"体内实例的宿主前提"）。
      这条条件排在各条 `if` 的前面，见第 9 项。
      它与 `if` 一样算数（作者 2026-11-22 06:37 对 concept C「赞同」）：只由它带条件的 refinement 成员也定义自己的常量；C 区文件按"带不带 `if`"分的地方（定义不定义常量、classical attribute）都把它算作带。
    - "实例的每个字段都与那个项相同，区别只在条件"是 concept B 15:06 的推论。它靠的两件事 2026-11-22 都定了（第 3 节第 5 项）：
@@ -155,7 +156,7 @@ concept_instance (in group) normal: group
    - 可以写几条 `名字: "t"`：每条都给全部字段、各带一条条件，值照 C 区 5.4 比较，相同就接受。原建议"至多出现一次"不要了。
    - 结果的 `more` 槽取自 `t`【已定，作者 2026-11-22 10:35 UTC「赞同取自那个项」；concept C 给的两种是"取自那个项"与"取 `unit`"】。
      所以结果与 `t` 类型相同，`concept x ⟹ x = t` 成立；`normal: group where subgroup: "sub N"` 里 `sub N` 带着宿主的扩展，`G.normal N` 也带着。
-     family 之外，结果的类型因此可以比声明的 concept 的类型宽：`c: comm_monoid where s: "sub.group G H"`（`c` 不是 family 的名字）得到的是群的类型。family 的成员不行，见下面"family 的成员"一条。
+     family 之外，结果的类型因此可以比声明的 concept 的类型宽：`c: comm_monoid where s: "sub.group G H" for G H`（`c` 不是 family 的名字）得到的是群的类型。family 的成员不行，见下面"family 的成员"一条。
      写了几条 `名字: "t"` 时，各条的 `more` 也照 C 区 5.4 比较（小组的挑毛病一方指出：只取第一条的话，第二条的 `x = t` 会悄悄不成立）。
    - family 的成员写 `名字: "t"` 时，`t` 的类型必须正好是这个成员的类型，没有扩展；对不上时报已有的"`where` 右边类型不符"
      【已定，作者 2026-11-23 07:37 UTC 对 concept A1：「3. 赞同你的建议」；concept A1 转来，原话 concept C 在它的转录里核过】。
@@ -256,4 +257,5 @@ family 的成员不许设置 `more`（作者 2026-11-23 07:37 UTC，C 区 3.6）
   第 3 节末尾的三段补充重写成现在的说法；第 4 节的表照现在的规则重写；第 5 节加一段状态。改之前第 3 至 5 节的原文存在讨论记录里。
   另记一处 concept C 的读法：`others` 不给 `more`（第 2 节第 7 项），依据是作者 2026-11-21 定的"不再默认继承 `more`"。
 - 2026-11-22 13:40：第 2 节第 7 项改定，记作者 13:38 的话：`others` 对别处有来源的字段让步；一个字段都没补上时不报错、等于没写。12:46 的"这时比较"不再用。第 3 节第 1 项跟着改一句。
+- 2026-11-23 08:45：第 2 节第 5 项加一行，`normal` 的规则里没有 `group ?G`（concept C 定的"体内实例的宿主前提判为推得出之后改什么"，C 区文件 5.2）。
 - 2026-11-23 07:42：第 3 节第 5 项加"family 的成员"一条（作者 07:37 UTC 对 concept A1 定的"family 的成员不许设置 `more`"与「3. 赞同你的建议」），它上面的例子改成 family 之外的；第 3 节末尾"`more` 的规则与本文件"加一句。
