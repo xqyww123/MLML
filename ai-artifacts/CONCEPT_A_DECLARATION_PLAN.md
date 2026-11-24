@@ -132,11 +132,11 @@ concept ('a, 'b) C = "'a Base"
 【2026-11-20 08:56 UTC，concept A1 按 B14 的裁定改】打开 concept context 时放进上下文、挂 `[intro!]` 的 fact 现在只有 `C_axioms` 一条；下面"打开 concept context 时"那一条已照此重写，它后面几条里说到"这些原子 fact"的地方也跟着改了。
 依据与作者的全部原话在 concept B 维护的 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 3 节"打开 concept 的块"（那份文件 2026-11-21 整份重写过，此前这里指的是它的第 2 节）。
 "opening the defining context of a concept"这个术语已退役：作者 2026-11-20 15:59 对 concept B 提出不再另有这种机制、一切统一为 assumption destruction（那条消息以「你觉得如何？」结尾），concept B 报了读法后作者 16:11「确认」。
-**本节标题里的"激活"是旧的意思**：不像 locale 那样给 lemma 造本地副本。它与那份文件 2.2 的"激活"（把激活列表实例化后放进 intro table）不是一回事；后一种在打开块时照常发生（`C_axioms` 这条假设走标准的 assumption destruction，最后一步就是它）。
+**本节标题里的"激活"是旧的意思**：不像 locale 那样给 lemma 造本地副本。它与那份文件 2.2 的"激活"（把激活列表实例化后放进 intro table）不是一回事；后一种在打开块时照常发生（`C_axiom` 这条假设走标准的 assumption destruction，最后一步就是它）。
 
 任何上下文里用的都是全局形式，所以不需要 locale 式的激活。导入只由用户写 `import_concept` 触发（5.3）。
 
-【已定，作者 2026-11-10】**声明块里也只用全局形式**：块里的 `assoc` 就是 `group ?S ⟹ …`，不再像 stock 那样把导出的定理导回成 `\<S>` 固定、前提 `COMP` 掉的本地形式（`generic_target.ML:307-352`）。理由：light locale 本来就定了重开 concept context 不重新激活，导回形式只在声明块里存在，块与重开的块行为不一致；统一为全局形式后两者完全相同。后果，作者接受：`by (rule assoc)` 要改成 `by (rule assoc) (rule group_axioms)`，概念前提 `group \<S>` 固定留作一个新增子目标（7.2）。块里的 note（2026-11-17 起是 concept target 自己的 `notes` 操作，第 9 节）退化为"全局 note，加把同一个 thm 对象在块里 note 一次"：后者只为 attribute 在块里生效（`Proof_Context.transfer` 不合并 generic data，theory target 也要 `standard_notes` 到各层，`generic_target.ML:407`）和本块 fact 的短名，不是副本。
+【已定，作者 2026-11-10】**声明块里也只用全局形式**：块里的 `assoc` 就是 `group ?S ⟹ …`，不再像 stock 那样把导出的定理导回成 `\<S>` 固定、前提 `COMP` 掉的本地形式（`generic_target.ML:307-352`）。理由：light locale 本来就定了重开 concept context 不重新激活，导回形式只在声明块里存在，块与重开的块行为不一致；统一为全局形式后两者完全相同。后果，作者接受：`by (rule assoc)` 要改成 `by (rule assoc) (rule group_axiom)`（2026-11-23 改名之前写的是 `group_axioms`），概念前提 `group \<S>` 固定留作一个新增子目标（7.2）。块里的 note（2026-11-17 起是 concept target 自己的 `notes` 操作，第 9 节）退化为"全局 note，加把同一个 thm 对象在块里 note 一次"：后者只为 attribute 在块里生效（`Proof_Context.transfer` 不合并 generic data，theory target 也要 `standard_notes` 到各层，`generic_target.ML:407`）和本块 fact 的短名，不是副本。
 
 【已定；作者 2026-11-10 定了"上下文里的 concept fact 一律 `[intro!]`"、11-11 去掉 `[simp]`；放哪些 fact 的清单 2026-11-19 至 11-20 改小】
 **打开 concept context（声明块与重开）时，上下文里只放本 concept 自己的 `C \<S>` 一条，它声明为 `[intro!]`。**
@@ -153,15 +153,18 @@ concept ('a, 'b) C = "'a Base"
   - 11-20 05:33：「"赞同不放"也包括 cm: "comm_monoid \<S>" 这一类」。
 - 此前"这几类都由块打开时算好的一个 morphism 逐项套用全局规则得到"的那一步（作者 2026-11-17 提的做法，分册第 2 节末条、第 9 节）整个去掉，已经没有东西要套。
 - 接受的代价：上面这些 fact 不挂 `[intro!]`，`blast`、`fast`、`safe` 关不掉它们；`concept_fact`、`simp`、`auto` 照常。
-- **名字只给本 concept 自己那一条：`C_axioms`**（如 `ordered_group_axioms`），即打开时假设的 `C \<S>`；其余一律不起名，由 `concept_fact` 从 intro table 推出（2026-11-20 起它们不在上下文里，也不挂 `[intro!]`）
+- **名字只给本 concept 自己那一条：`C_axiom`**（如 `ordered_group_axiom`），即打开时假设的 `C \<S>`；其余一律不起名，由 `concept_fact` 从 intro table 推出（2026-11-20 起它们不在上下文里，也不挂 `[intro!]`）
+  - 【名字 2026-11-23 改：作者 16:14 UTC 在 concept B 的会话里提议、16:30 UTC 对 concept A1 定「group_axioms 要改名 group_axiom」；此前叫 `C_axioms`。
+    代码与测试当天已改（`concept_package.ML` 里拼名字的那一处）。本文件与别的文件里带日期的旧注、引的作者原话、探针的记录仍写旧名，没有逐处改。
+    实例上下文里那条假设的名字（"实例名最后一节加 `_axioms`"，如 `sub_axioms`）归 C 区，concept B 已请 concept C 对齐。】
   - 【作者 2026-11-17「赞同保留 ordered_group_axioms」，其余不起名、挂 `[intro!]`；作者问"这些始终可以通过 concept_fact 证明得到对吗"，是：都从 `C_axioms` 沿 parent 规则、视图的 intro rule 推出（依据原是 B 区 7.1 的搜索规则；2026-11-20 起搜索写在 `CONCEPT_FACT_SEARCH_PLAN.md`，B 区 7.1 已改为指向它；`concept_fact` 还没有实现，实现后这几种情形各写一个测试，见 11.2）】。
-- 这些不起名的 fact 照样能交给 Sledgehammer：trigger 用 parent 规则的名字和 `C_axioms` 拼名字表达式，如 `ordered_group.ord[OF ordered_group_axioms]`（7.1），`concept \<S>` 经后备 attribute `[[concept_fact "concept \<S>"]]` 交出（7.1 `name_of` 一条；作者 2026-11-18 在 B 区会话里批准，并令转给本会话改 2.3、4.1），通往它的 parent 规则仍不起名。
-- 打开它的是 concept 自己那种命名 target（第 9 节）：固定 `\<S>`、假设 `C_axioms`、不激活任何东西
-  （这里的"激活"也是旧的意思，不给 lemma 造本地副本，见本节标题下的说明；`C_axioms` 这条假设照常走 assumption destruction，它的最后一步是新的意思的激活）。
-- `C_axioms` 是不含变量的原子 fact，`intro!` 在逻辑上安全，进 `safe0_netpair`（`classical.ML:324-328`），safe 阶段按匹配、不限次、不消耗预算；`auto`、`blast`、`fast`、`force` 的非 safe 阶段对它们改用合一（`classical.ML:633-643`），会把目标里的 `group ?S` 以 `?S := \<S>` 关掉，这是 stock 行为，报告 (D4) 已裁定为正常；`blast` 的 `lim` 只在引起实例化时扣分（`blast.ML:966-977`）。
+- 这些不起名的 fact 照样能交给 Sledgehammer：trigger 用 parent 规则的名字和 `C_axiom` 拼名字表达式，如 `ordered_group.ord[OF ordered_group_axiom]`（7.1），`concept \<S>` 经后备 attribute `[[concept_fact "concept \<S>"]]` 交出（7.1 `name_of` 一条；作者 2026-11-18 在 B 区会话里批准，并令转给本会话改 2.3、4.1），通往它的 parent 规则仍不起名。
+- 打开它的是 concept 自己那种命名 target（第 9 节）：固定 `\<S>`、假设 `C_axiom`、不激活任何东西
+  （这里的"激活"也是旧的意思，不给 lemma 造本地副本，见本节标题下的说明；`C_axiom` 这条假设照常走 assumption destruction，它的最后一步是新的意思的激活）。
+- `C_axiom` 是不含变量的原子 fact，`intro!` 在逻辑上安全，进 `safe0_netpair`（`classical.ML:324-328`），safe 阶段按匹配、不限次、不消耗预算；`auto`、`blast`、`fast`、`force` 的非 safe 阶段对它们改用合一（`classical.ML:633-643`），会把目标里的 `group ?S` 以 `?S := \<S>` 关掉，这是 stock 行为，报告 (D4) 已裁定为正常；`blast` 的 `lim` 只在引起实例化时扣分（`blast.ML:966-977`）。
 - **不挂 `[simp]`**：simp 一侧全部交给 `concept_fact` simproc（7.1），它按需从这些 assumption 推出 `C t`，不需要静态 simp 规则。
-- `rule assoc` 留下的 `group \<S>` 由 `concept_fact`、`simp`、`auto` 关掉；在 group 自己的块里也可以 `rule group_axioms`（在 ordered_group 的块里则写 `concept_fact` 或 `ordered_group.group[OF ordered_group_axioms]`）。
-- 效果上 `blast`、`fast`、`safe` 关得掉的是挂了 classical 属性的：`C_axioms`（2026-11-20 起只有这一条，祖先与视图的 fact 归到下面"关不掉"的那一类），以及实例的 intro rule（5.2：没有 `if` 子句的实例挂 `[intro!]`，带 `if` 子句的实例那条不带名字的拆前提规则挂 `[intro]`；`safe`、`clarify` 只用 `[intro!]` 的，`blast`、`fast` 与 `auto` 的搜索阶段两种都用）；关不掉需要经 parent 规则推导的（`monoid int.ring`），这是接受的
+- `rule assoc` 留下的 `group \<S>` 由 `concept_fact`、`simp`、`auto` 关掉；在 group 自己的块里也可以 `rule group_axiom`（在 ordered_group 的块里则写 `concept_fact` 或 `ordered_group.group[OF ordered_group_axiom]`）。
+- 效果上 `blast`、`fast`、`safe` 关得掉的是挂了 classical 属性的：`C_axiom`（2026-11-20 起只有这一条，祖先与视图的 fact 归到下面"关不掉"的那一类），以及实例的 intro rule（5.2：没有 `if` 子句的实例挂 `[intro!]`，带 `if` 子句的实例那条不带名字的拆前提规则挂 `[intro]`；`safe`、`clarify` 只用 `[intro!]` 的，`blast`、`fast` 与 `auto` 的搜索阶段两种都用）；关不掉需要经 parent 规则推导的（`monoid int.ring`），这是接受的
   - 【上文"不含变量的原子 fact"说的是块里的 fact，不是实例的规则】。
 - parent 规则不挂任何 attribute（术语表）。
 
@@ -283,7 +286,7 @@ concept ('a, 'b) C = "'a Base"
 - **谓词的定义式与全局形式**：每条封闭好的假设各自用 `Object_Logic.atomize` 化成 HOL 的公式，作一个合取分量；合取右嵌套（不用 stock `def_pred` 的平衡合取，四个分量起它会印成 `(A ∧ B) ∧ C ∧ D`）。
   全局形式是用户写的命题原样、前面加前提 `C ?\<S>`，由 atomize 的那条等式换回来，不做 rulify：用户写成 `∀x. P x ⟶ Q x` 的，全局形式里仍是这个样子。
   印出来的 schematic 变量是 `?\<S>`；本文件别处写的 `?S` 是简写。
-- **名字**：与 parent 规则重名、或在拥有类型的 concept 里叫 `equality`，报 10.1 的 A7；重复报 A11。字段的名字、concept 自己的名字、`intro`、`axioms`、`C_axioms` 都不拦。
+- **名字**：与 parent 规则重名、或在拥有类型的 concept 里叫 `equality`，报 10.1 的 A7；重复报 A11。字段的名字、concept 自己的名字、`intro`、`axioms`、`C_axiom`（2026-11-23 改名之前是 `C_axioms`）都不拦。
 - **名字相撞时怎么办，归成一条规则**【已定，作者 2026-11-23 09:36 至 10:03 UTC，逐点答的；文案在 10.1"名字相撞"一组】：
   系统替用户造的名字被再用一次时报错；用户自己写的名字之间相撞，照 Isabelle 平常的规矩，至多给一个 warning。
   系统造的名字指：第一个不带名字的 parent 的规则（`C.⟨它的 concept 名⟩`）、类型是 concept 的字段 `q` 的规则（`C.q`）、`C.equality`、常量 `C.truncate`。
@@ -357,6 +360,15 @@ concept ('a, 'b) C = "'a Base"
   `CONCEPT_BLOCK_NOTES_PLAN.md` 的第二轮评审指出它的几个后果（按短名删除声明落空、印的名字与取到的定理对不上、要在 Pure 取定理处接钩子）之后，他撤回了：
   16:06 UTC「我建议取消 in_concept 改为 `of_concept _`」，16:08 UTC「我提议取消短名自动 of_concept 而是要求用户手写 of_concept / 短名还是走 global form」。
   所以要本地形式时用户手写 `foo[of_concept _]`（E 区的 attribute，`_` 指块自己的结构）；同一条里他另定 xOF 填 concept 前提时也做 case 分解，与 `of_concept` 一致（归 `rule_attributes.ML`）。
+  【2026-11-23 16:14 至 16:23 UTC，作者在 concept B 的会话里（原话 concept A1 在它的转录里核过）：assumption destruction 一个名字都不绑，统一走 `[of_concept]`；`concept_implications` 没有了；实例上下文里的短名也不绑；
+  他重申 xOF 与 `of_concept` 完全一样，并提议 `of_concept` 的参数由一条 fact 改成一个 concept fact 的项、自动用 `concept_fact` 证
+  （归 E 区；作者 2026-11-23 16:30 UTC 对 concept E 确认了：「没错，r[of_concept "P"] 就是：先用 concept_fact 证出 P，再照 xOF 的做法用这条 fact 去填 r 的第一条 concept 前提」，细节在 E 区文件）。这些归 B、C、E 三区的文件。
+  落在 `rule_attributes.ML`（还没有写进 `contrib/concept`）上的约定，concept A1 与 concept B、concept E 当天对过：
+  - xOF 填完 concept 前提之后的那一段（用 selector Simpset 改写、含 `rewrites` 等式，再做 case 分解）不另写，调 E 区"做副本的函数"；改写经类型层的入口 `Concept_Type.selector_simplify`。
+  - 那个函数由 E 区提供，收的是原规则与用来填的那条 concept fact，不是填完之后的定理；xOF 要留得出这两样。
+  - 那个函数先查登记表，有存着的副本就交回存着的那条；所以 xOF 在"给的是 concept fact、填的是 concept 前提"时也取回存着的副本。
+  - 填前提那一步是匹配并经 `concept_entailment` 换谓词（规则的第一条 concept 前提可以是 `concept (group.sub ?G ?H)`），不是只代入一个结构变量。
+  - 函数放在谁的文件里、加载的先后，还没有与 concept E 定。】
 - **函数包的数据只在定义函数的块里可用，而且中间不能隔带 `(in …)` 的命令**（带 `(in …)` 的命令会让块从 theory 重建；`CONCEPT_BLOCK_NOTES_PLAN.md` 6.2）：
   - `fun` 的自动终止性证明在定义函数的块里照常。
   - **`termination` 必须写在定义函数的那个块里**（作者 2026-11-22 13:01 UTC：「可接受，termination 必须在同一个块里去做。」；
@@ -455,7 +467,7 @@ concept ('a, 'b) C = "'a Base"
 
 **打印**（讨论 T6）
 - 【concept A1 定】target 的 `pretty` 照 `Locale.pretty_locale` 的版式印三行，后面留一个钩子给 D 区接符号列表：
-  `concept ordered_group` / `  fixes \<S> :: "('a, '\<e>) ordered_group_scheme"` / `  assumes ordered_group_axioms: "ordered_group \<S>"`。
+  `concept ordered_group` / `  fixes \<S> :: "('a, '\<e>) ordered_group_scheme"` / `  assumes ordered_group_axiom: "ordered_group \<S>"`（2026-11-23 改名之前这一行印的是 `ordered_group_axioms`）。
   `concept` 命令结束时、`context C begin` 时、`print_context` 时印它；`lemma (in C)` 不印。header 的假设不列在 `assumes` 下面，免得被读成块里的本地假设。
 - `concept` 命令结束时除这三行外还印新常量的清单【concept A1 定；作者 2026-11-22 10:57 UTC：「我交给你自主决定了」；讨论小组三个意见不一：不印、印常量清单、再加类型与 fact 名】。
   措辞照 2.2 `concept_instance` 的那一句，每个常量一行、格式照 stock 的 `consts` 输出；只列用户写得出的名字，先谓词，再按 header 的先后列字段与带名字的 parent 的常量，拥有类型的 concept 再列 `C.truncate`、`C.more`。

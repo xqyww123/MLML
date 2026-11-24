@@ -75,7 +75,8 @@
 
 ## 0. 术语
 
-- **块**：`concept C = … begin … end`，以及之后重开的 `context C begin … end`。块最底层的 context 里固定了一个变量 `\<S>`，假设了 `C \<S>`（这条假设的名字是 `C_axioms`）。
+- **块**：`concept C = … begin … end`，以及之后重开的 `context C begin … end`。块最底层的 context 里固定了一个变量 `\<S>`，假设了 `C \<S>`（这条假设的名字是 `C_axiom`；2026-11-23 16:30 UTC 作者对 concept A1「group_axioms 要改名 group_axiom」，此前叫 `C_axioms`。
+  本文件里探针的记录（第 7、9 节里的 `mono_axioms`、`pointed_axioms`）与文末带日期的修订记录写的仍是旧名：探针是在改名之前跑的，记录照原样留着；行为没有变）。
 - **层**：块最底层是第 1 层。包自己在内部可以临时再开一层（如 datatype 包）；用户在块里写嵌套的无名 `context … begin` 也会多一层，那是初版不支持的用法（第 7 节）。Isabelle 给每一层各存着一个 context。
 - **工作 context**：正在执行的这条命令手里的 context。命令结束时它被丢掉，下一条命令从所在那一层存着的 context 重新开始（读源码：`Local_Theory.reset`）。
 - **全局形式**：theory 里存的定理的样子。`\<S>` 换成了 schematic 变量，假设成了前提：`C ?\<S> ⟹ P ?\<S>`。它没有 hyps。
@@ -154,7 +155,7 @@
 逐条的理由：
 
 - **存下的样子随不随证明是否并行而变。**"照 stock 导出"那一支不看 hyps，不变。"原样存"那一支看 hyps；交来的定理的 hyps 若不随并行而变，结果就不变。
-  重新登记的命令交来的有三种：theory 里存着的定理（没有 hyps）；块的假设（hyp 是它自己）；attribute 当场从这些推出来的（hyps 是所用定理的并，如 `foo[OF C_axioms]`、`foo[of_concept _]`）。
+  重新登记的命令交来的有三种：theory 里存着的定理（没有 hyps）；块的假设（hyp 是它自己）；attribute 当场从这些推出来的（hyps 是所用定理的并，如 `foo[OF C_axiom]`、`foo[of_concept _]`）。
   这三种的 hyps 都不随并行而变。
   实测：六种来源的新定理（引用 `\<S>` 的、不引用的、`Goal.prove` 的、`Goal.prove_future` 的、`Goal.future_result` 的、人为加了 hyp 的）都存成恰好一个前提。
 - **一个不被支持的用法：块里证明不用块的假设的 `interpretation`**（作者 14:33 UTC；实测）。
@@ -163,7 +164,7 @@
   存定理的规则怎么改都分不开这两种：不并行时它与 `group.assoc` 一样没有 hyps，并行时带上的 hyp 又不能丢。
   作者定了：并行与不并行都必须支持；这种 interpretation 不被支持，代码里不检查、不报错，文档里写明（文字在 A 区计划 2.6）。
   证明用到块的假设的 interpretation 不受影响（实测）。
-- **"只带块的假设"也原样存**（第二轮评审 M1 的改法，在最底层采用）。这样 `lemmas bar = foo[OF C_axioms]` 与 `lemmas bar = foo` 存下的命题相同
+- **"只带块的假设"也原样存**（第二轮评审 M1 的改法，在最底层采用）。这样 `lemmas bar = foo[OF C_axiom]` 与 `lemmas bar = foo` 存下的命题相同
   （前者没有规则标签：stock 的 `OF` 本来就把标签丢了，读源码）；`lemmas bar = foo[of_concept _]` 在副本没有改动陈述时存下的与 `C.foo` 是同一条定理，标签也相同（第 4 节）。
   按这种写法定义的 bundle，定义它的块里各层存的也是那条全局定理，与 theory、重开的块里相同（实测：`bundle s_b`，三处都是 `mono ?\<S> ⟹ carrier ?\<S> = carrier ?\<S>`、没有 hyps）。
   它不改变上一条那个用法的情形：并行时 hyp 是块的假设，变回前提后得到的与 stock 导出相同。
@@ -207,7 +208,15 @@
 - `_` 指块自己的结构 `\<S>`，所用的 concept fact 是块的假设；规则开头的前提是祖先 `D` 的谓词时，由 `concept_entailment` 表里的 `C ?S ⟹ D ?S` 得到 `D \<S>`。
   它与 `of_concept x` 是同一个函数取不同的结构（concept E 2026-11-22 16:2x UTC 同意，17:1x UTC 再次确认：在块的上下文里做，不查导入处的登记表）。在块外写 `_` 报错。
   既然是同一个函数，它也用 selector Simpset 改写、也做 case 分解：只说 `\<S>` 自己的字段的陈述不会被改动；提到体内实例、视图或别的实例的陈述可能被改写。
-- 对开头那条 concept 前提，它等价于 `foo[xOF C_axioms]`（xOF 是已定的 attribute，后代的 fact 可以填祖先的前提，公共文件第 9 节）。
+- 【2026-11-23，上两条里有两处被 E 区后来的改动盖过，以 E 区文件 5.3 为准；另有一个等作者的提案（concept E 17:0x UTC 来信指出）：
+  (1) `of_concept` 的参数不再是实例 `x`，是一个 concept fact 的项：`r[of_concept "P"]` 先用 `concept_fact` 证出 `P`，再照 xOF 的做法用它填 `r` 的第一条 concept 前提（作者 16:30 UTC 对 concept E 确认）；
+  (2) `_` 在实例上下文里也能写，指那个实例的结构项（出自 concept B 写、作者 16:23 UTC 确认的一项里的一句，作者没有单独说过，E 区列在等作者的）；"在块外写 `_` 报错"应读作"在 concept 的块与实例上下文之外"；
+  (3) concept E 另有一个等作者的提案：`_` 只是省去写项，`r[of_concept _]` 就是 `r[of_concept "D t"]`，连同查登记表，块里也改成从 theory 建上下文。
+      它若被采纳，上一条"在块的上下文里做，不查导入处的登记表"要改。concept A1 的看法（2026-11-23 17:1x UTC，已回 concept E；不是决定）：对本方案没有影响。
+      做副本的函数收到的仍是规则与块的假设这条带 hyp `C \<S>` 的 concept fact，结果仍只带这一个 hyp，再登记时照旧走第 3 节"只带块的假设"那一种；
+      实验 E12 量的是"消掉开头的前提"与再登记，不依赖在哪个上下文里做。会变的只有一点：改写用的是 theory 的 selector Simpset，
+      块里嵌套的证明中临时假设出来的东西够不到副本，所以同一条规则在块里各处写 `[of_concept _]` 得到同一条定理。】
+- 对开头那条 concept 前提，它等价于 `foo[xOF C_axiom]`（xOF 是已定的 attribute，后代的 fact 可以填祖先的前提，公共文件第 9 节）。
 - 它的实现归 E 区与 `rule_attributes.ML`，不在本方案里。本方案对它只有两点要求：结果带着规则标签，`consumes` 照第 3 节末的约定减去消掉的那一条（concept E 同意在做副本的函数里做）；
   它的结果带 hyp `C \<S>`，再交去登记时走第 3 节"只带块的假设"那一种：副本没有改动陈述时存成与 `C.foo` 相同的定理（标签也相同）；
   改动了的，存成 `C ?\<S> ⟹` 副本的陈述，仍恰一个前提、没有 hyps、theory 与各层相同。本方案不对 E 区另提要求。
@@ -600,7 +609,7 @@ B 区认出、挪动 concept 前提的机制，连同它按位置数 `consumes` 
 
 - **`inductive_cases`、`inductive_simps` 在块里不能用**，在定义谓词的块里也不行，重开的块里也不行（实测；作者 16:01 UTC：记下，之后可以考虑修）。
   原因（读源码）：它们按主前提、按等式的形状去找 inductive 包登记的规则，而登记的是第一条前提为 `C ?\<S>` 的全局形式。它们不读包数据，与 6.2 无关。
-  按长名显式用的写法可以：`erule C.p.cases[OF C_axioms]`。以后的修法（concept B 的提示）：HOL 的 `inductive.ML` 里 `mk_cases` 先把 concept 前提挪到最后再 `RS`，那是对 HOL 源码的改动。
+  按长名显式用的写法可以：`erule C.p.cases[OF C_axiom]`。以后的修法（concept B 的提示）：HOL 的 `inductive.ML` 里 `mk_cases` 先把 concept 前提挪到最后再 `RS`，那是对 HOL 源码的改动。
 - **`fun_cases` 只在定义函数的块里、对不用 `\<S>` 的函数可用**（实测；作者 2026-11-23 02:21 UTC 接受）。分两种：
   - 函数用到 `\<S>`：处处不能用，定义的块里也不行。这是 stock 就有的限制：stock 的 locale 块里，函数用到 locale 的参数时报的是同一句。
   - 函数不用 `\<S>`：定义它的块里可用（到第一条带 `(in …)` 的命令为止；括号里这一句是读源码得的，见 6.2，没有量）；重开的块里与 theory 层不能用。stock 的 locale 重开之后是可用的，因为它重放数据；theory 层 stock 也不能用。
@@ -619,9 +628,10 @@ B 区认出、挪动 concept 前提的机制，连同它按位置数 `consumes` 
 - **从已有定理推出新定理的命令**（`simps_of_case`、`case_of_simps` 等，它们按名字读定理）不设标记。拿全局形式去推，结果仍带着 `C ?\<S>`，存的时候再贴一次（读源码，未测）。
   要修时是在这些命令里也打开标记，那是对 HOL 源码的改动，用到时逐个提。
 - **标记是对调用方的约定。**在标记下存"并行证明的结果"的 ML 代码，存下的样子会随是否并行而变；不设标记而重新登记已有定理的 ML 代码，得到两个前提。这属于 ML 层调用方守约的事，不加运行时检查。
-- **仍会存成两个 concept 前提的写法**（实测）：用户自己把 `C \<S>` 写进陈述（`stated`）；`[OF …]` 里用全局形式（`filled`；写 `[OF a[of_concept _]]` 或 `[OF a[OF C_axioms]]` 就是一个前提）。
+- **仍会存成两个 concept 前提的写法**（实测）：用户自己把 `C \<S>` 写进陈述（`stated`）；`[OF …]` 里用全局形式（`filled`；写 `[OF a[of_concept _]]` 或 `[OF a[OF C_axiom]]` 就是一个前提）。
 
 **没有等谁定的事。**与别的分区之间还开着的：`of_concept x` 在别的上下文里怎样求值（concept E 的 Q10，等作者），它与 `_` 要用块的假设怎样并存；这不影响本方案。
+【2026-11-23：Q10 那件事已定（`of_concept` 的参数改成项，第 4 节的注）。新开着的一件：concept E 关于 `_` 的提案（同一个注的第 (3) 点），等作者；它改的是 `_` 取哪个上下文，本方案第 3 节的存法不受影响。】
 
 ## 11. 没有采用的做法
 
@@ -651,7 +661,7 @@ B 区认出、挪动 concept 前提的机制，连同它按位置数 `consumes` 
 - `notes` 一律照 stock 导出：`lemmas bar = C.foo` 的测试失败。
 - `notes` 对没有 hyps 的定理一律原样存、不看标记：用 `Goal.prove` 证出、不带标记存的那条（探针里的 `three_unforked`）存成没有前提，测试失败。
   （不能用 `lemma two` 来测：多线程构建里它的证明是并行的，带着 hyp，测不出这个错。）
-- 带块的假设的不原样存（`probe_no_close`）：按 `C.a[OF C_axioms, simp del]` 定义的 bundle，查定义它的块那一层存的定理与 theory 那一份是同一条（命题相同、标签相同）；测试失败。
+- 带块的假设的不原样存（`probe_no_close`）：按 `C.a[OF C_axiom, simp del]` 定义的 bundle，查定义它的块那一层存的定理与 theory 那一份是同一条（命题相同、标签相同）；测试失败。
 - declaration 的 morphism 把"原样存"的定理导到目标 context 而不是 theory（第二稿的做法），或对没有 hyps 的定理在各层用标准的 morphism：
   按 `C.foo[of \<S>, simp del]` 定义的 bundle，同样查"块那一层的与 theory 那一份是同一条"；并且 `declare C.foo [simp]` 之后在定义它的块里 `including b`、在重开的块里 `including C.b` 都把规则拿掉了。测试失败。
 - 判定函数里不抄标签（`probe_no_tags`）、不给 `consumes` 加 1（`probe_no_shift`）：一条带 `case_names` 与 `consumes` 的规则，带着块的假设再登记，

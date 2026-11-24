@@ -509,6 +509,10 @@ concept A1 11-20 03:09 建议按登记的截断等式把键连起来、查表时
 【实现；评审 `wf_3980a953-c00` 的修改意见】分两步，**从不在 `C t` 这个节点上跑 selector Simpset**：
 
 1. **只化简结构项 `t`**：用 selector Simpset 作用在参数上。这就是 B 区 7.1"查表前先化简"(a) 的做法，照旧受那里的预检查限制。
+   【2026-11-23：实现时经类型层的入口 `Concept_Type.selector_conv`（类型层计划文件头"十八"第 (4) 项）。它带步数上限，到达上限时交回没有改动的项，搜索照没化简的写法往下走（B 区 7.1）；
+   这说的是这次调用不在别的受限单元里面的时候：搜索若是在 selector Simpset 的一次运行里面被调到的，到上限时停的是最外面的那个单元，搜索拿不到交回的项（同一处第 (2) 项）。
+   `put_selector_simpset` 已不对外。本文件别处对项（结构项、条件）用 selector Simpset 化简时同样经这个入口；
+   对子目标、对定理分别经 `selector_simp_tac`、`selector_simplify`（同一处）。】
    预检查要保证：凡是 selector simproc 在这个结构项里改写得动的，它都放行。B 区 7.1 现在列的三种（selector、视图常量、`truncate` 作用在非变量上）漏了一种：
    有 truncate congruence rule 的常量作用在截断上，截断里面是变量也算，如 `comm_group (monoid.Units (group.truncate G))`。
    可靠的做法是读 simproc 分发时用的那张登记表，不另维护一份清单（复审 `wf_8ae40286-ba9` 的修改意见；实现归 concept B）。
@@ -1691,3 +1695,4 @@ B 区 11.2"truncate 三件事"第 (1) 件问的是 `P.truncate t` 算不算第�
   2.1"一处例外"加注（concept B：`concept_extraction_limit` 默认 300、两遍都计数，记在表里的工作有两样）；
   2.1 加一项"theory 的 intro table 里的条目更多"（concept B：导出这次拆放进表的全部 concept fact 条目）。
   另：类型层因到达步数上限而起的三句报错不另拟、沿用已批的三句（作者 07:28 UTC 对 concept B「不另拟」）；本文件里没有照旧想法写的句子，无改动。
+- 2026-11-23 15:5x：3.1 第 1 步加注：用 selector Simpset 化简在实现里经 `Concept_Type.selector_conv`（带步数上限），`put_selector_simpset` 不再对外。不改搜索的算法。

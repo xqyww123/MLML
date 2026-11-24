@@ -6,6 +6,133 @@
 - rev 4（2026-11-13）：**同步稿**。写入 rev 3 之后作者的全部裁定、第二轮评审（`wf_e55250cc-cd8`，修改后通过）的处置、与 unary concept 会话对过的语义、新增探针的结果；第 9 节列全部未定问题。包的定位在这一版变了（0.1 第 23–26 条）：它只为 concept 服务，对外只留两个入口。新的"一次调用"那一层的设计还是草稿、尚无探针（3.2、3.3、3.8、3.9），本稿的目的是不让任何决定只留在对话里。写完后由本会话通读、再由一个 Opus agent 对照会话记录校对，校对指出的问题已改入（第 10 节末）。
 - rev 5（2026-11-16）：本计划改由 unary concept 会话维护（作者「我建议把 concept record 相关的工作全都划归到你这里」，0.1 第 31 条）；写入作者当日对第 9 节的裁定（0.1 第 32–39 条）和新 feature `concept` 的决定；过时的状态与归属随之更正。没有新的探针，已定的设计没有改动。下文的"本会话""我"在 rev 4 及以前指原来的 concept record 会话，rev 5 新写的部分指 unary concept 会话。
 - 2026-11-18/19（未另编 rev 号）：0.1 加第 70–77 条（第 74–77 条在表里的排列不是编号顺序：75、77、76、74）。其中第 75–77 条推翻或改动了此前的多处：`truncate` 放给用户（第 75 条；改动第 5、9、18、43 条，3.5、3.7、3.9、第 2 节）；类型的打印按模式匹配、一律印全名（第 76 条；改动第 33 条，3.4，第 6 节测试第 4 项）；类型缩写读成 `('a, _) C_scheme`、视图可带 row variable、more 变量叫 `'\<e>`（第 77 条；改动第 8、45、57 条，3.1 第 13 项，3.4，3.8，3.12）。各处加了指回的话，正文没有重写；待定的事集中在 concept 计划 11.2 开头那一条。
+- 2026-11-23（未另编 rev 号，十九，16:4x UTC 写，17:0x 至 17:1x UTC 照校对改过，17:2x 至 17:3x UTC 照第二轮校对再改，2026-11-24 01:4x UTC 照方案评审改、02:0x UTC 照第三轮校对改，
+  03:3x 至 04:1x UTC 照复审改写 3.15、05:0x UTC 照第四轮校对改、06:0x UTC 照第三轮评审改）：**类型层声明一层之后的证明，要像 `record` 包那样只用抽象层的定理**【作者定的方向，实现交给 concept A1】。
+  "抽象层"是作者的词，指：一个值写成构造常量作用在它的各个分量上，加上"selector 作用在这样的值上等于那个分量"这一类等式（第 (4) 项）。
+  与它相对的是类型的表示（3.4、3.6）：元组、`Rep` 与 `Abs`、各层 selector 与 `more` 的定义；下文把它们合称"类型的表示"。
+  这一条不属于"十八"那一批代码。设计写在 3.15（2026-11-23 17:1x UTC 起写；写这一行时还没有评审、没有实现）。
+  (1) 作者的话（2026-11-23 16:31 至 16:42 UTC，对 concept A1）。他 16:31 问「我们想知道 og2.o2 int.og2 为何这么贵，都发生了什么？」；
+      看了下面第 (2) 项的数字之后，16:41 说：「我以为这些全都被封装了。你应该像 record 那样做抽象层出来」（引的是"元组的 fst、snd；各层的 Rep (Abs x) = x；各层 more 的定义；字段 selector 的定义"）；
+      对优化，16:40：「要优化的，这个交给你去自主进行好吗？可以启动 subagents」。
+      16:42 他把要的形状说明白了：「record 记录应该类似于 `group_record data1 data2 ... dataN` 然后 selectors 直接在这一层级上去做 `selector1 (group_record data1 ...) = data1` 对吗？我认为这些是很基本的操作但你居然都没做？」。
+      concept A1 的回答见第 (3) 项：这种定理声明时证了，但值不是写成一个构造常量作用在各分量上，声明之后的证明也没有用这些定理。
+  (2) 实测（cslh19；探针与记录在 `concept_A_prototype/fill_probe/`，不提交）。`og2.o2 int.og2 = int.og` 这条等式（视图 `o2` 是用 `o2 = int.og` 整个给的）由 `whole_equation` 证：
+      用类型层的 `equality`，一项一项证两边相同；`ordered_group` 的类型除隐藏字段外有 6 个叶子（carrier、mult、one、inv、ord 的 le、bound），加 more 槽共 7 项（隐藏字段另由 `concept` 的定理处理，不在这 7 项里），每一项把两边各自用 `unfold_conv` 展开到类型的表示。
+      一共 943 步：含 `og2.o2 int.og2` 的一边 842 步，`int.og` 的一边 101 步。前一边每项 98 至 117 步，ord 的 le 那一项 202 步（要多展开一轮）；各项做的是同一件事：
+      `og2.o2` 与 `int.og2` 的定义各展开 1 次，视图重建出来的各个分量全部化到底，最后才取出要的那一个。
+      按规则的种类：`fst`、`snd` 373；各层的 `Rep (Abs x) = x` 238；各层 `more` 的定义 209；字段 selector 的定义 53；实例与视图常量的定义 36；每次起化简 34。
+      （这一行 16:4x 写的六个数都错了，写的是 376、240、210、54、37、26；校对照记录重数，concept A1 再数一遍相同，已改。总数与两边的数没有错。错的数当时也报给了作者与 concept B。）
+      第一次耗时 17 至 23 毫秒；对照直接读一个字段 `monoid.mult int.og2` 是 0.7 毫秒。
+  (3) 现状与差距（concept A1 读代码所见）。声明一层时类型层已经证了这一类定理并存在层的记录里：每个叶子的 `conv`（访问项作用在规范项上等于那个叶子的参数）、`more_conv`、`truncate_conv`、`equality`、`surjective`。
+      但声明之后的证明没有用它们：`unfold_rules` 交给 `unfold_conv` 的是各层的 `defs`（selector 与 `more` 的定义）、`abs_inverse`、`fst_conv`、`snd_conv`，
+      加上项里出现的实例常量、视图常量与 `truncate` 的定义；所以每读一个分量都要沿元组与各层一路投影。
+      匿名叶子的访问项本身是写着 `fst`、`Rep`、`more` 的 λ 项，不是常量。这是作者早先定的（0.1 第 19 条：匿名叶子不设常量；3.6）。
+      类型层也没有作者现在说的那种构造常量：一个值的规范项是各层的 `Abs` 套着元组直接写出来的（`whole_of`），实例与视图常量的定义右边就是这样的项。这也是早先定的（0.1 第 35 条：不设单独的构造子常量，作者 2026-11-16 追认 concept A1 的提案；3.5）。
+      （给用户的构造子、update、make 是有意不生成的：A 区计划里注明 2026-11-11 的一条，"构造子、update、make、`(| |)` 这个 notation 根本不生成"。现在说的是类型层内部用的、输入够不着的构造常量。）
+  (4) 要做的（方向；设计在 3.15）。像 `record` 包那样：每个值写成内部的构造常量作用在它的各个分量上（作者的 `group_record data1 … dataN`），
+      声明一层时证好"selector 作用在构造出来的值上等于那个分量"这一类定理（作者的 `selector1 (group_record data1 …) = data1`）；
+      之后的证明（selector simproc 的各条等式、`whole_equation`、截断、truncate congruence rule 的推导）只用这一类定理与实例、视图常量的定义，
+      不出现 `fst`、`snd`、`Rep`、`Abs` 与各层 selector 的定义。读一个分量应当是一两步，与字段数、层数无关。
+      另有一处与它无关的重复也要去掉：`whole_equation` 现在每一项各把整个值展开一遍，应当每边只展开一次。
+      做完重新量上面的例子与"十八"第 (3) 项里那几组（字段数 2 至 32、视图套视图 1 至 10 层），连同新数字报作者。
+  (5) **与早先两条决定的关系**（校对指出 16:4x 写的稿没有标明）：
+      - 设构造常量，**推翻 0.1 第 35 条**。依据是作者 2026-11-23 16:42 UTC 的话（第 (1) 项）；他没有提第 35 条，推翻是 concept A1 从他的话读出来的，报他时点明。
+      - 给匿名叶子设访问常量，**与 0.1 第 19 条相反**（作者当时否决过："反对 (a)."）。作者 2026-11-23 没有提匿名叶子，这是 concept A1 的提案，**待作者批准**；
+        为什么提、不设常量时怎样做，写在 3.15.6。批准之前代码只在工作副本里做，不提交。
+      - 另有一处与作者 16:42 UTC 写的形状不同，同样**待作者批准**：他写的是一个常量带全部分量（`group_record data1 … dataN`）；
+        设计里是每层一个构造常量、嵌套起来，像 `record` 包对有 parent 的 record 那样（3.15.1 末条）。
+      - **这三点作者都还没有批过**（方案评审的裁判在转录里核过）。concept A1 2026-11-23 16:44:29 UTC 的答复在"我要做的（您已交给我自主做）"下面写了
+        "每层一个内部的构造常量，用户的输入够不着它；没有名字的叶子也给访问常量"，没有点明它们与第 35、19 条相反，也没有点明与他写的形状不同；这是 concept A1 当时该点明而没有点明的。
+        作者 5 秒后的下一句问的是别的事（计划的改动要不要方案评审），16:44:53 的「很好，请准备 compact」答的是"设计写出来后跑方案评审"，都不是对这三点的批准。
+  (6) **方案评审**（2026-11-23 17:33 至 18:15 UTC，`wf_367db8cb-865`；明细 `concept_A_prototype/design_review_abstraction_result.json`，不提交）：不通过，形状成立，五条都判给维护者改：
+      D1（(a) 隔多层时怎样读、读不出来时退回经视图的读法、`whole_equation` 留着 `agreed` 那条路；改完复审）；D2（(b) 里 `expand` 与 `more_conv` 的先后；改完复审）；
+      D3（3.15.6 里不设常量的退路写错了）；D4（第 35 条的说法、943 步不是靠构造常量去掉的）；D5（"拿不到"说过了头、代价的测试量不出东西）。
+      2026-11-24 01:4x UTC 都照改进 3.15。裁判另提一处请作者接受的放宽（3.15.8 末条）。裁判对上面三点的看法：都对；第二点是技术上必需的，第一点换来的是形状与把排法关在 `add_layer` 里。
+  (7) **复审，与随后的改写**（2026-11-24）。
+      - 复审 `wf_883884b9-35b`（结果 02:43 UTC；明细 `concept_A_prototype/rereview_abstraction_and_review7_result.json` 的 A 部分，不提交）审的是照 D1、D2 改过的 3.15.5：不通过，五条都判给维护者改，其中两条改完要再审。
+        裁定 1：隔层读时 more 槽里的匿名叶子要先写成交给用户的样子，并留着 `view_more` 那个"是不是自己的 more"的检查（它管着会不会停）。
+        裁定 2：视图各格怎样填，照现在的分类来说；"持有它的视图"说一次。
+        裁定 3：范式那种证法丢的东西比原稿说的多，而且有的实例会定义不出来、报内部错误；裁判给的改法是"抄来的叶子存成访问常量"。
+        裁定 4、5：`expand` 与 `more_conv` 的先后没有测试钉着；原稿给的一条理由不成立。
+      - concept A1 的处置：裁定 1、2 照改（3.15.5 (a)、3.15.4）。裁定 3 至 5 没有照裁判的改法做，而是把范式那种证法整个去掉，换成逐个分量读出来再比（3.15.5 (b) 与它开头的说明）；
+        `expand` 定理与 `unfold_rules`、`unfold_conv`、`prove_unfold` 随之去掉。原稿"请作者接受的一处放宽"撤回：裁判就它举的例子现在都证得出（测试钉着）。
+        换来的是另一类旧证法成、新证法不成的比较（两边停在不同的写法上、只有投影到类型的表示才看得出相同；3.15.5 (b)"与旧证法相比证不出的一类"），
+        concept A1 没有找到碰得到它的入口，也没有一般的论证，报作者。**这个改法没有评审过**，与裁定 1 的改动一起等下一次复审。
+      - 代码：开发副本 `concept_A_prototype/abs_dev/concept_type.ML`，03:18 UTC 起通过全部已有的测试，期望文件不变。没有提交；(5) 的三点作者批准之前不提交。
+      - 实测的数在 3.15.9。
+  (8) **第三轮评审**（2026-11-24 05:28 至 05:58 UTC，`wf_4bf4e54d-963`；明细 `concept_A_prototype/rereview2_abstraction_result.json`，不提交）。审的是 (7) 的改写与实现它的代码。
+      不通过；四条都判给维护者，其中裁定 2 改完要再审。裁判确认的：类型的表示只在 `add_layer` 里用，层的记录不交出它；步数的记法照定的。
+      - 裁定 2（要紧的一条）：`whole_equation` 丢一条已提交的代码给得出的等式。视图整个给（`A = lt.lat`），它的 more 又由另一个子句给成别的写法，more 的类型是扩展类型时，
+        代码按 `y` 的类型取叶子，比到了 more 里面的 `lat.sup`，那不是实例存下的格。裁判是读代码推出来的；concept A1 写成测试后在两份代码上实跑，确认如此。
+        改法照裁判的：在视图的 parent 那一层上比（3.15.5 (b)）。
+      - 裁定 1：`read` 里"对不上就再变一次、再试"的循环改成计划里写的字面上的两步；"会停"的论证改了两处。
+      - 裁定 3：登记常量的种类与装 simproc 并成一处（3.15.8）。
+      - 裁定 4：时限的说法不准、`Cost_Test.thy` 一处注释与断言过时；时限放进了两个新测试共用的小函数，整体等式的断言改成正好 0 步（3.15.10）。
+      - 裁判对 3.15.5 (b)"证不出的一类"的意见：作为定义是准确的，但"没有找到入口"要换成逐个入口的理由；已照改。
+      - 四条都已改进代码与本文件（06:0x UTC）；改后全部测试通过，新加的测试先在已提交的代码上跑通过。`whole_equation` 的改法等再审。
+  (9) **第四次，小的再审**（2026-11-24 06:38 至 06:55 UTC，`wf_18e918b1-f0c`；明细 `concept_A_prototype/rereview3_result.json`，不提交）。审的是 (8) 之后的改动。
+      裁判的结论：代码是对的。`whole_equation` 现在比的正好是子句给出的各格，已提交的代码给得出的等式一条不丢，每一格不经化简器就证得出；裁定 1、3 照做了，行为不变。
+      没有算通过，差的是两处文字，都判给维护者、不必再审，06:5x UTC 已改：
+      - 计划说"没有已知的行为改变"不对：改过的 `whole_equation` 多给出一类等式（3.15.8"行为的改变"）。裁判是读代码推出来的，要求先实跑；
+        concept A1 写成测试，在两份代码上跑了，确认开发副本给出等式、已提交的代码不给。等式是对的，代码不改；这一点请作者认可。
+      - 时限的说法又说多了（6 个实例定义、7 个声明不在时限之内）；改成按"怎样加的时限"来说（3.15.10）。
+      至此抽象层这一批的评审做完了。代码在作者批准 3.15.6 的三点之前不提交。
+- 2026-11-23（未另编 rev 号，十八，15:1x UTC 写，15:5x UTC 照做完的样子改过）：这一天后半定下并实现的五件；正文 3.7、3.8、3.9、3.11 各加了指回这里的话，没有重写。写这一条时代码还没有送代码评审。
+  (1) **实例的前提表存在本层**【与 concept C 2026-11-23 12:3x UTC 定的接口；本层的接口归 concept A1】：
+      `define_instance` 的参数 `constraint: term` 改成 `premises: term list`，每项是表里的一条，已写成隐藏字段里的样子（`⋀`/`⟹` 写成 `∀`/`⟶`），用实例的参数表示，先后就是表的先后；
+      隐藏字段的值由本层拼（`mk_constraint`：空表是 `True`，一条就是它本身，几条是右结合的合取）；`get_instance` 交回的记录有 `premises` 与由它算出的 `constraint` 两栏。
+      用处：xOF 照表里的条数沿 iff 右边的右脊拆（用户写的某条条件本身是合取时不会数错）。唯一一条是字面 `True` 时拼出来仍是 `True`，照旧算没有条件。已实现并测过。
+  (2) **化简的步数上限 N = 1000**【已定，作者 2026-11-23 14:36 UTC：「好的，定 1000」；它是本层的一个常数，不是 Config】。
+      他先问「你测一下 1000 用时是多少？」，实测（cslh19，i9-12900K，单线程，被上限拦下的不结束的化简）：1000 步是 0.6 至 5 毫秒；
+      项不变大的打转要 3.5 万至 8 万步才到 50 毫秒，项每两步变大一层的约 3000 步、10000 步要半秒。concept A1 答应他：接好之后量出正常化简最多走多少步报他，接近或超过 1000 再议。
+      机制是 `generic_mksimps` 的 `Simp_Steps`（concept 的树已合并，`59cf128`）。本层怎样用（照 `SIMP_STEP_LIMIT_PLAN.md` 第 5 节与 B 区文件 7.1）：
+      每个受限的单元各直接包一层 `Simp_Steps.limited 1000`——经第 (4) 项四个入口的每次调用、缓存的每次填充、推 truncate congruence rule 的每次尝试、比较一个字段的两个值、显示一个值；
+      缓存存下每条等式的证明走了多少步，命中时在同样的一层里 `charge` 这个数，所以外面的计数不随缓存里有没有现成的等式而变；
+      单元里新造的 context 用 `Simp_Steps.inherit` 接上这个单元的计数器。
+      到上限一律当作"化不出来、推不出"，不出声；因此拿不到规则或等式时，用户点名要它时报的仍是已批的两句
+      （`No truncate congruence rule for …`、`No selector equation for …`，3.11 末尾），不提步数（作者 2026-11-23 07:28 UTC 对 concept B「不另拟」）。
+      比较同一个字段的两个值是例外：到上限是第三种结果，见下面 (5)。
+      单元套着单元时，里外的上限相同，先到上限的总是最外面的那个：里面的单元不交回任何结果，整个最外面的单元当作到达上限（`step_bound` 的注释；`Simp_Steps.limited` 的规矩）。
+      所以第 (4) 项各入口"到上限时"交回的东西，只在这次调用不在别的受限单元里面时才会出现。
+      【2026-11-23 17:0x UTC，第七次代码评审 `wf_35464c30-4c0` 的 V2，**待作者定**："显示一个值"这个单元实际上到不了上限（被显示的值总是一次已经在上限之内比完的比较的一边），
+      裁判提议去掉它：让"比出不同"的结果带上两边化简之后的项，报错直接印这两个项。作者定之前代码照旧。】
+  (3) **哪些步计入上限：只计 selector Simpset 的运行，本层自己的固定规则改写不计**
+      【concept B 定，2026-11-23 15:4x UTC；"哪些工作算受限的单元、缓存的记账"是作者 2026-11-22 13:07 UTC 交给它的。
+      它偏离作者的原话；**作者 2026-11-24 03:22:15 UTC 已批准**，在 concept B 的会话里：「"不计步"这一条同意」
+      （答的是 concept B 03:20 UTC 的"步数上限里'类型层固定规则的改写不计步'，请明说同意与否"；concept A1 在 concept B 的转录里核过问与答）。
+      经过：concept B 2026-11-23 16:43 UTC 向作者报了这一条，写明"这一条还要你先说是否同意"；作者 16:45 UTC 对那一批只答「请写计划并维护，proof read，如有需要启动方案评审」，没有单独说到这一条。
+      这处改动随 `contrib/concept` 的 `bb907cb` 提交并推送是 2026-11-24 03:16 UTC，比作者明说同意早 6 分钟：concept A1 在他点头之前就提交了一处标着"待批准"的偏离，这是不该的。
+      作者点头时知道它已经提交：concept B 03:21:33 UTC 对他说了「"固定规则的改写不计步"的代码已经在这次提交里」，他的同意在 42 秒之后。
+      3.15 的设计里这种不计步的改写只剩 `cong_conv` 一处（3.15.5 (b)）】。
+      - 它偏离作者 2026-11-22 12:33 UTC 那句话的字面（「重置前所有的 rewrite 等 step 无论是当下的还是 nested simproc 中的都累加，然后受限」）：有一类改写现在有意不累加。
+      - 来由是 (2) 里答应作者的实测。全计的时候，现有测试里正常结束的单元最多 943 至 994 步，全是缓存填充"读一个视图在一个实例上的整个值"；
+        探针里 k 个字段的结构上读整个视图，k = 2 / 4 / 8 / 16 / 32 时是 125 / 316 / 954 / 3348 / 12934 步。
+        这些步都是 `unfold_conv` 用本层的定义、`Rep (Abs x) = x`、元组投影把等号两边展开到类型的表示，一定结束，步数只随结构的大小变。
+        全计的话 N = 1000 之下字段数超过 8 的结构就读不出整个视图，而且是悄悄交回"没有这条等式"；调大 N 又拦不住项不断变大的打转（1 万步已要半秒）。
+      - 做法：小函数 `uncounted` 交回去掉计数器的 context（`Simp_Steps.inherit (Proof_Context.init_global thy) ctxt`），只有两处用它：
+        `unfold_conv` 与 `cong_conv` 里展开定义的 `Raw_Simplifier.rewrite_wrt`。这两处用的是空的 simpset 加给定的规则，没有 simproc、congruence rule、处理器，也不用假设，调不到 selector Simpset。
+        所以一个不结束的单元仍然要走无穷多计步的步子：不计步的每一段都有限，段与段之间隔着 selector Simpset 的步子。
+        concept B 报作者时一并提议在 `Simp_Steps` 里加一个有正式名字的函数取代这个写法，由作者定谁来做（写 `Simp_Steps` 的那个会话 simplifier 限步数不在线）。
+      - 单元的划分与缓存的记账都不变：缓存存下的、命中时 `charge` 的，是填充里计步的那些步。
+      - 改了之后重新量（2026-11-23 15:4x UTC，cslh19）：全部测试 806 个受限单元，正常结束的最多 42 步，593 个是 0 步，没有超过 50 的；到达上限的 11 个全是故意写的不结束的测试。
+      - **留下一件单独要看的事**：不计步的工作不受任何上限管，而"读整个视图"的填充贵。视图套视图读第 n 层的整个视图，4 个字段时 1 至 10 层是 316 至 84066 步（10 层第一次 1.2 秒），
+        8 个字段、8 层是 139153 步、2.2 秒；带参数的实例套 n 层读一个字段是 n 的二次式（4 个字段时 10 层 3539 步、6 毫秒）。都是多项式增长，证过之后进缓存。
+        证法可以改成逐层用已有的等式，不一路展开到类型的表示；这一批没有动。（2026-11-23 16:4x UTC 起这件事归"十九"。）
+  (4) **对外的入口**【名字 concept A1 定，2026-11-23 与 concept B、concept C、concept E 来回定的】。selector Simpset 只能经下面四个带上限的入口用，另有一个只读的标记；`put_selector_simpset` 已从签名里拿掉：
+      - `selector_rewrite : Proof.context -> cterm -> thm option`：化简一个 cterm，带上调用处 context 里的前提；`NONE` 是到达上限（C 区用）。
+      - `selector_conv : Proof.context -> conv`：同上，到上限交回 `Thm.reflexive ct`（B 区用）。
+      - `selector_simp_tac : Proof.context -> thm list -> int -> tactic`：化简第 i 个子目标，子目标自己的前提照 `asm_full_simp_tac` 收进来，定理表是只在这一次调用里加的规则；
+        到上限时子目标原样留下、不失败；子目标不存在时照常失败（C 区用）。
+      - `selector_simplify : Proof.context -> thm -> thm option`：照 `asm_lr_simplify` 化简一条定理，每条前提先被改写、再被假设；被假设的东西不造改写规则，只进前提表去消等式的条件，
+        mksimps 的各处理器照常把它拆开（合取的每一支各自进前提表）；`NONE` 是到达上限（E 区做副本用；前提是等式时不会去改写结论）。
+      - `in_selector_simp : Proof.context -> bool`：selector Simpset 每次运行时交给 simproc 与处理器的 context 上为真，别处为假（B 区只读）。
+        selector Simpset 的每次运行都经这四个入口：本层内部比较值、显示值、推 truncate congruence rule 时也是调 `selector_conv`
+        （第七次代码评审 `wf_35464c30-4c0` 的 V1 之后如此，2026-11-23 16:5x UTC 改；此前这三处直接换上 selector Simpset，只靠各自的调用处包着上限）。
+      `map_selector_simpset` 照旧，用来往 selector Simpset 里登记规则、simproc、处理器。
+  (5) **同一个字段的几个值：比较有三种结果，报错照 C 区文件 10.1 已批的三组文案**（规则与文案都是 C 区的，比较与报错在本层做；细节在 3.9 末尾）。
+      本层定的两小处【concept A1 定，concept C 同意，作者没有看过】：比不出来而存下的是 family 沿用来的值时，那一行写字段自己的路径、不带 `⌂`；
+      一条路径经过不止一个 header 的映射时，`The concept "…" itself specifies "…" as "…"` 每个映射印一遍，由内到外。
+  测试 `Step_Bound_Test.thy`（不提交）抓到实现里的一个错：缓存存步数时先读了计数、后跑证明，存下的恒为 0；已改。
 - 2026-11-23（未另编 rev 号，十七续，08:0x UTC）：四件，都在 3.8、3.9、3.11 里各加了一段：
   (1) **family 的成员不许设置 `more`**（作者 07:37 UTC 定；3.9）；(2) 隐藏字段里放什么写准（concept C 定的，3.8）；
   (3) 两句文案里 `the given value` 改 `the assigned value`、带 `super` 的路径加双引号（作者 07:47 UTC；3.11）；(4) `concept_holds` 进接口（3.9）。
@@ -91,7 +218,7 @@
 | 16 | 内部函数与字段的名字 `mk_extension`、`dest_scheme_type`、`extension`、`scheme`、`truncate_conv`；不把 `Abs`、`Rep` 交出去 | 「2. 全部批准」 | 3.7（第 23 条之后这些都成了包内名字） |
 | 17 | 带名字叶子与 `more` 的定义式（`C.f_def`）也做成解析不到 | 「(b) 赞同」 | 3.5 |
 | 18 | `truncate` 常量和这些 `_def` 都放在 `C.extension.` 之下 | 「确认 truncate 和这些 _def 都放到 C.extension. 之下」 | 3.5 |
-| 19 | 匿名叶子不设常量（否决第二轮评审裁判推荐的"每个匿名叶子一个封掉的常量"） | 「反对 (a).」「你调用 simp 的时候不能明确限定所使用的 simp rules 吗？」 | 3.6、3.7 |
+| 19 | 匿名叶子不设常量（否决第二轮评审裁判推荐的"每个匿名叶子一个封掉的常量"）【2026-11-23：concept A1 提议改成设常量，待作者批准，文件头"十九"第 (5) 项、3.15.6】 | 「反对 (a).」「你调用 simp 的时候不能明确限定所使用的 simp rules 吗？」 | 3.6、3.7 |
 | 20 | 写 Isabelle/ML 库不直接用系统的 simplifier；用固定规则的 rewrite，或手动换掉规则集（已记为 memory） | 「在书写 Isabelle/ML 的库的时候，直接使用系统库的 simlifier 是危险的！如有可能用 rewrite with a fixed set of rules 或者手动替换 simplifier 所使用的 simplification set」 | 3.7 |
 | 21 | 原始的 accessor 定理不交给 concept 命令（去掉 `accessor_conv`、`more_conv`） | 「2. 赞同」 | 3.7 |
 | 22 | 封装：不让 concept 命令自己去套原始定理，由本包给成品 | 「为什么是 unary concept 来证？不应该你都封装好，提供接口给 unary concept 直接用吗？」 | 3.1 |
@@ -112,7 +239,7 @@
 | 32 | 视图常量与实例常量的定义式（如 `int.group_def`）也封掉 | 「赞同封」 | 3.5 |
 | 33 | 没有新叶子的 concept 的类型印成拥有类型的祖先的名字（`'a comm_monoid` 印成 `'a monoid`），接受。作者接受时问「我们的解析与打印的结果（除非用户明确限定的话）始终是 `('a, 'b) monoid_scheme` 而非 `'a monoid` 对吗？若是，则没有一点问题」；答复是打印不总是 scheme（more 槽为 `unit` 时印 `'a monoid`，如 `int.group` 的类型印 `int group`，见 3.4）；作者随后：「我认为 int group 很好啊，没有任何问题啊，就照旧不好吗？」，打印规则照旧 | 「接受」 | 3.4 |
 | 34 | 去掉内部的 `inject` 定理 | 「赞同你的建议」 | 3.7 |
-| 35 | 不设单独的构造子常量（追认 rev 1 起的提案） | 「赞同你的建议」 | 3.5 |
+| 35 | 不设单独的构造子常量（追认 rev 1 起的提案）【2026-11-23 写、2026-11-24 改写：作者 2026-11-23 16:42 UTC 的话要的是构造常量，与这一条相反；他没有提这一条，推翻是 concept A1 读出来的，待他确认。文件头"十九"第 (5) 项、3.15.6】 | 「赞同你的建议」 | 3.5 |
 | 36 | 带参数的实例不给 code equation | 「赞同你的建议」 | 3.10 |
 | 37 | 被封的常量不加打印规则，照印 `??.` 开头的全名 | 「不加」 | 3.5 |
 | 38 | 两个入口的形状放到原型阶段定；本层的 ML 内部名字由维护者按优雅性的要求自定，不报作者过目 | 「同意」「不用给我看，按你对优雅性的要求自己去做」 | 3.2、3.3 |
@@ -207,6 +334,7 @@
 - **一层**：一条 extension 链上属于某一个 concept 的那一段，即它的 `C.extension` 类型的一个值。
 - **叶子**、**匿名叶子**、**major parent**、**视图**、**访问项**、**布局表**：沿用 `CONCEPT_UNARY_PLAN.md` 术语表与 3.2–3.4。
 - **规范项**【已定：只在内部用】：把一个值写成"每一层的 `Abs` 套一个平衡元组"的形式。
+  【2026-11-23：3.15 的设计实现之后，改为"各层的构造常量嵌套"的形式（3.15.1）。】
 - **类型的拥有者**：一个 concept 没有新叶子时沿用祖先的类型；"拥有这个类型的 concept"指造出该类型最深一层的那个 concept。
 - **用户可见文字的用词**【已定】：视图是内部说法；带 qualifier 的 parent 对用户是一个带字段的 record，用 field。作者点名的是"视图"和 mapping；leaf 等其他内部词同样不用，是我的引申。`where x = t` 说成"给出（specify）parent 的字段 x"，这个说法出自作者批过的文案（3.11 第 11–13 句）。
 
@@ -432,6 +560,9 @@ typedef ('a, 'z) monoid.extension        = "UNIV :: (('a set × ('a ⇒ 'a ⇒ '
 
 【2026-11-18，0.1 第 75 条：`truncate` 已放给用户。本节里"`truncate` 封着""`monoid.truncate G` 不解析""truncate 常量是 `C.extension.truncate`"都作废，常量改成用户可见的 `C.truncate`（只有拥有自己类型的 concept 才有）；`Abs`、`Rep`、各定义式照旧封着。本节原来特意把 `C.` 下的名字空出来、让体内 `definition truncate` 不重名，这个理由现在反过来了：体内的 `definition truncate` 会与 `C.truncate` 重名，怎么办没有定（concept 计划 11.2 开头那一条的第 8 项），第 6 节里"`definition truncate` 不报重名"的测试也要跟着改。】
 
+【2026-11-23 写、2026-11-24 改写：下面这一段与作者 2026-11-23 16:42 UTC 的话相反（文件头"十九"）：他的话要的是一个构造常量作用在各分量上；他没有提第 35 条，推翻要他确认。
+"每层一个、嵌套起来"是 concept A1 的提案，待批。设计与四条理由现在的状况在 3.15（3.15.1、3.15.6）；这一段留作当时的理由。】
+
 【已定，0.1 第 35 条】没有单独的构造子常量：一层的构造方式就是 `typedef` 给出的 `Abs` 套一个平衡元组。（这一条在 rev 1 列为待作者裁定，rev 2 被从待裁定清单里删了而作者并没有答过；2026-11-16 作者追认。）理由：用户只在 `concept_instance` 里构造实例，构造子对用户封死；定义式封掉之后这种项不出现在用户面前；内部搭值走同一个函数，多一个常量只多一步展开；代码生成直接把每层 `Abs` 声明为构造子，已测通（3.10）。一个值写成各层嵌套：
 
 ```
@@ -474,6 +605,7 @@ Abs_monoid ((A, m), e, c, Abs_group (i, Abs_ordered_group (l, z)))
 **访问项**：第 i 个叶子的访问项是"沿 parent 链取到本层的 extension 值，`Rep` 之后按路径取分量"。
 - **带名字的叶子**：声明常量 `C.f`，定义成它的访问项，binding 在 `Sign.qualified_path true C` 之下，必须写 `monoid.carrier`，裸的 `carrier` 不解析【实测】。
 - **匿名叶子**【已定：不设常量】：访问项是一个 λ 项，如 `λr. fst (snd (Rep (group.more r)))`，只在包内使用。
+  【2026-11-23：concept A1 提议改成每个匿名叶子一个封掉的访问常量，待作者批准；理由与不改时的做法在 3.15.6。】
 - **`more`**：每层一个常量 `C.more`。
 - **`_constraint`**【rev 6 改，0.1 第 47–50 条】：它是 base concept `concept` 那一层唯一的分量（`bool`）。读它的 selector 就是谓词常量 `concept :: 'z concept_scheme ⇒ bool`，定义成这个分量的访问项，和 `monoid.carrier` 取 monoid 那一层的 carrier 是同一类定义；定义式 `concept_def` 封掉（3.5）。**不声明叫 `_constraint` 的常量**，"`_constraint`"只是文档里对这个分量的叫法。`concept` 不登记到 dot_syntax，不进 static notation table 的名字类 key。
   - 改的原因（A 区评审 A2，我核过源码）：`Sign.declare_const` 经 `Consts.declare` 无条件调 `Binding.check`，名字不是合法标识符就发 "Legacy feature! Bad name binding"（`binding.ML:199-201`）；`_constraint` 以下划线开头，所以 rev 5 的做法每声明一个 root concept 都出这条 warning，root 的 `C_def` 里还会印出用户读不回去的 `monoid._constraint ?S`。现在没有任何不合法的名字要声明，用户的 `C_def` 里只出现 `concept S`。
@@ -508,6 +640,8 @@ rev 3 里的本层单射性 `(Abs x = Abs y) = (x = y)`（`inject`）：第二�
   | `truncate`（只在内部出现） | `P.f (C.truncate r) = P.f r`（0.1 第 44 条） | `truncate` 的定义式。2026-11-18 维护：复审 `wf_6f802c81-d32` 指出此前这里写的 `surjective`、`truncate` 作用在规范项上的定理、accessor 定理这条证法代码没有用；这三类定理照旧存着（本节第 1、3、4 条） |
 
   每一行的等式都由同一个函数 `prove_select` 证出：两边用同一组固定规则展开到叶子，比较两边的范式（模 eta）。规则是涉及的各层的定义式、各层 typedef 的 `Abs_inverse`、项里出现的实例常量、视图常量与 `truncate` 的定义式，加 `fst_conv`、`snd_conv`；accessor 定理不参与。上表"依据"一栏只写逻辑上的来源。（2026-11-18 维护，第三次代码评审 `wf_1eaa6cea-993`：这句此前只写在 `truncate` 一行里，实例与视图两行还写着成品等式与 accessor 定理。）
+  【2026-11-24：这一段说的是已提交的代码（`bb907cb`）。3.15 的设计不这样证：读一个分量靠实例化两条定理，比较两个结构是逐个分量读出来再比（3.15.5）；
+  上表各行的等式不变。3.15 的代码在开发副本里，作者批准 3.15.6 的三点之前不提交。】
 
 - 右边含模式匹配 λ 的字段：原形不给；simproc 连同后面的参数一起看，参数是显式元组时给分解归约后的结果（concept 计划 5.2、5.3 的 case 分解），否则不处理。
 - 缓存（【复审 R5】key 与放在哪条记录、表用 `Synchronized.var`、认证的 theory 与命中时的检查，以 concept 计划 5.2"缓存的三条规矩"为准，本条下面的"key 是 selector 的名字"是之前的简化说法）：每个实例的 ML 记录里一张表，key 是 selector 的名字，值是指向合成出的定理的 `Unsynchronized.weak_ref`；带参数的实例存的是参数为 schematic 变量的那一条，用时实例化。取时 `weak_peek`，取不到（已被 GC 清掉）就重新合成、放一个新的弱引用，失效的项顺手清掉。弱引用在 GC 时失效，所以缓存不进 heap。命中率与合成耗时在原型里测；命中率太低而合成又不便宜时改回普通引用（实现层面，由维护者定，结果报作者）。
@@ -515,6 +649,9 @@ rev 3 里的本层单射性 `(Abs x = Abs y) = (x = y)`（`inject`）：第二�
 - 不生成"more 相同则本层字段相同"的同余定理（评审 A7 的另一个改法）。
 - **带条件的 selector 等式**【0.1 第 60、62 条】。上表各行的等式都是从定义直接算出来的，没有条件；带条件的只有 3.9 里用参数或依赖参数的项填一整块时的整体等式，条件是 `concept K`。selector Simpset 里所有规则的条件都只能是 `concept _`（作者 2026-11-17 批准写明的原则，concept 计划 5.3）：除隐藏字段外的字段都按定义逐个相等，能不一样的只有隐藏字段。simproc 可以返回带前提的等式：返回的定理经 `mk_procrule`（`src/Pure/raw_simplifier.ML:960`）用 `decomp_simp` 拆出前提，之后和普通条件改写规则走同一条路（`:1042`–`:1069`），前提由 simplifier 的 prover 去证（作者指出，维护者核过源码）。消条件分两步：(1) simproc 里只跑 `Concept_Fact.search`（不调用户的 simp；结构项需要时用 selector Simpset 化简，concept 计划 5.2、7.1；2026-11-17 改，此前写的是"纯查表，不碰内核，不调 simp"），找到不带剩余条件的推导就重放、返回不带条件的等式；(2) 否则原样返回带条件的等式，交给 simplifier。simproc 内部从不调用户的 simp。条件消不掉时这一处不改写；能否消掉取决于上下文里有没有相应的 concept fact，没有完备性保证。
 - **复审（第二轮）判给维护者的几处，细节写在 concept 计划 5.2、第 9 节**：字段类型是函数类型的 selector 另注册带全部参数的模式（R8）；缓存的定理只由定义式等经内核推理得到、命中时先查能否 transfer、不能就在当前上下文重新合成，表用 `Synchronized.var` 装弱引用，key 按 selector、视图链、`truncate` 分别定（R5）；`concept_selector f` 作用在任何一条 concept fact `C t` 上，视图项用视图的 parent 规则 `C.q` 拼，如 `ordered_group.ord[OF int.og, concept_selector order.le]`，本节上文"作用在实例的裸名 fact 上"说窄了（R6）；本层不直接写 `Concept_Fact` 的名字，要用的搜索函数由 `Concept_Package` 传进来（R7）。
+- **selector Simpset 怎样用**【2026-11-23】：只能经本层四个带步数上限的入口（`selector_rewrite`、`selector_conv`、`selector_simp_tac`、`selector_simplify`），
+  另有一个只读的标记 `in_selector_simp`；换上 selector Simpset 的那个函数 `put_selector_simpset` 是本层私有的；往里登记东西用 `map_selector_simpset`。
+  各入口的含义、上限怎样计步见文件头"十八"第 (2) 至 (4) 项。
 - **selector Simpset 里针对 `concept _` 的 simproc**【0.1 第 65 条】：见 concept 计划 5.3。
 - **selector Simpset 里不装通用的 `concept_fact` simproc**【0.1 第 63 条】：它会把定理里本身是 concept fact 的部分改写成 `True`（例：`ordered_group.group[xOF int.ordered_group]` 会从 `group int.ordered_group` 变成 `True`），而 selector Simpset 主要用来改写定理。带条件的 selector 等式在 selector Simpset 里靠上面第 (1) 步或针对 `concept _` 的 simproc 消条件（0.1 第 65、68 条）。
 - 以上都没有探针。
@@ -526,6 +663,9 @@ rev 3 里的本层单射性 `(Abs x = Abs y) = (x = y)`（`inject`）：第二�
 - `equality`：先用 parent 的 `equality`，再用本层 `Rep_inject`，然后按元组的树形逐步 `rule prod_eqI`，正好拆到每个叶子为止，每个子目标用对应的前提关掉。（原先的 simp 写法会把"类型本身是对"的叶子继续拆下去、靠 simp 收场；新写法在带这种叶子的类型 `pm` 上通过。）
 - `surjective`、`truncate`：固定规则重写后 `refl`。
 - selector simproc 合成的等式：`prove_select`，两边用同一组固定规则展开到叶子再比较（上面 selector simproc 表下的那句）。（2026-11-18 维护：此前这里是探针里成品等式的证法"只用调用者给的那一条等式重写，再 `rule` 一条 accessor 定理"，原型里没有这个函数。）
+
+【2026-11-24：3.15 的设计里，声明一层之后的证明不再是上面第四条那样。读一个分量靠实例化；比较两个结构时每个分量读出来之后用 selector Simpset 化简一次（3.15.5 (b) 的第 2 件事），
+这是第 20 条允许的第二种做法（手动换掉规则集），不是用系统的 simpset。前三条（`add_layer` 里的证明）照旧是固定规则的重写。】
 
 【实测，`Encaps.thy`】四类证明全部通过；与原先"simplifier 加固定规则集"的写法耗时无差别（8 个叶子 140–163 毫秒对 121–153；32 个 331–336 对 337–399）。
 
@@ -564,6 +704,7 @@ rev 3 里的本层单射性 `(Abs x = Abs y) = (x = y)`（`inject`）：第二�
 体内实例存的是实例的前提表各条的合取：用户写的各条条件照书写的先后（`名字: "项"` 的在前，然后各条 `if`）；用户写的条件推不出宿主的谓词时，最前面加上它，推得出时不加。
 体内实例的隐藏字段仍然从不是 `True`：没有条件时存宿主的谓词，有条件时至少存一条用户写的条件。
 本层的接口不变：合取照旧由命令拼好经 `define_instance` 的 `constraint` 传进来，本层原样存下。】
+【2026-11-23 14:4x UTC 起接口变了（文件头"十八"第 (1) 项）：命令传的是前提表 `premises: term list`，合取由本层的 `mk_constraint` 拼；上一行与下一行里"由命令拼好经 `constraint` 传进来"不再成立。】
 合取由命令拼好传进来（`define_instance` 的 `constraint`），本层原样存下、不改写；"是不是字面的 `True`"由 `Concept_Type.concept_holds` 判（3.9）。
 唯一的条件就是字面的 `True`（`if c: "True"`）的实例算没有条件，不为它另设检查。】
 
@@ -617,7 +758,10 @@ ordered_group.equality:
     即叶子自己的路径穿过这个节点（比较时子句路径里的 `super` 段不计，所以 `super = t` 对它那一部分的每个叶子都是直接给）。
     节点够到的别的叶子是"经映射"给的。例：`ordered_group` 上的 `ord = t`，对 `ord.le` 是直接给，对 `carrier` 是经映射。
   - 两条子句直接给同一个叶子，或两条子句的路径相同：报 `specified twice`（3.11 第 11 至 13 句），值相同也报。
+    【这一条 2026-11-22 就不成立了：作者同日 09:21 UTC 对 concept C「3. 值相同就放过」，实例里这两种写法与别的重叠一样比较，相同接受、不同报错（当天已照改并测过）。
+    `specified twice` 那三句只留给 concept 的 header 里的 `where`。】
   - 存下的值依次取：family 里沿用来的；直接给的；经映射来的第一个（照书写的先后）。
+    【2026-11-22 11:0x UTC 起中间多一档，C 区 5.4：沿用来的；`super = t` 那条来源子句给的；别的直接给的值里书写在先的；经映射来的第一个。】
   - 其余每个值与存下的值比：先看是否就是同一个项；不是就各自用 selector Simpset 化简、做 beta-eta 之后再比。
     比的时候 simproc 对"值以模式开头的字段"也给出它存着的值（平时不给），靠一个内部的开关 `pattern_values`，用户设不了。
   - 不同就报错，用 C 区 10.1 已批的那一句。测试里的一例（`carrier = "{x. True}"` 与 `ord = int.order` 同写）：
@@ -627,10 +771,25 @@ ordered_group.equality:
     ```
 
     family 之外也先用这一句（concept C 2026-11-22：它拟的新文案批下来之前如此）。来自节点的值印化简之后的样子，用户写的值照原样印。
+  - 【2026-11-23 15:3x UTC 改，取代上面"不同就报错"一条：一次比较有三种结果，报错用 C 区 10.1 的三组文案（三组的句子都已由作者批给 concept C，逐字在那里，带双引号；`the values` 那个变体除外，见下）。】
+    - 三种结果：相同（带一条等式）；不同；比不出来（那次比较到达步数上限）。
+    - 一个字段一段，各段照字段在 concept 里的先后排，合成一条报错。一个字段用哪一组：
+      有比出不同的值，而这个字段有 family 沿用来的值：`The field "carrier" of "int.ring" has been defined as "UNIV", but here you specified a different value "{x. x ≠ 0}"`，
+      印书写在先的那个不同的值；那条子句不是写在字段自己的路径上时下面加一行 `The value comes from "add"⌂`，路径经过 header 的映射时接着印 `. The concept "ring" itself specifies "add.carrier" as "carrier"`。
+      有比出不同的值，而这个字段没有沿用来的值：`The same field "carrier" of "int.ordered_group" is given different values`，下面各行 `  路径⌂ = 值`，先是存下的那个值，再是比出不同的那些，
+      末行 `The specifications must be identical in term`；与存下的值相同的、比不出来的都不列。
+      没有比出不同的、而有比不出来的：`Cannot tell whether the two values of the field "carrier" of "int.ring" are the same`，下面各行同上，先是存下的那个值，再是比不出来的那些；
+      列出的行数不是 2 时首行写 `the values`（这个变体是 concept C 定的，作者没有看过，C 区 10.1）。
+    - 值怎样印：用户在这条命令里写的值照原样；从节点上读出的值、family 沿用来的值印成比较时的样子（selector Simpset 化简之后；显示它的那次化简到达上限时照原样——这个兜底实际上到不了，见文件头"十八"第 (2) 项末尾待作者定的 V2）；
+      "比不出来"那一组里一律照原样。沿用来的值照比较时的样子印是 concept C 2026-11-23 15:5x UTC 提的，此前照成员存着的样子印。
+    - 各行的路径是"子句的路径接上叶子在节点里的路径"（`ord = t` 给 `carrier` 的那一行写 `ord.carrier`），`⌂` 指向那条子句。
+    - 第二句里的映射由 `mapped_leaf` 沿这条路径走出来：经过一个视图时，视图的叶子在宿主里的名字不是"视图名接上叶子的路径"，就是一处映射，记下声明这个视图的 concept。
+    - 本层定的两小处见文件头"十八"第 (5) 项。测试 `Step_Bound_Test.thy` 钉着各种情形（带位置标记）。
   - 比较通过而两个项并不相同时，把得到的等式存进实例的记录（`agreed`）。整视图恒等等式靠展开定义证不出某个叶子时，用这些等式接上。
     例（测过）：`xp.og G` 的 `carrier` 直接给的是 `car (monoid.truncate G)`，经 `ord = "cg.order G"` 来的是 `car G`，`car` 是用户的常量，
     两个值只靠用户登记的 truncate congruence rule 才相同；`ordered_group.ord (xp.og ?G) = cg.order ?G` 照样拿得到。
   - 还没有做的：`others = t`；`名字: "t"`（concept C 说先不要做，契约定了它发来）；"The value comes from …"那一行（文案没批）。
+    【2026-11-23：那一行的文案作者 2026-11-22 12:25 UTC 批了，已实现（上一条）；来自 `名字: "t"` 的那种（`The value comes from "submonoid"⌂`）随 `名字: "t"` 一起做。】
 
 ### 3.10 代码生成【已定：只做两步】
 
@@ -729,6 +888,8 @@ ordered_group.equality:
 
 实例里与已有链常量不一致（concept 计划 10.1 已批，现由本包报）：
 14. ``The field carrier of int.group has been defined as UNIV, but here you specified a different value `{x. True}` ``
+    【2026-11-23：代码里这一句照 C 区 10.1 的定稿带双引号，`The field "carrier" of "int.group" has been defined as "UNIV", but here you specified a different value "{x. True}"`，
+    只用于有 family 沿用来的值的字段；别的情形是 C 区 10.1 的另两组（`The same field … is given different values`、`Cannot tell whether …`）。哪一组用在哪里见 3.9 末尾。】
 
 【2026-11-23】A 区的 A4 两句（`where` 右边的类型不符；逐字在 concept 计划 10.1）里 `the given value` 改成 `the assigned value`，带 `super` 的路径加双引号（作者 07:47 UTC「按你建议来」）。
 上面第 10 句的 `2 given, 1 expected` 不改。新的一句（family 的成员写了 `more`）见 3.9 开头。
@@ -1199,6 +1360,376 @@ semigroup.more ?X = semigroup.more ?Y  ⟷  monoid.one ?X = monoid.one ?Y ∧ mo
 - 证的方向：对一个抄了参数的运算与 more、只换了载体的实例，`semigroup.more (group.sub2 K H0) = semigroup.more K` 由 `simp` 证出。
 - 不引起不终止：类型里看不到更深的层时等式原样不动；看得到时拆到最外面那层的 more 为止；项里只是出现 `more` 而没有等式时不触发（这一条没有断言，取自探针打印的输出）。
 - 探针里这些等价是作为普通的 simp 规则临时加进去测的；做成 simproc 还没有写。
+
+### 3.15 抽象层：每层一个构造常量，声明之后的证明只用陈述在它上面的定理【设计：concept A1 2026-11-23 17:1x UTC 起写；方向是作者定的（文件头"十九"）；评审四次（"十九"第 (6) 至 (9) 项），最后一次认定代码是对的，要改的文字已改；有三点待作者定（3.15.6），另有三处要报作者
+（3.15.8"行为的改变"里多出的一类等式，请他认可；3.15.5 (b) 里"与旧证法相比证不出的一类"；3.15.9 末条）；代码在开发副本里，通过全部测试，没有提交】
+
+**本质。** 把"一层的值是怎样存的"关在声明这一层的那一个函数里。
+- 声明一层的函数 `add_layer` 照旧用 `typedef` 定义类型。它另外声明一个构造常量（一个常量，参数是这一层的各个分量，结果是这一层的值；3.15.1），
+  每个分量有一个访问常量（一个常量，参数是整个值，结果是这个分量；3.15.2），
+  并用类型的表示（`Abs`、`Rep`、元组、各访问常量的定义式）证出一组陈述在构造常量与访问常量上的定理（3.15.3）。
+- 这组定理之外，`add_layer` 不再把 `Abs`、`Rep`、各定义式交给别的代码：层的记录里不再有它们。
+- 声明之后的一切证明只用这组定理，加上实例常量、视图常量、`truncate` 的定义式（它们的右边是构造常量搭出来的项）。
+
+**本节通用的例子。** 三层的链：`monoid`（carrier、mult、one）、`group`（inv）、`ordered_group`（一个视图 `ord: order where carrier = carrier`，order 的 `le` 没被给出、存成匿名叶子；一个字段 `bound`）。
+最靠外还有 base concept `concept` 那一层，它只有一个分量：隐藏字段。下文"靠 base 的那一层"指链上往 `concept` 方向的相邻一层，"更里的层"指反方向的各层。
+例子是为讲解现写的，与测试里同名的 concept 有两处不同：这里 `bound` 的类型取 `nat`；例子里的实例 `ex.og` 每个叶子都直接写出值（测试里的 `int.og` 是用 `ord = int.order` 给的）。
+
+#### 3.15.1 构造常量
+
+- 每一层一个构造常量，参数是这一层的各个叶子，最后是 more 槽：
+
+  ```
+  concept.extension.constructor       :: bool ⇒ 'z ⇒ 'z concept.extension
+  monoid.extension.constructor        :: 'a set ⇒ ('a ⇒ 'a ⇒ 'a) ⇒ 'a ⇒ 'z ⇒ ('a, 'z) monoid.extension
+  group.extension.constructor         :: ('a ⇒ 'a) ⇒ 'z ⇒ ('a, 'z) group.extension
+  ordered_group.extension.constructor :: ('a ⇒ 'a ⇒ bool) ⇒ nat ⇒ 'z ⇒ ('a, 'z) ordered_group.extension
+  ```
+
+  下文省去 `extension.` 一段，简写成 `concept.constructor`、`monoid.constructor`、`group.constructor`、`ordered_group.constructor`。
+- 它不是 `record` 包给用户的 `make`。3.7 与 A 区计划里"不生成 `make`"说的是那个给用户的常量，照旧不生成；这里的常量只在类型层内部用。
+- 它的定义式是 `constructor x1 … xn m ≡ Abs (x1, …, xn, m)`，元组照 3.6 的平衡排法。常量与定义式都照 3.5 的办法封掉，输入够不着。
+- 一个值的规范项从此是各层的构造常量嵌套，base 那一层在最外（第 1 节术语表里"规范项"的定义随之改）。`ex.og`（整数上的 `ordered_group`）的值是：
+
+  ```
+  concept.constructor True
+    (monoid.constructor UNIV (+) 0
+      (group.constructor uminus
+        (ordered_group.constructor (≤) 3 ())))
+  ```
+
+- 这与 `record` 包的写法相同：`record` 的每个扩展有一个常量 `…_ext`，一个值是各扩展的 `_ext` 嵌套，selector 的定理陈述在这个嵌套的项上
+  （读 `src/HOL/Tools/record.ML` 所见：`extension_definition` 里的 `ext_def`，`r_rec0 = mk_rec all_vars_more 0`，`sel_conv_props`）。
+- **每层一个常量，不是每个 concept 一个带全部分量的常量**【concept A1 的提案；与作者 16:42 UTC 写的形状不同，待作者批准】。
+  作者 2026-11-23 16:42 UTC 写的是 `group_record data1 data2 ... dataN`，一个常量带全部分量。只有一层时两种写法相同；有几层时这里是嵌套。
+  理由：selector 的定理对所有后代只要一条。`monoid.mult (concept.constructor c (monoid.constructor A m e x)) = m` 里 `x` 是变量，`group`、`ordered_group` 的值也匹配得上。
+  若每个 concept 一个平的常量，每声明一个后代就要为所有继承来的字段在新常量上各证一条。`record` 包对有 parent 的 record 也是嵌套（上一条）。
+
+#### 3.15.2 访问常量
+
+- 一层的每个分量有一个访问常量，类型是"整个值 ⇒ 这个分量"。带名字的叶子的访问常量就是用户的 selector（`monoid.mult`），more 槽的是 `C.more`；这两种照旧。
+- 匿名叶子现在没有常量，访问项是 λ 项，如 `λr. fst (Rep (group.more r))`（0.1 第 19 条）。
+  本设计**提议**给每个匿名叶子一个封掉的访问常量，待作者批准；理由与不批时的做法在 3.15.6。
+  例子里 `le` 那个匿名叶子的访问常量是 `ordered_group.extension.leaf0`，下文同样省去 `extension.`，写作 `ordered_group.leaf0`。
+- 匿名叶子在用户面前的样子不变：仍然只能经持有它的视图读（`order.le (ordered_group.ord G)`；"持有它的视图"是哪一个，定义在 3.15.4）；它的访问常量不出现在任何交给用户的结果里（3.15.5 的"读出来的结果怎样交给用户"）。
+
+#### 3.15.3 声明一层时证的定理
+
+`W` 指这一层的规范项，各分量都是变量。对 `ordered_group`：
+
+```
+W = concept.constructor c (monoid.constructor A m e (group.constructor i (ordered_group.constructor l b x)))
+```
+
+层的记录存这一层的构造常量（取代现在存的 `Abs` 常量；`whole_of`、`mk_value`、`add_laws` 用它搭项），以及下面六样（开头是代码里的字段名）：
+1. `conv`，每个叶子一条：访问常量作用在 `W` 上等于那个分量。`ordered_group.bound W = b`；`ordered_group.leaf0 W = l`。
+2. `more_conv`：`ordered_group.more W = x`。
+3. `surjective`：`r = W`，其中 `W` 的每个分量换成对应的访问常量读 `r`。
+4. `equality`：两个值在整条链的每个访问常量上相同、在本层的 `more` 上相同，则相等。
+   有匿名叶子的层，它的前提从 `fst (Rep (group.more r)) = fst (Rep (group.more r'))` 变成 `ordered_group.leaf0 r = ordered_group.leaf0 r'`；别的层陈述不变。
+5. `split`：3.14 那条等价在访问常量上的陈述。它不是新的定理：现在由 `add_split` 在视图定义之后用 `rep_inject` 证，这里把证明挪进 `add_layer`，层的记录不再存 `rep_inject`。
+   `(group.more X = group.more Y) = (ordered_group.leaf0 X = ordered_group.leaf0 Y ∧ ordered_group.bound X = ordered_group.bound Y ∧ ordered_group.more X = ordered_group.more Y)`。
+   3.14 给用户的那条由它得出：把其中匿名叶子的访问常量换成经视图的读法。base 那一层没有这一条。
+   （3.7 里"不生成 split 规则"说的是 `record` 包那种把量词拆开的规则，与这一条无关，照旧不生成。）
+6. `truncate` 常量与 `truncate_def`，它的定义式作用在参数上的形式：`ordered_group.truncate r ≡ W`（`W` 的各分量换成访问常量读 `r`，more 槽是 `()`）。
+
+另证一条不进记录的：`ordered_group.truncate W` 等于把 `W` 的 more 槽换成 `()`。它只作 code equation（3.15.7），声明之后的证明不用它（读一个截断用的是 `truncate_def`）。
+
+【2026-11-24 03:3x UTC：这一小节原来列七样，多一样 `expand`（靠 base 的那一层的 `more` 读一个带本层的值，等于本层的构造常量作用在本层各访问常量读它的结果上）。
+它只给"化到范式再比较"那种证法作改写规则；那种证法已经去掉（3.15.5 开头），`expand` 随之不再证。要把 `L.more t` 写成构造常量开头的项时，用 `surjective` 加 `more_conv`（3.15.5 (a)）。】
+
+层的记录里**去掉**四样：`abs`（`Abs` 常量）、`defs`（各访问常量的定义式）、`abs_inverse`（`Rep (Abs x) = x`）、`rep_inject`。
+它们与构造常量的定义式只在 `add_layer` 里用来证上面这些定理；层的记录不再把它们交出去。
+搭元组、取元组分量的四个小函数（`layerT`、`mk_layer`、`projs`、`split_tac`）也只有 `add_layer` 用，用 `local … in … end` 圈在它身边，别的代码在作用域上就够不着。
+（ML 里没有办法让一条定理"绝对拿不到"；能做到的是记录不交出、作用域圈住这两样。）
+
+#### 3.15.4 实例常量、视图常量的定义式
+
+- 定义式的右边照旧由 `mk_value` 搭，搭出来的现在是构造常量的嵌套：
+  - `ex.og ≡ concept.constructor True (monoid.constructor UNIV (+) 0 (group.constructor uminus (ordered_group.constructor (≤) 3 ())))`；
+  - `ordered_group.ord S ≡ concept.constructor True (order.constructor (monoid.carrier S) (ordered_group.leaf0 S) ())`。
+- 视图的每一格填什么，分两步（复审 `wf_883884b9-35b` 的裁定 2 之后照这样写）：
+  - 先照现在的办法给每一格分类，分类的代码不动（`define_view` 里的 `candidates`）：`where` 没有给的格，是这个视图存的匿名叶子；
+    `where` 给了项的格，这个项与 concept 的某个叶子的读法（`read_leaf` 写出来的那个项：带名字的叶子是 selector 读 `S`，匿名叶子是经持有它的视图读 `S`）相同时，这一格就是那个叶子；否则是"给的项"。
+  - 定义式里的项由分类得出：是叶子的格，填那个叶子的访问常量读 `S`（带名字的是 selector，匿名的是它的访问常量）；是"给的项"的格，照写的填。
+  - "持有一个匿名叶子的视图"在全文指同一个：沿 major chain 从 base 那头数起、同一个 concept 里照 header 的先后，头一个有一格是这个叶子的视图（代码里的 `holder`，不变）。
+    一个叶子可以有不止一个视图的格是它：`ord2: order where le = order.le ord` 的 le 那一格与 `ord` 的 le 那一格是同一个叶子，持有它的是 `ord`。
+    第三个视图写 `le = order.le ord2` 时，这个项不是那个叶子的读法（读法是经 `ord` 的），所以是"给的项"，照写的存；`order.le (ord3 X)` 读出来是 `order.le (ord2 X)`，与现在相同（`Corner_Test.thy` 钉着）。
+  - 与现在的不同只在定义式里的写法。是匿名叶子的格，现在存的是：`where` 没有给的，写着 `fst`、`Rep` 的访问项；`where` 给了、分类认作那个叶子的，照写的经视图的读法（`order.le (ord S)`）。
+    以后两种都存它的访问常量。读这一格得到访问常量读 `S`，交给用户之前照 3.15.5 的办法换成读法。
+- 记录里存"作用在参数上"的形式 `c ?x1 … ?xn ≡ 规范项`。它由封掉的定义式 `c ≡ λx1 … xn. 规范项` 推一次得到，之后不再碰 λ 形式。`truncate` 的定义式同样存这种形式。
+- 实例的定义式里，各叶子的值与 more 槽照现在的样子存，不做任何展开：more 槽写的是 `group.more G` 就存 `group.more G`；从一个节点 `t` 读出来的叶子存的是读法（`order.le t`）。
+
+#### 3.15.5 声明之后怎样证
+
+基本的动作只有一个：读一个分量，靠实例化两条定理，不调化简器（下面 (a)）。
+比较两个结构，是把两边的各个分量分别读出来、逐个比较，再用层的 `equality` 或 `split` 合成一条等式（下面 (b)）。
+两样都不下到类型的表示，也都不是"从项里收集一组固定的规则、把项改写到不能再改写"那种证法；那种证法（`unfold_conv`）整个去掉了。
+声明一个视图、一个实例、一层的定律时还各有一两处用一两条点名的等式改写一遍的小证明，列在 (b) 的"声明时的小证明里留着的改写"一条。
+
+【2026-11-24 改写（03:3x UTC；代码在开发副本里已照此实现，当时已有的测试全部通过）。原稿的 (b) 是"把含结构的项化到范式再比较"：用各头的定义式、`conv`、`more_conv`、`expand` 作改写规则，把等号两边各化到底，看是否相同。
+两轮评审指出的毛病都出在"范式"上。结果依赖 `expand` 与 `more_conv` 的先后（第一轮的 D2）；这个先后没有测试钉着（复审 `wf_883884b9-35b` 的裁定 4），为它给的一条理由不成立（裁定 5）；
+抄了一个视图的 more 的值与经视图读它的读法，化不到同一个范式，有的整体等式因此丢掉，有的实例（`super = S`，类型是 3.15.10 里那种）定义时 `fields` 证不出、报的还是内部的 `Tactic failed`（裁定 3）。
+裁判对裁定 3 给的改法是再加一条存法的规矩（抄来的叶子存成访问常量）。concept A1 没有采用它，改成不用范式：每个分量照 (a) 读出来再比。这样没有改写规则的先后可言，上面几种毛病的来源也没有了；
+裁判举的几个例子写成了测试（3.15.10 的 `Corner2_Test.thy`），在已提交的代码与开发副本上都通过（2026-11-24 04:04 UTC）。这个改法没有经过评审，列在本节要复审的内容里。】
+
+**(a) 读一个分量。** selector simproc 合成的字段等式（3.7 那张表各行里读一个叶子或 `more` 的那些）都是这一种，缓存里填的主要是它。
+视图整个给的那种等式用 (b)；右边以模式开头的字段在读出来之后另做 case 归约（`select_applied`，不变）。
+要证的是 `访问常量 (头 参数…) ≡ 值`，其中"头"是实例常量、视图常量或 `truncate`；一个结构项"有头"指它是这三种常量之一作用在它的全部参数上。
+（结构项本身已经是构造常量开头的规范项时，没有定义式要实例化，只做下面的第 2 步；声明一层时证截断的定律要用到这种项。）
+下文说一个结构项"读得动"，指它有头，或者本身是构造常量开头的规范项；否则说它"读不动"（变量、用户的常量作用出来的项都读不动）。读一步是两次实例化，不调化简器：
+1. 把头的定义式实例化到这些参数上，得 `头 参数… ≡ W'`，`W'` 是一个规范项。
+2. 把这个访问常量的 `conv` 实例化到 `W'` 上，得 `访问常量 W' ≡ 那个分量`。两条接起来就是结果。
+
+- 例：`monoid.mult ex.og ≡ monoid.mult (concept.constructor True (monoid.constructor UNIV (+) 0 …)) ≡ (+)`。
+- 例：`order.le (ordered_group.ord ex.og)`。第一次读出 `ordered_group.leaf0 ex.og`（视图的定义式加 `order.le` 的 `conv`）；它是匿名叶子的访问常量作用在一个有头的结构上，再读一次得 `(≤)`。
+  （测试里的 `int.og` 是用 `ord = int.order` 给的，这个叶子存的是读法 `order.le int.order`。那里同样读两次，交出的等式是 `order.le (ordered_group.ord int.og) = order.le int.order`，与现在相同；
+  `order.le int.order` 由化简器下一次调 simproc 时再读，那是另一条等式。）
+- 没有改写。每读一步是两次实例化；要读的分量在 `W'` 没有写出来的层里时四次（下一条），那里把槽写成交给用户的样子时每读一步或每换一次读法再加两次。
+  一条等式要接着读时，每多读一步再加这么多（上面第二个例子读两步，四次）。
+  次数与这一层有多少字段、链有多少层、视图有多少格都无关：视图其余各格不被化简，原样留在被丢掉的那些分量里。
+- **要读的分量在 `W'` 没有写出来的更里的层**（3.7 表里"继承了宿主 more 的实例"那一行）。这时 `W'` 最里面的 more 槽不是构造常量开头的项，先把它变成构造常量开头的项，再做第 2 步。
+  下面把正在读的那个结构项（定义式刚被实例化的那一个）叫 `w`。分两步（复审 `wf_883884b9-35b` 的裁定 1 之后照这样写）：
+  - 第一步，把这个槽写成交给用户的样子。槽里是匿名叶子的访问常量作用在某个结构 `u` 上时（带 more 槽的视图把自己的 more 存在匿名叶子里，就是这样），
+    照下面"读出来的结果怎样交给用户"的规矩办：`u` 读得动就接着读一步，读出来的再看；`u` 读不动、或者那一步读不出来，就换成经持有它的视图的读法。别的槽不动。
+  - 第二步，看这个槽现在是什么。
+    - 是 `L.more t`，而且 `t` 不是 `w`：这个值抄了 `t` 的 more。设要读的分量在 `K` 这一层（读的是某层的 `more` 时 `K` 就是那一层）。
+      把 `K` 的 `surjective` 实例化到 `t` 上，得 `t` 等于它在 `K` 的规范项（各分量是访问常量读 `t`）；再对这个规范项用 `L` 的 `more_conv`，
+      得 `L.more t` 等于从 `L` 的更里一层到 `K` 的各层构造常量嵌套，各分量是访问常量读 `t`。把它换进 `W'`，再用 `conv`（读的是 `more` 时用 `more_conv`），读出来的是同一个访问常量读 `t`。
+      不管 `K` 离 `L` 隔几层，都是这两次实例化。
+      例：`group.sub G H` 的类型写到 `group` 这一层为止，more 槽是 `group.more G`。读 `ordered_group.bound (group.sub G H)` 时，
+      `group.more G` 换成 `ordered_group.constructor (ordered_group.leaf0 G) (ordered_group.bound G) (ordered_group.more G)`，再用 `conv` 得 `ordered_group.bound G`。
+    - 是 `L.more w`，也就是 `w` 自己的 more；或者是别的项（比如一个变量）：这一步读不出来。
+  - 这两步在读一个分量时至多做一回：槽写出来到 `K` 之后 `conv` 一定对得上，对不上就是读不出来，不再重试
+    （第三轮评审 `wf_4bf4e54d-963` 的裁定 1：代码原先写成"对不上就再把槽往里变一次、再试"的循环，靠别的函数的性质才停；已改成字面上的这两步）。
+  - 第二步里"`t` 不是 `w`"这个检查就是现在 `view_more` 做的检查。它比的是项，不是"是不是同一个视图"。它保证这个过程会停：
+    `w` 自己的 more 若照上面写出来，读到的是同一个访问常量读 `w`，也就是要读的那个项本身，再读就没完。
+    出现它的情形：`w` 是视图作用在一个变量上，视图的 more 存在匿名叶子里，第一步把这个叶子换成经视图的读法，得到的正是 `L.more w`
+    （`View_More_Test.thy` 里 `homg` 的那个例子；`Corner_Test.thy` 的 `hom4`、`via.lat` 两节）。
+  - 例（第二个视图接走第一个视图的 more）：`hom4` 有两个视图，`A: order`（more 是类型参数）与 `A2: order where more = order.more A`，`A2` 的 more 那一格就是存 `A` 的 more 的那个匿名叶子。
+    `X` 是变量、那个类型参数取 `(int, unit) lat.extension` 时读 `lat.sup (hom4.A2 X)`：第一步把槽里的访问常量读 `X` 换成 `order.more (hom4.A X)`；
+    `hom4.A X` 不是正在读的 `hom4.A2 X`，第二步把它写出来，读到 `lat.sup (hom4.A X)`。再读 `lat.sup (hom4.A X)` 时槽里是它自己的 more，读不出来，到此为止。与现在相同。
+- 这一个过程取代 `leaf_value`、`leaf_term`、`view_slot`、`view_more`、`more_value`、`beyond` 六个函数里按头分情形的写法。
+  三种头的定义式右边都是规范项，所以同一个过程都适用；现在是先在 ML 里按头的种类算出右边、再把等号两边展开到类型的表示来证它（`prove_select`）。
+  代码里是互相调用的三个函数：`read`（上面的两步与隔层的读）、`shown`（把结果写成交给用户的样子）、`folded`（匿名叶子的访问常量换成经视图的读法）。
+- **读出来的结果怎样交给用户**（行为照旧，3.7 表；现在是 `leaf_term` 的规矩）：
+  - 结果是带名字的 selector 或 `more` 作用在某个结构上、或者是用户写的项：原样交出，不接着读。
+  - 结果是匿名叶子的访问常量作用在某个结构 `u` 上：不能原样交出去。`u` 读得动就接着读一步，读出来的结果再照这几条看；
+    `u` 读不动（比如是变量），**或者接着读的那一步读不出来**，就换成经持有它的视图的读法：
+    `ordered_group.leaf0 G ≡ order.le (ordered_group.ord G)`，这条等式是视图的定义式加 `conv` 反过来用。
+  - 这样得到的右边若与左边相同，交回"没有等式"（`X` 是变量时 `order.le (ordered_group.ord X)` 不处理，就是这种情形）。
+  - 读 `more` 得到构造常量开头的项时（读的不是这个值最后一层的 more），交回"没有等式"：构造常量不给用户看。
+
+**(b) 比较两个结构：逐个分量读出来再比。**
+用它的地方：视图整个相等（`whole_equation`）、截断的各条定律（`add_laws`）、truncate congruence rule 的推导里包自己的常量（视图常量、带参数的实例常量）、实例与它的来源在截断上相同（`define_instance` 里的 `fields`）。
+- **一个分量怎样比**（`leaf_conv`、`same_leaf`）。要比的两个项都是"访问常量作用在一个结构上"。对每一边依次做两件：
+  1. 照 (a) 接着读，直到读不动：结果不再是访问常量作用在一个读得动的结构上。这一段全是实例化。
+  2. 把读出来的项用 selector Simpset 化简一次（经 `selector_conv`，计步，在步数上限之内）。用户写的值里夹着的字段读取与截断在这里化掉。
+  两边得到同一个项，这个分量就相等。
+  （已提交的代码在比较之前另做一次 eta 归约。这里没有：两边的写法出自同一份存下的值，化简器只在有规则作用在 λ 那个节点上时才动它；
+  变异检查里去掉 eta 的那一个，补了"值写成 λ 项"的测试之后仍然没有测试抓得住它，所以这一步作为用不到的代码删了，3.15.10。）
+- **两个结构相等**（`structure_equation`，要证 `x = y`，两边类型相同）：隐藏字段、整条链上的每个叶子、最后一层的 `more`，各照上一条比一次，再用最后一层的 `equality` 合成 `x = y`。
+- **两个结构除隐藏字段外相同**（`base_more_equation`，要证 `concept.more x = concept.more y`）：从最后一层往 base 走，每一层用它的 `split`：
+  这一层的各个叶子相等，加上已经得到的"这一层的 `more` 相等"，得出靠 base 的那一层的 `more` 相等；走到紧挨 base 的那一层为止。
+- **视图整个给的等式**（`whole_equation`）。要证 `q (c xs) = y`：实例 `c xs` 的视图 `q` 是用 `q = y` 整个给的（`q` 可以是连着的几层视图）。
+  比的是 `q` 的 parent 的各个叶子与它的 `more`，也就是那个子句给出的各格，一格不多一格不少；用的是 parent 所在那一层的 `equality`。
+  不能按 `y` 的类型来取叶子：视图的 more 的类型是扩展类型时，`y` 的类型在那个 more 里面还有叶子（`lat.sup`），它们不是实例存下的格，读不到存的值上。
+  （第三轮评审 `wf_4bf4e54d-963` 的裁定 2 指出原先就是按类型取的，因此丢了一条已提交的代码给得出的等式：视图整个给、它的 more 另由一个子句给成别的写法时。已改，3.15.10 有测试。
+  改了之后，这种情形里两种写法只有经 selector Simpset 才看得出相同时，这里给得出等式而已提交的代码给不出；这是多出来的，3.15.8"行为的改变"。）
+  对每一格：
+  - 左边是访问常量读 `q (c xs)`。沿"视图、视图下面的视图、实例"这一串各读一步，读到实例存的那个值为止，不再往下读。
+  - 右边是同一个访问常量读 `y`；匿名叶子的写成经视图的读法（`folded`），这正是声明实例时这个子句读出来、存进实例的写法。
+  - 两边是同一个项就相等；不是时，照旧经实例记录里的 `agreed` 等式接上（3.9：声明时比出相同而写法不同的两个值；`Selector_Name_Test.thy` 里有钉着这条路的测试）。
+  - 类型是 `unit` 的分量不读，直接相等（视图没有 more 槽时，它的 `more` 一边是 `()`、一边是 `more` 读 `y`，写法不同）。
+    隐藏字段照旧用 `concept` 的定理；`y` 的隐藏字段不是 `True` 时等式带着 `concept y` 这个前提。
+  最后用 `equality` 合起来。读到存的值就停是有意的：每一格存的值，要么就是这个子句读出来的那个项，要么是声明时与它比出相同、因而有一条 `agreed` 等式的另一个值；
+  所以每一格都证得出，这条等式的证明不调化简器。
+- **truncate congruence rule 的推导**（`prove_cong_meta`）：常量是包自己的（它造出来的是结构），用 `structure_equation` 比两边；
+  常量是用户的，照旧：把它的定义式展开一次，再用 selector Simpset 化简，两边相同即可（`cong_conv`）。
+- **`fields`**（`define_instance`）：先把实例登记进表（这样它读得动），再用 `base_more_equation` 比实例的截断与来源的截断。
+- **不计步的改写**（文件头"十八"第 (3) 项）只剩 `cong_conv` 里展开用户的那一条定义式。`unfold_rules`、`unfold_conv`、`prove_unfold` 三个函数去掉了。
+  那一项量出来的随结构变大而猛增的步数（读整个视图、视图套视图）都是 `unfold_conv` 的，现在这些等式是 0 步（3.15.9）。
+- **声明时的小证明里留着的改写**（每处用一两条点名的等式过一遍，不随用户的证明重复做，也不在步数上限管的范围里）：
+  `prove_definitional` 由封掉的定义式推出"作用在参数上"的形式与隐藏字段的等式（定义式一条、base 那一层的 `conv` 一条）；
+  `add_laws` 里 `C.truncate r = r`（`r` 的 more 是 `unit`）那一条（`truncate_def` 与 `unit` 的唯一性）；`add_split` 把匿名叶子的访问常量换成读法（用的是下面讲 `C.equality` 那一条里的等式）。
+  `add_layer` 自己的各条证明用的是类型的表示，那是它的本分（3.15.3），不在此列。
+  另有三处各拿一条定理做一次 `Conv.rewr_conv`，不经化简器，与已提交的代码相同：`reduce`（模式开头的字段的 case 归约）里的 case 定理；`along_source`、`member_equation` 里的 `C.truncate r = r`。
+- **会停**（论证，不是形式证明；复审要看的一处）。
+  - 用来说"变小"的量：把一个结构项里的头全都换成各自的定义式、一直换到没有头为止，得到的项在这里叫它的"完全展开"。
+    定义式不循环（一个常量的定义式只提到比它早定义的常量和它自己的参数），所以完全展开是有限的项。
+  - 读一步，是从"访问常量读 `w`"得到 `w` 的完全展开里的一个分量。接着读时，新读的那个结构的完全展开是 `w` 的完全展开的真子项。
+    把 more 槽里的 `L.more t` 写出来、之后读 `t`，也是这样：`L.more t` 是 `w` 的完全展开里的分量，`t` 在它里面。所以这两种步只能做有限次。
+  - 不使这个量变小的只有一种步：匿名叶子的访问常量作用在读不动的 `u` 上时，换成经持有它的视图 `h` 的读法（`folded`），项变大了。
+    换出来的若是正在读的结构自己的 `more`，(a) 的检查到此为止。若不是，接着读的是换出来的那个读法里的结构，记作 `v`
+    （`v` 是 `h u`；持有它的视图一层套一层时是 `h' (h u)` 这样的项）。`v` 存这个叶子的那一格读到的仍是"这个匿名叶子读 `u`"，
+    再换出来的就是 `v` 自己的 `more`，同样到此为止。所以这种步不会接连做下去。
+  - `folded` 自己的递归（持有它的视图的那一格又是一个匿名叶子时接着换）每次进到视图的 parent，次数不超过视图嵌套的深度。
+  比较时的第 2 件事，selector Simpset 的化简，有步数上限。
+- `C.equality` 的推导（`add_equality`）与 3.14 的等价（`add_split`）不比较结构：两处要的只是把匿名叶子的访问常量换成经视图的读法，用上面"读出来的结果怎样交给用户"里的那条等式（`folded`）。
+- **与旧证法相比证不出的一类**【报作者】。它只关系到经 `leaf_conv` 的比较（`structure_equation`、`base_more_equation`）。`whole_equation` 不在其内：它不调化简器，每一格照上面那样证得出。
+  经 `leaf_conv` 的比较要的是：两边各自读到读不动为止、再经 selector Simpset 化简之后，是同一个项。旧证法要的是：两边展开到类型的表示之后相同。
+  所以有一类比较旧证法成、新证法不成：两边停在不同的写法上，只有投影到类型的表示才看得出相同。
+  例：`m` 是一个扩展类型的变量，两个不同的实例都把自己视图的 more 给成 `m`；分别经这两个实例读 `lat.sup`，两边都读不动（`m` 不是构造常量开头的项，也不是某个结构的 `more`），停在各自的写法上。
+  用 `leaf_conv` 的入口有三处。每一处两边的写法都出自同一份存下的东西，所以碰不到这一类：
+  - `add_laws`（声明一层时的三条定律）：两边是同一个变量 `r` 的截断与截断的截断，每个分量两边读到的都是同一个访问常量读 `r`。
+  - `prove_cong_meta`（包自己的常量的 truncate congruence rule）：两边是同一个常量，一边作用在 `r` 的截断上，另一边作用在 `r` 上（或再取截断）。
+    每个分量读到的是这个常量同一条定义式的同一格，只差参数上的那层截断；selector Simpset 把访问常量下面的截断去掉。
+  - `fields`（实例与它的来源在截断上相同）：实例里从来源来的那些层，每一格存的就是来源的那一格（family 的成员：那个成员存的值；`super = t`：读 `t` 的读法），两边读到同一个项。
+  复审 `wf_883884b9-35b` 的裁判就原稿"请作者接受的一处放宽"举的例子都写成了测试，已提交的代码与开发副本全部通过（3.15.10 的 `Corner2_Test.thy`）；那一处放宽因此撤回。
+  第三轮评审 `wf_4bf4e54d-963` 的裁判认为这一类作为定义是准确的，要求把原先的"没有找到碰得到它的入口"换成上面这样逐个入口的理由。
+
+**(a) 与 (b) 的关系。** (b) 不是另一种证法：它比的每个分量都是 (a) 读出来的，读不动了才交给 selector Simpset；而 selector Simpset 里读字段的 simproc 做的又是 (a)。
+用户的值里夹着的结构（(a) 自己不去化简的那些）就这样由 selector Simpset 管，带着步数上限。
+
+#### 3.15.6 与早先两条决定的关系
+
+这一小节的三点（设构造常量；每层一个、嵌套；给匿名叶子设访问常量）可以分开定，哪一点都还没有得到作者的批准。
+
+- **设构造常量，推翻 0.1 第 35 条（不设单独的构造子常量）。** 依据是作者 2026-11-23 16:42 UTC 的话：他写的就是一个构造常量作用在各分量上。
+  他没有提第 35 条，"这是推翻"是 concept A1 读出来的，报他时点明、请他确认。
+  - 3.5 当时列的四条理由现在的状况：用户只在 `concept_instance` 里构造实例、构造子对用户封死，照样成立；这种项不出现在用户面前，照样成立；
+    "多一个常量只多一步展开"变成零步，因为声明之后的证明不再展开它；"代码生成把 `Abs` 声明为构造子、已测通"换成把构造常量声明为构造子，
+    `record` 包就是这样做的（`record.ML` 里 `Code.declare_datatype_global [ext]`）；开发副本里已这样做，原有的 `value`、`by eval`、`export_code` 测试通过（3.15.10）。
+  - **943 步不是靠这个常量去掉的。** 去掉它的是 3.15.5：(a) 用实例化读分量，(b) 逐个分量读出来再比、不再把两边展开到底。
+    这些在"`Abs` 套元组"的写法上同样做得成（现在的 `conv` 就是陈述在那种项上的），前提是下一点（匿名叶子的访问常量）或它的退路。
+  - 这个常量换来的是两样：作者要的形状；`Abs` 与平衡排法只留在 `add_layer` 里，`whole_of`、`mk_value`、`add_laws` 与 (a) 搭项、拆项只用"常量作用在参数上"，不必知道排法。
+    代价是每层多一条封掉的定义式，代码生成的构造子换一个。
+- **每层一个构造常量、嵌套**：concept A1 的提案，理由在 3.15.1 末条。
+- **给匿名叶子设访问常量，与 0.1 第 19 条相反。这是 concept A1 的提案，待作者批准。**
+  - 第 19 条的来由（3.7"起因"）：子层匿名叶子的 accessor 定理左边是 `fst (snd (Rep (group.more W)))`；在默认的 simpset 里，里层的 `group.more W` 先被 `more` 的定理化掉，这条定理就对不上了。
+    第二轮评审的裁判建议给匿名叶子设常量；作者否决（"反对 (a)."，「你调用 simp 的时候不能明确限定所使用的 simp rules 吗？」），改成包内证明只用固定规则。
+    第 19 条只说到这里。之后把所有分量（连带名字的叶子）都展开到类型的表示再比较，是 concept A1 写原型时的选择（3.7 selector simproc 表下那句与"证明方式"一段），第 19 条没有要求这样做；
+    探针阶段用的是 accessor 定理（3.7 同一段的维护说明）。
+  - 现在的冲突：作者 2026-11-23 要声明之后的证明不再用 `fst`、`snd`、`Rep (Abs x) = x` 与各定义式。匿名叶子的访问项只要还是写着 `fst`、`Rep`、`group.more` 的 λ 项，就有两处做不到：
+    1. 类型的表示留在声明之后的定理里：视图与 `truncate` 的定义式右边、`surjective`、`equality`、`split` 的陈述、(a) 的中间结果，都写着 `fst`、`Rep`。
+    2. (a) 要先认出"这个项是第 k 个匿名叶子的访问项作用在结构 `u` 上"，才能读它、才能把它换成经视图的读法。
+       访问项是常量时查一次表就知道；是 λ 项时，得拿各个匿名叶子的访问项去对这个项的形状，读的代码就要知道元组的排法，排法关不在 `add_layer` 里（3.15.3 末段）。
+    【2026-11-24 改写：原稿这里列三处，另两处是"自底向上的改写先把里层的 more 化掉，`conv` 对不上"与"`expand` 作改写规则会打转"。那两处是范式那种证法的，随它去掉了（3.15.5 开头）。】
+  - 设常量之后这两处都没有了：匿名叶子与带名字的叶子在类型层内部走同一条路，3.15.2 至 3.15.5 就是照设常量写的。用户看到的东西不变：常量封着，结果里不出现。
+  - **不设常量时怎样做**（作者不批时的退路；正文没有照它写，也没有实现过）。
+    - (a) 的两步照样做：匿名叶子的 `conv` 陈述成 `fst (Rep (group.more W)) = l` 这种样子，拿整条去对整个项。另写一个按排法认访问项的函数（上面第 2 处）。
+    - (b) 不受影响：它只用 (a) 与 `equality`、`split`，这两条定理里匿名叶子的前提照现在的样子写着 `fst`、`Rep`。
+    - 拿这条退路与作者在文件头"十九"里定的方向比：做不到"声明之后不出现类型的表示"，排法也关不住；别的都一样。
+
+#### 3.15.7 代码生成与封死的名字
+
+- 代码生成（3.10）：每层声明为构造子的从 `Abs` 改成构造常量。code equation 是各访问常量的 `conv`（匿名叶子的访问常量也在内）、`more_conv`、
+  `truncate` 作用在规范项上的那一条（3.15.3 末段，不进层的记录）；不再需要 `Rep (Abs x) = x` 那一条。
+- 新封掉的名字：每层的构造常量及其定义式、匿名叶子的访问常量及其定义式。都放在 `C.extension.` 之下，照 3.5 的办法限制在没有 naming 进入过的 scope 里。
+
+#### 3.15.8 改动的范围
+
+- `add_layer`：声明构造常量与匿名叶子的访问常量；定理照 3.15.3 陈述；`split` 的证明是现在 `add_split` 里用 `rep_inject` 的那一段搬过来。
+  `layerT`、`mk_layer`、`projs`、`split_tac` 挪到它身边，用 `local … in … end` 圈住。
+- `whole_of`、`mk_value`：用构造常量搭规范项。`add_laws`：三条定律改用 (b) 证；其中一条的陈述里现在用 `Abs` 套元组搭了一个 base 那一层的值，改用 base 那一层的构造常量。
+- `define_view`：各格照 3.15.4 填；视图的记录不再存定义式里各格的项与它的变量（现在的 `values`、`S` 两栏，只给 `view_slot` 用）。
+- `leaf_value`、`leaf_term`、`view_slot`、`view_more`、`more_value`、`beyond`、`prove_select` 去掉，换成 (a) 的 `read`、`shown`、`folded`。
+- `unfold_rules`、`unfold_conv`、`prove_unfold` 去掉，换成 (b) 的 `leaf_conv`、`same_leaf`、`structure_equation`、`base_more_equation`；`whole_equation` 照 (b) 重写，`agreed` 那条路照留；
+  `define_instance` 先登记实例、再证 `fields`；`add_split`、`add_equality` 照 3.15.5 (b) 里讲 `C.equality` 的那一条改。
+- `prove_cong_meta`（推 truncate congruence rule 时比较两边）：包自己的常量改用 `structure_equation`；用户的常量照旧用 `cong_conv`。
+- `commuting`（带参数的实例与截断交换的那条等式）：证出来之后把等式对回它陈述里的变量 `?x0, ?x1, …`。逐个分量的证明会给变量换下标，而 `commuting_at` 是按这些名字代入的。
+- 登记常量的种类与装 simproc 并成一个函数 `register`：一个常量有没有读字段的 simproc，由它的种类经 `kind_arities` 一处定；构造常量与匿名叶子的访问常量没有
+  （第三轮评审的裁定 3：原先这两种常量另走一个只登记种类的函数，而 `kind_arities`、`has_simproc` 仍把"有种类"当作"有 simproc"）。
+- **不变的**：对外的签名；selector simproc 给出的每一条等式的左右两边；缓存与它的记账；步数上限与计步；truncate congruence rule；各句报错文案。
+  所以 B、C、E 三区不受影响；现有的测试与期望文件不改而通过（2026-11-24 实测如此，3.15.10）。
+  【"每一条等式的左右两边不变"在第三轮评审时不成立：`whole_equation` 丢一条等式（3.15.5 (b) 那一条里的说明）。修改之后，那种情形的测试在已提交的代码与开发副本上都通过，没有已知丢掉的等式；
+  但多出一类，见下一条。修改经第四次的小评审 `wf_18e918b1-f0c` 看过，代码通过。】
+- **与已提交的代码相比，行为的改变（报作者，请他认可）**：
+  - 没有已知丢掉的等式。
+  - **多出一类等式**：视图整个给，它的 more 的类型是扩展类型，这个 more 又由另一个子句单独给了一次，两种写法只有经 selector Simpset 化简才看得出相同、展开包自己的定义看不出。
+    例：用户的常量 `tw` 有 truncate congruence rule，实例的子句是 `A.more = order.more (tw (lat.truncate G))` 与 `A = tw G`。
+    开发副本给出 `concept (tw G) ⟹ hom2.A (pg.hom2 G) = tw G`；已提交的代码不给等式（两份代码上都实跑过，`Corner2_Test.thy`；`build_abs14.log`、`build_old_corner2f.log`）。
+    原因：已提交的代码把 more 里面的叶子（`lat.sup`、`lat.more`）逐个拿来比，靠的是展开包自己的定义，展开不进用户的常量；开发副本比的是 more 这一格本身，用声明时已经比出来的 `agreed` 等式接上。
+    等式是对的，实例本来也被接受（声明时两个值已比出相同）；多出它的后果是 `simp` 现在会改写一个以前不动的项。
+  - 3.15.5 (b)"与旧证法相比证不出的一类"：有旧证法成而新证法不成的比较，但用到那种比较的三处入口都碰不到它（那里逐处给了理由），所以不是已知的行为改变；一并报作者。
+- 原稿这里有一条"会变的只有一种情形，请作者接受"。它随范式那种证法撤回了，换成上一条。
+- **代码量**：开发副本比已提交的 `concept_type.ML` 多约 180 行（3854 行对 4037 行）。按区段数（`diff` 的增减行）：(a) 与 (b) 的函数连注释比被换掉的那些多约 100 行；`add_layer` 多约 30 行（多声明常量、多证 `split`）；
+  `add_split`、`add_equality`、`commuting` 与登记常量种类的几处合计多约 30 行；其余各处增减相抵。
+
+#### 3.15.9 实测的代价
+
+【2026-11-24 04:0x UTC 实测，取代原来的估算；这一小节原来的标题是"预计的代价与要量的"。】
+- 量法：`Cost_Test.thy`（3.15.10 的"代价"一条）从外面数化简器的工作，一"步"是下面三样之一：化简器被调起一次、一个 simproc 被调一次、一条规则被试一次（与 `Simp_Steps` 的数法相同）。
+  (a) 的实例化不是化简器的工作，不在其中。新旧两份代码跑同一个测试，在本机；凡是要经几层填缓存的测量各用自己的一套结构，每一项量的时候缓存里都没有它要用的等式。
+  旧代码的数两次运行完全相同；它的"视图整个给"那一项是 943，与文件头"十九"第 (2) 项在 cslh19 上数的相同。
+- 步数（旧 → 新）：
+
+  | 量的是什么 | 旧代码 | 新代码 |
+  |---|---|---|
+  | 读实例的一个字段（`monoid.mult cost.og2`） | 22 | 0 |
+  | 同上，concept 有 2 / 4 / 8 个字段 | 10 / 11 / 12 | 0 / 0 / 0 |
+  | 视图整个给的等式（`og2.o2 cost.og2 = cost.og`） | 943 | 0 |
+  | 同上，视图有 2 / 4 / 8 个字段 | 122 / 313 / 951 | 0 / 0 / 0 |
+  | 同上，4 个字段、视图套视图的第 1 / 2 / 4 / 8 层 | 313 / 602 / 2856 / 33439 | 0 / 0 / 0 / 0 |
+  | 经 1 / 2 / 4 / 8 层视图读一个字段，化简到底 | 329 / 933 / 5095 / 75325 | 5 / 7 / 11 / 19 |
+  | 带参数的实例套 1 / 2 / 4 / 8 层，读一个字段，化简到底 | 29 / 111 / 506 / 2220 | 5 / 9 / 20 / 54 |
+  | 读继承了宿主 more 的实例的 `more` | 34 | 0 |
+
+  新代码里是 0 的那些，证明只做实例化。不是 0 的两行，步子全是 selector Simpset 自己的。
+  "经 n 层视图"那一行：起一次化简，读 n + 1 步，每步调一次读字段的 simproc、用一次它给的等式，共 2n + 3 步。
+  "套 n 层"那一行是 (n+1)(n+2)/2 + n + 1 步：起一次化简，用 n 次读字段的等式（每次读过一层实例），simproc 一共被调 (n+1)(n+2)/2 次。
+  simproc 的次数为什么是二次的，是 concept A1 的推断，没有逐个 simproc 数过：每读过一层，化简器把改写出来的项从头再走一遍，
+  剩下的每一层各问一次那个实例常量的 truncate congruence simproc（它只看参数是不是截断，不是就返回）。
+- 耗时（旧的取量旧代码的那一次运行，新的取量新代码的那一次，前后相隔两分钟，本机当时有别的负载；每项只量一次，只看量级）：视图整个给的等式 86 毫秒 → 5 毫秒；套视图第 8 层的整体等式 1.77 秒 → 20 毫秒；
+  经 8 层视图读一个字段 4.07 秒 → 46 毫秒；带参数的实例套 8 层 204 毫秒 → 2.8 毫秒。
+- 声明一个 concept 的耗时没有看出差别（4 / 16 / 64 个字段，每个量两次：旧 227、100 / 251、175 / 1670、896 毫秒，新 110、148 / 231、352 / 650、892 毫秒；波动比差别大）。
+- **concept A1 2026-11-24 02:3x UTC 报给作者的旧代码的两行数不准**：当时报的是经视图 329 / 609 / 4169 / 36802、套实例 29 / 87 / 404 / 1734。
+  那一版测试里几项共用一套结构，后量的项用到了先量的项留在缓存里的等式，所以偏小；上表是分开量的。新代码的数两次相同。
+- **留给作者定的一处**：让读字段的 simproc 一次读到底（`c.f1 (s (s G))` 直接给出 `c.f1 G`），"套 n 层"那一行就从二次变成线性。
+  代价是用 `[[concept_selector "项"]]` 按名字取到的那条等式，右边从"读过一层实例"（`c.f1 (s G)`）变成"一直读到最里"（`c.f1 G`）；对 `simp` 的结果没有影响。没有做，等作者定。
+
+#### 3.15.10 测试
+
+【2026-11-24 04:1x UTC 照做完的样子改写。测试都在 `ai-artifacts/concept_A_prototype/`，不提交；被测的代码放在它下面的 `under_test/`。】
+- 原有的全部测试与两份期望文件不改而通过（实测；会话 `Concept_A_Test` 与 `Concept_Command_Dev`）。
+- 行为的测试，**新旧代码都通过**（只有下面标出的一处例外）。每一个都先在已提交的代码上跑通过，所以其中的期望就是现在的行为：
+  - `Reading_Test.thy`：18 个"读出来是什么"的例子。实例的叶子；经视图读带名字的与匿名的叶子，结构是实例与是变量；
+    最后一层与靠前一层的 `more`；继承了宿主 more 的实例读更里层的叶子与 `more`；截断。
+  - `Corner_Test.thy`：
+    - 要读的分量隔两层：`monoid` 层的实例 `msub.sub G H`，`more = monoid.more G`；读 `group.inv`、`group.more`、`ordered_group.bound`、`order.le (ordered_group.ord …)`、`ordered_group.more`。
+    - 一个匿名叶子有几个视图的格是它（`og3` 的 `ord`、`ord2: le = order.le ord`、`ord3: le = order.le ord2`）：钉住每个视图上单独一步读出来的是什么，结构是变量，以及再套一层 more 是类型参数的视图。
+    - 第二个视图接走第一个视图的 more（`hom4` 的 `A2: more = order.more A`），在变量上读 `lat.sup`、`lat.more`、`order.more`（3.15.5 (a) 的例子）。
+    - 值是"经视图读视图没有写出来的层"（实例 `via.lat S` 的 `sup = lat.sup (hom2.A S)`）：它的 truncate congruence rule 推得出，读得完。
+    - 钉住单独一步的等式（不是化简到底的结果）：`int.og` 的 le 那一格是 `order.le int.order`；用户写的值 `carrier = monoid.carrier int.group` 原样交出；带参数的实例套两层只剥一层。
+  - `Corner2_Test.thy`，复审 `wf_883884b9-35b` 的裁判点名的情形，视图的 more 的类型都取 `(int, unit) lat.extension`：
+    - `hom4` 在实例上读，与再套一层视图之后在变量上读。
+    - 视图整个给，给的那个实例把自己视图的 more 写成参数：`kk.B (km.kk m) = qm.hom2 m`。
+    - `super = S`（`S` 是参数）与 `super = qm.hom2 m` 的实例定义得出来，读出来的值对。
+    - 视图整个给，给的那个实例带前提：`hom2.A (ks.hom2 S) = qs.order S`，带着前提 `concept (qs.order S)`。
+    - 值写成 λ 项（`mult = λx. monoid.mult G x`）的带参数实例与截断交换的规则推得出，化简的结果对。
+    - 视图整个给、它的 more 另由一个子句给成别的写法（第三轮评审的裁定 2 的情形）：两个子句的两种先后；more 来自 family 的另一个成员；视图的 parent 没有自己的层。四条整体等式都要有。
+    - 同上，而两种写法只有靠用户的常量 `tw` 的 truncate congruence rule 才看得出相同（实例 `pg.hom2 G`）：开发副本给出等式。这是这两个测试里唯一一处已提交的代码过不了的（3.15.8"行为的改变"）。
+  - 时限（60 秒，`Timeout.apply`，包在小函数 `C.limited` 里）。在时限之内的：两个测试里检查的每一次读（经 `C.step`、`C.value`、`C2.equation`）；
+    写在 `C.limited` 里面或经 `C2.def` 做的实例定义。读不完时它们是一条报错。
+    不在时限之内的：经原有测试的小函数做的定义与声明（`I.def_sub`、`I.def_global`、`V.def_hom2`、`V.declare`；它们也要读结构）；
+    定义实例时分到别的线程里去证的那一步（默认设置下 `fields` 的比较）；原有的各个测试（它们不改）。
+    那些地方读不完时，要等整个构建被运行它的脚本掐掉；变异里"more 读它自己"那一个（卡在原有的 `View_More_Test.thy` 里）就是这样才算抓住的。
+- 只对新代码的：`Abstraction_Test.thy`，构造常量、匿名叶子的访问常量在输入里解析不到（照 3.5 的做法）。
+  代码生成换了构造子，没有另加测试：原有测试里的 `value`、`by eval` 与 `export_code`（`Instance_Test.thy`、`View_More_Test.thy`）已经经过匿名叶子与截断
+  （下面的变异里，去掉构造子的声明、去掉任一组 code equation，都被它们抓住）。
+- 代价，`Cost_Test.thy`（从外面量：旧代码的固定规则改写不计步，`Simp_Steps` 报不出它，所以不用 `Simp_Steps`）：
+  - 这个 theory 先用 `Raw_Simplifier.set_trace_ops` 装上计数（化简器被调起、simproc 被调、规则被试，各数一次），再定义它自己的结构；只数做测量的那个线程（声明时分出去的证明在别的线程里）。
+    计数只看得见在这个 theory 的上下文里做的工作：缓存的填充是在"等式里各常量都已有的那个祖先 theory"里做的，所以被量的结构必须定义在这个 theory 里。
+  - 凡是要经几层填缓存的测量各用自己的一套结构，每一项量的时候缓存里都没有它要用的等式（3.15.9 里更正的那两行数，就错在早先的一版几项共用结构）。
+  - 它在旧代码上数得出已知的数：照 `Instance_Test.thy` 重新定义同样的一串实例（新名字），"视图整个给"的那条等式正好是 943。
+  - 断言（新代码上成立，旧代码上不成立）：读实例的一个字段是 0 步；视图整个给的等式是 0 步（各种字段数、各层都是）；
+    两组增长（经视图读、套实例）里 8 的步数都不超过 4 的两倍加 20；被试的规则没有一条作用在类型的表示上（拆元组、读 `Rep`、右边有 `Abs` 或 `Rep`）。
+    "套实例"那一组现在是二次的（3.15.9），8 层 54 步对 4 层 20 步，刚好在这个界之内；这个断言的界宽，抓不住它从线性变成二次，只抓得住回到旧代码那样的增长。
+- 变异（故意写错的实现，一次装一个，跑 `Concept_A_Test`；脚本 `mutate34.py`，记录 `mutants34_results.txt`，逐个的日志在 `mutants34/`）：
+  - 数法：只有测试的命令失败才算抓住；被测的文件装不上（编译不过、加载时出错）另算"没装上"，不算抓住。
+  - 35 个，都针对这一节新写的代码：(a) 的各步（不查"是不是自己的 more"、more 槽里的匿名叶子不先写成交给用户的样子、more 槽不写出来、不穿过构造常量、
+    匿名叶子的访问常量或 `more` 或谓词 `concept` 读不出东西、规范项与截断与视图读不动、`folded` 不接着换、`shown` 的三种错法、
+    simproc 交出的结果不写成交给用户的样子、把构造常量开头的结果交给用户），共 16 个；
+    (b) 的各步（比较时不用 selector Simpset、不接着读、接着读只读一步），3 个；`whole_equation` 的 7 处（其中一个是"按视图的类型取叶子"，第三轮评审的裁定 2 要的）；
+    `commuting` 不对回变量；包自己的常量与用户的常量用错比法，2 个；
+    声明一层时的 6 处（构造常量与匿名叶子的访问常量的名字没封、构造子的声明与两组 code equation、构造常量的种类没登记）。
+  - 结果（2026-11-24 06:04 至 06:36 UTC，本机，第三轮评审的四条改完之后的代码，默认设置与 `parallel_proofs=0` 各一遍）：34 个两种设置下都被测试抓住；
+    1 个是读不完的（"more 读它自己"，卡在原有的 `View_More_Test.thy` 里），两种设置下都靠脚本给每次构建的 200 秒时限才算抓住；没有没抓住的，没有没装上的。
+  - 过程中变异检查指出并已处理的：`same_leaf` 里给 `unit` 的捷径没有测试用得到，删了；比较时的 eta 归约同样（3.15.5 (b)），删了；
+    早先一个变异（"给的结构不必是 concept"）其实是文件装不上却被数成抓住，脚本的数法因此改成上面那样，那个变异换成了装得上的；
+    "经视图的读法停在匿名叶子上"那一个原先会让 `read` 里的循环转不完，第三轮评审据此指出那个循环（裁定 1），循环去掉之后它是一条普通的测试报错。
+  - 它没有指出的：`whole_equation` 丢等式（裁定 2）是评审读代码找到的；没有测试的情形，变异检查看不见。
+  - 没有做的：原稿打算的两个"只有代价的断言抓得住"的变异（改回旧证法）没有做，旧证法的代码已经不在了；`Cost_Test.thy` 在已提交的代码上断言失败，起的是同样的作用。
 
 ---
 
