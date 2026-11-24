@@ -259,7 +259,8 @@ end
     （那份文件 4.2、6.2 第 11 项；concept A1 2026-11-20 通报，concept C 没有复核）。
   - 碰到搜索的次数上限 `concept_fact_user_limit` 时出 warning，告诉用户【已定，作者 2026-11-24 对 concept B：04:04 UTC「在命令的 warning 里说一句」，
     04:16 UTC「干脆做成 concept_fact 的参数好了，然后 the users' concept_fact tactic 以及 concept_instance 用的都始终开启」；concept B 转来，原话 concept C 在它的转录里核过】。
-    做法：B 区的 tactic 函数（`concept_fact_tac`，签名还在重拟）带一个参数管这件事，命令调它时始终开着；用户的 `by concept_fact` 也始终开着，simp 里的调用与 trigger 关着。不设配置项。
+    做法：B 区的 tactic 函数带一个参数管这件事，命令调它时始终开着（传 `warn_user_limit = true`）。它的类型是
+    `Concept_Fact.concept_fact_tac : {max_distance: int option, warn_user_limit: bool} -> Proof.context -> int -> tactic`（concept B 2026-11-24 告知这一部分已定；`max_distance = NONE` 是不限最大生效距离；代码还没有写）；用户的 `by concept_fact` 也始终开着，simp 里的调用与 trigger 关着。不设配置项。
     出的是 B 区文件 10.1 已批的两句（`Tactic concept_fact gave up after using concept_intro rules 30 times …` 与 `Tactic concept_fact stopped collecting alternative solutions …`），由 B 区的函数出，命令不另拟文案。
     它不改另两处的不出声：selector Simpset 的一次调用到达步数上限（第 4 步），拆假设到达 `concept_extraction_limit`（第 3 步）。
 - **第 6 步：把剩下的子目标作为一个目标交给用户。**
@@ -292,7 +293,15 @@ end
     它不进 intro table，只供补强用和用户按名字手动用（作者同一条消息：「实例存着的那条定理按你建议来」；`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.5 节）。
     导入也用它：体内实例作导入处时，它就是给出导入处 concept fact 的那条定理；不定义常量的成员用它自己的 fact（E 区文件 5.3"副本怎样做"里"这套做法是一个函数"一条，作者 2026-11-22 17:05 UTC 对 concept E 采纳）。
     `of_concept` 因此是保留名，`if` 子句不能叫这个名字，命令在声明处报错（concept B 的读法，它说向作者说过、作者没有异议）；文案已定，10.1。
-    它由命令做出，做好后交类型层存进实例的记录（concept A1 2026-11-21 经 concept B 转告；类型层自己做不出，它没有关于谓词 `D` 的事实）：
+    它由命令做出（类型层自己做不出，它没有关于谓词 `D` 的事实）；做出之后命令调 `Concept_Package.add_instance_facts`，把它连同各条 destruction lemma 存在谓词那一层
+    【concept A1 定，接口归它；作者 2026-11-24 08:05 UTC 对它：「> 实例的 destruction lemma 与 of_concept 存在哪」「交给你自决了」，concept C 在它的转录里核过】。
+    它的理由：类型层不认识 `concept` 之外的任何谓词，`ambient` 与 `of_concept` 是谓词层的定理、类型层自己不用；`add_implication` 存的那些只说 `concept`，而且类型层自己要用。
+    此前这里写的是"做好后交类型层存进实例的记录"，那是 concept A1 2026-11-21 经 concept B 转告的说法，不是作者定的。
+    接口（`contrib/concept` 的提交 `5eef770`；B 区拆假设的代码与命令都按这个取）：`type instance_facts = {destructions: (string * thm) list, of_concept: thm}`；
+    `Concept_Package.add_instance_facts : string -> instance_facts -> theory -> theory`，第一个参数是实例常量的全名，命令在证明结束、做出这两样之后调一次，先于 `Concept_Type.add_implication`；
+    `Concept_Package.instance_facts : theory -> string -> instance_facts option`，不定义常量的成员交回 `NONE`。
+    `destructions` 的名字是 `ambient`（体内实例才有）与各条条件的名字，先后是声明的先后、`ambient` 第一；定理与绑在 Facts 名字空间里的是同一条。
+    同一个实例常量只能加一次，再加是 `Symtab.DUP`。
     做法（2026-11-23 改写，concept C 定，讨论小组 `wf_fefdbde2-f6a`；这一句不在上面作者那个决定之内）：证完的 `D X` 离开义务的上下文时带着各条条件作前提，体内实例还带着 `C ?S`；
     每条前提经陈述它的那条 destruction lemma 换成 `concept (实例项)`，`C ?S` 经 `ambient`。实例的规则与 iff 再由它与隐藏字段的等式做出（5.2"体内实例的宿主前提"）。
     此前这里写的是"隐藏字段的等式给出各条 `if`，再接实例自己的规则"。两种做法做出的 `of_concept` 陈述相同；差别是旧做法要先有规则，现在规则由 `of_concept` 做出。
@@ -331,6 +340,9 @@ end
     导出什么（concept B 2026-11-23 定，是论证的、没有实测；`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.4 节"2026-11-22 停机的设计对这一节的三处"的第三项。
     concept B 同日告知它的复审 `ai-artifacts/concept_destruction_plan_rereview_2026-11-23.md` 判这条线成立；concept C 没有通读那份报告）：
     上下文什么都不假设时，除了激活出的 fact，还导出这次拆放进 intro table 的全部条目；上下文有假设时只导出激活出的 fact，不多导出。
+    【提案，concept B 的设计，2026-11-24 告知；作者没有逐条看过，也没有经过评审】命令要调的 B 区函数在结构 `Concept_Intro_Table` 里：
+    `instance_entries : Proof.context -> thm -> system_entry list` 由实例的 fact 算出要进表的条目，`add_system_entries : system_entry list -> theory -> theory` 把它们写进 theory；
+    实例上下文里拆假设用 `destruct_assms : destruct_work -> site -> (name option * thm) list -> Proof.context -> Proof.context`。全文在 B 区文件 7.1"签名：三个文件"。
     激活做的事：把实例所属 concept 的激活列表（header 里说别的结构的假设拆出的 concept fact）对这个实例实例化、用 selector Simpset 化简。
     作者 2026-11-20 15:52 UTC 对 concept A1 的"theory 数据那部分也要做激活"答：「是的，在定义 concept_instance 时候做」（concept C 核过转录）。
     激活出的条目不起名，条目本身留在 intro table【已定，作者 2026-11-21 02:48 UTC 对 concept B：「赞同声明实例时激活出的条目不起名，条目本身留在 intro table」】；用户要用时自己拿 concept 的 `X.q` 和实例的规则拼。
@@ -519,6 +531,8 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
     数的东西与 `concept_extraction_limit` 相同，每条条件各自算；它不可配置；到了就停，不报错、不出 warning（这三点是 concept A1 报给作者的读法；怎样数归 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.3）。
     被上限拦下的后果只是 `C \<S>` 证不出、判为推不出，宿主前提照旧留着。上限是固定的常数，所以判断的结论仍不随配置项 `concept_extraction_limit` 变。
     此前这里写的是"这几次拆不设上限、不报错"。
+    【提案，concept B 的设计，2026-11-24 告知；作者没有逐条看过，也没有经过评审】判断由 B 区的一个函数做，命令只调它：
+    `Concept_Fact.host_premise : theory -> {host: term, conditions: term list} -> thm option`，证得出交回 `SOME (w₁ ⟹ … ⟹ wₙ ⟹ C ?S)`，否则 `NONE`。
     判断里对 selector Simpset 的每次调用限的是步数、不是时间（B 区文件 7.1），所以同一份输入、同一个 theory 内容判出来的结论每次相同，不随机器与负载变。
     `simp_depth_limit` 不在这些调用里固定【作者 2026-11-22 15:29 UTC 对 concept B：「> selector Simpset 的 depth」「那我觉得不用做了，别过度设计」；concept C 在 concept B 的转录里核过】：
     判断的结论只在用户把它设成 0 或极小的值时才会变。
@@ -1120,7 +1134,16 @@ The value comes from "add"⌂. The concept "ring" itself specifies "add.carrier"
 
 节点自己存着这个叶子时（`ord = t` 给的 `ord.le`）只有第一句：`The value comes from "ord"⌂`；来自 `名字: "t"` 时是 `The value comes from "submonoid"⌂`。
 子句写在通到同一个叶子的另一条路径上时也算"不是写在字段自己的路径上"，这一行照印；路径经过 header 的映射时带第二句，不经过时（`super.carrier = v`）只有第一句（reader 第三遍补的一种情形）。
-一条路径经过不止一个 header 的映射才到这个字段时，第二句每个映射印一遍，由内到外，各以 `. ` 接在前一句后面（concept A1 2026-11-23 实现时定，作者没有看过）：
+一条路径经过不止一个 header 的映射才到这个字段时，第二句每个映射印一遍，由内到外，各以 `. ` 接在前一句后面【已定，作者 2026-11-24 08:11 UTC 对 concept A1 看了下面这个例子后：「可以」；concept A1 2026-11-23 实现时定的，原话 concept C 在它的转录里核过】。
+它给作者看的例子：`concept 'a pair = a :: 'a + b :: 'a`，`concept 'a dd = x :: 'a + v: "'a pair" where a = x  b = x`，`concept 'a ee = y :: 'a + w: "'a dd" where x = y`；
+family `sbe` 里已有成员 `sbe.ee`，它的 `y = 1`，再定义这个成员时写 `w.v = sbp.pair`，而 `sbp.pair` 的 `a` 是 5：
+
+```
+The field "y" of "sbe.ee" has been defined as "1", but here you specified a different value "5"
+The value comes from "w.v"⌂. The concept "dd" itself specifies "v.a" as "x". The concept "ee" itself specifies "w.x" as "y"
+```
+
+只经过一个映射时与下面的例子逐字相同：
 
 ```
 The field "carrier" of "int.ordered_group" has been defined as "UNIV", but here you specified a different value "{x. True}"
@@ -1160,9 +1183,11 @@ Cannot tell whether the two values of the field "carrier" of "int.ring" are the 
 ```
 
 各行的写法同上一段。经节点读出的值照写的样子印，它正是化简不出来的那个。
-值有三个及以上时首行写 `the values`，不写 `the two values`（单复数照个数算；这个变体是 concept C 定的，作者没有看过）。
-存下的值是 family 沿用来的那个时，它没有子句、没有位置：那一行写字段自己的路径、不带 `⌂`，值照成员存着的样子印（concept A1 2026-11-23 实现时定，作者没有看过）。
-这时两行在用户眼里路径相同，分不出哪一行不是自己写的；要说清得加字，留给作者回来时看。
+值有三个及以上时首行写 `the values`，不写 `the two values`【已定，作者 2026-11-24 08:05 UTC 对 concept A1：「好，但这个是何时显示？」；变体是 concept C 拟的，单复数照个数算】。
+存下的值是 family 沿用来的那个时，它没有子句、没有位置：那一行写字段自己的路径、不带 `⌂`，值照成员存着的样子印
+【已定，作者 2026-11-24 08:06 UTC 对 concept A1：「好」；concept A1 2026-11-23 实现时定的】。
+这时两行在用户眼里路径相同，分不出哪一行不是自己写的。作者批的时候 concept A1 把这一点一并写给了他，他答的「好」连它在内，所以不加字。
+两处的原话 concept C 都在 concept A1 的转录里核过。
 一条命令里一个字段比不出来、另一个字段的值不同时，合成一条报错，各占一段。
 
 <!-- 冻结主计划 CONCEPT_UNARY_PLAN.md 第 1800–1839 行 -->
