@@ -1049,9 +1049,12 @@ val linked_keys: theory -> string -> string list
 
 - `truncate_eq`：`s` 可以带 schematic 变量（调用方先把它们与 `t` 的变量改名分开，与普通匹配一样），`t` 的变量从不实例化。
   `s'` 是 `s` 照 `env` 代入之后的项。
-  【2026-11-24，concept B 问范式：`s'` 由 `Envir.norm_term` 算出，是代入之后的 β 范式；本函数不做 η 化简，`eq` 两边写成哪一种范式也没有规定。
-  concept B 在接口处自己先化成 β-η 范式（它的形式函数先 `Envir.beta_eta_contract`）。
-  concept A1 问它要不要改成本函数交回 β-η 范式，它 08:5x UTC 答要：下一批把 `s'` 与 `eq` 都交回 β-η 范式、写进契约、加测试，之后它删掉自己那一步。还没做。】
+  【2026-11-24，concept B 问范式。当时（`50faedb` 及以前）的情形：`s'` 由 `Envir.norm_term` 算出，是代入之后的 β 范式；本函数不做 η 化简，`eq` 两边写成哪一种范式也没有规定。
+  concept B 那时在接口处自己先化成 β-η 范式（它的形式函数先 `Envir.beta_eta_contract`）。
+  concept A1 问它要不要改成本函数交回 β-η 范式，它 08:5x UTC 答要。
+  **2026-11-24 09:29 UTC 已做（`contrib/concept` 的 `5c57ba0`），契约从此是**：`eq` 是 β-η 范式，它的命题恰好是 `concept s' ⟹ O.truncate s' = O.truncate t'`（`extra` 是 `SOME t'` 时中间多一个前提 `concept t'`），
+  其中 `s'` 是 `s` 照 `env` 代入之后的 β-η 范式（调用方用 `Envir.beta_eta_contract` 算），`t'` 是 `t` 的 β-η 范式；`extra` 交回的就是 `t'`。`env` 里的项本身不规定范式。
+  `t` 带不带 schematic 变量都如此。测试 `Truncate_Eq_Test.thy` 的 `E.in_form` 对每一例逐项比对这个形状，另有目标差一步 η、差一步 β 的三例。下文各处写的 `t` 在 `eq` 里都指 `t'`。】
   `extra` 是 `NONE` 时交回的 `eq` 是 `concept s' ⟹ O.truncate s' = O.truncate t`；
   是 `SOME t` 时 `eq` 是 `concept s' ⟹ concept t ⟹ O.truncate s' = O.truncate t`，调用方把 `concept t` 补成规则额外的 concept 前提。额外的前提至多这一个。
   `concept s'` 总是第一个前提，哪怕它本来消得掉：调用方手上总有关于 `s'` 的事实，每次都用同一个办法消它。
