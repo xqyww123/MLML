@@ -958,7 +958,12 @@ concept A1 02:24 向作者报了自己的理解（A 区剩下的问题里只属�
     `group.sub.closed: concept (group.sub ?G ?H) ⟹ closed`、`group.sub.ambient : concept (group.sub ?G ?H) ⟹ group ?G`。
     起因：手上只有 `monoid (G.sub H)` 时，按 group 陈述的引理用不上；每个 concept 都蕴含 `concept`，所以写成 `concept (…)` 之后手上是哪个 concept 的 fact 都拆得动。
   - `concept (group.sub ?G ?H) ⟹ group (group.sub ?G ?H)`（`D` 是声明实例时写的 concept）由 `concept_instance` 命令在证明结束时做出来（隐藏字段的等式给出各条 `if`，再接实例自己的规则），
-    存进类型层的实例记录；类型层自己做不出它，因为它没有关于谓词 `D` 的事实。它的名字是 `实例名.of_concept`（见上）。结论进 intro table 时据它补强（`CONCEPT_FACT_SEARCH_PLAN.md` 2.1）。
+    命令做出之后把它连同各条 destruction lemma 交给 `Concept_Package.add_instance_facts` 存下，按实例常量的名字取（`Concept_Package.instance_facts`）；
+    类型层自己做不出它，因为它没有关于谓词 `D` 的事实。它的名字是 `实例名.of_concept`（见上）。结论进 intro table 时据它补强（`CONCEPT_FACT_SEARCH_PLAN.md` 2.1）。
+    【2026-11-24 改：此前这里写的是"存进类型层的实例记录"（concept A1 2026-11-21 说的）。concept C 2026-11-24 问存放处，建议仍放类型层的实例记录；
+    concept A1 定为放 `Concept_Package`：类型层不认识 `concept` 之外的谓词，`ambient` 与 `of_concept` 是谓词层的定理、类型层自己不用，而 `Concept_Package` 本来就按 concept 存谓词层的规则。
+    作者 2026-11-24 08:05 UTC 对这一件：「交给你自决了」。代码在 `contrib/concept` 的 `5eef770`：
+    `type instance_facts = {destructions: (string * thm) list, of_concept: thm}`，`destructions` 里 `ambient` 第一（有的话）、其余照声明的先后，名字是各条条件的名字。】
   - 实例上下文里真正假设的是 `concept (\<S>.sub H)`，名字 `sub_axioms` 绑的是由它推出的 `group (\<S>.sub H)`（作者 2026-11-21 05:35 对 concept B；`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节），
     所以块里证的 lemma 导出后前提是 `concept (group.sub ?S ?H)`，与 destruction lemma 一致。
   - xOF 随之一般化（作者 2026-11-21 05:09、05:22 对 concept B；实现在 A 区的 `rule_attributes.ML`）：前提的头是 concept 谓词 `D`、给的 fact 的头是另一个 concept 谓词 `C`、`concept_entailment` 说 `C` 蕴含 `D` 时，
