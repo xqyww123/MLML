@@ -307,6 +307,7 @@ theory 数据与上下文数据两部分的分法、条目的 mask 都不变；"
   assumption destruction 用它们向前拆，把拆出的不带前提的事实登记进表（B 区 7.3 第 (4) 类）；对这些事实，标记和 leap 都无所谓。
   用 `[concept_extraction]` 声明的 extraction rule 同样不是条目（作者 11-20 15:43、16:50 在 concept B 的会话里定的机制，细节在 concept B 的文件里）；
   它拆出的事实也是第 (4) 类条目，没有名字，`name_of` 用后备写法（concept B 11-21 告知）。
+  【2026-11-25：条目都不存名字了，`name_of` 一律写 `[[concept_fact "P"]]`（2.1"带前提的规则都必须有名字"一条末尾的注）。】
 - **激活的时机可能推迟**（concept B 11-21 告知，怎样做它那边还没有设计）。作者 11-20 16:36 对 concept B：
   「记一笔：TAT 的 Lemma node 要以某种方式跳过。例如把激活放在 AoA 的 proof block 实际打开时。也许我们可以用某种开关来做。」
   若做成"先欠着、第一次查表前补上"，上面"进 intro table 时"就读作"最迟在第一次查表前"，搜索的入口要先把欠的激活做完。
@@ -1324,6 +1325,7 @@ type goal = {dist: int (*目标的距离*), steps: int (*目标的规则数*), p
    把新实例的一部分改写成 `some_order` 的等式都以 `concept some_order` 为条件，所以义务里出现 `order some_order` 时 `concept some_order` 一定查得到。
 4. **`name_of` 怎么写新出现的几种步**（concept B）：`concept_entailment` 的一步照表里的 `path` 拼成 OF 链，`path` 是 `NONE` 时用后备写法 `[[concept_fact "P"]]`（2.2，11-21 定）；
    靠截断转换的一步没有名字，用后备写法。后一句是 concept A1 的看法。
+   【2026-11-25：这一项了结：`name_of` 不再拼 OF 链，对每个推导都写 `[[concept_fact "P"]]`（B 区文件 7.1"3. `Concept_Fact.name_of`"开头"2026-11-25 定"一块）。】
 5. **B 区的 `Concept_Fact` 签名**（那里标的是"提案，作者未批"）要跟着改（concept B）：去掉 `Incomparable` 与 `search_all`；
    `derivation` 要有新的节点种类，记靠截断转换的一步、`concept_entailment` 的一步；搜索要有一个"不展开带条件的规则"的入口，给 4.4 里只接受不留条件推导的调用方用。
 6. **三个配置项**（concept B）：新增 `concept_fact_max_search_distance`（默认 100）、`concept_fact_max_leaps`（默认 20）；`concept_fact_user_limit` 的默认值从 2000 改为 30。
@@ -1355,6 +1357,7 @@ type goal = {dist: int (*目标的距离*), steps: int (*目标的规则数*), p
       `name_of` 对这样的结果用后备写法 `[[concept_fact "P"]]`（讨论团队的看法）；
       `concept_fact` 的 simproc 交回的带条件的改写里，可能有一个条件是"或"（4.4）。
     - 带前提的规则都要有名字：不写名字的 `lemma [concept_intro]: "…"` 报错，文案请拟了报作者（2.1）。
+      【2026-11-25：撤掉了，登记时不看名字（2.1 那一条末尾的注）。】
     - `concept_fact_trace` 要印的：每一步的规则、它的来历、`d'`、leap 及理由；生效距离；收进来的每个打平的解法；停下的原因；顶层目标上没被取中的规则及它们的生效距离。
     - `Concept_Fact` 的签名里，`result` 与 `derivation` 要能表示"一个目标有几个打平的解法"（一个表示"或"的节点）。
 11. **`concept_instance` 的义务里可能出现带"或"的子目标**（concept C）：阶段二对残余的 concept 子目标调 `concept_fact`（第 5 节），它的结果现在可以带"或"。
@@ -1731,3 +1734,7 @@ B 区 11.2"truncate 三件事"第 (1) 件问的是 `P.truncate t` 算不算第�
   2.1 加一项"theory 的 intro table 里的条目更多"（concept B：导出这次拆放进表的全部 concept fact 条目）。
   另：类型层因到达步数上限而起的三句报错不另拟、沿用已批的三句（作者 07:28 UTC 对 concept B「不另拟」）；本文件里没有照旧想法写的句子，无改动。
 - 2026-11-23 15:5x：3.1 第 1 步加注：用 selector Simpset 化简在实现里经 `Concept_Type.selector_conv`（带步数上限），`put_selector_simpset` 不再对外。不改搜索的算法。
+- 2026-11-25 11:5x：随作者对 concept B 定的"Sledgehammer 里每条 concept fact 统一写成 `[[concept_fact "P"]]`、登记时不绑名字、条目不存名字"加注：
+  2.1"带前提的规则都必须有名字"一条（报错撤掉、条目不存名字）与它后面讲名字的两处；2.2 的 `path`（没有读它的了，留不留以后定）；4.1 末与 6.2 第 4 项、"对 B 区"一条里讲 OF 链与后备写法的话。
+  第 7 节与本记录里更早各条提到名字的话是当时的经过，没有逐句标。搜索的算法（第 3、4 节）不受影响。
+  同日 4.1 末加"搜索里对这种前提的三处做法"（参数的名字、推导里存什么、包装里面去掉外面已成立的条件），是 `concept_search.ML` 的实现。
