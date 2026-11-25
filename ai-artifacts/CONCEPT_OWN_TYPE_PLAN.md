@@ -20,11 +20,25 @@
         一次重算是 simpset 大小的线性，其中 `Simplifier.dest_ss` 整理 simproc 的那一步按 simproc 的个数是平方（没有实测）。
   (2) **`Concept_Type.dest_truncation: theory -> term -> (string * term) option`** 与 **`Concept_Type.key_of: theory -> term -> string option`**：本层已有的两个函数，原样导出，concept B 的下层文件不另写一份。
       `dest_truncation` 认出 `P.truncate u`，交回 `(P, u)`。`key_of` 是搜索计划 2.1 的键：截断之下，family 的成员取 family 名，否则取头上的常量；头不是常量时没有键。
-  (3) **`Concept_Type.trace: bool Config.T`**：选项 `concept_fact_trace`（B 区 7.1，布尔，默认关）在本层声明，`Concept_Fact` 把它再导出为 `trace`。本层自己现在不读它。
-      - 本层要印的只有一行：一个受限的单元到达步数上限时（"十八"第 (2) 项）。**这一行的文案与用哪条通道印都还没有定。**
-        concept A1 09:31 UTC 报的拟稿是首行 `the selector Simpset stopped: it reached its bound of 1000 simplifier steps.` 加一行说当时在做什么（六种写法）。
+  (3) **`Concept_Type.trace: bool Config.T`**：选项 `concept_fact_trace`（B 区 7.1，布尔，默认关）在本层声明，`Concept_Fact` 把它再导出为 `trace`。
+      - 本层读它只为印一样东西：一个受限的单元到达步数上限时（"十八"第 (2) 项）印两行【文案已定，作者 2026-11-24 17:10 UTC「批准」；`contrib/concept` 的 `0e99087`】：
+        ```
+        the selector Simpset stopped: it reached its bound of 1000 simplifier steps.
+          simplifying: monoid.mult (f G)
+        ```
+      - 第二行印这个单元当时在化简的东西：一个项，或一个命题；比较两个值（`compare_values`）与推 truncate congruence rule（`prove_cong`）时印成一条等式 `左 = 右`。
+        各单元印什么：`selector_rewrite`、`selector_conv` 印交进来的项；`selector_simp_tac` 印第 i 个子目标；`selector_simplify` 印定理的命题；
+        填缓存（`cached`）印要证的等式的左边，其中代表任意结构的位置是 schematic 变量，如 `loop_id (monoid.truncate ?x)`。
+      - 通道是 tracing【作者同一条「批准」；concept A1 在报他的那一条里明说的建议】。concept B 的匹配函数在同一个选项下也用 tracing 印"规则对不上的原因"。
+      - 只在选项开着时印；一个单元印一次：嵌在别的单元里面的单元到上限时停的是最外面那个（"十八"第 (2) 项），印的也是最外面那个在化简的东西。
+        选项关着时行为与原来完全相同："在化简什么"是一个到印的时候才求值的函数（`bounded` 的第一个参数）。
+      - "`concept_fact` 的哪一部分受影响、会导致什么"不由本层印：本层不知道是谁调的它（同一行在 `concept_instance` 比较字段值时也会印）。
+        知道后果的是调本层的那一边：concept B 的"给出形式的函数"（目标照原样的写法往下走）与搜索里化简条件的地方（条件少化简一步）。
+        作者说这不是必须的（下面的原话），现在两边都不印；他的原话 2026-11-24 已转给 concept B。
+      - 经过：concept A1 09:31 UTC 报的第一稿是首行加一行说当时在做什么（六种写法）。
         作者 13:59 UTC：「这个文案很好，甚至有点过度好了，让我不确定是否需要如此多的细节。而且更有帮助的其实是说明 concept_fact 的什么部分会受到影响，可能会导致什么（但这真的不是必须的）」。
-        concept A1 照此另拟一版精简的再报他；他批定之前代码里不印。
+        concept A1 14:04 UTC 把六种写法并成上面这一种再报，作者 17:10 UTC 批准。
+      - 测试：`Step_Bound_Test.thy` 末尾一节（十例）。变异 `mutate35.py` 第 26 至 37 个，全部被测试抓住。小评审（一个 Opus agent，2026-11-25）通过。
       - `truncate_eq` 接不上时由本层印原因（3.13 里 concept B 2026-11-21 提的要求）第一版不做：concept B 2026-11-24 08:4x UTC 选的。
         它的匹配函数在一条规则被去掉时自己印一行，本层每次都印会把那些行淹掉；以后要细的原因时，改成另给一个函数让它去取。
   (4) **`truncate_eq` 交回的等式与额外前提是 β-η 范式**：3.13 契约那一段 2026-11-24 的注。
