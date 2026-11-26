@@ -1387,6 +1387,15 @@ type goal = {dist: int (*目标的距离*), steps: int (*目标的规则数*), p
     - concept A1 当时答的想法（还不是设计）：缓存的每一条是一个定理，定理自己带着它靠哪些假设成立（内核记的 hyps），取用时只查这些假设在当前上下文里是否都还在；
       缓存的事实对搜索来说就是上下文里的事实，查表时一起找到。要定的：表挂在哪里（一个证明之内，还是 theory 上）；命中时用户规则怎么记（关系到缓存冷热时结果是否相同）；
       嵌套的搜索要不要因此改成独立的搜索（那样第 15 项的"放弃并等待"可以不要）。存取大半在 concept B 的文件里，要与它一起做。
+    - **作者 2026-11-26 11:51 UTC 给的做法（原话）**：
+      「我们给 proof context 加一个 Proof_Data 其中放一个 Synchronized.var 或者 Unsynchronized.ref，放一个跟 the intro table 的 scheme 相同的表，
+      使用 the `Proof.context -> bool` 闭包来存储 the rule 说涉及的 fixed variables 的 hyps，在用的时候检查一下传入的 context 是否可用。
+      其实就是 the `Proof.context -> bool` field 的一个自然应用，你觉得如何？」
+      - 这里的 `Proof.context -> bool` 是 intro table 的条目已有的字段 `mask`；`entries_for` 查表时已经会去掉 `mask` 不认当前上下文的条目。
+      - **表挂在 theory 上的想法作者否了**：「你要这么搞的话就真的会面对"在哪里能用"这个问题了。我感觉这个方向很糟」。不做。
+      - concept A1 答：赞同，这正是该有的样子。补充三点：检查要同时看上下文的假设与化简器的局部前提（现有的 `Raw_Simplifier.simproc_can_use_thm` 只看后者）；
+        闭包里存定理的 hyps 就够，固定变量不必另查（不带关于 `x` 的假设的定理对任何 `x` 成立）；子证明会并行，用 `Synchronized.var`。
+      - 还没定的两件：命中时用户规则怎么记；嵌套的搜索要不要改成独立的搜索。
 
 ### 6.2 要别的区接着做的
 
