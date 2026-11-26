@@ -163,6 +163,11 @@
         探针里 k 个字段的结构上读整个视图，k = 2 / 4 / 8 / 16 / 32 时是 125 / 316 / 954 / 3348 / 12934 步。
         这些步都是 `unfold_conv` 用本层的定义、`Rep (Abs x) = x`、元组投影把等号两边展开到类型的表示，一定结束，步数只随结构的大小变。
         全计的话 N = 1000 之下字段数超过 8 的结构就读不出整个视图，而且是悄悄交回"没有这条等式"；调大 N 又拦不住项不断变大的打转（1 万步已要半秒）。
+      - 【2026-11-26：下面这个做法已经没有了。`unfold_conv` 随 3.15 的设计去掉之后只剩 `cong_conv` 一处在用 `uncounted`；
+        作者 2026-11-26 06:33 UTC 对 concept B：「你确定写个小函数 uncounted 把计数器从 context 里拿掉是好方法吗？我感觉有点笨？这里我交给你自决了，你可以跟 concept A1 讨论一下谁来做」。
+        concept B 与 concept A1 商定：`cong_conv` 展开那一条定义不再经化简器，改用 `Conv.top_sweep_rewrs_conv [def]`（把定义当一条等式，在常量出现的地方用一次），`uncounted` 删掉（`contrib/concept` 的 `dd1630b`）。
+        这样一个受限的单元里只剩 selector Simpset 的运行会走化简器，"计步的只有 selector Simpset 的运行"不再靠拿掉计数器来保证。
+        附带的好处：旧写法遇到"右边又出现自己的常量"的等式会在所有上限之外改写个没完，新写法只用一次。】
       - 做法：小函数 `uncounted` 交回去掉计数器的 context（`Simp_Steps.inherit (Proof_Context.init_global thy) ctxt`），只有两处用它：
         `unfold_conv` 与 `cong_conv` 里展开定义的 `Raw_Simplifier.rewrite_wrt`。这两处用的是空的 simpset 加给定的规则，没有 simproc、congruence rule、处理器，也不用假设，调不到 selector Simpset。
         所以一个不结束的单元仍然要走无穷多计步的步子：不计步的每一段都有限，段与段之间隔着 selector Simpset 的步子。
