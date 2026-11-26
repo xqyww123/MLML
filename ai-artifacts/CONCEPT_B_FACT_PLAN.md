@@ -896,6 +896,13 @@ end
       - 现在下层 md5 `62322bd3…`（2248 行，`build100.log` exit 0），上层不变（`buildf59.log` exit 0）；类型层是 concept A1 的 `dd1630b`。
       - 代码评审 `wf_8f366a3e-b03` 07:46 UTC 起跑（brief `ai-artifacts/concept_B_code_review5_brief_2026-11-26.md`，其中列着 concept B 在计划没有写到处自己定的十一处）。
       - 仍没有写：`[concept_intro]` 登记时的激活、`add_system_entries`、`instance_entries`、`note_thmss` 的钩子、mksimps 处理器、`concept_fact` 的 simproc、trigger 的登记。
+    - 【2026-11-26 09:54 UTC 的状态】代码评审 5（`wf_8f366a3e-b03`，报告 `ai-artifacts/concept_B_code_review5_2026-11-26.md`）与它要求的短复审
+      （`wf_d5eedf03-7ec`，报告 `ai-artifacts/concept_B_code_review6_2026-11-26.md`）都回来了，归 concept B 的各条都改了：
+      - 计数照专题文件 4A.3（排在队里没有轮到的也算出现过）；接着做的一步与平常的一步共用同一组函数；补充激活在同一个结构上按整条命题取差；注释五处；
+      - 评审给的测试都加了，运行与两位裁判的预言逐条一致；变异 29 处全部抓到。下层 md5 `6602bd8e…`（2234 行，`build104.log` exit 0），上层不变（`buildf61.log` exit 0）。
+      - 短复审的裁判：除下面作者未定的一件之外，"assumption destruction"一节被接受。
+      - **等作者定**：带前提而结论是 concept fact 的 fact（进来的、实例条件里的、header 假设里的）怎么办；现在的代码把它作为不安全的规则放进表，不拆、不激活。
+        另有两处措辞等他准许写进专题文件（4A.5 讲 mask 的三句；4A.4、4A.5 讲内部调用的三句），代码是对的、文字要改。
     - （以下是 05:39 UTC 时的数）现在的文件：上层 md5 `72e0405a…`（413 行），下层 `962a9163…`（931 行）；两套测试 exit 0（`buildf40.log`、`build60.log`）；
       concept A1 的搜索文件用的是它提交的 `bb97e388…`。
     - 上层文件这些改动处的短复审 `wf_c4bd367f-dc7` 05:40 UTC 起跑（brief `ai-artifacts/concept_B_code_review4_brief_2026-11-26.md`）。
