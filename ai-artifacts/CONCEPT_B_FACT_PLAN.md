@@ -886,6 +886,16 @@ end
       之后照作者 06:29:51 UTC 的两条又改了两处：关条件取写法 (B)（7.1"怎样关"）；条目加位置一栏（7.3 第 (3) 类）。
       下层文件开头另加了 `structure Concept_Check`（专题文件第 4A.1 节的检查，assumption destruction 的第一块；有单元测试）。
       现在：上层 md5 `d36defd9…`（406 行，`buildf54.log` exit 0），下层 `31d25329…`（1166 行，`build86.log` exit 0）；类型层是 concept A1 的 `fc51f83`。
+    - 【2026-11-26 07:47 UTC 的状态】**`destruct_assms` 的函数体写了**（下层文件末尾"assumption destruction"一节，照专题文件第 4A 节）：
+      - 一次拆的遍历（轮、两遍、检查、计数与上限）、激活与激活结果的后续工作、走过第一阶段的命题的集合、被上限拦下的工作的表与接着做、封顶与调大上限后的重拆与合并；
+      - 激活列表在定义 concept 时算出（挂在 `Concept_Package.Declared` 上），`activation_list` 已导出；
+      - trace 的七种消息 T1 至 T7 用 warning 通道印。
+      - 测试在 `Intro_Table_Test.thy` 末尾两节：确定性的十几条，加专题文件 4A.8"实现时要做的测试"五条的随机测试
+        （提交的是 300 例；一次性跑过 4000 例，五条全部成立）。变异 24 处抓到 23 处；没抓到的是"接着做的各项共用一张表"。
+      - 签名比上面多一样 `destruction_state`（给测试看集合里封顶的 fact 与被上限拦下的工作），是 concept B 加的。
+      - 现在下层 md5 `62322bd3…`（2248 行，`build100.log` exit 0），上层不变（`buildf59.log` exit 0）；类型层是 concept A1 的 `dd1630b`。
+      - 代码评审 `wf_8f366a3e-b03` 07:46 UTC 起跑（brief `ai-artifacts/concept_B_code_review5_brief_2026-11-26.md`，其中列着 concept B 在计划没有写到处自己定的十一处）。
+      - 仍没有写：`[concept_intro]` 登记时的激活、`add_system_entries`、`instance_entries`、`note_thmss` 的钩子、mksimps 处理器、`concept_fact` 的 simproc、trigger 的登记。
     - （以下是 05:39 UTC 时的数）现在的文件：上层 md5 `72e0405a…`（413 行），下层 `962a9163…`（931 行）；两套测试 exit 0（`buildf40.log`、`build60.log`）；
       concept A1 的搜索文件用的是它提交的 `bb97e388…`。
     - 上层文件这些改动处的短复审 `wf_c4bd367f-dc7` 05:40 UTC 起跑（brief `ai-artifacts/concept_B_code_review4_brief_2026-11-26.md`）。
