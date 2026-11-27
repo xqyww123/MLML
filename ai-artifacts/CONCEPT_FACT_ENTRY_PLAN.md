@@ -546,8 +546,16 @@ simp 的本地假设：
   `concept_intro_table.ML`（含 assumption destruction）与 `concept_fact.ML`（`contrib/concept` `4e7b7e6`）。
 - 在开发副本里写了、测了，还没有进 `contrib/concept`：挂在钩子上的函数，连同 `auto_concept_extraction`、`concept_extract`。
   开发副本 `ai-artifacts/concept_B_prototype/hook/`（不提交），底是 concept A1 2026-11-27 05:00:20 UTC 的三个开发文件加已提交的类型层；
-  测试 `Hook_Test.thy` 40 条检查通过（05:24 UTC 的第 7 次构建）。
-  还没有做：变异核对、代码评审；在钩子开着的情形下跑 concept A1、concept C 的测试；提交前先告诉 concept A1。
+  测试 `Hook_Test.thy` 42 条检查通过；变异核对 12 个抓到 11 个，没抓到的那个从外面看不出差别
+  （`concept_extract` 不清掉存着的 fact：第二次调用碰到一模一样的条目，什么都不做）。
+  同一份开发副本里还有（concept B 2026-11-27 05:53 UTC 报，三套测试在它上面都通过）：
+  `[concept_extraction]` 放宽了的声明检查（没有前提报作者批准的那一句；形如 `bspec`、`mp` 的规则收下；
+  规则有两个以上前提时的几句报错文案是 concept B 拟的，还没有报作者批）；
+  带前提的 fact 那一批的两步准备，不改行为（concept fact 的键改成整条命题；规则用在定理的结论上、定理的前提跟着走）。
+  一处量到的相互作用：陈述的假设上写 `[concept_intro]` 时，它既被 attribute 登记、又被钩子上的函数收进来；
+  钩子按上下文的 fact 放（系统安全），条目留较强的标记，原来"不安全，用户的"读成"系统安全，用户的"。
+  这类条目都不带前提，搜索对它们怎样都不计距离。
+  还没有做：代码评审；在钩子开着的情形下跑 concept A1、concept C 的测试；提交前先告诉 concept A1。
   测到的行为：对得上 extraction rule 的关系 fact 也收；带 `mark_handled` 标记的定理放过；
   带前提的 fact 现在只作为一条规则进表（3.1 要改的那一处）；
   不带前提的 concept fact 成为这个上下文的 safe introduction rule，它的祖先不成为。
