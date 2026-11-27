@@ -668,7 +668,9 @@ simp 的本地假设：
   评审时要告诉评审者的已知缺口：讨论报告 7.3 第 5、8、9 项与 7.4 的随机测试没有写；五句 `first premise` 文案与变量为头的规则的产物等作者；
   带前提的条目还没有在自己的前提之下化简（3.3 第 5 项没有定）；`condition_proc` 仍只要不留条件的推导（等 concept A1 那一批）；
   concept A1、concept C 的测试还没有在这份副本上跑。进 `contrib/concept` 的先后：concept A1 那一批在前。
-  评审小组由作者下令才开；concept B discussion 07:13 UTC 向他提了。
+  评审小组由作者下令才开；concept B discussion 07:12 UTC 向他提了。
+  作者 07:15 UTC：「1. 开，但是交给 concept B 来做」「2. 可以」（第 2 点：评审的 agent 可以在 cslh19 上实际跑测试）。
+  所以评审由会话 concept B（现名 concept B1）自己开、自己跟；07:16 UTC 已把原话与 cslh19 上的环境转给它。
 - 量到的一处设计上的事，concept B 建议先不管，等真有这种陈述再说【没有报作者定】：
   陈述的假设上写了 `[concept_intro]` 时，attribute 当场就把它拆了，`auto_concept_extraction` 关着也一样
   （attribute 在钩子上的函数之前跑；它不先拆，自己放的那条条目就会把这条 fact 挡住、激活丢掉）。
