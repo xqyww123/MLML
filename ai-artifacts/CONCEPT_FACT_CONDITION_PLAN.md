@@ -232,6 +232,22 @@ concept B discussion 08:49 UTC 的看法（不是决定）：赞同；它把"查
   改成在钩子上先用 selector Simpset 把 fact 化一遍（那一刻没有搜索在进行）；条件这边读结果时本来就用它化过。
 - 要作者澄清："the basic simpset"是只有逻辑的那种，还是系统的。只有逻辑的消不掉 `0 < 4`、`a ∈ {a, b}`【实测】，
   用户的 `[simp]` 声明也起不了作用（与他 07:46 UTC 说的好处相反）；concept B discussion 倾向系统的 simpset 加全部 fact。
+- concept A1 的评估（2026-11-27，它的两层）：可行。
+  - 用 selector Simpset 化一遍记下的 fact，类型层接受。`Concept_Type.may_rewrite` 就是为此做的闸：
+    项里没有 selector Simpset 管得着的头时它是假，不含 selector 项的 fact 几乎不花钱。
+    含这种项的 fact 花 selector Simpset 的一次调用（上限 1000 次尝试；到上限时这条 fact 照写的样子进去）。
+    那次调用自己可能启动一次搜索（截断等式的条件 `concept t`），所以这一步也要惰性地做，
+    否则每 `note` 一条在截断过的结构上的 fact 都付一次搜索。
+  - selector Simpset 不放进消条件用的 simpset，理由是对的。代价已知：走一步时规则留下的条件还不是 selector 的范式，
+    那里只有本来就是范式的条件消得掉；读结果时消的是给用户看的样子。
+  - "整次调用同一份"要这样定义才成立：最外层的入口留下的是**已经装着 fact 的规则的那一份 simpset**，
+    整次调用的每个搜索都在它里面消，不取各自上下文里的 fact。就它的代码而言，一次调用里面没有东西在记 fact
+    （类型层只引入、固定变量；搜索不记；化简器用 `add_prems` 假设前提，不经 `note_thmss`）；
+    concept B1 的 simp 处理器记不记，要问它。
+  - 一次调用之内的表不用改。
+  - 三点提醒：等式 fact 只加成 `≡ True` 是必须的（当成从左到右的规则，还会改掉之后每条 fact 与条件的样子）；
+    一条 fact 化简成 `False` 时，之后每个条件都消得掉，这是对的（上下文自相矛盾），但要写明；
+    第 k 条 fact 被它之前的 fact 化简，所以这份 simpset 依赖记下的先后，同样的证明文本每次运行都一样。
 
 ## 5. 约束
 
