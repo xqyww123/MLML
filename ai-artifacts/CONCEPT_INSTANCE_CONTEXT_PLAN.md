@@ -41,6 +41,9 @@
   **真正假设的是 `concept (\<S>.sub H)`，名字 `sub_axiom` 绑的是由它推出的 `group (\<S>.sub H)`**【已定，作者 2026-11-21 05:35 UTC 对 concept B：「建议在块中最初假设的就是 concept (\<S>.sub H)，但绑定的是 group (\<S>.sub H)」；`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节第 1 项】。
   做法（concept B 向作者讲的，没有试过，实现归 concept C）：块假设 `concept (\<S>.sub H)`，接上实例存着的那条 `concept (实例项) ⟹ group (实例项)`（主计划 5.1）得到 `group (\<S>.sub H)`，绑在 `sub_axiom` 上；交给 assumption destruction 的是这条 `group (\<S>.sub H)`，下面拆出的部分不变。
   它改的是 2026-11-18 定的"假设的是 `group (\<S>.sub H)`"。
+  实现上要守的一点（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节第 1 项"陷阱"，以那里为准；实现归 concept C）：假设的 `concept (\<S>.sub H)` 进上下文时带"assumption destruction 已经处理过"的 tag，
+  或者根本不经 `note_thmss`（用 `Assumption.add_assumes`，不用末尾会调 `note_thmss` 的 `Proof_Context.add_assms`），免得钩子把它当作进来的 fact 先拆一遍。
+  走 assumption destruction 的只是绑在 `sub_axiom` 上的那一条 `group (\<S>.sub H)`，绑名字时也带 tag。
   对它走标准的 assumption destruction（第 2 节）。**拆出的部分不起名**【已定，作者 2026-11-23 对 concept B：16:14 UTC「那我现在建议干脆一个都不绑定了，直接统一走 `[of_concept]`」，
   16:23 UTC「确认 实例上下文里的短名也不绑」；concept B 转来，原话 concept C 在它的转录里核过】。
   拆出的 concept fact 照旧进 intro table、照旧激活，只是没有名字；各条 destruction lemma 的先后（`ambient` 第一，然后各条条件）仍然管拆的次序。

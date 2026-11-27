@@ -272,7 +272,9 @@ end
     绑定 destruction lemma 在存下 `rewrites` 等式之前（存下的等式是用它们做出来的，11.2 的 C15）。
     做出 destruction lemma（`ambient` 在内）与 `of_concept` 也在交蕴含、绑定裸名上的 iff、登记 intro rule 之前（2026-11-23，5.2"体内实例的宿主前提"）：
     iff 与规则由 `of_concept` 做出，`of_concept` 经 destruction lemma 做出，`super = \<S>` 的蕴含用 `ambient`。
-    绑定裸名上的 fact 与登记 intro rule 在自动导入之前（E 区的要求）；它们相对于激活的先后归 B 区，没有定（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 8 节第 3 项）。
+    绑定裸名上的 fact 与登记 intro rule 在自动导入之前（E 区的要求）。
+    登记 intro rule 与激活是 B 区的同一个调用（下面"激活"一条，2026-11-27），两者之间没有先后要定；
+    绑定裸名上的 fact 或 iff、声明 intro rule 的 classical attribute 都不碰 intro table，放在做出规则之后、自动导入之前的哪里都可以。
   - 这一步做出的东西都绑在、声明在 theory 层，不经宿主 concept 的 target，命令写在宿主的块里时也是
     【concept E 定，2026-11-22 16:18 UTC 通知；依据是作者对它的授权，14:30 UTC「这里你可以自主设计，最好跟 Opus agent team 讨论一下看有没有你没想到的问题」、14:38 UTC「交给小组一并设计」，concept C 在它的转录里核过；
     E 区文件 `CONCEPT_E_IMPORT_PLAN.md` 5.3"导入带来什么""保持最新"，以那里为准】。
@@ -281,7 +283,7 @@ end
     体内实例自己的 fact、实例上下文里的 lemma 不随宿主被导入；实例上下文里的 lemma 标 `[concept_export]` 没有效果（同一处）。
     这个 attribute 2026-11-22 17:10 UTC 起叫 `[concept_export]`（作者对 concept E，E 区文件 5.3）；本文件只在引作者当天原话的地方还写 `[export]`。
     concept C 没有发现它与本节别处相抵：这些 fact 本来就是以 `concept (实例项)` 或宿主谓词为前提的定理。照计划推的，没有实测。
-  - 绑定裸名上的 fact，登记 intro rule 和它的 classical attribute（5.2）。
+  - 绑定裸名上的 fact，声明 intro rule 的 classical attribute（5.2）。intro rule 进 intro table 只经下面"激活"一条里的那一个调用，不另挂 `[concept_intro]`。
     没有前提的实例裸名上绑的就是它的 fact，挂 `[intro!]`；有前提的实例裸名上绑的是 iff，不挂 attribute（2026-11-16）；实例的 intro rule 另按有没有 `if` 子句声明成 `[intro!]` 或 `[intro]`（2026-11-18）。
   - 绑定 destruction lemma（4.1），前提写成 `concept (实例项)`；另存一条 `of_concept`
     【已定，作者 2026-11-21 03:34 UTC 对 concept B；全文在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.5 节，以那里为准】。
@@ -333,24 +335,32 @@ end
     "用户给单条等式起的名字（5.3，作者 2026-11-10）照旧"是 concept maintain 的读法，作者没有单独说。
     等式存下的同一刻也加进 selector Simpset【已定，作者 2026-11-22 15:17 UTC 对 concept E：「赞同 rewrites 等式放进 selector Simpset」，concept C 在 concept E 的转录里核过；E 区文件 5.3"selector Simpset"一段的最后一条】。
   - **激活**（机制以 concept B 的 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.4 节为准，那份文件 2026-11-21 02:18 UTC 定稿）：
-    命令在实例的上下文里把实例的 fact 交给 assumption destruction，它的最后一步是激活；激活出的 fact 带着实例的原前提导出到 intro table 的 theory 数据【已定，作者 2026-11-20 16:11 UTC 对 concept B 的这个读法答「确认」】。
+    声明时在实例的上下文里把实例的 fact 交给 assumption destruction，它的最后一步是激活（2026-11-27 起这件由 B 区的函数做，命令只调它，见下）；激活出的 fact 带着实例的原前提导出到 intro table 的 theory 数据【已定，作者 2026-11-20 16:11 UTC 对 concept B 的这个读法答「确认」】。
     "原前提"指实例上下文的那一条假设 `concept (实例项)`，不是 5.2 说的实例的前提表（2026-11-23 写明）。
-    命令在声明时用的这个实例上下文从 theory 建起，不嵌在宿主的块里：嵌在块里的话，导出时会经过块的 `C_axiom`，把 `C ?S` 加回前提【concept C 定，2026-11-23；讨论小组 `wf_fefdbde2-f6a` 指出此前没有写明】。
+    声明时用的这个实例上下文从 theory 建起，不嵌在宿主的块里（2026-11-27 起由 B 区的函数从 theory 建，下面）：嵌在块里的话，导出时会经过块的 `C_axiom`，把 `C ?S` 加回前提【concept C 定，2026-11-23；讨论小组 `wf_fefdbde2-f6a` 指出此前没有写明】。
     实例的隐藏字段是 `True` 时上下文什么都不假设（分册第 1 节 assumes 一条，2026-11-23 定），激活出的条目就是不带前提的 fact，如 `int_mod` 的条目不带 `concept (int_mod ?n)`。
     导出什么（concept B 2026-11-23 定，是论证的、没有实测；`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.4 节"2026-11-22 停机的设计对这一节的三处"的第三项。
     concept B 同日告知它的复审 `ai-artifacts/concept_destruction_plan_rereview_2026-11-23.md` 判这条线成立；concept C 没有通读那份报告）：
     上下文什么都不假设时，除了激活出的 fact，还导出这次拆放进 intro table 的全部条目；上下文有假设时只导出激活出的 fact，不多导出。
-    【提案，concept B 的设计，2026-11-24 告知；作者没有逐条看过，也没有经过评审】命令要调的 B 区函数在结构 `Concept_Intro_Table` 里：
-    `instance_entries : Proof.context -> thm -> system_entry list` 由实例的 fact 算出要进表的条目，`add_system_entries : system_entry list -> theory -> theory` 把它们写进 theory；
-    实例上下文里拆假设用 `destruct_assms : destruct_work -> site -> (name option * thm) list -> Proof.context -> Proof.context`。全文在 B 区文件 7.1"签名：三个文件"。
+    **命令在这里只调 B 区的一个函数**【concept B 与 concept C 2026-11-27 约定，是两个会话之间的接口；讨论小组报告 `ai-artifacts/concept_registration_and_activation_order_discussion_2026-11-26.md` 6.1、6.7；
+    作者 2026-11-26 14:39:45 UTC 对 concept B：「赞同这是实现上的问题。建议过一轮 Opus 讨论小组」，concept C 在它的转录里核过；代码还没有写】：
+    `Concept_Intro_Table.add_instance_entries : {rule: thm, theorem: thm} -> theory -> theory`。
+    `rule` 是由实例的前提表做出的 intro rule（5.2）；`theorem` 是存下的 `x.of_concept`，不论隐藏字段是什么。不定义常量的成员两者都是它自己的 fact。
+    它一次做完两件：把 intro rule 写进 intro table 的 theory 部分（`Safe_By_System`，不算用户登记的，规则本身不激活）；在实例上下文里激活实例的 fact 并导出，连同下面那条声明时的判断。
+    实例上下文由这个函数自己从 theory 建起（`Concept_Intro_Table.fact_context`，做法就是分册第 1 节"假设不假设，看实例有没有条件"），命令不为激活建上下文。
+    它在写入之前的 theory 上算，再一次写进去。所以有一种丢失不会发生：没有参数也没有条件的全局实例、不带参数的不定义常量的成员，它们的 fact 与规则是同一条命题，规则先进表会让激活被跳过。命令也不用记着这两件的先后。
+    调用的位置：在 `add_instance_facts`、`add_implication`、存下 `rewrites` 等式之后，自动导入之前（上面"先后"一条；报告 6.7 列的十步与本节定下的各个先后一致，concept C 核过）。
+    每种实例只交一条规则，命令也不要它交回什么（结束提示只印常量与裸名上的 fact 或 iff，A 区 2.2）。
+    `fact_context` 也导出给命令用：`context x` 打开实例上下文时可以用它，两处就不会走样；固定下来的变量名要正好是实例上下文要的（宿主叫 `\<S>`，`for` 变量用原名），这取决于 `of_concept` 里的变量名，原型时核。
+    此前这里是 concept B 2026-11-24 的提案 `instance_entries` 与 `add_system_entries`（类型 `system_entry`），已撤回。
     激活做的事：把实例所属 concept 的激活列表（header 里说别的结构的假设拆出的 concept fact）对这个实例实例化、用 selector Simpset 化简。
     作者 2026-11-20 15:52 UTC 对 concept A1 的"theory 数据那部分也要做激活"答：「是的，在定义 concept_instance 时候做」（concept C 核过转录）。
     激活出的条目不起名，条目本身留在 intro table【已定，作者 2026-11-21 02:48 UTC 对 concept B：「赞同声明实例时激活出的条目不起名，条目本身留在 intro table」】；用户要用时自己拿 concept 的 `X.q` 和实例的规则拼。
-    激活相对于绑定裸名 fact、登记 intro rule 的先后，没有定（那份文件第 8 节第 3 项）。
+    激活与登记 intro rule 是同一个调用（上面），那份文件第 8 节第 3 项的问题由此了结（2026-11-27）。
   - 激活出的每条带前提的条目，声明时再做一次判断，定出它在搜索里的标记（`CONCEPT_FACT_SEARCH_PLAN.md` 2.1"第六类"、2.3 表后第五条、6.2 第 12 项；
     concept A1 2026-11-20 17:20 通报，依据是作者 17:14 UTC 对它报的六处说「先全部按你建议来吧。我逐步把这边的设计交给你来做好了」）：
-    只知道条目结论里的结构项是合法的结构时，能得到条目的全部前提，就记 `Safe_By_System`，与实例自己的规则同样对待；否则记 `Unsafe`。不报错不警告，条目照样以名字导出。判断在项上查，不做证明。
-    两种条目不进 intro table，只绑名字：前提里的变量在化简后的结论里不出现的；
+    只知道条目结论里的结构项是合法的结构时，能得到条目的全部前提，就记 `Safe_By_System`，与实例自己的规则同样对待；否则记 `Unsafe`。不报错不警告。判断在项上查，不做证明。
+    两种条目不进 intro table，也什么都不留（条目 2026-11-21 02:48 起不起名，`CONCEPT_FACT_SEARCH_PLAN.md` 2.1；此前这里写的"以名字导出""只绑名字"已过时）：前提里的变量在化简后的结论里不出现的；
     化简后结论的结构项剥掉外面的截断之后是变量的带前提的条目（如 `comm_group ?K ⟹ comm_group ?K`，它是讲任意结构的规则，与 B 区 7.3 第 (3) 类不许用户登记的同类）。
     后一种是 concept A1 2026-11-20 18:16 UTC 补的（评审 `wf_6fc70650-2ab` 的意见，它照作者 17:16 的授权定，已报作者；那份文件 2.1、6.2 第 12 项）；
     其中"剥掉外面的截断之后"出自作者 2026-11-21 02:16 UTC 对 concept A1 提的"用户规则的限制扩到截断之后"答的「按你建议来」（那份文件 6.1 第 2 项）：激活得到的条目与用户规则用同一个判断。
@@ -370,9 +380,11 @@ end
   - **family 里不定义常量的成员**（不带任何条件的 refinement 成员，5.6）只做其中几件：绑定它的 fact、登记这条规则、做激活、打印 A 区 2.2 的第三种结束提示
     （先一行 `Defined no new constant: …`，再是 `Proved the concept fact` 与这条 fact）。
     不建类型层的记录，不交蕴含，不绑 `of_concept`，没有 destruction lemma，`a.P` 的记录不动（评审 `wf_70ae1214-43d` 的 K4；不绑 `of_concept` 与没有 destruction lemma 这两点是与 concept B 之间的约定）。
-    声明时没有现成的实例上下文，激活要临时开一个假设了这条 fact 的前提的上下文来做（concept B 2026-11-21 指出）。
+    登记这条规则与做激活是上面"激活"一条里的同一个调用，`rule` 与 `theorem` 都是它的 fact；声明时没有现成的实例上下文，由那个函数临时开一个（concept B 2026-11-21 指出要开，2026-11-27 起由它开）。
     这种成员可以用 `context` 打开、可以带 `rewrites`（5.6"不定义常量的成员，它的名字能做什么"）；带了 `rewrites` 时还要存下 `rewrites` 等式。
     它做的这几件依上面"先后"一条的次序；带 `rewrites` 时，存下等式在激活之前（复审 `wf_a9bd937b-0fd` 的 S1）。
+    已知的缺口（讨论小组报告第 9 节问题 1；归 E 区文件 11.5 的未决项，作者还没有答，concept B 转告他的答复）：这种成员的 fact 已经在 theory 里时（更早的实例放进去的），声明时不再激活，
+    它自己的 `rewrites` 碰不到已存的条目。例：更早的实例已放进 `comm_monoid int.monoid` 与 `group (Units int.monoid)`，之后 `concept_instance int: comm_monoid rewrites e: "Units int.monoid = int_units"`，`group int_units` 不会存下。
     它不带参数时是否自动导入，是 concept E 的提案，还没有定（5.6 同一条）。
 - **几个例子里各步怎样走。**
   - `int: group` 沿用已有 `int.monoid`：`monoid (monoid.truncate int.group)` 经 truncate 等式变 `monoid int.monoid`，不再是 `selectors X`，表里有 `monoid int.monoid`，阶段二一步。
@@ -531,6 +543,9 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
     数的东西与 `concept_extraction_limit` 相同，每条条件各自算；它不可配置；到了就停，不报错、不出 warning（这三点是 concept A1 报给作者的读法；怎样数归 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.3）。
     被上限拦下的后果只是 `C \<S>` 证不出、判为推不出，宿主前提照旧留着。上限是固定的常数，所以判断的结论仍不随配置项 `concept_extraction_limit` 变。
     此前这里写的是"这几次拆不设上限、不报错"。
+    用户写的几条条件共用判断的这一个临时上下文【concept B 定，2026-11-24 告知；`CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.3"判断宿主前提的上限"】：
+    被上限拦下的工作照平常的规矩记在这个上下文里，后一条条件碰到表项时接着做前一条条件被拦下的工作，用它自己的计数；判断结束，这个上下文连同记着的东西一起丢。
+    碰到上限时，判断的结论仍可能随用户书写条件的先后变；方向都是留着宿主前提（同一条）。
     【提案，concept B 的设计，2026-11-24 告知；作者没有逐条看过，也没有经过评审】判断由 B 区的一个函数做，命令只调它：
     `Concept_Fact.host_premise : theory -> {host: term, conditions: term list} -> thm option`，证得出交回 `SOME (w₁ ⟹ … ⟹ wₙ ⟹ C ?S)`，否则 `NONE`。
     判断里对 selector Simpset 的每次调用限的是步数、不是时间（B 区文件 7.1），所以同一份输入、同一个 theory 内容判出来的结论每次相同，不随机器与负载变。
@@ -585,7 +600,7 @@ concept_instance (in group) sub: group where … if … for H :: "'a set"
       `CONCEPT_DEFINING_CONTEXT_PLAN.md` 2.4、2.5、4A.3 与第 5 节第 1、3 项；B 区文件 7.1、7.3 里 `name_of` "填宿主前提"的说法。
       公共文件第 0 节 `ambient` 一行与第 9 节讲 xOF 的一条，concept C 已各加一句。
     - 照计划推的，没有实测。实现前要做的探针：判断交回的定理正好以所假设的条件为前提；隐藏字段的合取与 Pure 形式的前提来回转换；
-      第 7 步那个函数作用在带着块里 `C_axiom` 的 `D X` 上（块内与 `(in C)` 两种）；声明时的实例上下文从 theory 建起、导出的条目只带 `concept (实例项)`。
+      第 7 步那个函数作用在带着块里 `C_axiom` 的 `D X` 上（块内与 `(in C)` 两种）；声明时的实例上下文从 theory 建起、导出的条目只带 `concept (实例项)`（这一项 2026-11-27 起是 concept B 的测试 R3）。
     一个 Opus 小组 2026-11-21 做过设计（workflow `wf_6e476249-993`）。它的判断办法只沿 `ambient` lemma 走，作者认为太弱（「我感觉太弱了」），没有采用；
     全文在 `ai-artifacts/concept_unary_C_probes/host_premise_design_team_final_2026-11-21.md`（不提交）。它关于"判为推得出之后改什么"的主张里，被采用的是隐藏字段、iff、规则照同一张表造，以及 `ambient` 的名字与陈述不变；
     它另写一个专门的导出函数、`of_concept` 照旧法做的两点没有采用。
@@ -1549,7 +1564,8 @@ reader（2026-11-22）主张留着它：10.1 那一句的两行函数类型里�
 
 别的文件里已定、而本文件正文尚未跟着改的两处（这里只指路）：
 - B 区文件 11.2 的 B14 一条：作者已定实例上下文只假设实例自己的 fact（第 (1) 项）。它现在写在专题文件 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 5 节。5.6"命令怎么用它"第 1 步与分册第 1 节（assumes、notation、导出、"和手写一个 light locale 的差别"）已照它改（2026-11-20）。
-- `CONCEPT_TRUNCATE_CONG_PLAN.md` 6.1 第 4 项：作者 2026-11-19 对 intro table 登记方式的裁定涉及 5.6 的 family（登记实例的 fact 时，往它的有名截断所化成的祖先实例上也写条目）；带前提的规则怎么搬等几点作者与 concept A1 还在讨论，以那个文件为准。
+- `CONCEPT_TRUNCATE_CONG_PLAN.md` 6.1 第 4 项：作者 2026-11-19 11:30 定的"登记实例的 fact 时，往它的有名截断所化成的祖先实例上也写条目"同日已被取代，改成查的时候搜索（12:13 提出、13:49 定下；`CONCEPT_FACT_SEARCH_PLAN.md` 开头"来由"）。
+  本文件正文不用跟着改：一个实例只往 intro table 交一条规则（5.1 第 7 步"激活"一条）。2026-11-27 核到，此前这里写的是"作者与 concept A1 还在讨论"。
 
 B 区文件 11.2 里有两条要改 5.2 的文字。
 B19（selector simproc 消条件的第 1 步是否去掉）2026-11-22 已定：去掉（concept B 定，`Q05_resolution_v5.md`）；5.1、5.2 的文字已跟着改。
