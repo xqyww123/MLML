@@ -711,10 +711,20 @@ simp 的本地假设：
     便宜判断现在像读 fact 的结论那样读规则的结论，这种规则声明时也被拒绝了。
   - "`concept_extract` 不清掉存着的 fact"那个变异现在有测试抓它。
   - 到上限后调高上限再拆时，新放进去的不带前提的条目现在也是 safe introduction rule。
-  - 变异核对在现在的代码上全部重跑：钩子 17/17，simp 前提的条目 15/15，theory 层 5/5，处理器 5/6
+  - 变异核对：钩子 17/17，simp 前提的条目 15/15，theory 层 5/5，处理器 5/6
     （没抓到的是"处理器对不带假设的规则也拆"，裁判认可它从外面看不出），合计 43 个抓到 42 个。上面各处旧的计数以这里为准。
-  - 对这些修改的短复审在跑（一个只读的 Opus agent）；它回来没有实在的发现的话，concept B1 告诉 concept A1 之后把两个文件放进 `contrib/concept` 提交。
-  - concept A1 的三个搜索测试 theory 在这一批上通过过（在修改之前的文件上）；concept C 没有代码可跑。
+    concept B1 09:15 UTC 更正：这些不是全在最后的文件上量的。钩子的 17 个与其余 26 个里的 24 个是在作者 08:31 UTC
+    那个决定之前的文件上跑的；之后的文件上只重跑了后来的改动碰到的那几个（决定之后 2 个，短复审的修改之后 4 个）。
+    短复审认为结果带得过来（后来的改动是新的拒绝、`apply_rules` 的一行、重拆时的 claset 与注释），但没有全部重量。
+  - 短复审回来了（一个只读的 Opus agent，报告 `ai-artifacts/concept_B1_batch_code_review_second_look_2026-11-27.md`）：
+    改两处小的之后通过，两处都改了。实在的一处：到上限后调高上限再拆，加进去的 safe introduction rule 太多
+    （连激活出来的结果也加了，与已定的"激活出来的 fact 不加 `[intro!]`"相违；上下文已有的规则也重加，会印重复的警告）；
+    现在那次遍历在一个不可见的私有上下文里跑，再把它的 claset 接过来。其余两处是注释。
+  - 这一批已进仓库：`contrib/concept` `8086e4c`，已推送，在 concept A1 的 `2a28212` 之上。MLML 里 `contrib/concept` 的指针还没有动。
+    随代码的测试是 `ai-artifacts/concept_B_prototype/hook/` 下的三个（照例不提交）。
+  - concept A1 的三个搜索测试 theory 在这一批上通过过（在最后一处小修改之前的文件上）；concept C 没有代码可跑。
+  - concept B1 那边还没有写的：带条件的 `condition_proc`、给用户 simp 用的 `concept_fact` simproc、Sledgehammer trigger 的登记、
+    带前提的报告剩下的测试。
 - 量到的一处设计上的事，concept B 建议先不管，等真有这种陈述再说【没有报作者定】：
   陈述的假设上写了 `[concept_intro]` 时，attribute 当场就把它拆了，`auto_concept_extraction` 关着也一样
   （attribute 在钩子上的函数之前跑；它不先拆，自己放的那条条目就会把这条 fact 挡住、激活丢掉）。
