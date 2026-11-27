@@ -42,7 +42,10 @@
   「接受每次 using、from、with 多一次便宜的判断（只看命题里有没有 concept fact）；真是 concept fact 的才拆」。
   怎样到钩子的：`using`、`from`、`with` 在 Isabelle 里本身各是一次名字为空的 `note_thmss`
   （`proof.ML` 的 `gen_using`、`gen_thmss`）。
-  便宜的判断里对得上 extraction rule 的命题也算有活（他同一条消息问的，1.2）。】
+  便宜的判断里对得上 extraction rule 的命题也算有活（他同一条消息问的，1.2）。
+  留多久【实测，concept B 2026-11-27 05:24 UTC，开发副本】：`using r` 把 `r` 记在目标的上下文里，只管这一步，
+  这一步证完，外面的上下文里没有它；`from r`、`with r` 与 `note r` 一样记在外面的上下文里，到这个证明块结束。
+  （concept B 05:08 UTC 对作者说三种都"等于写了 `note r`"，对 `using` 说长了；concept B discussion 向他更正。）】
 
 收的（由别的测量推出，没有单独测）：
 - concept 的块的 `C_axiom`（1.2）。
@@ -103,13 +106,19 @@
   所以 `auto_concept_extraction` 关着时打开这样的 context，它的假设也存着不拆。
 - 实测两次：2026-11-24 用一个 attribute 在原版上；2026-11-27 在钩子被调用的那一刻、在 concept 的私有树上。
 
-实现时要核的：
-- TAT 设的值在 `Specification.theorem_cmd` 记下陈述的假设之前不丢
-  （memory 里有 `Config` 的值在第一个 `end_nested` 处丢掉的实测）；
-- 它也不留在这条 lemma 之后的 local theory 里。
+TAT 怎样关它【实测，concept B 2026-11-27 05:24 UTC，开发副本上的 `Hook_Test.thy`；用 ML 调 `Specification.theorem_cmd`，
+上下文是 `Named_Target.theory_init thy |> Config.put auto_extraction false`】：
+- 值在陈述的假设被记下时还在：`grp G` 存着没有拆；在目标的上下文上调 `concept_extract` 之后拆了。
+- 证完之后（`Proof.global_skip_proof`），证明交回的 local theory 里这个配置项**仍是关的**，不会自己恢复。
+  补法（实测）：`theorem_cmd` 的 after_qed 参数给 `K (Config.restore auto_extraction lthy0)`，证完之后就恢复成开的。
+  TAT 现在给的是 `K I`（它的 `THEOREM.md` 第 6 节），所以 TAT 要改成给这样一个 after_qed。
+  在 theory 层 TAT 证完就离开这个 local theory，后面没有东西受影响；在以后的 Context、Locale 节点里才要紧。
+  嵌套的 target 没有测。
 
 没有定的：在 theory 层写 `declare [[auto_concept_extraction = false]]` 时，之后这个 theory 里每条 lemma 的陈述都不拆。
 concept B 2026-11-27 02:43 UTC 向作者说过打算照普通配置项的惯例允许这样写、不特别拦；他没有答。
+与它有关的一条实测（同上）：写在 `context begin … end`（不带 `fixes`、`assumes`）里面的这句 `declare` 是 theory 的声明，
+`end` 之后配置项仍是关的。
 
 ---
 
@@ -505,9 +514,18 @@ simp 的本地假设：
 
 - 已做：Pure 的钩子与那一行（concept 私有树 `66b51ce`）；`C_axiom` 的加法（`contrib/concept` `a4a860d`）；
   `concept_intro_table.ML`（含 assumption destruction）与 `concept_fact.ML`（`contrib/concept` `4e7b7e6`）。
-- 没有做：挂在钩子上的函数，连同 `auto_concept_extraction`、`concept_extract`；
-  `fact_context`、`add_instance_entries`、`add_system_entries`，以及 theory 层 `[concept_intro]` 改经那一个函数写；
-  带前提的 fact 照 3.1 改；`condition_proc` 照 3.2 改；simp 的处理器与 4.2 的条目。
+- 在开发副本里写了、测了，还没有进 `contrib/concept`：挂在钩子上的函数，连同 `auto_concept_extraction`、`concept_extract`。
+  开发副本 `ai-artifacts/concept_B_prototype/hook/`（不提交），底是 concept A1 2026-11-27 05:00:20 UTC 的三个开发文件加已提交的类型层；
+  测试 `Hook_Test.thy` 40 条检查通过（05:24 UTC 的第 7 次构建）。
+  还没有做：变异核对、代码评审；在钩子开着的情形下跑 concept A1、concept C 的测试；提交前先告诉 concept A1。
+  测到的行为：对得上 extraction rule 的关系 fact 也收；带 `mark_handled` 标记的定理放过；
+  带前提的 fact 现在只作为一条规则进表（3.1 要改的那一处）；
+  不带前提的 concept fact 成为这个上下文的 safe introduction rule，它的祖先不成为。
+- 没有做：`fact_context`、`add_instance_entries`、`add_system_entries`，以及 theory 层 `[concept_intro]` 改经那一个函数写；
+  带前提的 fact 照 3.1 改（往下拆、激活，各处不筛）；extraction rule 的新形状与 `bspec`、`mp`（3.4）；
+  `condition_proc` 照 3.2 改；simp 的处理器与 4.2 的条目。
+- 分工（作者 2026-11-27 05:22 UTC 定）：代码、构建、测试归会话 concept B；
+  与作者的讨论、把他定的写进本文件归会话 concept B discussion（concept B 的一个 fork）。
 - 探针（不提交）：`ai-artifacts/concept_unary_B_probes/entry_hook/`。
   哪些 fact 建索引（`index_probe.out`）；哪些到钩子（`domain_probe.out`）；
   到钩子时 `inner_body` 与 `inner_stmt` 的值（`body_probe.out`）；
