@@ -209,7 +209,29 @@ concept B discussion 建议接受这个损失，08:30 UTC 向作者说了。
 - 讨论报告对系统的 simpset 提的三条，与现在的办法：各调用方拿到的不是同一份（整次调用留同一份）；
   里面有会启动搜索的 simproc、按名字去不掉（按身份删）；结果随用户的 simp 声明变（作者认为是好事）。
 
-### 4.4 作者 2026-11-27 08:48 UTC 的提议：一份 simpset 里装着全部 fact【没有定】
+### 4.4 fact 进来时也记下化简后的样子；先查，再化简，再查【作者 2026-11-27 08:56 UTC 的提议；一处等他澄清】
+
+作者 08:56 UTC（对下面"先前的一版"）：「我的意思还是先查。能不用 the simpset 就别用」
+「那这样吧。每次进 fact 前，the fact 被 the basic simpset 化简一下如果不同就也要一并进入 the fact
+然后策略改成：先查 fact，再用 the basic simpset 化简（不用 the facts as simp rules），再查」
+
+concept B discussion 08:57 UTC 答他赞同。方案：
+- **fact 进来时**：用 the basic simpset 化简一下；化简后的样子若与原样不同，两种样子都记下。
+- **消一个条件时**：先拿条件原样去查（4.1）；查不到，用 the basic simpset 把条件化简一次（不带 fact 作规则），再查一次（4.3）。
+- 两边都有原样与化简后两种写法可对。例：fact 是 `{a} ⊆ A`、条件是 `a ∈ A`，fact 化简后的样子就是 `a ∈ A`，第一次查就中；
+  fact 是 `a ∈ A`、条件是 `{a} ⊆ A`，条件化简成 `a ∈ A`，第二次查中。
+- fact 不当改写规则，所以没有等式不停的问题，也不花往 simpset 里加规则的钱。
+- 它不做的：一个条件自己是合取或析取、各支只是普通 fact 时消不掉（4.2）；fact 之间的等式不被用来改写别的东西。
+- concept B discussion 打算的做法（向作者说了，等他说有没有不同意的）：
+  两种样子记在本包自己的一张查找表里，放在证明上下文中，不往 Isabelle 的 fact 空间里再记一条；
+  惰性地做，钩子只记下 fact，第一次真要消条件时才化简；
+  fact 进表前先过 selector Simpset（同样惰性；concept A1 的评估见下）；fact 是合取时拆成各支进表，化简成 `True` 的不进。
+- 【没有定】"the basic simpset"是哪一份：固定的、只有逻辑加一张规则表的（每条 fact 只化简一次、永远有效，
+  但用户的 `[simp]` 声明不起作用），还是系统的 simpset（用户加的 simp 规则立刻起作用；
+  但之后新声明的 simp 规则不回头重算旧 fact 化简后的样子，对不上时只是消不掉）。
+  concept B discussion 倾向系统的，并接受后一点。
+
+先前的一版（作者 08:48 UTC 的提议，08:56 UTC 他自己改成上面的）：一份 simpset 里装着全部 fact。
 
 作者：「用 the basic simpset + all the facts as simp rules （这些 facts 自身也被 the simpset 化简） 你觉得如何？
 就是我们需要一个钩子。对 facts 的注册是在 note_thmss 里吗？在那个钩子上加入：新增的 fact 会被 the simpset 化简一下后

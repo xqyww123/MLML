@@ -411,6 +411,11 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
       这一句没看懂；concept B discussion 讲了，并拟了一个换的说法
       （`A concept fact such as "grp ?G" is taken apart by the instance that makes its structure, not by a concept_extraction rule`），等他定。
     每句都以 `Users are not allowed to declare a concept_extraction rule ` 开头。
+  - 结论不是 HOL 命题的规则，声明时拒绝【已定，作者 2026-11-27 08:31 UTC 直接对 concept B1 说：
+    「check_extraction 可以直接拒绝结论不是 HOL 命题的规则，文案你来拟」】。
+    concept B1 拟的文案（08:33 UTC 给他看过，他没有要求改）：
+    `… whose conclusion is not a proposition of HOL. The conclusion "?x ≡ ?y" of your "RR ?x ?y ⟹ ?x ≡ ?y" must be a proposition of HOL`。
+    例：`RR x y ⟹ x ≡ y`。这样"每条 extraction rule 的结论都是 HOL 命题"由构造保证，`apply_rules` 里为不带 `Trueprop` 的结论留的兜底去掉了。
 - 【没有定】规则的结论以它自己的变量为头时，产物不是 concept fact 就丢掉的旧规矩（旧文件第 4 节：
   「用的时候只认它被代成 concept 谓词的情形；代成别的，结果丢掉，即使有规则能接着拆」）把 `mp`、`bspec` 截短了。
   concept B 在开发副本上实测：`assume "∀i∈I. grp (F i)"` 拆得出；`assume "∀i∈I. ∀j∈J. grp (F3 i j)"` 与
@@ -698,9 +703,18 @@ simp 的本地假设：
   - 钩子上的便宜判断对"结论不是 `Trueprop …`"的 extraction rule（如 `RR x y ⟹ x ≡ y`，声明检查现在收下它）抛 `TERM dest_Trueprop`，
     异常传进用户的证明与 simp。改：像读 fact 的结论那样读规则的结论。
   - 三处测试说的比查的多；几处代码整洁问题；到上限后调高再拆时不给新找到的挂 `[intro!]`（裁判的观察）。
-  - 要作者定的一件（08:12 UTC 报给了他，没有答）：声明 extraction rule 时，结论不是 HOL 命题的要不要拒绝。
-    裁判拟的文案：`Users are not allowed to declare a concept_extraction rule whose conclusion is not a proposition of HOL.
-    The conclusion of your "RR ?x ?y ⟹ ?x ≡ ?y" must be a proposition of HOL`。裁判、concept B1、concept B discussion 都建议拒绝。
+  - 要作者定的一件：声明 extraction rule 时，结论不是 HOL 命题的要不要拒绝。他 08:31 UTC 定了拒绝（3.4）。
+- 评审分给 concept B1 的修改都做了（08:57 UTC 报，第 120 次构建，三套测试通过，在已提交的 `2a28212` 之上也通过，随机世界的计数不变）：
+  - 第一条缺陷修之前实测复现了（`assumes g [concept_intro]: "grp G" shows "grp G ∧ True" by blast` 失败）；
+    修法是一个函数 `take_in`，证明里的声明与钩子上的函数共用。
+  - 第二条修之前也实测复现了（声明 `RR x y ⟹ x ≡ y` 之后 `assume "RR a b"` 与 `by simp` 抛 `TERM dest_Trueprop`）；
+    便宜判断现在像读 fact 的结论那样读规则的结论，这种规则声明时也被拒绝了。
+  - "`concept_extract` 不清掉存着的 fact"那个变异现在有测试抓它。
+  - 到上限后调高上限再拆时，新放进去的不带前提的条目现在也是 safe introduction rule。
+  - 变异核对在现在的代码上全部重跑：钩子 17/17，simp 前提的条目 15/15，theory 层 5/5，处理器 5/6
+    （没抓到的是"处理器对不带假设的规则也拆"，裁判认可它从外面看不出），合计 43 个抓到 42 个。上面各处旧的计数以这里为准。
+  - 对这些修改的短复审在跑（一个只读的 Opus agent）；它回来没有实在的发现的话，concept B1 告诉 concept A1 之后把两个文件放进 `contrib/concept` 提交。
+  - concept A1 的三个搜索测试 theory 在这一批上通过过（在修改之前的文件上）；concept C 没有代码可跑。
 - 量到的一处设计上的事，concept B 建议先不管，等真有这种陈述再说【没有报作者定】：
   陈述的假设上写了 `[concept_intro]` 时，attribute 当场就把它拆了，`auto_concept_extraction` 关着也一样
   （attribute 在钩子上的函数之前跑；它不先拆，自己放的那条条目就会把这条 fact 挡住、激活丢掉）。
