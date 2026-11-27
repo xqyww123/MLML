@@ -614,8 +614,10 @@ simp 的本地假设：
   `concept_intro_table.ML`（含 assumption destruction）与 `concept_fact.ML`（`contrib/concept` `4e7b7e6`）。
 - 在开发副本里写了、测了，还没有进 `contrib/concept`：挂在钩子上的函数，连同 `auto_concept_extraction`、`concept_extract`。
   开发副本 `ai-artifacts/concept_B_prototype/hook/`（不提交），底是 concept A1 2026-11-27 05:00:20 UTC 的三个开发文件加已提交的类型层；
-  测试 `Hook_Test.thy` 42 条检查通过；变异核对 12 个抓到 11 个，没抓到的那个从外面看不出差别
-  （`concept_extract` 不清掉存着的 fact：第二次调用碰到一模一样的条目，什么都不做）。
+  测试 `Hook_Test.thy` 42 条检查通过；变异核对 12 个抓到 11 个，没抓到的是"`concept_extract` 不清掉存着的 fact"。
+  【更正，2026-11-27 08:11 UTC】当时写的"从外面看不出差别"不对，代码评审指出它看得出：
+  上限为 0 时存着的 fact 被拦下，调高上限后再调一次 `concept_extract`，清单没有清掉的话会把它重拆一遍。
+  代码是对的（第二次调用什么都不做）；缺的是这条测试，concept B1 补。
   同一份开发副本里还有（concept B 2026-11-27 05:53 UTC 报，三套测试在它上面都通过）：
   `[concept_extraction]` 放宽了的声明检查（没有前提报作者批准的那一句；形如 `bspec`、`mp` 的规则收下；
   规则有两个以上前提时的几句报错文案是 concept B 拟的，还没有报作者批）；
@@ -657,7 +659,8 @@ simp 的本地假设：
     测试：两份讨论报告的 B1 至 B12，另加一例，第一次跑都通过。实测报告里写着"现在证不出"的两例现在 `by simp` 证得出
     （用测试里的替身 simproc，因为给用户 simp 用的 `concept_fact` simproc 还没有写）。
     处理器的变异核对：6 个抓到 5 个；没抓到的那个（处理器对不带假设的规则也拆）在任何结果上都看不出差别。
-  - 变异核对合计：钩子 12/13，simp 前提的条目 15/15，theory 层 5/5，处理器 5/6；没抓到的两个都是从外面看不出的。
+  - 变异核对合计：钩子 12/13，simp 前提的条目 15/15，theory 层 5/5，处理器 5/6。
+    没抓到的两个当时说"从外面看不出"；钩子的那一个其实看得出（上面的更正），处理器的那一个 concept B1 说看不出。
   - 整批现在都在开发副本里。还没有做：文件的注释（文件头还把已写的东西写成"Not yet"）；讨论报告 7.3 剩下的测试
     （检查、上限与复用、带前提的条目之下被拦下的工作、带前提的实例条件、带前提的 header、proof method）与带前提 fact 的随机测试；
     在这份副本上跑 concept A1、concept C 的测试；然后整批的代码评审（对 concept A1 的文件约 1250 行 diff，加三个测试 theory）。
@@ -677,6 +680,18 @@ simp 的本地假设：
   题目 `ai-artifacts/concept_B1_batch_code_review_brief_2026-11-27.md`，报告将在 `ai-artifacts/concept_B1_batch_code_review_2026-11-27.md`。
   评审的对象是第 97 次构建时的开发副本；它的副本在 cslh19 的 `…/ai-artifacts/concept_B1_review_2026-11-27/`，
   三套测试 07:17 UTC 在那里跑过一遍，都通过。评审期间 concept B1 不改 `hook/concept/`。
+- 评审 08:11 UTC 回来，报告 `ai-artifacts/concept_B1_batch_code_review_2026-11-27.md`。裁判：**还不能接受**。
+  这一批没有不可靠的步骤、会停、结构是对的；没通过的几条是小缺陷，concept B1 自己改，改完重跑测试与变异核对。
+  评审里**没有一条是实测的**：agent 在 cslh19 上的构建全被权限系统拒了（讨论小组那次也一样）；
+  concept B1 对每条意见先用自己的测试复现、再改。
+  - 证明里的 fact 或陈述的假设上写 `[concept_intro]`，这条 fact 与从它拆出的 concept fact 进不了上下文的 safe introduction rule
+    （声明先不挂 `[intro!]` 地拆了一遍，钩子随后见它拆过就跳过）。改：两处共用一个"收进一条 fact"的函数。
+  - 钩子上的便宜判断对"结论不是 `Trueprop …`"的 extraction rule（如 `RR x y ⟹ x ≡ y`，声明检查现在收下它）抛 `TERM dest_Trueprop`，
+    异常传进用户的证明与 simp。改：像读 fact 的结论那样读规则的结论。
+  - 三处测试说的比查的多；几处代码整洁问题；到上限后调高再拆时不给新找到的挂 `[intro!]`（裁判的观察）。
+  - 要作者定的一件（08:12 UTC 报给了他，没有答）：声明 extraction rule 时，结论不是 HOL 命题的要不要拒绝。
+    裁判拟的文案：`Users are not allowed to declare a concept_extraction rule whose conclusion is not a proposition of HOL.
+    The conclusion of your "RR ?x ?y ⟹ ?x ≡ ?y" must be a proposition of HOL`。裁判、concept B1、concept B discussion 都建议拒绝。
 - 量到的一处设计上的事，concept B 建议先不管，等真有这种陈述再说【没有报作者定】：
   陈述的假设上写了 `[concept_intro]` 时，attribute 当场就把它拆了，`auto_concept_extraction` 关着也一样
   （attribute 在钩子上的函数之前跑；它不先拆，自己放的那条条目就会把这条 fact 挡住、激活丢掉）。
