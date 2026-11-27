@@ -300,8 +300,9 @@ selector Simpset 里针对 `concept _` 的 simproc、`concept_instance` 的阶�
 证明里的调用是用户的；theory 层的内部调用是声明那一刻 theory 的（后一半等作者确认，4.3）。
 一次调用之内，从最外层到嵌套的搜索用同一份。
 【concept A1】一次调用之内的表不用改：留下的 simpset 在一次调用里是固定的。
-但若这张表以后要跨调用留在证明上下文里（会话 stateful simplifier 的计划），一条条目就还依赖证出它时的 simpset，
-之后的 `note foo [simp]`、`declare [simp del]` 会改变它；要告诉那个会话。
+跨调用留表的问题不存在了：会话 stateful simplifier 2026-11-27 来信说作者 08:24、08:42 UTC 取消了那个一般的 feature，
+表不会留出一次调用；调用方只能在一整次 simp 或 auto 的外面打开这张表（`with_concept_cache`），那次调用结束就丢。
+所以一张表存在的期间里，上下文的 simpset 与登记的规则都是固定的。它也不会去改 `raw_simplifier.ML` 与 `Simp_Steps`。
 
 ## 8. 条件被判为假时丢掉这一步：不做
 
