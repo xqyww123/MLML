@@ -292,7 +292,10 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
    作者 2026-11-27 04:12 UTC 令讨论小组查这样做安不安全：「若安全，且代价可接受，建议统一拆解与激活」。
    Workflow `wf_26720849-7c4` 回来了，报告 `ai-artifacts/concept_concept_premise_activation_discussion_2026-11-27.md`
    （没有人跑过程序；导出那一步的代码还没有写，凡是经过它的推演都照计划的文字）。
-   concept B discussion 2026-11-27 05:30 UTC 把它报给了作者，等他定报告第 12 节的五件。小组的结论（不是作者的决定）：
+   concept B discussion 2026-11-27 05:30 UTC 把它报给了作者，等他定报告第 12 节的五件。
+   concept A1 随后核了报告里关于搜索的说法：没有改变结论的错误（一句措辞不准、一处行号少写了文件名）；
+   它补的一点：深度上限 100 在嵌套的搜索里接着数，所以经过 selector Simpset 的回退也受它管。
+   小组的结论（不是作者的决定）：
    - 会停、不会得出错的定理。拆和激活往前用的只有 destruction lemma、extraction rule、激活列表；
      登记时只把规则的结论拆一次、激活一次，没有哪一步把规则再用到别的 fact 上。
      2026-11-20 讨论的不停机是把规则本身往前用，是另一回事。
