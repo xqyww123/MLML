@@ -556,6 +556,14 @@ simp 的本地假设：
   钩子按上下文的 fact 放（系统安全），条目留较强的标记，原来"不安全，用户的"读成"系统安全，用户的"。
   这类条目都不带前提，搜索对它们怎样都不计距离。
   还没有做：代码评审；在钩子开着的情形下跑 concept A1、concept C 的测试；提交前先告诉 concept A1。
+- 同一份开发副本里，simp 的本地假设的条目（4.2）写了、测了，处理器本身除外（concept B 2026-11-27 06:03 UTC 报，第 35 次构建）：
+  做了讨论报告第 6 节的第 1 至 9 项：公开的 `entry` 去掉 `mask`；一条条目放一条不带 mask 的定理，或每条前提各一条带 mask 的；
+  `add_contextual` 只在没有东西管这次调用时才加；`entries_for` 交出前提在场的第一条；带 mask 的调用里自己的前提算在场，
+  开始时没有被拦下的工作，结束后把上下文原有的原样放回。
+  测试：`Intro_Table_Test` 新的一节"Premises of the simplifier"十三组通过，`Hook_Test`、`Fact_Test` 通过；
+  随机世界的计数与改动前相同（不带 mask 的调用行为没有变）。讨论小组只是推出来的预期，第一次跑都对上了。
+  还没有做：simp 的处理器与它的登记（第 10 项；带前提的本地假设也拆这一条要等"带前提的 fact"那一批）、
+  `Fact_Test` 的 B1 至 B12、注释、这处改动的变异核对。concept A1 已拿到签名的 diff。
   测到的行为：对得上 extraction rule 的关系 fact 也收；带 `mark_handled` 标记的定理放过；
   带前提的 fact 现在只作为一条规则进表（3.1 要改的那一处）；
   不带前提的 concept fact 成为这个上下文的 safe introduction rule，它的祖先不成为。
