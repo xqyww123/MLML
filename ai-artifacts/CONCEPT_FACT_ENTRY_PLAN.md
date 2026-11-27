@@ -661,6 +661,14 @@ simp 的本地假设：
     在这份副本上跑 concept A1、concept C 的测试；然后整批的代码评审（对 concept A1 的文件约 1250 行 diff，加三个测试 theory）。
     等别人的：五句 `first premise` 文案（作者）；变量为头的规则的产物（停机验证，再由作者定）；concept A1 那一批先进 `contrib/concept`。
     "登记时前提不拆"没有动。
+- 2026-11-27 07:12 UTC：concept B 报整批可以送代码评审了（第 97 次构建，各 session 通过；`contrib/concept` 里什么都还没有）。
+  代码 `hook/concept/concept_intro_table.ML`（2697 行）与 `hook/concept/Concept.thy`（加了 `mp`、`bspec` 两条声明）；
+  对 concept A1 05:00:20 UTC 的开发文件的 diff 是 `hook/dev_vs_a1_snapshot.diff`（约 1250 行），那份底存在 `hook/a1_snapshot_0500/`。
+  测试 `hook/Hook_Test.thy`（50 条检查）、`hook/table/Intro_Table_Test.thy`、`hook/fact/Fact_Test.thy`。
+  评审时要告诉评审者的已知缺口：讨论报告 7.3 第 5、8、9 项与 7.4 的随机测试没有写；五句 `first premise` 文案与变量为头的规则的产物等作者；
+  带前提的条目还没有在自己的前提之下化简（3.3 第 5 项没有定）；`condition_proc` 仍只要不留条件的推导（等 concept A1 那一批）；
+  concept A1、concept C 的测试还没有在这份副本上跑。进 `contrib/concept` 的先后：concept A1 那一批在前。
+  评审小组由作者下令才开；concept B discussion 07:13 UTC 向他提了。
 - 量到的一处设计上的事，concept B 建议先不管，等真有这种陈述再说【没有报作者定】：
   陈述的假设上写了 `[concept_intro]` 时，attribute 当场就把它拆了，`auto_concept_extraction` 关着也一样
   （attribute 在钩子上的函数之前跑；它不先拆，自己放的那条条目就会把这条 fact 挡住、激活丢掉）。
