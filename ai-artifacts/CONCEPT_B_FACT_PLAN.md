@@ -471,6 +471,8 @@ B1 的五步照裁定重写了，写之前先照改后的步骤重做了探针�
    这时 proof method 交给用户的子目标里会有"或"（样子见 `CONCEPT_FACT_SEARCH_PLAN.md` 4.2）；trigger 照样交带"或"的结果，见下文 trigger 一条；`concept_instance` 的义务里也可能出现带"或"的子目标（`CONCEPT_FACT_SEARCH_PLAN.md` 第 5 节，C 区）；
    simproc 交回的带条件的改写 `R₁ ⟹ … ⟹ Rᵣ ⟹ (C t ≡ True)` 里，那个"或"就是其中一个 `Rᵢ`，由外层的 simp 去证（`CONCEPT_FACT_SEARCH_PLAN.md` 4.4）。
    只接受没有剩余条件的推导的调用方，跑的是同一个搜索、但从不展开带非 concept 条件的规则【实现，concept A1；`CONCEPT_FACT_SEARCH_PLAN.md` 4.4】。
+   【2026-11-27：作者 03:20 UTC 定了针对 `concept _` 的 simproc 允许条件、不另设生效距离为 0 的限制
+   （`CONCEPT_FACT_ENTRY_PLAN.md` 3.2），它不再属于这类调用方；剩下的只有 `concept_instance` 判断宿主前提的那一步。代码还没有改。】
 3. `Concept_Fact.name_of`：把这条 fact 的命题印成读得回的文字（2026-11-25 起；此前是沿树拼名字表达式），只给 Sledgehammer 用。
    **【2026-11-25 定，写入的许可是作者 11:22 UTC：「请先写进计划并维护」。它取代本条下面讲 OF 链、名字表达式、"何时出 OF 链、何时用后备"的全部内容，
    也取代"后备：attribute `concept_fact`"一条里"只作后备""什么时候用"两处；下面的旧文字留作经过，还没有逐句标。】**
@@ -548,6 +550,12 @@ B1 的五步照裁定重写了，写之前先照改后的步骤重做了探针�
      印的文字是 Isar 里表示 dummy theorem 的 `[[]]`，他 12:57:06 UTC：「1. 可以」】。
      - 所以核对不在造候选时做。候选的 `name` 真的 lazy：Sledgehammer 要这条 fact 的文字时才走三级打印；
        那一刻打印器交回"印不出"（`NONE`），名字就是 `[[]]`，用到它的那条证明重放时失败。候选不因此被丢掉。
+       【2026-11-27 更正：名字不是到"要这条 fact 的文字时"才印。MePo 返回的结果里的每条候选，名字在返回时印
+       （`sledgehammer_mepo_trace` 开着时再多印一次），不管后来的证明用不用它；
+       被接受、又被名额截掉的候选只算了定理、不印名字；落选的候选两样都不做。
+       原因是 Sledgehammer 自己表示 fact 的类型里名字是现成的字符串。
+       作者 2026-11-27 02:21 UTC 对"名字在 MePo 返回时就印，接受吗"：「1. 接受」。
+       上下文的要求不变：名字是闭在 trigger 收到的上下文上的，什么时候印都是同一段文字。】
      - 代价（concept B 报过他）：用户只看到证明失败与一个 `[[]]`，看不出是哪条 fact 印不出来。
      - 晚印时上下文要仍是将来读这段文字的那个上下文（打印器会话的提醒，转告的）。
      - 这取代此处 11:22 至 11:25 UTC 写的"核对在交候选的时候做，不能推迟"：那是 concept B 的说明，理由是定理一旦交给 prover 就收不回；
@@ -838,6 +846,9 @@ end
   `Context.Proof ctxt` 而 `Variable.is_body ctxt` 与 `Proof_Context.is_stmt ctxt` 都为假时是声明在某一层上的作用，什么都不做，靠 `Context.Theory` 的那一次；
   有一个为真时（证明里登记、写在假设上的 attribute）照专题文件第 4A.3 节"在证明里登记"做。stock 的 locale 里的声明要到 interpretation 才登记，是已知的限制。
 - **`add_system_entries`、`instance_entries`**【提案】：concept E 的副本与 concept C 声明实例时的条目经它们进表；激活列表按 concept 名存在下层的 theory 数据里，挂在 `Concept_Package.Declared` 上算。
+  【2026-11-27：`instance_entries`、类型 `system_entry` 与这里的 `add_system_entries` 撤回，换成
+  `add_instance_entries`、新的 `add_system_entries` 与 `fact_context`；签名与说明在 `CONCEPT_FACT_ENTRY_PLAN.md` 第 2 节。
+  上面签名框里的这三行留作经过。激活列表的存法不变，已实现。】
 - **`concept_fact_tac` 的 `warn_user_limit`**【已定，作者 2026-11-24 04:16 UTC：「干脆做成 concept_fact 的参数好了，然后 the users' concept_fact tactic 以及 concept_instance 用的都始终开启」】：
   为真时碰到 `concept_fact_user_limit` 出 10.1 的两句 warning。用户的 proof method 与 `concept_instance` 传真；simproc、trigger 不出声。
   它取代上文"只在 proof method 身份下发一条 warning"里"只在 proof method"的那一半：`concept_instance` 证义务时也出（作者 04:04 UTC：「2. 在命令的 warning 里说一句」）。
@@ -877,6 +888,8 @@ end
       上层文件差两处关条件的毛病（V1、V2，见 7.1"怎样关"的状态）与三句没有断言的测试，都照它给的改法改了，它的四组测试与两个变异的结果与它预期的一致。
     - 上层文件另写了三样（都有测试，各跑过一个变异）：
       selector Simpset 里针对 `concept _` 的过程（`condition_proc`，内部的名字 `concept_condition`，只放进 selector Simpset）；
+      【2026-11-27：它现在只接受不留条件的推导。作者同日定了要改：允许条件、不另设生效距离为 0 的限制，
+      与别的 concept 目标同样处理（`CONCEPT_FACT_ENTRY_PLAN.md` 3.2）。代码还没有改，等 concept A1 这一批改动提交后的入口。】
       读 P 用两个 reader（`read_prop`）；`name_of: Proof.context -> term -> string`。
       还没有写的：`concept_fact` 的 simproc、trigger 的登记。
     - 开发 session 现在依赖 `Performant_Isabelle_ML`（打印器在它的工作区里，未提交）；正式的 session `Concept` 还没有加这个依赖（`ROOT` 归 concept A1，已告诉它）。
@@ -903,6 +916,22 @@ end
       - 短复审的裁判：除下面作者未定的一件之外，"assumption destruction"一节被接受。
       - **等作者定**：带前提而结论是 concept fact 的 fact（进来的、实例条件里的、header 假设里的）怎么办；现在的代码把它作为不安全的规则放进表，不拆、不激活。
         另有两处措辞等他准许写进专题文件（4A.5 讲 mask 的三句；4A.4、4A.5 讲内部调用的三句），代码是对的、文字要改。
+    - 【2026-11-27 的状态】
+      - **`concept_intro_table.ML`、`concept_fact.ML` 已提交**：`contrib/concept` `4e7b7e6`（2026-11-26）；
+        `Concept.thy` 在 `concept_package.ML` 之后加载 `concept_intro_table.ML`、`concept_search.ML`、`concept_fact.ML`。
+      - Concept session 依赖 Performant_Isabelle_ML（concept A1，`32c8cfa`）：
+        构建它和建在它上面的 session 都要加 `-d contrib/Performant_Isabelle_ML`。
+      - **钩子的 Pure 部分已做**：concept 私有树 `66b51ce`（`Proof_Context.Indexed_Facts`；`global_goal` 的 after_qed 恢复 `inner_stmt`）。
+      - 钩子、往 intro table 的 theory 部分写的那个函数、带前提的 fact、simp 的本地假设：
+        现行写法与没有定的各处都在 `CONCEPT_FACT_ENTRY_PLAN.md`，这里不另抄。
+      - 实例与导入进表的接口换了（本节上面 `add_system_entries`、`instance_entries` 一条的注）。
+        带前提的 fact 怎样拆定下之后，"带条件的实例导出什么"可能要改，改了要告诉 concept C。
+      - **trigger**（细节在 `contrib/sledgehammer_fact_trigger/ai-artifacts/RELEASE_4_WORK_PLAN.md` 第 11 节）：
+        候选的接口改动已提交并沿 `default_fact_qualifiers`、`global_form`、`generic_mksimps`、concept 四棵树合并下来；
+        第 4 版的标签没有打（作者 2026-11-27：「先做代码评审」；评审回来了，建议标签等到发 conda 时再打）。
+      - **仍没有写**：挂在钩子上的函数（连同 `auto_concept_extraction`、`concept_extract`）；
+        `fact_context`、`add_instance_entries`、`add_system_entries` 与 theory 层 `[concept_intro]` 登记时的激活；
+        `condition_proc` 改成允许条件；mksimps 处理器；`concept_fact` 的 simproc；trigger 的登记。
     - （以下是 05:39 UTC 时的数）现在的文件：上层 md5 `72e0405a…`（413 行），下层 `962a9163…`（931 行）；两套测试 exit 0（`buildf40.log`、`build60.log`）；
       concept A1 的搜索文件用的是它提交的 `bb97e388…`。
     - 上层文件这些改动处的短复审 `wf_c4bd367f-dc7` 05:40 UTC 起跑（brief `ai-artifacts/concept_B_code_review4_brief_2026-11-26.md`）。
@@ -921,6 +950,10 @@ end
   钩子收不收不带 hyps 的 `have`；simp 那一路的集合怎样顾及 mask；
   Sledgehammer 求值候选时的上下文是不是看不见的（`prove_proposition` 靠 `Context_Position.is_visible` 判出不出 warning）；
   `[concept_intro]` 登记时读不读得到名字（name hint）；激活列表的钩子读不读得到 header 的假设；TAT 的 Lemma node 怎样跳过激活。
+  【2026-11-27：其中三项定了，都写在 `CONCEPT_FACT_ENTRY_PLAN.md`：
+  实例的规则与激活谁先（一次调用，第 2 节）；钩子收不带 hyps 的 `have`（第 1 节）；TAT 的做法（1.3）。
+  E 的副本的标记只定了接口（`safety option`），带哪个由 concept E 选，还没有选（2.3）。
+  simp 那一路怎样顾及 mask：讨论小组回来了，等作者定一件并准许写入（第 4 节）。】
   【2026-11-25：其中两项没有了。Sledgehammer 不再对候选的文字求值；登记时不读 name hint（concept B 推出的后果，作者没有明说确认，7.3 第 (3) 类）。】
 
 下面是 2026-11-18 的那一版，留作经过。
@@ -941,6 +974,8 @@ end
   - （6.2 第 5、10 项）去掉 `Incomparable` 与 `search_all`；`derivation` 加新的节点种类，记靠截断转换的一步、`concept_entailment` 的一步；
     `result` 与 `derivation` 要能表示"一个目标有几个打平的解法"（一个表示"或"的节点）；
     搜索加一个"不展开带非 concept 条件的规则"的入口，给只接受不留条件推导的调用方用。
+    【2026-11-27：这类调用方现在只剩判断宿主前提的那一步；针对 `concept _` 的 simproc 改调普通的入口
+    （`CONCEPT_FACT_ENTRY_PLAN.md` 3.2）。】
   - `Entry` 的 `name` 仍是可选的：哪些条目必须有名字、哪些不起名，见上文"带前提的规则都要有名字"一段与 `CONCEPT_FACT_SEARCH_PLAN.md` 2.1。
     （此前这里写的"`name` 对带前提的规则不再是可选的"不对：声明实例时激活出的条目带前提也不起名，作者 2026-11-21 02:48 UTC。）
   - 匹配函数除规则的实例之外交回什么（照原样对上还是靠截断转换、有没有添 `concept t` 这条前提、`reached` 这一位；6.2 第 13 项与 2.1），类型由 concept B 定。
@@ -1057,6 +1092,8 @@ val name_of: Proof.context -> derivation -> string option (* OF 链或后备 att
   作者 2026-11-24 17:12 UTC：「我们要把 trigger 的接口改成 lazy 的」；17:14 UTC：「赞同做法二」；改动由 concept B 做、并进 trigger 的第 4 版（2026-11-25 11:20 UTC）。
   全文在 `contrib/sledgehammer_fact_trigger/ai-artifacts/SLEDGEHAMMER_FACT_TRIGGER_PLAN.md` 3.1 末尾那一块。
   对本文件的含义：`name` 是 lazy 的，Sledgehammer 要这条 fact 的文字时才印成 `[[concept_fact "P"]]`；
+  【2026-11-27 更正：MePo 返回的结果里的候选在返回时就印，落选的与被名额截掉的不印；
+  作者同日接受（7.1 `name_of` 一条里同日的更正）。】
   印不出读得回的文字时是 `[[]]`，候选照常交（`name_of` 一条的"印不出读得回的文字时"一块，2026-11-25 12:21 UTC 起）；
   `thm` 是 `prove` 造的那条定理。造候选时不核。
   （2026-11-26 校对后改：这里 2026-11-25 11:22 至 11:26 UTC 之间写的是"P 印不印得准要在造候选时核，因为定理交出去就收不回"，第十批取代了它而这一处漏改。）
