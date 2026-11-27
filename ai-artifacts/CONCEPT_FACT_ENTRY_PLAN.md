@@ -157,15 +157,17 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   - 为什么：一条规则进 theory 时把它的活做全、结果存全，之后任何地方再碰到一模一样的条目都挡，不丢东西（3.1）。
   - concept B 的读法：带条件的实例声明时导出的也照此全存。
 
-### 2.3 没有定的
+### 2.3 存下的东西会过时【已定：接受】
 
-- 一条 fact 已经在 intro table 的 theory 部分里，后来的声明要不要重做它的激活。
+- 一条 fact 已经在 intro table 的 theory 部分里，后来的声明不重做它的激活。
+  【作者 2026-11-27 04:07 UTC：「接受存下的东西会过时」；04:25 UTC 对"后来的声明不重做早先 fact 的激活"：「是的」。】
   例：`comm_monoid int.monoid` 已由更早的实例放进表；
   后来 `concept_instance int: comm_monoid rewrites e: "Units int.monoid = int_units"` 的激活被跳过，
-  `group int_units` 进不了表。concept C 在等这一问。
-  带前提的条目全存之后有同样的毛病：登记之后，后来的 theory 又加了 extraction rule 或实例，早先存下的不更新。
-  作者 2026-11-27 04:07 UTC：「接受存下的东西会过时」。
-  concept B 读作它也答了这一问（后来的声明不重做），04:10 UTC 向作者说了这个读法并请他读错了就指出；他还没有回应。
+  `group int_units` 进不了表。
+  带前提的条目全存之后同样：登记之后，后来的 theory 又加了 extraction rule 或实例，早先存下的不更新。
+
+### 2.4 没有定的
+
 - 导入的副本带哪个安全标记：只定了接口（`safety option`），带原件的标记还是交 `NONE`，由 concept E 选，还没有选。
   副本要不要记位置也没有定。
   concept E 的初步倾向（2026-11-26，不是定论）：带原件的标记；位置记做出这条副本的那条命令的位置。
@@ -192,7 +194,7 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
 - 全存的代价【作者 2026-11-27 04:07 UTC：「接受表的大小」「接受构建时间」「接受存下的东西会过时」】：
   - theory 部分变大：评审团队的 Python 模型里，一条登记存全之后从 1 条变成约 87 条或 141 条；
   - 每条登记多做一次拆和激活；
-  - 存下的东西会过时（2.3 第一条）。
+  - 存下的东西会过时（2.3）。
   这些代价都只关于 intro table：登记时的拆不起名字、不挂 `[intro!]`、不作 notation 的来源；
   间接受影响的只有读这张表的搜索。真实的库上都没有量过，原型里量。
   讨论小组还推过一条、concept B 没有核：目标的写法化简不动、而存的是化简过的写法时，对不上存下的条目。
@@ -344,6 +346,7 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
 
 往 theory 部分写：
 - 2026-11-26 14:39:45 UTC【归属与要求】：「赞同这是实现上的问题。建议过一轮 Opus 讨论小组」
+- 2026-11-27 04:25 UTC【决定】，对"后来的声明不重做早先 fact 的激活"：「是的 后来的声明不重做早先 fact 的激活」
 
 带前提的 fact：
 - 2026-11-26 11:30:43 UTC，对"进表当一条不安全的规则，别的不做"：「1. 赞同 进表当一条不安全的规则。但“别的”是什么？」
