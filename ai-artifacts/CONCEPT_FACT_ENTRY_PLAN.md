@@ -38,11 +38,11 @@
 - 证明里 `interpret` 证出的 locale 谓词（如 `PL 12`）；
 - 证明或陈述里点名的全局定理（`using`、`from`、`with`、`note`、`notes`）：只进这个上下文，不进 intro table 的 theory 部分。
   【这一处改了旧写法"theory 级无 hyps 的定理不算"。它由判据推出；
-  concept B 2026-11-27 01:27 UTC 列给作者时说"建议都照它"，01:56 UTC 又写"我读作随判据一起成立，不对请指出"。
-  作者 05:05 UTC 问为何、怎样做到；concept B 05:08 UTC 答了，他还没有定收还是排除：
-  `using`、`from`、`with` 在 Isabelle 里本身各是一次名字为空的 `note_thmss`
-  （`proof.ML` 的 `gen_using`、`gen_thmss`），所以随判据到钩子；
-  要排除，从定理本身分不出"点名的全局定理"与"证明里证出的、不带 hyps 的 fact"。】
+  已定，作者 2026-11-27 05:13 UTC：「好的，赞同照收」
+  「接受每次 using、from、with 多一次便宜的判断（只看命题里有没有 concept fact）；真是 concept fact 的才拆」。
+  怎样到钩子的：`using`、`from`、`with` 在 Isabelle 里本身各是一次名字为空的 `note_thmss`
+  （`proof.ML` 的 `gen_using`、`gen_thmss`）。
+  便宜的判断里对得上 extraction rule 的命题也算有活（他同一条消息问的，1.2）。】
 
 收的（由别的测量推出，没有单独测）：
 - concept 的块的 `C_axiom`（1.2）。
@@ -168,6 +168,10 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   后来 `concept_instance int: comm_monoid rewrites e: "Units int.monoid = int_units"` 的激活被跳过，
   `group int_units` 进不了表。
   带前提的条目全存之后同样：登记之后，后来的 theory 又加了 extraction rule 或实例，早先存下的不更新。
+- 激活列表也是这样：只在声明 concept 时写一次（`declare_activation`），之后不改；
+  concept 声明之后才声明的 extraction rule 不补进它的列表（旧文件第 2.3 节的"限制"）。
+  【没有定】作者 2026-11-27 05:16 UTC 问后来新增的要不要补做激活；
+  concept B 05:17 UTC 建议不补做（与上一条同一类；补救是库里把 extraction rule 声明在用到它的 concept 之前），等他定。
 
 ### 2.4 没有定的
 
@@ -212,7 +216,12 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   「我建议不丢弃。这样的条目要留着」。】
   例：`assume "⋀i. i ∈ I ⟹ sub group (H i) K"` 拆一步得到 `?i ∈ I ⟹ group K`，它进表；
   搜索用它证 `group K` 时把 `?i ∈ I` 留给用户。
-  管到哪里还没有定，见 3.3 第 2 项。
+  各处都不筛：证明里、内部调用、声明实例、登记与导入都一样。
+  【已定，作者 05:13 UTC：「赞同"各处都不筛"，因为各处必须一样」
+  「可以推翻 前提里的变量在化简后的结论里不出现的那种不进 intro table」。】
+  被推翻的是搜索计划 2.1 的那一条（那里记的是作者 2026-11-20 17:14「先全部按你建议来吧」；
+  例 `P ?a ⟹ lattice int.order`，现在进表）。那份文件归 concept A1，已告诉它。
+  "结论的结构项剥掉截断之后头是 schematic 变量的不进表"是另一条，不变。
 
 现在的代码：带前提的不分两种，都只作为一条不安全的规则进表，不拆、不激活。
 
@@ -276,11 +285,7 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
    旧文件里与它有关的：第 2.2 节"用户登记的、导入进来的有 concept 条件的规则登记时不激活：后果与补救"、第 8 节第 18 项。
    讨论小组早先补的一点：不管怎样定，各处的遍历要一样（证明里、内部调用、声明与登记时的遍历），
    否则同样两句话先后不同会得出不同的 fact。
-2. "前提的变量在结论里不出现了的条目留着"（3.1）管到哪里。
-   各处的遍历要一样，theory 里存下的才等于证明里拆出来的；所以 concept B 把作者的话读作各处都不筛。
-   这样读会推翻搜索计划 2.1 里更早的一条：「前提里的变量在化简后的结论里不出现的那种不进 intro table」
-   （那里记的是作者 2026-11-20 17:14「先全部按你建议来吧」；例 `P ?a ⟹ lattice int.order`）。
-   concept B 2026-11-27 05:08 UTC 请作者确认这一条也改成留着；他确认之前，已定的只是证明里拆出的这类条目留着。
+2. （2026-11-27 05:13 UTC 定了：各处都不筛，见 3.1。）
 3. （2026-11-27 05:05 UTC 定了，见 3.4；编号留着，别处引用第 5、6 项。）
 4. （2026-11-27 05:05 UTC 定了，见 4.2 末条。）
 5. 带前提的条目化简时假设不假设自己的前提。
@@ -291,7 +296,10 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
    对第一种 concept B 提过一个补法：条件字面上就是化简器假设着的前提时，在搜索里算已关掉（2026-11-27 03:17 UTC）。
    "不安全的规则加不加 1"的讨论小组把它定在"走这一步的时候"：这一步就不算带条件，
    于是"有不留条件的方案就提前结束"取它，`W` 是什么都修得好（报告 3.3，手算，没有做过原型）。
-   它偏离搜索计划 4.2 的一句「排序从不看条件的内容；一条规则算不算带条件，只看它的陈述」。等作者定。
+   它偏离搜索计划 4.2 的一句「排序从不看条件的内容；一条规则算不算带条件，只看它的陈述」。
+   【已定，作者 05:13 UTC：「可以作为一个优化但不能依赖。我们的设计要在及时没有这个优化的时候也能工作」。】
+   后果（concept B 05:17 UTC 向他说了，等他定）：不靠它时，3.2 起因的例子在保留加 1、去掉加 1 两种做法下都化不开；
+   concept B 建议把这个例子在没有优化时记成已知的限制，同时把优化做上。
    concept A1 04:59 UTC 补的两点：
    - 搜索的内核不用改；要带上"这个前提是被一条假设关掉的"的是搜索那一层的 `rule`、`solution_of` 与 concept B 的 `goal_thm`。
      开发副本里搜索已经拿着化简器的前提（`local_prems`）。
@@ -312,7 +320,12 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   - 两个以上前提不再报错；没有前提仍报错。
     【作者：「接受这改了你 2026-11-21 批的形状，和报错文案里 "must have exactly one premise" 那一组：
     两个以上前提不再报错，没有前提仍报」。】
-    没有前提时的文案后半句要跟着改；concept B 05:08 UTC 拟了 `… must have at least one premise` 报作者，他还没有批。
+  - 没有前提时的文案【作者 05:13 UTC 批准，逐字】：
+    `Users are not allowed to declare a concept_extraction rule without a premise. Your "<rule>" must have at least one premise`
+- 用一条 extraction rule 时，规则的 schematic 变量的编号要与 fact 的错开。
+  【作者 05:13 UTC：「注意作用 extraction rule 的时候要设置 the schematic index，防止 schematic variables 重叠」。】
+  现在用规则的函数 `elim_first` 已经先把规则的编号抬到 fact 的最大编号之上再匹配；
+  规则多出来的前提与它剩下的变量（如 `bspec` 的 `?x`）沿用这一步。
 - 两条规则由 `Concept.thy` 声明：HOL 的 `bspec`（`∀x∈?A. ?P x ⟹ ?x ∈ ?A ⟹ ?P ?x`）与 `mp`（`?P ⟶ ?Q ⟹ ?P ⟹ ?Q`）。
   `∀i<n. P i`、`∀i≤n. P i` 在 HOL 里是 `∀i. i < n ⟶ P i` 的写法，`∀` 打开之后由 `mp` 接着拆。
   用户自己的有界量词（如 `list_all`）由用户再声明一条。
@@ -324,7 +337,7 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
 - 挂在钩子上的函数的便宜判断（1.2）要跟着做细：`⟶`、`Ball` 开头的命题都对得上规则，
   所以要在项上把规则的结论代出来再往里看，不做推理；否则证明里每条蕴含式都进遍历。【作者：「4. 接受」。】
 - 施工的先后：先写"带前提的 fact 往下拆"那一段（3.1），再声明这两条规则。
-  这只是写代码的先后；执行时是同一趟遍历，规则的结果由这趟遍历接着拆。
+  这只是写代码的先后；执行时是同一趟遍历，规则的结果由这趟遍历接着拆。【作者 05:13 UTC：「可接受」。】
 - concept B 读规矩推的、没有跑过：每打开一层少一个常量，命题不变大，
   所以"一条链上只许变大一次"的检查（旧文件 4A.1）不受影响。
 - 在项上拆的那一遍（notation 一侧）怎样对待多出来的前提，归 concept D 定。
@@ -465,9 +478,26 @@ simp 的本地假设：
   两个以上前提不再报错，没有前提仍报」「2. 接受」「4. 接受」；
   第 3 条【问题，concept B 05:08 UTC 答：是施工的先后】：「"它要等"带前提的 fact 拆、激活"先做出来" 什么意思？
   是我们施工的时序还是最后写出的代码的执行时序？」
-- 2026-11-27 05:05 UTC，对"证明里点名的全局定理也收"【问题，concept B 05:08 UTC 答了，他还没有定】：
+- 2026-11-27 05:05 UTC，对"证明里点名的全局定理也收"【问题，concept B 05:08 UTC 答了】：
   「你是说 `using r` 这种也要去 assumption destruction r 吗？为何？如何做到的？
   我以为只是 note_thmss 的时候去 destruct/extract 呀」
+- 2026-11-27 05:13 UTC【决定，逐条】：
+  - 对"`using r` 也收"：「好的，赞同照收」「接受每次 using、from、with 多一次便宜的判断（只看命题里有没有 concept fact）；
+    真是 concept fact 的才拆。确认一下 extraction rule 也会被考虑对吗？」（concept B 05:17 UTC 答：考虑）
+  - 对"不丢弃"管到哪里：「赞同"各处都不筛"，因为各处必须一样」
+    「可以推翻 前提里的变量在化简后的结论里不出现的那种不进 intro table」
+  - 「注意作用 extraction rule 的时候要设置 the schematic index，防止 schematic variables 重叠」
+  - 「批准 Users are not allowed to declare a concept_extraction rule without a premise.
+    Your "<rule>" must have at least one premise」
+  - 对"是我们施工的先后，不是代码执行的先后"：「可接受」
+  - 对"条件字面上就是化简器手里假设着的前提时，搜索走这一步就当它没有条件"：
+    「可以作为一个优化但不能依赖。我们的设计要在及时没有这个优化的时候也能工作」
+  - 对"生效距离 0 上'停止收集'的 warning"【问题，concept B 05:17 UTC 答了，他还没有定】：「提醒我一下这个 warning 是什么」
+- 2026-11-27 05:14 UTC【问题与意见；concept B 05:17 UTC 答：效果由激活列表给了，登记这条规则时拆不拆等小组】：
+  「于是，视图的 intro rule 在声明进 the intro table 时其结论也会被 destruct 与激活，对吗？我认为这是好的」
+- 2026-11-27 05:16 UTC【问题；concept B 05:17 UTC 答：固定，建议不补做，等他定】：
+  「激活列表是固定的对吗？不存在之后新增激活条目的情况是吗？
+  我是在想是否有新增条目需要补充激活的情况，如果有，我们是否应该考虑」
 
 ---
 

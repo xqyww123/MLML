@@ -1424,8 +1424,8 @@ concept extraction stopped after getting 50 ordinary facts (increase it by "decl
 【2026-11-23 下午：第 8 组作废，段名去掉了，见那一组末尾的标注。】
 
 【2026-11-27 05:05 UTC：作者放宽了规则的形状，两个以上前提不再报错，下面第 0 组的第二句作废；
-第一句（没有前提）仍报，它的后半句 "must have exactly one premise" 要改，
-concept B 05:08 UTC 拟了 "must have at least one premise" 报作者，他还没有批。见 `CONCEPT_FACT_ENTRY_PLAN.md` 3.4。】
+第一句（没有前提）仍报，它的后半句改成 "must have at least one premise"（作者 05:13 UTC 批准，逐字在
+`CONCEPT_FACT_ENTRY_PLAN.md` 3.4）。】
 
 0. 前提不是恰好一个（没有前提；两个或更多，数字填前提的个数，总是复数）：
 
