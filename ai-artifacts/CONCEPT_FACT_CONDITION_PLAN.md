@@ -209,6 +209,30 @@ concept B discussion 建议接受这个损失，08:30 UTC 向作者说了。
 - 讨论报告对系统的 simpset 提的三条，与现在的办法：各调用方拿到的不是同一份（整次调用留同一份）；
   里面有会启动搜索的 simproc、按名字去不掉（按身份删）；结果随用户的 simp 声明变（作者认为是好事）。
 
+### 4.4 作者 2026-11-27 08:48 UTC 的提议：一份 simpset 里装着全部 fact【没有定】
+
+作者：「用 the basic simpset + all the facts as simp rules （这些 facts 自身也被 the simpset 化简） 你觉得如何？
+就是我们需要一个钩子。对 facts 的注册是在 note_thmss 里吗？在那个钩子上加入：新增的 fact 会被 the simpset 化简一下后
+加入到 the simpset 中。你觉得如何？此 simpset 要包含 the selector simpset 吗？我不确定」
+
+concept B discussion 08:49 UTC 的看法（不是决定）：赞同；它把"查"并进化简，4.1 就不需要了。
+- 一条 fact `A` 进了 simpset 就是规则 `A ≡ True`。【实测】`finite (K ?i)` 作规则消得掉 `finite (K a)`；
+  fact 作规则时 `c ∨ d`、`True ∧ c`、`A ⟶ B` 都消得掉，所以删掉原第二档损失的那一种（4.2）自己回来。
+- fact 先被这份 simpset 化简是必须的：规则的左边不是范式就永远对不上（化简器自底向上先改写了条件里的子项）。
+- 钩子：fact 的登记在 `note_thmss` 里，`Proof_Context.Indexed_Facts` 就挂在它给 fact 建索引的地方，已经用来把 fact 交给
+  assumption destruction；在同一个钩子上做，不用新加。locale 的假设不经过它【实测】，另从上下文的假设里取。
+- 要定死的：
+  - 等式 fact 只加成 `(a = b) ≡ True`，不当"左边改写成右边"的规则。
+    【实测】`f x = g (f x)` 当规则一直跑到步数上限，`a = b` 与 `b = a` 同样；进了这份 simpset 之后每次消条件都会撞上限。
+    代价：fact 之间的等式不被用来化简别的 fact 与条件。
+  - 惰性地做：钩子只记下 fact，第一次真要消条件时才化简、才加。否则每条记下的 fact 都付一次化简，不管这个证明用不用 `concept_fact`。
+    【实测】100 条 fact 加作规则共 0.56 毫秒；加好之后化简一个条件的时间不随 fact 的个数变。
+  - 化简器手里的前提不经过钩子，每次搜索开始时临时加。
+- selector Simpset 不放进这份 simpset（它的改写带条件 `concept t`，证它要启动搜索，违反第 5 节第 2 条），
+  改成在钩子上先用 selector Simpset 把 fact 化一遍（那一刻没有搜索在进行）；条件这边读结果时本来就用它化过。
+- 要作者澄清："the basic simpset"是只有逻辑的那种，还是系统的。只有逻辑的消不掉 `0 < 4`、`a ∈ {a, b}`【实测】，
+  用户的 `[simp]` 声明也起不了作用（与他 07:46 UTC 说的好处相反）；concept B discussion 倾向系统的 simpset 加全部 fact。
+
 ## 5. 约束
 
 1. 【concept A1】消条件只能用对整次搜索都成立的东西：上下文的 fact 与假设、化简器手里假设着的前提。
