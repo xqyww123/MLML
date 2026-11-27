@@ -115,6 +115,15 @@ TAT 怎样关它【实测，concept B 2026-11-27 05:24 UTC，开发副本上的 
   在 theory 层 TAT 证完就离开这个 local theory，后面没有东西受影响；在以后的 Context、Locale 节点里才要紧。
   嵌套的 target 没有测。
 
+Minilang 与 AoA 记下的 fact 进不进索引【concept B discussion 读代码，2026-11-27 08:32 UTC；没有实测】：进。
+- Minilang 的状态从一个 Isar 证明状态起步（`contrib/Isa-Mini/library/proof.ML` 的 `INIT'` 取 `Proof.context_of`），
+  而 Isabelle 给每个证明状态的上下文都打开了 `inner_stmt`（`Proof.init_context` 里的 `set_stmt true`）。
+- Minilang 记 fact 的九处都调 `Proof_Context.note_thmss ""`，与 Isar 的 `note`、`have` 是同一个函数，所以建索引、到钩子。
+- 要量的一处：Minilang 有七处 `Variable.set_body false`，把 `inner_body` 设回"否"。在那些上下文里记下的 fact
+  会被当成陈述里的 fact；`auto_concept_extraction` 关着（TAT 的情形）时它们存着不拆，
+  与"AoA 只在开头调一次 `concept_extract`"对不上。那七处是什么场合、会不会真的出问题，没有查、没有测。
+- AoA 与 Minilang 的代码里现在没有任何地方调 `concept_extract`（搜过 `contrib/Isa-Mini`）；AoA 那一侧还没有做。
+
 没有定的：在 theory 层写 `declare [[auto_concept_extraction = false]]` 时，之后这个 theory 里每条 lemma 的陈述都不拆。
 concept B 2026-11-27 02:43 UTC 向作者说过打算照普通配置项的惯例允许这样写、不特别拦；他没有答。
 与它有关的一条实测（同上）：写在 `context begin … end`（不带 `fixes`、`assumes`）里面的这句 `declare` 是 theory 的声明，
