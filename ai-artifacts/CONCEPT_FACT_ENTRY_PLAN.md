@@ -619,8 +619,28 @@ simp 的本地假设：
   变异核对做了（06:13 UTC）：15 个变异全部被测试抓到，没有装不上或编不过的，对照通过。
   还没有做：simp 的处理器与它的登记（第 10 项；带前提的本地假设也拆这一条要等"带前提的 fact"那一批）、
   `Fact_Test` 的 B1 至 B12、注释。concept A1 已拿到签名的 diff。
-- concept B 2026-11-27 06:13 UTC 起做"带前提的 fact"那一批：先遍历，再 `bspec` 与 `mp`，再往 theory 部分写的那个函数
-  （全存与两处收窄）。"登记时前提不拆"不动。
+- "带前提的 fact"那一批（concept B 2026-11-27 06:13 UTC 起做；都在同一份开发副本里，三套测试通过，随机世界的计数不变）：
+  - 遍历（06:19 UTC 报，第 43 次构建）：带前提的节点与不带的同样走，每一步读结论、前提留在结果上；
+    叶子 `Rule` 与"有没有 concept 前提"的判断去掉了；`open_fact` 在前提之下也打开 `∧`、`∀`；`put_entries` 自己算标记。
+    实测 `⋀x. r0 x ⟹ kc (mk x)` 给出的正是讨论报告手推的那些条目，没有一条不带前提的；
+    `pq ⟹ kc (mk ta)`、`qq ⟹ kc (mk ta)`、`kc (mk ta)` 不管先后都是三族各自的条目。
+  - `mp` 与 `bspec` 在开发副本的 `Concept.thy` 里声明成 extraction rule。实测 `assume "∀i∈I. grp (F i)"` 给出
+    `grp (F 3)` 的一个留下 `3 ∈ I` 的推导；`∀i. P i ⟶ grp (F2 i)` 同样；嵌套的有界量词拆不出，见 3.4 末条。
+  - theory 层（06:37 UTC 报，第 60 次构建）：只经一个函数写（`register_theory`；`add_static` 没有了）；`fact_context`；
+    登记时全存、带着规则的前提导出，连同两处收窄；`add_system_entries`、`add_instance_entries`；
+    `register_rule` 在 theory 里经那一个函数，在证明里先把 fact 当进来的 fact 拆、再放它自己的条目。
+    实测：theory 里 `declare … [concept_intro]` 的 `r0 x ⟹ kc (mk x)` 存下 `r0 ?x ⟹ grp (nn ?x)` 等；
+    规则自己那一条只有一份，带着声明时的标记；之后在证明里假设同一条定理，什么都不多放；
+    拆开后回到自己前提 `kc K` 的规则不存 `kc` 的列表；实例的规则进表，它自己的定理 `concept (nw ?K) ⟹ grp (nw ?K)` 不进。
+    五个变异都被测试抓到（其中一个起初没抓到，补了测试）。
+    对登记的讨论报告 6.2 的草稿的一处更正：`fact_context` 要用照前提原样假设出来的定理（`Thm.assume`）去填前提；
+    `Assumption.add_assumes` 交回的是 fact 的形状，填不了带参数的前提（如 `⋀i. i < n ⟹ grp (F i)`）。
+  - 还没有做：讨论报告 7.3 剩下的测试与带前提 fact 的随机测试；钩子上的便宜判断顺着规则的结论看；
+    simp 的处理器与它的测试；注释；给 concept A1 的 diff；整批的代码评审。"登记时前提不拆"没有动。
+- 量到的一处设计上的事，concept B 建议先不管，等真有这种陈述再说【没有报作者定】：
+  陈述的假设上写了 `[concept_intro]` 时，attribute 当场就把它拆了，`auto_concept_extraction` 关着也一样
+  （attribute 在钩子上的函数之前跑；它不先拆，自己放的那条条目就会把这条 fact 挡住、激活丢掉）。
+  所以 TAT 对这样的陈述每次求值仍付这份工夫。要让配置项在这里也管用，得把这次声明连同存着的 fact 一起留给 `concept_extract`。
   测到的行为：对得上 extraction rule 的关系 fact 也收；带 `mark_handled` 标记的定理放过；
   带前提的 fact 现在只作为一条规则进表（3.1 要改的那一处）；
   不带前提的 concept fact 成为这个上下文的 safe introduction rule，它的祖先不成为。
