@@ -230,9 +230,19 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   `concept_fact_user_limit`，在距离 0 上出"停止收集"的 warning。这与作者 2026-11-24 04:04 UTC 定的
   "生效距离 0 上不发 warning"（`CONCEPT_B_FACT_PLAN.md` 7.1）相抵。
   concept A1 2026-11-27 03:40 UTC 指出；concept B 03:43 UTC 向作者提过；下一条的讨论小组一并在查。
-- 【在讨论】不安全的规则还加不加 1。作者 03:30 UTC：「也许我们不应该惩罚不安全规则」；
-  03:34 UTC 令开讨论小组查别的代价与问题（Workflow `wf_f1f99220-a4b`，
-  报告将在 `ai-artifacts/concept_unsafe_penalty_discussion_2026-11-27.md`）。
+- 【等作者定】不安全的规则还加不加 1。作者 03:30 UTC：「也许我们不应该惩罚不安全规则」；
+  03:34 UTC 令开讨论小组查别的代价与问题（Workflow `wf_f1f99220-a4b`）。
+  小组 04:50 UTC 回来，报告 `ai-artifacts/concept_unsafe_penalty_discussion_2026-11-27.md`（没有人跑过程序）。
+  它的建议（不是作者的决定；concept B 04:53 UTC 报给了作者，concept A1 还没有核报告里关于搜索的说法）：
+  - 保留加 1。去掉之后，一条只是充分的 `[concept_intro]` 规则在目标自己的 concept 上单独胜出，挤掉低一层的正确路线；
+    "或"只连生效距离相同的推导，救不了（报告 3.1，例 `comm_ring (zmod 4)`）。
+  - 起因的例子改用另一条补法修：一步的条件字面上就是化简器手里假设着的前提时，走这一步就当它没有条件（3.3 第 6 项）。
+  - 报告第 11 节另列了要作者定的：距离 0 上的 warning；"某个目标的第一个解法生效距离是 0 时不记别的解法"的规矩；
+    去掉加 1 时 `[concept_intro!]` 撤不撤。
+- 【读代码确认，concept B 与讨论小组各读过】selector Simpset 证不了是"或"的条件：
+  它清掉了改写规则（`Simplifier.clear_simpset` 只留 `mk_rews`、项序、subgoaler、solver），
+  HOL 的 solver 只做自反、`True`、前提、`assumption`、`FalseE`、`conjI`。条件是"或"时这条带条件的改写不出声地用不上。
+  距离 0 取"或"之后就会有这样的条件。补法（没有定，改的是 concept A1 的 `put_selector_simpset`）：加一步 solver，先试左支、再试右支。
 
 照搜索计划 4.2 现在的定义手算的（没有跑过；"不安全加 1"若去掉，这里的数要重算）：
 - 起因的例子里，经这条 fact 的推导生效距离是 1：它按不安全的规则进表，不安全加 1；`W` 是 `group` 或其祖先时 concept 距离是 0。
@@ -242,8 +252,9 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   如先有 `assume "group G"`，再 `assume "⋀H. P G H ⟹ W (sub.group G H)"`。
   这时 `sub.group` 自己的规则给出生效距离 0 的推导，只有它被交回，留下的是 `sub.group` 的各条 `if` 条件，
   在前提 `P G H` 之下证不出。
-  去掉"不安全加 1"并且距离 0 也取"或"之后，交回的是 `(各条 if 条件) ∨ P G H`；
-  化简器要证这个"或"，selector Simpset 证不证得出没有核过。
+  去掉"不安全加 1"并且距离 0 也取"或"之后，`W` 是 `group` 或其祖先时交回的是 `(各条 if 条件) ∨ P G H`，
+  selector Simpset 证不了这个"或"（上面一条）；`W` 比 `sub.group` 声明的 concept 强（如 `comm_group`）时
+  concept 距离是 1，`sub.group` 自己的规则仍以 0 单独胜出，什么都不变（讨论小组的报告 3.3，手算）。
 - 仍化不开的另一种（带前提的讨论报告 3.4）：视图被整块填成别的结构时，如 `assume "⋀K. P K ⟹ Z (z K)"`，
   条件 `concept ?K` 没有可用的条目：关于 `?K` 的只有 `P ?K ⟹ group ?K`，它的结构项是 schematic 变量，不进表。
 
@@ -266,6 +277,9 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
    作者没有单独定过；concept B 2026-11-27 03:23 UTC 只向他说过它是那个例子化得开的前提。
 6. 3.2 末尾两种仍化不开的情形要不要管。
    对第一种 concept B 提过一个补法：条件字面上就是化简器假设着的前提时，在搜索里算已关掉（2026-11-27 03:17 UTC）。
+   "不安全的规则加不加 1"的讨论小组把它定在"走这一步的时候"：这一步就不算带条件，
+   于是"有不留条件的方案就提前结束"取它，`W` 是什么都修得好（报告 3.3，手算，没有做过原型）。
+   它偏离搜索计划 4.2 的一句「排序从不看条件的内容；一条规则算不算带条件，只看它的陈述」。等作者定。
 
 ---
 
