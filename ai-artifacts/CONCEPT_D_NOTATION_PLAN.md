@@ -50,6 +50,7 @@
 - **名字也有带下标的写法**（2026-11-22）：`carrier⇘K⇙` 经一条普通的 `syntax` 声明和一个 parse translation 产出 explicit form 的触发形状，key 是名字、体是结构项；文法、判定与位置的约定见 6.4"名字的带下标写法"。
   上一条里 `_concept_index` 的 `(00⇘_⇙)` 改成照 stock `_index` 的 block 属性（同处）。
 - **名字类 trigger**【已定，作者 2026-11-14】：字段名、体内 definition 名、视图 qualifier、实例名这些名字类 key 的**裸短名**也产出触发形状。
+  【2026-11-22：下面"先 `Proof_Context.lookup_free`"写错了函数，应当用 `Variable.lookup_fixed`，见 6.9"核查之后的更正"第 8 条】
   钩子在 `decode_term` 的 Free 分支（`syntax_phases.ML:304-313`，那里手里有用户原文 `a`）：先 `Proof_Context.lookup_free`，是 fixed 变量就仍是变量（用户 `fix norm` 后照常可用）；不是，且 `a` 不含 `.`、且在名字 key 表里，就产出 `Pure.concept_notation $ Abs (a, dummyT, Bound 0) $ 参数`，**不去查常量**；否则照旧 `decode_const`。
   λ 绑定的名字在此之前已是 `Bound`，碰不到。
   后果：(1) 不声明任何 trigger 常量，不碰常量名字空间，ML 的 `\<^const_name>‹inv›` 这类引用不经 `decode_term`、不受影响；
@@ -62,6 +63,7 @@
     条目的项仍然可以是 λ（作者：「我们把有用的益处保留，而把坏处调整」）。
   - **实例名是 key**：作者 2026-11-15 定的是"体内裸写 `sub H` 合法，与是否 `import_concept sub` 无关"；原话是确认式的问句：「没错，这没有任何问题对吗？无论是否 import sub，在体内 sub 都是一个函数对吗。但这里有个问题，sub 到底是一个 abbreviation of `group.sub \<S>` 还是走我们的 notation 机制？」。
     下面三点是我当场的说明，作者看过、没有反对，但不是作者说的：`concept_instance sub` 定义时 `sub ↦ group.sub \<S>` 就进宿主 concept 的 static notation table；
+    【2026-11-22：本句由 6.6 的 R7.6 (2) 更正：裸写 `sub H` 要这个位置的来源列表里有提供 `sub` 的来源；`group G` 只是证明里的 fact、全局的 fact 或已设置的表下面的前提时，写 `sub⇘G⇙ H`】
     体外看得见 `group G` 的地方裸写 `sub H` 同样合法；
     它走 notation 机制、不是 abbreviation（依据是作者 11-14 的「赞同名字一律走 notation 机制、不再用 abbreviation」，实例名本就在当时定的名字类 key 之列）。
   - 作者 B[8063] 原话记一句，是 trigger payload 用 `Abs` 的依据：「一般工具不会，除非像 rewrite, unification 之类的可能会破坏。所以这里我赌的是不会有人在 parsing-checking 阶段动它」。
@@ -104,7 +106,7 @@
 **static notation table，每个 concept 一张**（theory 数据，按 concept 名存）。
 条目 `key ↦ 项`，key 见 6.2；项是**以 `\<S>` 为唯一自由变量的封闭项**（`group.carrier \<S>`；可以是 λ，如 `λx y. group.mult \<S> y x`，作者 2026-11-15 确认保留），入表前**规范化**：复合视图之后用 selector Simpset 改写（5.3；作者 2026-11-14 批，被映射的字段因此指向 major 的字段，`ord.carrier ↦ group.carrier \<S>`；没被映射的叶子只有视图形式，不动）、再 `Envir.beta_eta_contract`。
 表里存的就是范式，之后比较、查表、打印都直接 aconv。不带优先级。
-【2026-11-22：下一句由 6.8 的 P2 取代，每条记一个 build position】每条另记着它的声明先后和它来自第几个 parent，只供打印时在同一个运算的几个 key 之间取舍（6.4）。
+【2026-11-22：下一句由 6.8 的 P2 与"评审之后的更正"第 3 条取代：build position 只记在 concept 自己声明的条目与体内的 `import_concept` 上，并进来的条目按来源的类与在来源表里的先后排】每条另记着它的声明先后和它来自第几个 parent，只供打印时在同一个运算的几个 key 之间取舍（6.4）。
 
 **构造**【作者原话，A[7021]、A[7978]】：在已有表上原地写，不另建表再合并——先 major parent 的表；
 再是直接说 `\<S>` 的 header 假设（如 `cm: "comm_monoid \<S>"`），把它的 concept 的表并进来，**符号和名字都并**，同 major parent【已定，作者 2026-11-21 05:37 UTC「赞同你的建议」；来源的次序是作者 2026-11-20 16:11 在会话 concept B 里定的，专题文件 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 6.1】；
@@ -118,7 +120,7 @@ header 里每条 `assumes` 都走 assumption destruction，用当时看得见的
 然后自己的字段、`definition`、`notation` 逐条按 key 覆盖。
 **并进来的符号的一个后果**【作者 2026-11-21 05:40 UTC 接受：「赞同 (a)」，(a) 是"接受这个后果，规则不变"】：`\<S>` 的 `⊗`（`'a ⇒ 'a ⇒ 'a`）与 `\<S>.quotient N` 的 `⊗`（`'a set ⇒ 'a set ⇒ 'a set`）type pattern 不同，不撞 key，都在表里；
 所以在这个 concept 的上下文里，元素类型没被别处定下的 `x ⊗ y` 有两个 candidate，报歧义（6.4 第三步），要写 `x ∈ carrier` 或标类型。这是按已定规则推出的，没有实测。
-【2026-11-22：下面"同 key 不同项取左"之前先在条目里选，声明它的 concept 是另一条的声明者的祖先的那条去掉，取左只用来分打平；名字按名字比；表跟着后来的声明走。见 6.10 的 (1) 到 (3)】
+【2026-11-22：下面"同 key 不同项取左"之前，先在说 `\<S>` 的来源（6.6 的 R1 给 `\<S>` 分的那一组）带来的条目里选（见 6.10"评审与检查之后的更正"第 2 条），声明它的 concept 是另一条的声明者的祖先的那条去掉，取左只用来分打平；名字按名字比；表跟着后来的声明走。见 6.10 的 (1) 到 (3)】
 **合并**：同 key（名字和 type pattern 都同）同项是**重复**，跳过；同 key 不同项是**冲突**，**取左**（作者 A[7021]、A[3827]），**不打 warning**【已定，作者 2026-11-21 05:49 与 10:41 UTC；五种来源一律不打；取代 2026-11-14 的"取左并打 warning"】。
 作者 05:49：「我建议这里的 warning 全都不打；而是在交互模式下，把此 concept/instance context 下生效的 notations 及其类型都打印出来」；取代 warning 的打印见 6.4 "打印符号列表"。
 模板冲突的 warning（6.1"模板 key 与冲突"）不在此列，保留【作者 10:41「赞同这个范围」】。
@@ -127,6 +129,7 @@ diamond（`cring = ring + cm: comm_monoid where super = \<S>`）的条目改写�
 
 **视图的视图**【作者 2026-11-14 认可】：每张表完整地含全部祖先的条目，所以取 non-major parent 的表就一步拿到它整条祖先链的符号 notation，嵌套几层复合几次：`ordered_ring = ring + add: ordered_group`，`ordered_group = group + ord: order`，则 ordered_ring 表里有 `⊑ ↦ order.le (ordered_group.ord (ordered_ring.add \<S>))`；`add.ord` 不是 key，由 dot_syntax 分两步取得（2026-11-15）。无新机制。
 
+【2026-11-22：哪些行、行怎样来、值的第二栏，由 6.8 的 P4 与 6.8"评审之后的更正"第 2 条取代：行由表算出，值是（key 名，结构的 pattern）】
 **printing table**（打印用，6.4；作者 2026-11-15 命名）：整个 theory 一张，`常量名 → term pattern → (key 名, concept_var) 的列表`，声明符号或名字时写入，不带优先级。
 
 **被永久遮蔽的条目**【已定，作者 2026-11-14】：作者 B[6780] 的原话是「此外，表内如果发现一个 entry 的优先级已经被永久遮蔽了（在任何 pattern 上），那么可以作为优化直接删除此 entry」。我的读法（作者没有确认；他说的"在任何 pattern 上"可能比这更宽）：在 static notation table 里，就是同 key 已有条目时不入表，也就是"同 key 不同项取左"的实现；contextual notation table 只是一张来源列表，不存条目，无此问题。
@@ -145,6 +148,7 @@ diamond（`cring = ring + cm: comm_monoid where super = \<S>`）的条目改写�
 本质：一个 context 里不写下标的符号怎样读，由一张**有序的来源列表**决定。这张列表由带语句的命令或块**设置一次**，之后在它下面的 context 里不变。
 
 - **物理上的表只有各 concept 的 static notation table。** context 里存的只是来源列表，每条记：结构项，它所属的 concept，来源的名字表达式（给报错文案、`name_of` 和打印时取下标用）。
+  【2026-11-23：括号里的三种用途已过时。来源是在项上算出来的（6.13），语句自己的假设在那时还不是 fact、没有名字；报错文案引的是写出来的那条 constraint 与它的位置（10.1 的 `(from "…")`），打印取下标用的是结构项（6.8）。所以 D 区不用 fact 的名字，每条来源记的是结构项、concept、它所出自的那条写出来的 constraint 与位置（11.3）。`Concept_Fact.name_of` 是 B 区的函数，它要不要名字归 B 区。concept B 当日问 D 区有没有用到 extraction rule 的段名或 assumption destruction 给拆出的 fact 起的名字，答：没有】
   逻辑上的表，是把列表里各来源的 static notation table 以它的结构项实例化后依次并起来，先并的赢；**实现是两级查找、不物理拼出**【作者 2026-11-14】。
   作者 2026-11-22 03:48：「那么是否我们只用静态表就够了？甚至连优先级结构都不需要了？」；我答是，作者没有异议。
 - **只设置一次**【已定】。作者 2026-11-22 03:21：「我原本的意思是 notation table 就被 lemma, locale, concept 等命令确定后，在其下的 context 内就不变了，不会因为 `assume` 等命令而改变啊」；
@@ -204,7 +208,7 @@ diamond（`cring = ring + cm: comm_monoid where super = \<S>`）的条目改写�
 - **来源是从写出来的命题读的，不从 intro table 读**：读的是语句或块的假设写出来的样子，用本节的 syntactic destruction，只看项的形状和实例登记表，不用定理。
   intro table 的条目登记前会被 selector Simpset 化简、并拆出 concept 形状的 `if` 条件（B 区），与写出来的样子不同，所以不能拿它当来源；intro table 只作 `concept_fact` 搜索的索引（B 区评审 B8，作者 2026-11-18「B8 赞同你的建议」）。
   结构项带 schematic 变量的 concept fact（`group (G ?i)`）不作来源【作者 2026-11-16，见下面 "syntactic destruction" 第 4 条】。
-- **接入点**【实现；作者 2026-11-22 问"需要把每个命令都 hack 一遍吗？还是可以有统一的接口？"，下面是答复，他没有异议】。不逐个改命令，只有两类通用的入口：
+- 【2026-11-22：本条只记了时机问题的一半（几个 `assumes` element）；另一半是语句的结论稍后才到，而 6.6 的 R7.7 要用结论，见 6.6"评审与检查之后的更正"第 5 条】**接入点**【实现；作者 2026-11-22 问"需要把每个命令都 hack 一遍吗？还是可以有统一的接口？"，下面是答复，他没有异议】。不逐个改命令，只有两类通用的入口：
   - 读语句本身：term check 的 −200 一步（6.4 第一步）。它一次拿到这条语句的全部命题，表未设置时从中读出这条语句自己的来源。
     2026-11-21 探针实测（stock 的 Isabelle2026、session HOL）下面各种写法都是一次交检：`fun`、`function`、`inductive`（带 `if`）、`primrec`、`locale` 与 `context … assumes` 的假设、
     长格式 lemma（含 `obtains`、`defines`、几条 `shows`）、`assume`、`presume`、`have`、`show`、`obtain`、`consider`、`definition … if`。
@@ -240,6 +244,7 @@ diamond（`cring = ring + cm: comm_monoid where super = \<S>`）的条目改写�
    前提、和拆开后的整项，只收本身形如 `C K`（`C` 是 concept predicate）的；`x ∈ carrier` 这类忽略。整项的收为语句自己的假设。`⟹` 的前提与 `⟶` 的前提不分等级，只按从外到里的先后（2026-11-22 起，此前分作两级 priority）。作者说的"只考虑 `∧`、`∀`"我读作：HOL 的 connectives 里只认这两个；`⟹`、`⟶` 是前提的来源，`⋀` 是 `∀` 在 Pure 里的对应，照表保留（作者 2026-11-16「你对"只考虑 ∧、∀"的读法正确」）。
 2. 可见范围。一项里的前提对这一项里的每个位置都可见（上文"语句前提的可见范围"）；整项是 concept fact 的对列表里的每一项都可见。提到绑定变量的前提只在那个 binder 里面可见：`A ⟹ (⋀G. group G ⟹ C)` 里的 `group G` 对 `A` 不可见，`A` 那里没有 `G`。
 3. 拆。对找到的每一条 `C K`，按实例登记表看 `K` 的头常量拆出宿主（`group (G.sub H)` 给出 `G`，宿主的 concept 由登记表查得）。
+   【2026-11-22："紧跟在后"由 6.6 的 R7.2 取代：整条语句里写出来的结构都排在拆出来的之前；一条 fact 内部的先后不变】
    在来源列表里，写出来的结构在前，从它拆出的宿主紧跟在后；它嵌在几层 connective 里与此无关。
    （作者 2026-11-16 原话里的"相同的初始深度 0"指的就是这一点；2026-11-22 起深度不再作为 priority 的一部分保存，只体现为列表里的先后。）
 
@@ -254,6 +259,7 @@ diamond（`cring = ring + cm: comm_monoid where super = \<S>`）的条目改写�
 
 **不再有 priority**【2026-11-22，随 "contextual notation table" 一段定下】：先后只有一种，就是来源列表里的先后，类型自带的那一条排最后。
 此前的五级 priority（`Global_Default`、`Context (level, depth)`、`Sibling_Statement`、`Meta_Premise`、`Propositional_Premise`），连同"层越深越高""同一层内先比 depth 再比先后""语句的前提压过上下文的假设"，都作废；别的文件里若还用这些名字，按本节读。
+【2026-11-22：下一句的前半说宽了，由 6.6 的 R4 收窄：来源之间取最靠前的、有条目匹配出现处类型的那个来源，同一个来源里取最具体的；类型定不下来时不按先后兜底，作者 A[8179] 说的是这一情形（6.4 第三步的 `x ⊗ y`）；与作者 2026-11-09 的"匹配到的里取优先级最高的"一致】
 仍然成立的两点：先后只在 key 重合（名字和 type pattern 都相同）时起作用，类型能分开的由类型分（作者 A[8179]）；解析和打印用同一张列表，所以打印判定的"读回来会选中的那个"和解析实际选的是同一个。
 一条来源内部怎样排（写出来的结构在前，拆出的宿主在后）：同一实例项的几个 concept 参数紧跟在它后面、彼此按参数的先后（`hom.emb G H ι` 的 `G`、`H`），`(G.sub H1).sub H2` 依次是它自己、`G.sub H1`、`G`。
 语句的假设与前提从左到右：`group G ⟹ group K ⟹ …` 里 `G` 在 `K` 前（作者 2026-11-15：「G 的 int list 是 [1] 而 K 的是 [2]，因此我们也是优先取 G 的」；作者 A[7978]「G 胜出更好」）。
@@ -293,7 +299,7 @@ K 里含 notation constant 时先对 K 递归做第一步，留下占位即判�
 - **parse 阶段**（6.1）：文法把 `x * y` 读成 `_infix_star x _concept_noindex y`，把 `x *⇘r⇙ y` 读成 `_infix_star x (_concept_index r) y`。
   `ast_to_term` 的钩子把头在模板登记表里的语法树换成触发形状 `Pure.concept_notation $ Abs (key 名, dummyT, 体) $ 参数…`：没写 index 时体是 `Bound 0`，写了时体是结构项 `r`。
   `decode_term` 的钩子对标识符 `a`：是 fix 过的变量就仍是变量；不含 `.` 且在名字 key 表里就换成 `Pure.concept_notation $ Abs (a, dummyT, Bound 0)`；其余照 stock。带点的标识符归 dot_syntax 和常量解析。
-- **第一步，check 阶段 −200**（下文）：一个 term check 函数拿到整张项列表、自己扫每个项；每遇到一个触发形状 `Pure.concept_notation $ Abs (k, _, b) $ 参数…`：
+- 【2026-11-22：本条第 2 条括号里"每条来源的结构项的类型必须此刻能确定"作废，第 5 条的占位对 −200 时类型未知的结构项另带前导的复制，都由 6.6 的 R6 取代；第 3 条里"几个互不相干的最靠后代的 concept 项不同就报错"之前先在条目里选（6.10 的 (5)，名字与符号同）；第 4 条"剩多条就报错"由 6.6 的 R2、6.7 的 E2 与 6.10 的 (9) 取代】**第一步，check 阶段 −200**（下文）：一个 term check 函数拿到整张项列表、自己扫每个项；每遇到一个触发形状 `Pure.concept_notation $ Abs (k, _, b) $ 参数…`：
   1. 看 `b`。是 `Bound 0`，表示用户没写结构；否则取出 `b`（`Term.incr_boundvars ~1`），它是用户写出的结构项 `r`。
   2. 没写结构：按 contextual notation table 查 `k`（6.3 "查一个 key"；每条来源的结构项的类型必须此刻能确定），查到的全部就是 candidate。
   3. 写了结构 `r`：看关于 `r` 的 concept fact，上下文里的、全局的、以及 syntactic destruction 从要 check 的项列表里找出的（语句的前提和语句自己的假设，作者 2026-11-16）都算（头是 `concept_instance` 定义出的常量或视图常量的项，按这个常量声明的结果 concept 算，不要求前提成立；带 schematic 变量的 concept fact 拿 `r` 去匹配，匹配上就算，作者 2026-11-16，6.3）；
@@ -306,7 +312,7 @@ K 里含 notation constant 时先对 K 递归做第一步，留下占位即判�
   5. 对第 2、3 条得到的 candidate（走了第 4 条的，结果照第 4 条自己写的处理）：零个，报错；一个，当场把触发形状换成"项 `$` 参数…"；多个，换成占位 `Var (("_concept_placeholder", i), T) $ 参数…`，`i` 是新鲜的 index，`T` 是全部 candidate 的类型的最小一般化（anti-unifier）、其中的类型变量是推断参数，candidate 记进占位旁表。
 
   另外两条要求（下文）：参数可以多于模板的槽位，照接；这一步必须可以重复执行。"结构项作命题"（`Trueprop e`）也在这一步处理，见下文。
-- **第二步，类型推断引擎内部**（下文）：占位的类型 τ 已完全确定时，按匹配留下 type pattern 对得上的 candidate，取来源列表里靠前的（类型自带的排最后）。未完全确定时，排除合一不上的，对剩下的重新求最小一般化类型并与 τ 合一；只剩一个就决定，否则等类型信息多了再试。
+- 【2026-11-22：决定规则由 6.7 的 E2 取代（类型未完全确定时，无论怎样补全读法都相同就定下）；先后照 6.6 的 R4 与 6.7 的更正第 1 条；原型里由 6.7 E1 (a) 的 temporary placeholder check 定】**第二步，类型推断引擎内部**（下文）：占位的类型 τ 已完全确定时，按匹配留下 type pattern 对得上的 candidate，取来源列表里靠前的（类型自带的排最后）。未完全确定时，排除合一不上的，对剩下的重新求最小一般化类型并与 τ 合一；只剩一个就决定，否则等类型信息多了再试。
 - **第三步，最后检查**（下文）：仍未决定的占位逐个报错。
 - 带点的写法（`G.carrier`、`ord.le`、`(sub H).carrier`）：取字段那一步由 dot_syntax 按类型做，不归这个算法管。点前面是变量时（`G.carrier`）完全不经过触发形状。点前面是名字类 key 时（`ord.le` 里的 `ord`、`(sub H).carrier` 里的 `sub`），那一段先经触发形状、按本算法解析成结构项，再由 dot_syntax 取字段（6.1、6.5）。
 
@@ -316,6 +322,7 @@ K 里含 notation constant 时先对 K 递归做第一步，留下占位即判�
 - explicit form，上下文里没有这个结构的 concept fact。上下文只有 `for G :: "('a, 'm) group_scheme"`，文本 `x *⇘G⇙ y`。parse 阶段得 `Pure.concept_notation $ Abs ("_infix_star", dummyT, G) $ x $ y`。第一步：写了结构 `G`；关于 `G` 的 concept fact，上下文里和全局都没有；走第 4 条：表里有 `_infix_star`、且 `G` 的类型对得上的 concept 是从 `magma` 到 `group` 的这一段，它们的条目都是 `magma.mul \<S>`；最具体的类型是 `group` 的，上面只有这一个项，当场换成 `magma.mul G x y`。
 - 名字。上下文 `assumes "group G"`，文本 `carrier`。parse 阶段得 `Pure.concept_notation $ Abs ("carrier", dummyT, Bound 0)`。第一步：来源列表是 `[G]`，`carrier` 只查到来源 `G` 的 `magma.carrier G`；一个，换成 `magma.carrier G`。
 
+【2026-11-22：下面各点里的三处不再照原文：(a)"key 名 ↦ 有它的 concept"的索引不存，按需要从各 concept 的表算；"全局实例最靠后代的 concept 是哪些"也不存，存的是断言过这个实例满足哪些 concept 的集合，最靠后代的用时算（都见 6.12 的 (6) 与它的更正第 3 条）。(b)"两个互不相干的最靠后代的 concept 项不同就报错"之前先在条目里选（6.10 的 (5)）。(c)"`r` 的类型已知"一条里"剩多条报错""同一个结构类型上项不同也对得上就报错"与"`r` 没标类型时"一条的末句，由 6.6 的 R2、6.7 的 E2、6.10 的 (9) 取代】
 总述之外的几点。作者 2026-11-15 已定、细则在别处的：语句的全部前提对语句里每个位置都可见（6.3）；第 4 条筛完一条不剩时报错（细则）；实例自己的表（6.3）在第 2 条按来源列表查时一并查。不改变解析结果、我按实现细节自决的（我向作者说过"你不反对的话我就自己定"，作者没有反对）：从 key 名查到"表里有它的 concept"的索引，符号的记在模板登记表里、名字的记在名字 key 表里；查到的 candidate 里项相同的合并成一个、留列表里靠前的那条（否则同一个结构从两处进入时，第 5 条走不到"一个"那一支）；用户写出的结构项 `r` 自己含触发形状时（`x *⇘sub H⇙ y`），先把 `r` 解析完再去查关于它的 concept fact。
 
 **第一步，check phase 优先级 −200**（在 HOL coercion 的 −100 之前；作者批 −200）：一个 term check 函数（用 `Syntax_Phases.term_check'` 注册——那是能把改过的 context 一并返回的入口，占位旁表靠它传到 stage 0；term check 没有模式分派，函数自己扫整个项列表，`Abs` 下带 loose bound 的子项照常递归），只认一种形状——6.1 的触发形状——分三种情形：
@@ -367,7 +374,7 @@ K 里含 notation constant 时先对 K 递归做第一步，留下占位即判�
   - 为什么取"表里有 `k`"的 concept 而不是"自己声明过 `k`"的（校对时发现）：`ordered_group = group + ord: order`，`⊑` 是 `order` 声明的，`ordered_group` 的表里是经视图合进来的 `⊑ ↦ order.le (ordered_group.ord \<S>)`。只取自己声明过的，`x ⊑⇘G⇙ y`（`G` 是 `ordered_group` 的类型，上下文里没有 fact）一个 candidate 都取不到；取表里有的，得到 `order.le (ordered_group.ord G) x y`，与上下文里有 `ordered_group G` 时的结果一致。
   - `r` 没标类型时：表里有 `k` 的 concept 只有一个，占位就只有一个 candidate，第二步立刻决定，`r` 的类型随之定下，与此前"恰一个就取它"同效；有多个而类型推断也定不下来，报错，请用户给 `r` 标类型。这两种结果正是作者 B[8538]「这两个选项不是挺好的吗？就继续这样办不好吗？」所指的两个选项。但要注意读法二下"只有一个"是按"表里有 `k`"来数的：一个 key 只要被有自己 record 类型的后代继承过（`magma` 的 `*` 被 `monoid`、`group` 继承），表里有它的 concept 就不止一个，于是"恰一个就取它"只在 `k` 没有被这样继承时才触发，其余情形 `r` 没标类型就报错。作者批读法二时我只举了 `⊑` 的例子，没有说到这一后果。
   - 占位的 candidate 因此有两种形状，一个占位里不会混：按来源列表查到的，结构已经代入（`group.mult G`）；来自这条路的，是结构的函数，`r` 留在项里。对引擎没有区别，都是带类型的封闭项。
-  - 【自决的实现细节，见上文"总述之外的几点"】"哪些 concept 的表里有某个 key"需要一张从 key 名到 concept 的索引，计划没设计它放哪；符号的记在模板登记表里、名字的记在名字 key 表里。
+  - 【2026-11-22：这个索引不存，按需要从各 concept 的表算，见 6.12 的 (6) 与它的更正第 3 条】【自决的实现细节，见上文"总述之外的几点"】"哪些 concept 的表里有某个 key"需要一张从 key 名到 concept 的索引，计划没设计它放哪；符号的记在模板登记表里、名字的记在名字 key 表里。
 - 分册第 3 节的"结构项作命题"（`Trueprop e`）同在这一步，占位机制同下。
 
 前提里的结构项类型判定（6.3）也在这一步。−200 必须可重复执行：AOT 对同一个 pre-term `Syntax.check_term` 两次（AFP 扫描）。
@@ -416,7 +423,7 @@ stage 0 自己的参数从 `param_maxidx_of ts + 1` 起（`:298`），严格高�
   产生式的 block 照 stock 的 `_index` 带 `unbreakable` 与 `notation` 属性（`pure_thy.ML:175`）；6.1 里 `_concept_index` 的 `(00⇘_⇙)` 同样改（Isabelle2026 里 `(00` 只是缩进为 0 的 block，不是不可断）。
   bundle 的名字 `concept_name_subscript_syntax` 是我定的，照 stock 的 `let_syntax`、`update_syntax`（`HOL.thy:243`、`Fun.thy:845`）的叫法。
 - **parse translation**（标准接口）：收到 `[_constrain $ Free (a, _) $ pos, r]`。`a` 在名字 key 表里，就返回 `_constrain $ (Pure.concept_notation $ Abs (a, dummyT, r)) $ pos`，即 explicit form 的触发形状，key 是这个名字，体是结构项 `r`；后面跟的参数是普通的应用。
-  `a` 不在名字 key 表里，就在 `pos` 报错（文案见 10.2），**只报错、不返回别的项**：与别的库的文法重叠时，正是这个报错让读法保持唯一。
+  【2026-11-22：这句报错的文案在 10.1"自决的文案"的 T1.5，是作者给的写法】`a` 不在名字 key 表里，就在 `pos` 报错（文案见 10.2），**只报错、不返回别的项**：与别的库的文法重叠时，正是这个报错让读法保持唯一。
   判定只有"在不在名字 key 表里"这一条；`⇘` 前面的标识符总是读作名字类 key，同名的固定变量、绑定变量都不影响（`ast_to_term` 先翻译参数再翻译头，`syntax_phases.ML:240-251`）。
   **位置的约定**（裸名字的钩子、这个 parse translation、符号的钩子三处一致）：位置约束直接包在 `Pure.concept_notation $ Abs (k, _, b)` 外面，参数在它外面。−200 读出位置，在那里报告解析出的常量的 entity 标记，报错时用它，然后剥掉。
 - **解析**：走 6.4 第一步 explicit form 的规则，key 是名字，结构是 `r`。连带定下四点（对符号是否同样，随 `wf_10bfad0f-fd5` 的 R 包定稿）：
@@ -500,7 +507,7 @@ stage 0 自己的参数从 `param_maxidx_of ts + 1` 起（`:298`），严格高�
    作者举的这个例子后来改了去向【已定，作者 2026-11-15：「是的，magma.mul R.add a b 总是应该打印成 a *⇘ring.add R⇙ b」】：例子里的结构是视图项 `ring.add R`，而作者随后批准了"实例常量和视图常量的项只看常量声明的结果 concept、不要求前提成立"，所以视图项和带参数实例的项总算有 concept fact；
    上下文里没有 `ring R` 时这个例子走第 3 条，印成 `a *⇘ring.add R⇙ b`（有 `ring R` 时第 2 条成立，印 `a + b`）。
    真正落到第 4 条的只剩：既不是 `concept_instance` 命令定义出的常量、也不是视图的常量，上下文里又没有它的 concept fact 的结构，比如只声明了类型的变量。
-   名字不能印裸名字时也落在这里；将来改印点号写法，由作者与 dot_syntax 那边定，不在本计划内【作者】。
+   【2026-11-22：由 6.8 的 P1.4 取代：名字过不了第 2 步时先试第 3 步，再落到这里】名字不能印裸名字时也落在这里；将来改印点号写法，由作者与 dot_syntax 那边定，不在本计划内【作者】。
 
 `show_concepts` 打开时，带结构的条目跳过第 2 条。被顶替的原常量不受 `show_concepts` 影响，总是走第 2 条，不通过就到第 4 条。
 
@@ -516,9 +523,9 @@ stage 0 自己的参数从 `param_maxidx_of ts + 1` 起（`:298`），严格高�
 - uncheck 把逻辑项换回触发形状：implicit form 的 trigger payload 的体是 `Bound 0`，explicit form 的体是结构项，与解析共用同一个约定。
   给 `Pure.concept_notation` 登记一个 print translation，它是解析钩子的逆：读出 binder 名，查模板登记表得知 index 排在第几位，放 `_concept_noindex` 或 `_concept_index $ 结构项`，返回 syntax constant 的应用，stock 的打印器按那条产生式印出。
   依据：`Syntax.pretty_term` 是 uncheck 接 unparse（`syntax.ML:334`）；项变 AST 时头是常量就先查登记在它名下的 print translation，syntax constant 原样放行（`syntax_phases.ML:630-712`）；打印器按 AST 的头常量找产生式（`:747-825`）。
-- 三层数据。事先准备好的（theory 数据，声明时写入）：printing table、各 concept 的 static notation table、模板登记表、concept 的继承关系、每个全局实例"最靠后代的 concept 是哪些"（登记全局的 concept fact 时就更新）。随 context 的：来源列表（设置后不变），和上下文里的 concept fact（只给 explicit form 认结构用）。每次打印现做的：逐个运算的匹配与比较；表未设置时另扫一遍这个项自己的假设和前提。
-- 表已设置时，查 key 的结果按 context 缓存：用到哪个 key 才算哪个，同一个 context 里只算一次。来源列表设置后不变，所以缓存不用因为证明里进来新的 fact 而作废；concept 体内 `notation` 覆盖符号之后要作废（缓存要带 theory 的标识，11.2 清单里记着）。
-- "先取本地最新声明的，再按 parent 从左到右"需要的声明先后与 parent 顺序记在 static notation table 的条目上。
+- 【2026-11-22：各张表由 6.10 的 (3) 的建表函数按需要算；"最靠后代的 concept"不存，见 6.12 的 (6)；printing table 由表算出，见 6.8"评审之后的更正"第 2 条】三层数据。事先准备好的（theory 数据，声明时写入）：printing table、各 concept 的 static notation table、模板登记表、concept 的继承关系、每个全局实例"最靠后代的 concept 是哪些"（登记全局的 concept fact 时就更新）。随 context 的：来源列表（设置后不变），和上下文里的 concept fact（只给 explicit form 认结构用）。每次打印现做的：逐个运算的匹配与比较；表未设置时另扫一遍这个项自己的假设和前提。
+- 【2026-11-22：缓存的有效性由 6.8 的 P1.6 定（读过的 theory 数据是否 `pointer_eq`），不带 theory 的标识】表已设置时，查 key 的结果按 context 缓存：用到哪个 key 才算哪个，同一个 context 里只算一次。来源列表设置后不变，所以缓存不用因为证明里进来新的 fact 而作废；concept 体内 `notation` 覆盖符号之后要作废（缓存要带 theory 的标识，11.2 清单里记着）。
+- 【2026-11-22：由 6.8 的 build position 与"评审之后的更正"第 3 条取代】"先取本地最新声明的，再按 parent 从左到右"需要的声明先后与 parent 顺序记在 static notation table 的条目上。
 
 还没定的：性能门槛的数字。打印是热路径，实现时测出数据后由作者定。
 
@@ -564,7 +571,7 @@ stage 0 自己的参数从 `param_maxidx_of ts + 1` 起（`:298`），严格高�
   ```
 
   所以借用 stock 符号的 key 至少有两条。名字类 key 在声明时已有的同短名常量（如 `inv` 的 `Hilbert_Choice.inv`）在带 `!` 时同样印在那个名字的最后【这半句是我照同一条规则推的，作者说的是运算】。
-- **表未设置时** `print_concept_notations` 印什么【提案，作者没有表态】：一行 `no concept notations in this context`。
+- 【2026-11-22：由 6.8 的 P2 与 10.1"自决的文案"取代（作者 15:15 UTC「好」）：表未设置时印 `This context sets no concept notations: each statement reads notation through its own concept constraints`；下面的旧提案已撤回】**表未设置时** `print_concept_notations` 印什么【提案，作者没有表态】：一行 `no concept notations in this context`。
 - **AoA 也要打印符号列表**【作者 2026-11-22 04:14：「记一笔：AoA 那里也要打印符号列表；AoA 每次每个 (sub)agent 启动时候，也要在 context 中打印符号列表」】。
   AoA 经 Isa-REPL 工作，那里 `Interactive.enabled ()` 是 false，命令处不会自动打印，所以要由 AoA 一侧在每个 agent 与 subagent 启动时主动打印当前 context 的符号列表。归 AoA 那边实现；本文件只记这一条要求，还没有通知别的会话。
 - **TAT 的 Lemma node 读入后要回显**【作者 2026-11-22 08:41 UTC：「记一下，TAT 中的 Lemma node 必须在读取后回显给 agent，回显中要开启 show_structure，把一切隐藏的都打印出来以让 agent 确认是否书写正确」】。
@@ -585,7 +592,7 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 
 ### 6.5 与 dot_syntax 的接口 【已定】
 
-- **原型阶段先不启用 dot syntax**【已定，作者 2026-11-22 07:50 UTC，详见 11.2 与公共文件"实施方式"之后的一段】：本节下面讲点号写法的各条（`t.name` 的登记、`ord.le` 的两步读法）推后到启用时再做；讲引擎的那一条不受影响。
+- 【2026-11-22：下面"讲引擎的那一条不受影响"要补一句：原型里占位由 6.7 E1 (a) 的 temporary placeholder check 定，最终设计不变】**原型阶段先不启用 dot syntax**【已定，作者 2026-11-22 07:50 UTC，详见 11.2 与公共文件"实施方式"之后的一段】：本节下面讲点号写法的各条（`t.name` 的登记、`ord.le` 的两步读法）推后到启用时再做；讲引擎的那一条不受影响。
 - **dot_syntax 是 concept 这个 feature 的 base**【已定，作者 2026-11-09】：notation 解析在它的两个引擎里做（6.4），`t.name` 走它的字段登记表。理由：字段与 notation 是同一类问题（按类型定一个待定常量），dot_syntax 已解决 R1 审计、晚决定、与 coercion 引擎的关系；单独在 stage 0 做多轮重推断与它"载体不跨轮"的决定冲突（`(G × H).carrier` 第一轮就会报对象类型未定），coercion 打开时也不正确。
 - long identifier 优先于 dot-access（dot_syntax agent 已确认）。
 - `t.name` 走 dot_syntax 的字段登记表【已定，作者 2026-11-10】：concept 命令把体内 `concept_instance` 的常量 `C.x`（`c.x` 表示 `C.x c`）和视图 `C.q` 登记为该 record 类型的字段，
@@ -609,6 +616,17 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 裁判的报告（英文，含理由、被否的做法、要在原型里跑的实验）：`concept_D_remaining_questions_reports_2026-11-22/package_R_judge.md`。本节是我据它定下的规则；**本节与 6.3、6.4 的旧文不一致时以本节为准**，下面每条写明它改的是哪一处。没有实现，没有运行。
 与"常量覆盖"有关的部分仍待 concept C 的讨论小组（11.2），本节的规则不依赖"名字不会被改绑"。
 
+**评审与检查之后的更正**（评审 `wf_508e7a28-b15` 第 1 块，与 6.10 的 (9) 的检查，2026-11-22；先读这一段，下面 R1 到 R7 里与它不一致的句子以它为准）。
+1. **三个例子补上类型标注**（原来的写法照规则算不出文中说的结果：`*` 顶替了 `times`，操作数没有类型时两个候选都留着，报"类型未定"）。
+   R1 的例子：`lemma assumes "group G" and "comm_group G" shows "(x::'a) * y = z"`。
+   R7.2 的例子：前面加 `fixes K :: "('a, 'm) group_scheme"`。
+   R7.7 的例子：`lemma fixes G K :: "('a, 'm) group_scheme" shows "group G ⟹ (x::'a) * y = z" and "group K ⟹ x * y = w"`，不再写"（`G`、`K` 同类型）"。
+2. **R4 与 6.3 里"先后只在 key 重合时起作用"一句的关系**：那句说宽了，R4 把它收窄。作者 A[8179] 说的是类型定不下来的情形（6.4 第三步的 `x ⊗ y`），那里 R4 给出同样的结果；类型确定时照作者 2026-11-09 的"匹配到的里取优先级最高的"，优先级现在就是列表里的先后。R 包的裁判主张"整张表里都取最具体的"，依据的是 6.3 那句的字面。
+   R4 里"带下标的写法在它自己的条目集合里用同一条规则"改为：带下标的写法的先后见 6.7"评审与检查之后的更正"第 1 条。R2 (ii) 里"按 R4 由类型挑"同样指到那里。
+3. **R1 里带下标的那一句**改为：带下标的写法先在条目里选（6.10 的"用词"），之后仍打平、项不同时，才报 10.1 已批的 "… satisfies several concepts…"；名字与符号相同（6.10 的 (5)）。
+4. **R2 照 6.10 的 (9) 改**：(i) 里"后代改绑了 `*`…时候选不同，照旧"只对拥有自己类型的后代或不相干的 concept 成立，没有新叶子的 concept 改绑不再挡住 (i)（它的条目已被 (9) 的 (a) 排除）；(ii) 里"项不同就报错"只在拥有类型的 concept 自己没有这个 key 名时才会走到。(ii) 里"最具体的那个结构类型上的条目"按 6.7 更正第 1、2 条（6.10 的 (9) 的 (b)、(c)）读；结构类型可以互不可比（6.10 的 (5) 末条）。
+5. **R7.7 要用到结论，接入点的那一段要写全**（6.3"接入点"与 11.3）：long-form 语句的结论在各个 element 进了 context 之后才到 `Proof.global_goal`，而 R7.7 交给证明体什么要看结论，所以设置要在两者都知道的地方做；不能靠"是否处在语句模式"来分辨，因为 `context … assumes … begin` 的 `prep_declaration` 同样在语句模式下激活 element（`expression.ML:514-517`）。形状仍是 11.3 里开着的那个问题。
+
 **R1 一个结构在来源列表里只占一个位置。**
 凡是形成来源列表的地方（块设置表、语句设置表、交给证明体的列表、读 header、建 static notation table），都先按结构项分组：
 - 比较结构项：没检查过的项用 `aconv_untyped`（先 `Type.strip_constraints`），检查过的项用 `aconv`。
@@ -617,13 +635,13 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
   "最靠后代"指去掉是别的某个的祖先的那些（按 `concept_entailment`），与激活列表的去重是同一个函数。
 - 上下文里的 fact、全局的 concept fact、带 schematic 变量的 fact 都不算：来源只从写出来的命题读，否则证明里一条 `assume` 的先后会改变读法。
 - 【6.10 的 (2)、(5) 补：并之前先在条目里选，声明它的 concept 是另一条的声明者的祖先的那条去掉；"先到的赢"只用来分打平】最靠后代的 concept 不止一个、彼此又不相干时：它们的表在这个位置按第一次出现的先后并起来，同 key 先到的赢，和 static notation table 并 header 里几条说 `\<S>` 的假设完全一样；不新增报错。带下标的写法在这种情形照旧报 10.1 已批的 "G satisfies several concepts…"。
-- 例：theory 顶层 `lemma assumes "group G" and "comm_group G" shows "x * y = z"`，`comm_group` 把 `*` 改绑到 `cmult`。列表是 `[(G, comm_group)]`，`x * y` 读成 `cmult G x y`，与 `x *⇘G⇙ y` 相同，两条假设谁先谁后都一样。
+- 【例子要补类型标注，见"评审与检查之后的更正"第 1 条】例：theory 顶层 `lemma assumes "group G" and "comm_group G" shows "x * y = z"`，`comm_group` 把 `*` 改绑到 `cmult`。列表是 `[(G, comm_group)]`，`x * y` 读成 `cmult G x y`，与 `x *⇘G⇙ y` 相同，两条假设谁先谁后都一样。
 - **两种写法仍可能不同、接受为现状的两种情形**：表设置之后才知道关于这个结构的更靠后代的 fact（表设置一次不变，带下标的写法看当时的 fact）；这个结构有几个互不相干的最靠后代的 concept。打印不受影响（每种写法各按自己的规则验读回）。
 - 6.3"构造"里对 `\<S>` 的各条 concept 做同样的去重，它是规则的一部分，不只是优化：后代改绑了某个 key 时结果不同（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 6.1"去重用在这里"）。
 - 它取代 11.2 评审清单第 3 条。
 
 **R2 按类型查的两处放宽（带下标、结构没有任何 concept fact 的那条路；6.4 第一步第 4 条）。**
-- (i) 结构的类型还没完全确定时，如果没被排除的候选都是其中某一个 `c0` 的类型实例（把候选看作对 `\<S>` 的带类型的封闭抽象来比），就取 `c0`，结构的类型由类型推断经 `c0` 定下。名字和符号都适用。
+- 【(i)、(ii) 照 6.10 的 (9) 改，见"评审与检查之后的更正"第 4 条】(i) 结构的类型还没完全确定时，如果没被排除的候选都是其中某一个 `c0` 的类型实例（把候选看作对 `\<S>` 的带类型的封闭抽象来比），就取 `c0`，结构的类型由类型推断经 `c0` 定下。名字和符号都适用。
   例：`x *⇘G⇙ y`，`G` 没标类型、没有 fact；`*` 由 magma 声明、monoid 与 group 原样继承，候选都是 `λS. magma.mul S` 的实例，结果是 `magma.mul G x y`。后代改绑了 `*`、或另有带 `*` 的 concept 时候选不同，照旧。
   它取代 6.4"名字的带下标写法"第 2 点的措辞（"候选代入后是同一个项"读作这个带类型的关系），并删去旧注里"其余情形 `r` 没标类型就报错"。
 - 【6.10 的 (5) 改：本条只适用于符号；名字按名字比，项不同就报错，不论 type pattern】(ii) 最具体的那个结构类型上的条目：type pattern 相同且项相同的合并；type pattern 相同而项不同的合成一个候选，类型选中它时才报 10.1 已批的 "…the concepts with the type … of G bind "*" to different terms"；type pattern 不同的各自留着，按 R4 由类型挑。
@@ -632,7 +650,7 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 
 **R3 concept fact 的结构项里的 notation 怎样读（符号与名字相同）。**
 对 syntactic destruction 找到的每条 `C K`，−200 先把 `K` 里面的触发形状解析完（从里往外），然后才形成来源、拆宿主、读语句的其余部分。
-- `K` 里不带下标的符号与名字，按这条语句继承到的表读：语句自己设置表时没有来源，只有类型自带的那一条；读 header 时按 major parent、自己的字段、视图；context 的表已设置时按那张表。
+- `K` 里不带下标的符号与名字，按这条语句继承到的表读：语句自己设置表时没有来源，只有类型自带的那一条；【读 header 时的基础的表已由 6.9 的 H1.2 第一条（作者 16:32 UTC）与"核查之后的更正"第 10 条改：还含整条就是 `D \<S>` 的假设与结构项就是 `\<S>` 的合取支】读 header 时按 major parent、自己的字段、视图；context 的表已设置时按那张表。
 - `K` 里带下标的写法，认它的结构时用上下文的 fact、全局的 fact，以及这条语句里结构项已经解析完的那些 concept fact。从里往外解析，所以一条 fact 不会经由它自己来读。
 - 这一步之后头仍是占位的结构项（只在一般语句里出现；header 的来源结构项是单独检查的，见 6.9 的 H1.2）：这条来源保留它写出来的 concept，结构项按 R6 复制进占位；−200 不拆它的宿主，也不用头常量声明的结果 concept。
 - 例：theory 顶层 `assumes "group G" "comm_group (sub⇘G⇙ H)"`，`sub⇘G⇙` 用语句自己的 `group G`，读成 `group.sub G H`。同一处裸写 `sub H` 没有候选，报错（文案 10.2）。`context group` 里 `have … if "group (sub H)"` 读成 `group.sub \<S> H`。
@@ -647,7 +665,7 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 - 类型自带的那一条排在所有来源之后，只在没有任何来源的条目匹配时才用；几条类型自带的（同短名的 stock 常量）之间用"最具体的"那条规则。
 - 用 6.7 的话说，候选之间的先后是：不同来源的按来源列表的先后；同一个来源里 type pattern 严格更具体的排在前，互不为实例的两条之间没有先后；类型自带的排在最后。于是上面的报错就是 6.7 最后检查的第二种情形（两个剩下的候选都匹配、彼此没有先后、项也不是彼此的类型实例），不带下标的写法也会遇到，文案在 10.1"自决的文案"。
 - 这一条上两个裁判的说法不同：R 包的裁判主张整张表里不分来源都取最具体的，E 包的裁判按来源的先后、来源内部才取最具体的。我取后者：前者会让靠后的来源里一条更具体的条目盖过靠前的来源，与"靠前的胜"和上面那句已定的规则相抵。
-- 带下标的写法在它自己的条目集合里用同一条规则；打印第 2 条问的也是这条规则。声明先后只用于打印时在几个 key 之间取舍。
+- 【带下标的写法的先后见 6.7"评审与检查之后的更正"第 1 条】带下标的写法在它自己的条目集合里用同一条规则；打印第 2 条问的也是这条规则。声明先后只用于打印时在几个 key 之间取舍。
 - 例：同一张表里字段 `⊗ :: 'a ⇒ 'a ⇒ 'a` 与体内 `notation act (infixl "⊗" 70)`（`act :: 'b ⇒ 'a ⇒ 'a`）：`x ⊗ y`（`x :: 'a`）读成字段，`(c::nat) ⊗ y` 读成 `act`。
   体内 `notation foo (infixl "+" 65)`（`foo :: 'b ⇒ 'c ⇒ 'c`）：`(m::nat) + n` 读成 `foo`，不是 `plus`。
 
@@ -677,14 +695,14 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 - R7.1 确认：context 只存来源列表，空列表就是未设置。语句的 concept fact 给不出来源时（如只有 `∀i. group (G i)`）表仍未设置。
 - R7.2 **更正**（撤回我 2026-11-22 写的"先写的假设拆出的宿主胜过后写的假设里写出来的结构"）：**写出来的结构都排在拆出来的之前，整条语句范围内如此。**
   先是语句里写出来的每条 concept fact（自己的假设从左到右，再是项里面的前提从外到里）；然后是拆一步得到的，按它们所出自的 fact 的先后；再是拆两步的，依此类推。一条 fact 内部不变（`(G.sub H1).sub H2` 给出它自己、`G.sub H1`、`G`）。块与交给证明体的列表同样。分组（R1）在排序之后。
-  例：`assumes s: "group (G.quotient N)" and k: "group K"` 给出 `[quotient, K, G]`，`'a` 上的 `x * y` 归 `K`。这与作者 2026-11-14 定的读法、2026-11-20 确认的并表顺序一致。"一步"怎样数随 B 区。
+  【例子前面要加 `fixes K :: "('a, 'm) group_scheme"`，见"评审与检查之后的更正"第 1 条】例：`assumes s: "group (G.quotient N)" and k: "group K"` 给出 `[quotient, K, G]`，`'a` 上的 `x * y` 归 `K`。这与作者 2026-11-14 定的读法、2026-11-20 确认的并表顺序一致。"一步"怎样数随 B 区。
 - R7.3 确认：带下标的写法认结构时用上下文的 fact、全局的 fact 和语句自己的 concept fact（在 syntactic destruction 的 binder 范围内），与表设置没设置无关；语句自己的 fact 的结构项里照 R3 的先后。
 - R7.4 "被永久遮蔽的条目"按宽的意思读：一个条目在它匹配的每个类型上都是别的条目被选中。照 R4 只有两种：与先并入的某条同 key 的（建表时就不入表）；类型自带的那一条，当它的 pattern 是这个位置的表里某条的 pattern 的实例时（可以从查表缓存里去掉）。同一张表里 pattern 不同的条目不会被永久遮蔽。只是优化；对复制进占位的结构项（R6）不做。
 - R7.5 确认，且是作者的确认：视图的符号条目并入时把 `\<S>` 换成 `C.q \<S>`，再规范化（作者 2026-11-20 16:24 随并表顺序确认，`CONCEPT_DEFINING_CONTEXT_PLAN.md` 6.1）。
 - R7.6 实例名作 key：(1) 确认，`concept_instance sub` 定义时 `sub ↦ group.sub \<S>` 就进宿主的表，与是否 `import_concept sub` 无关；(2) **更正**：体外裸写 `sub H` 要靠这个位置的表里有 `sub` 的来源来读；`group G` 只是证明里的 fact、全局的 fact、或已设置的表下面的前提时，裸的 `sub` 不指 `G`，要写 `sub⇘G⇙ H` 或 `group.sub G H`；(3) 确认，名字走 notation 机制，不是 abbreviation。
 - R7.7 语句设置表时交给证明体什么（取代 6.3"语句与证明读得一样"一条的第一句与"已知的角落"）：总是交 W，即整项就是 concept fact 的那些（含 `shows "group G"` 这样的结论），按项列表的先后；
   各条结论的顶层前提里不提绑定变量的来源，只在每条结论给出的列表都相同时才一并交，否则只交 W。然后排序（R7.2）、分组（R1）。
-  例：`lemma shows "group G ⟹ x * y = z" and "group K ⟹ x * y = w"`（`G`、`K` 同类型）：证明体是未设置，`show "x * y = w" if "group K"` 读成 `K` 的，与语句相同。只有一条结论时不变。
+  【例子要 fix `G`、`K` 并标 `x` 的类型，见"评审与检查之后的更正"第 1 条】例：`lemma shows "group G ⟹ x * y = z" and "group K ⟹ x * y = w"`（`G`、`K` 同类型）：证明体是未设置，`show "x * y = w" if "group K"` 读成 `K` 的，与语句相同。只有一条结论时不变。
 
 **裁判指出的、要在别处改的过时处**：6.2 表里 `sub` 的结果类型 `('a, 'm) group_scheme` 过时（A 区 3.7 起不写 `more = \<S>.more` 时结果的 more 是 `unit`），与已记在 11.2 的 `ord` 一行同类。
 **一处要核的**：我给 concept C 的小组写过"裸写与带下标两种写法读成同一个常量是作者定过的保证"，裁判在转录里没有找到作者这样的原话。这是我的说法过头了：作者定的保证只有打印那一条；两种写法一致是评审的目标，R1 接受了上面两种不同的情形。已更正给 concept C。
@@ -692,6 +710,31 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 ### 6.7 按类型挑候选的引擎 【自决（作者 2026-11-22 08:41 UTC 授权）；讨论 `wf_10bfad0f-fd5` 的 E 包】
 
 裁判的报告：`concept_D_remaining_questions_reports_2026-11-22/package_E_judge.md`（含给 dot_syntax 的约定全文、决定规则的完整表述与论证、测量办法）。没有实现，没有运行。
+
+**评审与检查之后的更正**（评审 `wf_508e7a28-b15` 第 2 块、第 5 块第 2 条，与 6.10 的 (9) 的检查 `wf_4bf893a4-cfb`，2026-11-22；先读这一段，下面 E1、E2 里与它不一致的句子以它为准）。
+1. **候选之间的先后，完整的写法**（取代 E2 第一条里"带下标按类型查时，结构类型严格更具体的在前，同一个结构类型上的候选之间没有先后"）。
+   不带下标：来源列表的先后，类型自带的排最后；同一个来源内部照 6.6 的 R4（type pattern 严格更具体的在前，互不为实例的之间没有先后）。
+   带下标、按 concept fact 查：候选出自最靠后代的 concept 的表（6.4"名字的带下标写法"第 1 点的那个函数），先后同"同一个来源内部"。
+   带下标、按类型查，分两级，与 6.10 的 (9) 的 (b) 相同。第一级按结构类型：结构类型严格更具体的在前；两个候选的结构类型谁也不严格更具体时，出自拥有自己类型的 concept 的排在出自没有新叶子的 concept 的之前（6.10 的 (9) 的 (b)）。第二级在同一个结构类型上：两个候选出自同一个 concept 的表、一个的 type pattern 严格更具体时它在前；出自不同 concept 的候选之间此外没有先后（作者 2026-11-15 的"同类型的几个 concept 之间不排序"说的是 concept 之间）。
+   项相同而合并的候选，只有每一份都排在 h 之前，才算排在 h 之前。这只会让定下的更少，不会读错。
+2. **排除，加两条**（6.10 的 (9) 的 (a)、(c)），只对带下标按类型查的候选（不带下标的写法与按 concept fact 查的不适用，否则 comm_group 改绑的 `*` 会因为 group 有 `*` 而被去掉）：没有新叶子的 concept 的条目，在拥有它的类型的那个 concept 的表里有这个 key 名时，不作候选；结构的类型一旦是照第 1 条第一级排在它前面的某个候选的结构类型的实例，这个候选也退出（同一张表里因 type pattern 更具体而排在前面的不算）。
+3. **名字按名字比，写进记下的数据里**（6.10 的 (5)）：带下标按类型查时，一个名字的各个候选（不论结构类型是否相同），记下的 type pattern 在结构那一位是各自的结构类型（结构在 −200 已代入的候选没有这一位），其余部分一律是它们这一部分的 anti-unifier（本节 anti-unifier 那个函数）；其中一个定下时，τ 还要与它自己的类型的一个新实例合一，合不上就是 Isabelle 自己的类型错误【复审之后放宽到不同的结构类型，2026-11-23；原来只说"同一个结构类型上"】。于是操作数的类型只会把它们一起排除，分开它们的只有结构的类型（6.10 的 (9) 的 (b)、(c)）；项相同时合成一个；彼此没有先后、项不同时定不下来，最后检查照"在同一个结构类型上且 type pattern 相同"那句报 "… bind … to different terms"。−200 与引擎用同一份记法。
+   没有这一条时，结构的类型靠推断得到的情形会绕过"按名字比"：group 没有 `pow`，两个 refinement 各有 `pow`（`nat` 与 `int` 指数），操作数的类型排除其中一个，另一个被悄悄定下。
+   随之，E1 (b) 末条里"代表同一个 type pattern 上几个不同项、被选中时报错的候选"不需要了：符号由"两个没有先后、pattern 相同的候选定不下来"得到同样的结果，名字由上面的记法得到。
+4. **6.6 的 R5 的占位是例外**：−200 不给它记候选；它等的占位都定了之后，由 concept 的函数给出候选与先后，此后照 E2 看它。"没定的占位都是错误"对它的例外是：它等的占位里有没定的时，只报里面的。
+5. **最后检查的文案对应补全**：按类型查时，两个候选谁也不排在谁前面、pattern 相同（两个 pattern 的结构那一位都与出现处结构的类型合一之后，其余部分相同）而项不同，用已批的 "… bind … to different terms"（不限于"同一个结构类型"，结构类型互不可比时也用）；pattern 不同而都对得上，用 "several notations … match … none of them is more specific"。
+   照第 2 条因结构的类型退出的候选（6.10 的 (9) 的 (c)）在最后检查的各句里都不列，与 (a) 去掉的一样：结构的类型已经让排在它们前面的那个候选的 concept 来读，它们不再是候选，即使它们匹配 τ；列出来会让 T1.1 的首行 "no candidate fits" 与列表矛盾【窄核对之后补，2026-11-23】。
+6. **temporary placeholder check 的两处细节**（补 E1 (a)）。
+   每一轮都在这个 check 收到的那一批项上跑；占位的约束，开始是 −200 的 anti-unifier，细化之后是剩下的候选的 anti-unifier 的一个新实例，定下之后是选中的 pattern 的一个新实例；从一轮的结果读出的类型只用来看，不写回去。写进去的每个类型参数的 index 都高于这一批里已有的任何 index（位置用的参数可以是 index 0，`type_infer_context.ML:118-161`）；测试里要有"故意写 index 0 就失败"的一例。
+   与"把占位写成候选的文本"相比时，那一边把候选作用上去、不化简；pattern 模式下 stage 0 不做 β 化简（`proof_context.ML:711-722`、`variable.ML:294-298`），所以两边都先 `Envir.beta_norm` 再比。
+7. **E2 (ii) 补一种情形**（复审 `wf_7532cb38-f70`，2026-11-23）：其余剩下的候选 h 既不排在 g 之后、项也不是 g 的项的类型实例时，只要在 τ 与 P(h) 合一得到的类型上（其中的变量都当作固定）有一个排在 h 之前、项是 g 的项的类型实例的候选匹配，h 也不挡住 g：h 匹配的每种补全里，那个候选也匹配并排在 h 之前，所以 h 不会被选中。
+   例：X 拥有自己的类型，表里 `⊗` 有字段 `X.mult`（`'a ⇒ 'a ⇒ 'a`）与体内 `notation` 的 `X.act`（`'b ⇒ 'a ⇒ 'a`）；`concept 'a D = "'a X" + extra :: 'a` 不改绑 `⊗`。theory 顶层 `x ⊗⇘G⇙ y`，`x`、`y` 是 `G` 的元素、`G` 的 more 的位置未定：D 的表里继承来的 `X.act` 的条目排在 X 的表里的 `X.mult` 之前，但在它与 τ 合一后的类型上，D 的表里继承来的 `X.mult` 的条目匹配、排在它之前，所以定成 `X.mult G x y`，与没有 D 时相同。改绑了 `⊗` 的后代的条目照旧挡住。
+   E2 里"一个占位恰好在…时定下"改读作"只在…时定下"：定下的占位在每种补全里读法都相同；反过来不作一般的保证。
+8. **已经退出的候选有时仍挡住别的候选**（复审的裁判查出，2026-11-23）【窄核对 `wf_9557b21e-7a6` 之后扩到第一种先后，2026-11-23；原来只说第二种】：照 6.10 的 (9) 的 (b) 第一句排在 g 前面的候选 O（两种先后都算：结构类型严格更具体的，或出自拥有自己类型的 concept、结构类型与 g 的谁也不严格更具体的），即使它已因 type pattern 对不上而不是剩下的候选，只要它的结构类型还能与 τ 的结构那一位合一，就挡住 g；除非出自 O 的那个 concept 的表的剩下的候选里有一个的项是 g 的项的类型实例。
+   理由：结构的类型以后若成为 O 的结构类型的实例，(c) 会让 g 退出。O 的表里有 g 的项的一份时，那时由它读成同一个项（O 的表里排在这一份前面、项不同的候选，剩下的照 (i)、(ii) 挡着 g，退出了的照本条单独看）；没有时，不挡的话，结果就取决于看这个占位时结构的类型知道了没有。
+   例：monoid 没有 `⊙`；`natm = "nat monoid" + assumes …` 声明 `⊙ :: nat ⇒ bool ⇒ nat`，group 声明 `⊙ :: 'a ⇒ 'a ⇒ 'a`。`(m::nat) ⊙⇘G⇙ True`，`G` 没有 fix：group 的 `⊙` 因 pattern 对不上而退出，但它的结构类型还能与 `G` 的类型合一，所以挡住 natm 的，占位定不下来，报"`G` 的类型未定"；给 `G` 标 `(nat, 'm) monoid_scheme`（`'m` 是固定的类型变量）之后 group 的结构类型合不上了，读成 natm 的；标成群的类型 `(nat, 'm) group_scheme` 则 (c) 去掉 natm 的，group 的又对不上，一个都不剩，最后检查报 T1.1，列表里只有 group 的 `⊙`（第 5 条）；`fixes G` 写同一个类型时 −200 就去掉 natm 的、只剩 group 的一个候选、当场代入，是 Isabelle 自己的 "Type unification failed"（一个候选当场代入与占位报的不同，见 10.1 T1.1 开头）。不加这一条时，没标类型的写法会先定成 natm 的，`G` 后来成了群也不改。
+   第一种先后的例：comm_monoid 是 monoid 的 refinement，体内 `definition cm_op :: "'a ⇒ 'a ⇒ 'a" (infixl "⊙" 70)`；monoid 没有 `⊙`；group 体内 `definition gact :: "nat ⇒ 'a ⇒ 'a" (infixl "⊙" 70)`。`(x::'a) ⊙⇘G⇙ y`，`G` 没有 fix：`gact` 因 pattern 对不上而退出，但它的结构类型严格更具体、还能与 `G` 的类型合一，group 的表里也没有 `cm_op` 的项，所以挡住 `cm_op`，报"`G` 的类型未定"；标 `('a, 'm) monoid_scheme`（`'m` 固定）读成 `comm_monoid.cm_op G x y`；标成群的类型则 (c) 去掉 `cm_op`、`gact` 又对不上，最后检查报 T1.1，列表里只有 `gact`（第 5 条）。不加这一条时，没标类型的写法会先定成 `cm_op`，`G` 在同一批里后来成了群也不改。
+   沿 major chain（g 出自 O 的祖先的表）时，O 的表里有 g 的项的一份，满足"除非"，不挡；或有一条 pattern 相同的改绑，它本来就是剩下的候选、照旧挡着。名字只会因结构那一位对不上而退出（第 3 条的记法），那时 O 的结构类型合不上 τ，也不挡。
 
 **E1 (a) 原型阶段占位由谁来定：session `Concept` 自己的一个 term check，下文叫 temporary placeholder check。**
 最终的设计不变：占位在 dot_syntax 的两个引擎里定（作者 2026-11-09，6.5）。在 concept 的树里有了守下面那份约定的引擎之前，原型用这个 check。
@@ -713,22 +756,22 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 - 标准引擎把占位当作第二种等待项：它的应用的参数推断完之后看一次，它的类型里的参数每次被绑定时再看，最后再看一次；定下时把类型与 pattern 的一个新实例合一并记下项，不重跑推断；输出时把占位换成项、作用到参数上、事后 β 化简。
 - 不再有查看能改变什么时，引擎把没定的占位交给包的 `report`，由包一次报出全部错误。
 - coercion 引擎：每个被接受的批次都等于"把每个字段和每个占位写成它的选择"之后的 stock coercion 推断；占位只在未解的子类型约束已经改变不了的类型上查看；有占位的批次不走 dot_syntax 的 I1a 捷径；最后核对一次。
-- 6.6 的 R5、R6 另需要的三样也在这份约定里提：带前导结构项复制的占位（候选是对它们的封闭抽象）；等别的占位定了才有候选的占位；代表同一个 type pattern 上几个不同项、被选中时报错的候选。
+- 【第三样（代表几个不同项的候选）不需要了，见"评审与检查之后的更正"第 3 条】6.6 的 R5、R6 另需要的三样也在这份约定里提：带前导结构项复制的占位（候选是对它们的封闭抽象）；等别的占位定了才有候选的占位；代表同一个 type pattern 上几个不同项、被选中时报错的候选。
 
 **E1 (c) 要作者的一件事，现在不问。** 实现上面的约定要改 dot_syntax 的代码，只有作者能下令。原型不需要它。等两件都成立再问：D 区原型的测试在 temporary placeholder check 上通过；dot_syntax 的第 2 步已提交。届时把提案发给 dot_syntax 会话审阅不必先问（发出去不改任何代码）。到时问作者的原句在裁判报告 E1 (c)。
 
 **E2 决定规则（取代 6.4 第二步"对一个占位、当前类型 τ"之后的三条与第三步的相应部分；旧规则是它的特例）。**
-- −200 为每个占位记下：候选（项 g 与它在这个位置的 type pattern P(g)，记下的类型，不从 g 重算）；候选之间的先后。不带下标时是来源列表的先后、类型自带的排最后，同一个来源内部按 6.6 的 R4；带下标按类型查时，结构类型严格更具体的在前，同一个结构类型上的候选之间没有先后。带类型的项相同的候选算一个，留靠前的。
+- 【先后的完整写法、名字记的 type pattern、R5 的例外，见"评审与检查之后的更正"第 1、3、4 条】−200 为每个占位记下：候选（项 g 与它在这个位置的 type pattern P(g)，记下的类型，不从 g 重算）；候选之间的先后。不带下标时是来源列表的先后、类型自带的排最后，同一个来源内部按 6.6 的 R4；带下标按类型查时，结构类型严格更具体的在前，同一个结构类型上的候选之间没有先后。带类型的项相同的候选算一个，留靠前的。
 - 用词：τ 是占位当前的类型，其中的推断参数还可以被实例化。"剩下的候选"是 type pattern 还能与 τ 合一的那些（含 sort）。g "匹配" τ 指 τ 是 P(g) 的实例（τ 的参数当作固定）。
 - **类型完全确定时**：在匹配 τ 的候选里，留下"没有别的匹配候选排在它前面"的那些；它们给出同一个带类型的项，那就是读法；没有候选匹配，就没有读法；否则是歧义。不带下标时这就是"第一个匹配的候选"。打印第 2 条"解析会选中的那个"调的是同一个函数。
 - **看一个占位**：剩下的候选 g 在下面两种情形之一时定下，否则细化，再否则等。
   (i) 其余每个剩下的候选的项都是 g 的项的类型实例；
-  (ii) g 匹配 τ，并且其余每个剩下的候选要么排在 g 之后，要么它的项是 g 的项的类型实例。
+  【(ii) 补一种情形，另有"已退出的候选仍挡住"一条，下面的"恰好"改读作"只在"，见"评审与检查之后的更正"第 7、8 条】(ii) g 匹配 τ，并且其余每个剩下的候选要么排在 g 之后，要么它的项是 g 的项的类型实例。
   定下时把 τ 与 P(g) 的一个新实例合一。"只剩一个就定"是 (i) 的特例；类型确定时的规则是 (ii) 的特例。
   所以**一个占位恰好在"无论它的类型以后怎样补全，读法都相同"时定下**；还有某种补全会给出别的读法时不定。这没有改作者 2026-11-09 的"定不下来的报错、不按先后兜底"，只是把一些原来报错的输入读成它们标全类型后本来的读法。
-- 排除：候选的 type pattern 不再能与 τ 合一时退出"剩下的候选"，此后不再回来。−200 时不带下标的写法不排除任何候选。
+- 【另加两条排除，见"评审与检查之后的更正"第 2 条】排除：候选的 type pattern 不再能与 τ 合一时退出"剩下的候选"，此后不再回来。−200 时不带下标的写法不排除任何候选。
 - anti-unifier（补全 6.4"占位"里没写的 sort）：各 type pattern 的最小一般化，按结构算，相同的一组不同成分给同一个变量；新变量是空 sort 的推断参数。它是"每个还可能的候选都蕴含的那部分类型"，在定下任何东西之前交给推断：−200 时是占位的类型；查看时，τ 还不是剩下的候选的 anti-unifier 的实例就与它合一。它从不用来做决定。
-- **最后检查**：只做一次，在不动点之后（这一批遍历完，没有待做的查看，最后又把每个没定的占位看过一次）。没定的占位都是错误，一次报出，每个占位一段，按文本里的位置排。每段的文案由最后的 τ 上剩下的候选决定：
+- 【R5 的占位的例外与文案对应的补全，见"评审与检查之后的更正"第 4、5 条】**最后检查**：只做一次，在不动点之后（这一批遍历完，没有待做的查看，最后又把每个没定的占位看过一次）。没定的占位都是错误，一次报出，每个占位一段，按文本里的位置排。每段的文案由最后的 τ 上剩下的候选决定：
   一个都不剩：没有候选匹配（10.2 的那句；带下标按类型查、单凭结构的类型就排除了全部候选时用 10.1 已批的 "no concept with the type … provides"）；
   两个剩下的候选都匹配、彼此没有先后、项也不是彼此的类型实例：带下标按类型查、它们在同一个结构类型上且 type pattern 相同时是 10.1 已批的 "… bind "*" to different terms"；它们出自同一个来源、type pattern 不同而都对得上时是 10.1"自决的文案"里 "several notations … match" 那句（6.6 的 R4）；
   否则是类型未定：10.1 已批的两句 "the type ?'a of its operands is not determined" 与 "… and the type of G is not determined"；结构的类型未定的那三句见 6.6 的 R6。
@@ -743,13 +786,28 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 裁判的报告：`concept_D_remaining_questions_reports_2026-11-22/package_P_judge.md`。**本节与 6.3、6.4 的旧文不一致时以本节为准。** 作者定的四步打印规则（6.4"打印"）不变，本节定的是它没有说到的细节。没有实现，没有运行。
 总的一条：**打印没有自己的"什么算数"的规则，它调用解析那一侧的函数**（syntactic destruction、查表、带下标的规则、6.7 里类型确定时的规则）。所以 6.6、6.7 的每一条自动适用于打印。
 
+**评审之后的更正**（评审 `wf_508e7a28-b15` 第 3 块，2026-11-22；先读这一段，下面 P1 到 P4 里与它不一致的句子以它为准，各句前有指路）。
+1. **打印的 uncheck 被调第二遍时原样返回**（取代 P1.5 第三条的理由）。Isabelle 对每个 stage 的 uncheck 反复调用，直到它返回"没有改动"（`syntax_phases.ML:959-960`、`library.ML:334-340`），所以这个函数会收到自己的输出。
+   检查过的项里不会有 `Pure.concept_notation`（−200 已把它换掉），所以一个含它的项一定是这个函数自己的输出，原样返回。一切判断（来源、fact、每个位置上的检验）只做一次，在没有转换过的项上做。第二遍不改任何东西因此是构造出来的，不靠"不进入 payload"这个论证。
+   原来的论证是错的：表未设置时，第二遍对已转换的项重新算来源，会把第一遍第 2 步的决定翻过来（评审的例子 `quotient⇘int.group⇙ N`）。
+2. **printing table 的行不由命令写，由表算出**（取代 P1.1 第一条"同一条命令就往 printing table 里写一行"）。6.10 的 (3) 之后表是按需要算的，后代的表里有的条目没有任何命令写过（祖先后来才声明的、两个 theory 合并才相遇的），照"命令写行"它们就没有行。
+   改为：每个 concept 的表（6.10 的 (3) 算出的；读 header 时是 context 带着的那张）与每张实例的表里的每个条目，照 P1.2 的公式给出一行；原常量与已有的同短名常量给出没有结构的行。行按需要算并缓存，缓存的有效性与表的缓存相同。读 header 时自己的字段与视图的行，由 context 带着的那张表算出（改 6.9 的 H1.4 末句"在 type 层返回时就写"）。
+3. **build position 只记在一个 concept 自己声明的条目与体内的 `import_concept` 上**（取代 P2"每个条目记一个整数"）。算出来的表里，条目先按它来自 6.3"构造"的哪一类排，再按它在那个来源的表里的先后排；自己声明的按 build position。
+   体内 `import_concept` 一个不带参数的体内实例并进来的条目（6.3"`import_concept` 与表"）算最后一类，排在拆出来的 fact 之后（6.3 里它以已有的表为左操作数，所以只能在最后）；几次导入之间按各自的 build position（相同时按 6.12 的 (6) 的身份；theory 合并之后"命令的先后"没有定义，所以不按它），一次导入内部按条目在被导入的表里的先后【复审 `wf_7532cb38-f70` 第 2 块第 2 条，2026-11-23】。祖先后来才声明的条目因此落在它自己那一类里，与声明的先后无关。
+   打印时在几个 key 之间的取舍读作：自己的条目按 build position 从大到小，并进来的按上面的先后。
+4. **符号列表里 key 的写法补一种**：生效的模板是被顶替的 stock notation 的时，标注照 6.12"声明时的 warning"的规则从被撤掉的产生式重写出来（`infixl ‹+› 65`、`infix ‹≤› 50`）。
+5. **下标里面与别处一样印**（取代 P1.1 第三条"下标里面只有 −200 当场就换掉的才印成 notation"）。那条规则真正的依据是一条旧规则（结构在 −200 之后仍含占位时只按类型查），已被 6.6 的 R5 取代；R5 之下，下标里留着的占位等它定了再对解析完的结构用带下标的规则，结果与把结构写全时相同。`show_concepts` 在下标里也一样。
+   例：ring 的块里下标 `G (plus n 1)`（`n :: nat`）印成 `G (n + 1)`。两个元素类型不同的来源 `G1 :: 'a`、`G2 :: 'b` 都提供 `sub` 时，`magma.mul (group.sub G2 H) x y`（`H :: 'b set`）印成 `x *⇘sub H⇙ y`：读回时 `sub H` 的两个候选由 `H` 的类型定成 `G2` 的。
+6. **P4 的例子改写**（原句缺一个条件，照规则算不出它说的结果）：theory 顶层、`group.sub G K` 不是来源时，实例项按它声明的结果 concept 算数，所以 `foo` 印带下标的写法，下标里的 `group.sub G K` 照第 1 到 4 步印（它是来源时，如 `group (group.sub G K) ⟹ P (group.sub.foo G K)`，印成裸的 `P foo`）：
+   不带前提的 `group.sub.foo G K` 里 `G` 没有 fact，印成 `foo⇘group.sub G K⇙`；`group G ⟹ P (group.sub.foo G K)` 里 `G` 是唯一提供 `sub` 的来源，印成 `group G ⟹ P (foo⇘sub K⇙)`；导出的定理 `group ?G ⟹ P (group.sub.foo ?G ?K)` 里 `?G` 有语句自己的 fact、但 schematic 的结构不是来源，印成 `foo⇘sub⇘?G⇙ ?K⇙`。
+
 **P1.1 printing table 的条目，与带下标时印哪个下标。**
-- 凡是某条命令往 static notation table 或实例的表里写一个条目，同一条命令就往 printing table 里写一行。这包括 concept 命令的全部并入（major parent、说 `\<S>` 的 header 假设、视图、其余 header 假设、拆出来的 fact、自己的字段、definition 与 notation）、体内的 `notation`、`concept_instance`、`import_concept` 一个无参数的体内实例、实例 context 里的 definition。
+- 【行不由命令写、由表算出，见"评审之后的更正"第 2 条】凡是某条命令往 static notation table 或实例的表里写一个条目，同一条命令就往 printing table 里写一行。这包括 concept 命令的全部并入（major parent、说 `\<S>` 的 header 假设、视图、其余 header 假设、拆出来的 fact、自己的字段、definition 与 notation）、体内的 `notation`、`concept_instance`、`import_concept` 一个无参数的体内实例、实例 context 里的 definition。
   相同的行（pattern 改名后相同、key 相同、结构的 pattern 相同）只存一次。上下文的 fact 不写任何东西（不变）。
   它取代 6.3、6.4 里"条目只在声明时写入：concept 每声明一个符号…或一个名字…就写一条"：那样写不出并进来的条目。
 - 第 3 步（带下标）试的正是第 1 步各个匹配给出的结构，且只试有 concept fact 的（条件不变）。每个结构 `s` 的验法是把 6.4 第一步第 3、4 条当一个函数调：读 `op⇘s⇙` 必须恰好得到这个运算。在通过的结构里按（一）到（四）取。所以印出来的下标一定是验过的那个。
   它取代"下标优先用来源列表里那个 candidate 的结构项…【我提，作者未单独表态】"。
-- **下标里面**（含嵌套的下标、名字的下标）的 notation，只有 −200 当场就换掉的才印成 notation：不带下标的符号或裸名字，查出来合并相同的项之后恰好一个候选（类型自带的那一条也算）；或嵌套的带下标写法，它的结构有 concept fact、最靠后代的 concept 里这个 key 的条目实例化后恰好一个项。其余的在下标里印 stock 的形式。
+- 【本条作废，下标里面与别处一样印，见"评审之后的更正"第 5 条；下面例子里 `G1`、`G2` 的那一句也照那一条】**下标里面**（含嵌套的下标、名字的下标）的 notation，只有 −200 当场就换掉的才印成 notation：不带下标的符号或裸名字，查出来合并相同的项之后恰好一个候选（类型自带的那一条也算）；或嵌套的带下标写法，它的结构有 concept fact、最靠后代的 concept 里这个 key 的条目实例化后恰好一个项。其余的在下标里印 stock 的形式。
   原因：−200 先解析下标、再查关于它的 fact；下标里留着占位会把读法引到另一条路上（6.6 的 R5）。
   后果：借用的 stock 符号在下标里只在没有来源提供它时才印成符号。ring 的块里下标 `G (n + 1)` 印成 `G (plus n 1)`。
 - 例：`ordered_group = group + ord: order`，来源 `K`。`order.le (ordered_group.ord K) x y` 既匹配 order 的那行（结构 `ordered_group.ord K`）又匹配 ordered_group 并进来的那行（结构 `K`）；第 2 步通过就印 `x ⊑ y`，否则按（二）印 `x ⊑⇘K⇙ y`。
@@ -781,7 +839,7 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 **P1.5 uncheck 放在哪个 stage，输出怎样是类型正确的。**
 - 登记为 `Syntax_Phases.term_uncheck 2 "concept_notation"`（这个包装在结果与输入 aconv 时返回 NONE）。它在 stage 0 的全部（abbreviation 折叠、overloading 的 improvement、adhoc overloading）与 stage 1（case 语法）之后。我核过：Isabelle2026 里 uncheck 只登记在 0（`standard`、`improvement`、`adhoc_overloading`）、1（`case`）、98（`pattern_syntax`）。
 - `Pure.concept_notation` 在 `pure_thy.ML` 里声明成类型 `('a ⇒ 'b) ⇒ 'a`。payload 的 binder 取运算的类型，体是 `Bound 0`（不带下标）或带类型的结构项（带下标），所以触发形状的类型就是运算自己的类型。解析时头仍带 `dummyT`，解析不受影响。
-- uncheck 不进入触发形状的 payload、不把触发形状再转一次，所以跑第二遍不改任何东西。
+- 【这个论证不成立，改为"见到自己的输出就原样返回"，见"评审之后的更正"第 1 条】uncheck 不进入触发形状的 payload、不把触发形状再转一次，所以跑第二遍不改任何东西。
 - 例：`inv_into UNIV f` 在 stage 0 被折成 `Hilbert_Choice.inv f`，stage 2 再印成 `inv f`，或在第 2 步不过时印限定名。
 - **以后启用 dot syntax 时**：concept 的转换必须先于 dot_syntax 的折叠（它也在 stage 2），否则 `magma.mul G x y` 先成了 `G.mul x y`，notation 就印不出来了。那时要问作者是否让 dot_syntax 把折叠挪到 stage 3，并登记下标里不折点号形式。现在不问。
 
@@ -805,7 +863,7 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 - 项：`Syntax.pretty_term`，并用一个内部的 configuration 开关关掉 concept 的转换（stage 2 的 uncheck 读这个开关）；`printable_const` 仍起作用，所以名字类 key 印成限定名：`magma.mul \<S>`、`Hilbert_Choice.inv`。报错文案里列出的候选项也这样印。
 - **key 之间的先后**（撤回我写的"按它在表里第一次出现的先后"：那样在作者的例子里会排成 `*`、`𝟭`、`+`，而作者写的是 `*`、`+`、`𝟭`）：符号在前，按模板里定界符的序列（去掉参数位置与排版）作为 Isabelle 内部字符串用 `string_ord` 排，相同时按印出来的标注；名字在后、只在带 `!` 时，按字母序。
 - 一个 key 下的条目正是 6.3 的查找对它返回的候选列表（同一个函数），按那个先后：来源按列表的先后；靠后的来源里同 key 同 type pattern 的条目不出现；从两个来源得到的同一个项只出现一次；类型自带的那一条在最后。不标来源，项里的结构本身就说明它来自哪里。
-- 同一个来源内部按 **build position**：static notation table 的每个条目记一个整数，在写入时定，按 6.3"构造"的先后（major parent 的条目保留它们原来的位置，然后依次是说 `\<S>` 的 header 假设、非 major 的 parent 从左到右、其余 header 假设、拆出来的 fact、自己的字段与 definition 与 notation）。
+- 【build position 只记在自己声明的条目上，先后见"评审之后的更正"第 3 条】同一个来源内部按 **build position**：static notation table 的每个条目记一个整数，在写入时定，按 6.3"构造"的先后（major parent 的条目保留它们原来的位置，然后依次是说 `\<S>` 的 header 假设、非 major 的 parent 从左到右、其余 header 假设、拆出来的 fact、自己的字段与 definition 与 notation）。
   打印时在几个 key 之间取舍的"先取本地最新声明的，再按 parent 从左到右"用的是同一个数：自己的条目按位置从大到小，并进来的按从小到大。它取代 6.3 里"每条另记着它的声明先后和它来自第几个 parent"。这也回答了 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 8.6"并进来的条目怎样打印"。
 - 只有类型自带的那一条的 key 不列：一个 key 至少有一个来源提供条目时才列，类型自带的那一条（名字则是已有的同短名常量）是它的最后一行。例：group 的块里不列 `+`，即使引入的某个 ring concept 顶替过它；`*` 列出 `magma.mul \<S>` 与 `times`。
 - 没有可列的时：`print_concept_notations` 恰好印一行（三种：表未设置；表已设置但不提供符号；带 `!` 时表已设置但既不提供符号也不提供名字），文案在 10.1。交互模式下自动打印在这几种情形什么都不印。撤回我此前拟的 "no concept notations in this context"：表未设置时每条语句仍按自己的 concept 假设读 notation，那句话会让人以为 notation 不起作用。
@@ -830,9 +888,9 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 - 例：agent 写 `assumes "group G" and "group K" shows "x * y = y * x"`，`G`、`K` 同类型；在证明的 context 里回显是 `x *⇘G⇙ y = y *⇘G⇙ x`。
 
 **P4 实例 context 里定义的名字也有 printing table 的行。**
-- 实例 context 里的 definition 写它的实例的表的条目（`foo ↦ group.sub.foo ?S ?H`）时，同时写一行：头 `group.sub.foo`，key `foo`，pattern 是条目的项（参数作 pattern 变量），结构的 pattern 是实例项 `group.sub ?S ?H`。
+- 【行由实例的表算出、不由 definition 写，见"评审之后的更正"第 2 条；行的头、key、pattern 与结构的 pattern 仍照本条】实例 context 里的 definition 写它的实例的表的条目（`foo ↦ group.sub.foo ?S ?H`）时，同时写一行：头 `group.sub.foo`，key `foo`，pattern 是条目的项（参数作 pattern 变量），结构的 pattern 是实例项 `group.sub ?S ?H`。
 - 为此 printing table 的值由 `(key 名, concept_var : varname option)` 改为 **`(key 名, 结构的 pattern : term option)`**：static notation table 来的行，pattern 里有 `?R` 时是 `SOME ?R`，否则 `NONE`；实例的表来的行总是 `SOME 实例项`（全局实例是 `int.group`）；原常量与已有的同短名常量是 `NONE`。只有匹配把结构的 pattern 里的变量全部实例化了才试带下标的写法。`show_concepts` 管每个 `SOME` 的行。
-- 打印照第 2 到 4 步不变。例：`context group.sub` 里 `group.sub.foo \<S> H` 印成 `foo`；theory 顶层没有关于 `group.sub G K` 的 fact 时，实例项按它声明的结果 concept 算数，印成 `foo⇘sub⇘G⇙ K⇙`（`sub` 不能当场定时是 `foo⇘group.sub G K⇙`）；`context int.group` 里 `int.group.foo` 印成 `foo`，开 `show_concepts` 时是 `foo⇘int.group⇙`。
+- 【中间"theory 顶层…"那个例子改写了，见"评审之后的更正"第 6 条】打印照第 2 到 4 步不变。例：`context group.sub` 里 `group.sub.foo \<S> H` 印成 `foo`；theory 顶层没有关于 `group.sub G K` 的 fact 时，实例项按它声明的结果 concept 算数，印成 `foo⇘sub⇘G⇙ K⇙`（`sub` 不能当场定时是 `foo⇘group.sub G K⇙`）；`context int.group` 里 `int.group.foo` 印成 `foo`，开 `show_concepts` 时是 `foo⇘int.group⇙`。
   不带宿主参数的条目（`group.sub.foo ?H`）恢复不出结构，只能裸印或印 stock 的形式。
 
 **符号列表每条 `concept` 命令只印一次**（H 包的裁判指出）：读 header 期间内部几次设置表（6.9）不是用户看得见的设置，不印；`concept` 命令在存下表之后印一次，这正是作者 2026-11-21 说的「`concept` 和 `context` 命令处打印」。
@@ -841,7 +899,7 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 
 ### 6.9 读 concept 的 header 的细则 【自决（作者 2026-11-22 08:41 UTC 授权）；讨论 `wf_10bfad0f-fd5` 的 H 包】
 
-裁判的报告：`concept_D_remaining_questions_reports_2026-11-22/package_H_judge.md`。作者 2026-11-22 08:41 定的 (a)（header 用这个 concept 将来的表来读；全部假设一批读、与书写先后无关；来源自己的结构项只按 major parent、自己的字段、视图读）不变，本节定的是它的细节。
+裁判的报告：`concept_D_remaining_questions_reports_2026-11-22/package_H_judge.md`。作者 2026-11-22 08:41 定的 (a)（header 用这个 concept 将来的表来读；全部假设一批读、与书写先后无关；来源自己的结构项只按 major parent、自己的字段、视图读）【括号里第三项已由作者 16:32 UTC 改，见 H1.2 第一条与"核查之后的更正"第 10 条；"不变"只说前两项】不变，本节定的是它的细节。
 **本节与 6.3"读 concept 的 header 时用的表"一段的旧文不一致时以本节为准**；那一段里"−200 把 header 当作设置表的那条语句来读""concept 命令随后用同一个函数、从检查过的假设建 static notation table"两句由 H1.1、H1.7 取代。没有实现，没有运行。
 
 **H1.1 读 header 时表的形状。**
@@ -860,7 +918,11 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 - 后果，与块里相同：`assumes h: "group K ⟹ x * y = y * x"` 里裸的 `*` 不来自 `K`，要写 `x *⇘K⇙ y`。
 
 **H1.2 来源自己的结构项先读，用基础的表。**
-- 基础的表是建表函数只用 major parent、自己的字段、全部视图算出的表，不用任何假设（作者的规则）。
+- **【已定，作者 2026-11-22 16:32 UTC 取 (a)：整条就是 `D \<S>` 的假设也算进基础的表】** 【结构项就是 `\<S>` 的合取支也算，见"核查之后的更正"第 10 条】基础的表因此是建表函数用 major parent、整条就是 `D \<S>` 的假设（按书写先后）、自己的字段、全部视图算出的表；不用的只剩"说别的结构的假设"与拆出来的 fact 带来的符号。
+  这改了作者 08:41 UTC 批的"只按 major parent、自己的字段、视图读"。起因是评审 `wf_508e7a28-b15` 查出它与常量覆盖合起来会悄悄读错：`definition (in group) center` 与 `definition (in comm_group) center` 都有，header 是 `concept 'a X = "'a group" + assumes cg: "comm_group \<S>" and z: "group (sub center)"`；X 的块里与 header 别处 `center` 是 `comm_group.center \<S>`，而 `z` 的括号里按旧规则只知道 group，是 `group.center \<S>`，不报任何东西。
+  不成循环：`D \<S>` 这种假设 parse 之后靠形状就认得出（头是 concept 谓词、参数就是 `\<S>`），它的结构项就是 `\<S>`，不需要先读任何东西。名字只从 major parent 与这类假设来，所以基础的表里的名字正是 X 最终的表里的名字。
+  随之：下面"对用户的后果"里"`D \<S>` 这类假设的 concept 的名字也在内"不再成立；"已知的角落"一条（`D \<S>` 假设与视图绑同一个 key）消失；10.1 里 header 的那句文案的例子（`cm: "comm_monoid \<S>"` 与 `u: "group units"`）不再报错，要换成"符号只由说别的结构的假设带来"的例子；6.11 里"header 里用基础的表挑假设"随之能挑到只由 `D \<S>` 假设带来的名字。
+- 【下一句是 16:32 UTC 之前的写法，"不用任何假设"已由上一条改掉】基础的表是建表函数只用 major parent、自己的字段、全部视图算出的表，不用任何假设（作者的规则）。
 - 检查假设之前：把 header 的每条假设都 parse 出来；按形状认出 (2) 类假设（与 A 区认 parent 边用同一个判定）；让共用的遍历在项层面走过 parse 出来的假设。
   遍历每当需要一个结构项 `K`（把它当来源、拆 `K` 里的实例、或把 `K` 当作一次 extraction rule 匹配的结果）时，先读 `K`：把命题 `C K` 单独检查一遍，走完整的 check 流程，在以基础的表设置好的 context 里。
   `K` 的类型里只许有确定的类型变量（`X` 的类型参数、`\<S>` 的 more 位置的类型变量；判定复用 `Undetermined_Types.to_annotate`），否则报 10.1 已批的 compound 那句（语句自己的假设的变体）。
@@ -874,8 +936,39 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 - 已知的角落（接受）：一条 `D \<S>` 假设与一个视图把同一个 key（名字与 type pattern 都相同）绑到不同的项时，来源的结构项里的符号读成视图的，别处读成假设的。
   若要让 `D \<S>` 的假设也算进基础的表，就改了作者 08:41 批的那句，要问作者；裁判与我都认为不必。
 
+**核查之后的更正**（"header 只 fix `\<S>` 与自己的东西"这条设计的核查 `wf_78948aa4-64c`，2026-11-22 17:20 UTC 前回来；裁定在 `concept_D_header_fixed_names_check_report_2026-11-22.md`。结论：决定成立，带下面的修正；先读这一段，H1.2、H1.3、H1.5 里与它不一致的句子以它为准）。
+1. **更简单的说法**：读 X 的 header 时，一个名字是 fix 的局部变量，恰好当 X 的表此刻读不了它。这样的名字有：`\<S>`；读第 k 个视图的 `where` 时还没有定义的自己的视图（第 k 个及之后）；不是登记过的名字类 key 的名字；另加 X 自己的字段与 qualifier（这一类去不去掉，待作者定，见第 9 条）。其余的名字与符号都经 X 的表读，表由建表函数按此刻已知的部分算：第 k 个视图的 `where` 用"基础的表去掉第 k 到 n 个视图"，来源的结构项用基础的表，假设用完整的表。
+2. **D 区没有加载时退回原来的做法**（回答 concept A1 提的障碍）：A 区 fix "不是登记过的名字类 key、也不是自己的东西"的每个继承来的名字，经一个钩子问"这个名字是不是名字类 key"；D 区的文件没加载时钩子默认答"都不是"，于是继承来的名字全部 fix，与此前相同，A 区的原型和测试不依赖 D 区；D 区加载之后每个继承来的名字都是名字类 key，就是作者选的 (a)。
+   不变式：header 里一个继承来的名字要么是 fix 的，要么是触发形状，绝不会是一个被 `⋀` 封闭掉的自由变量。没有这一条时，只收窄 fix 的集合而钩子没加载，`pt ∈ carrier` 会被封闭成 `⋀carrier. pt ∈ carrier`，公理悄悄错了。测试加一条：有没有 D 区的文件，`pointed.pt_in` 都导出成 `pt ∈ monoid.carrier \<S>`。
+3. **`where` 的右边也要用 `D \<S>` 假设带来的东西**（改 H1.5）。第 k 个视图的 `where` 用的表是 major parent、整条就是 `D \<S>` 的假设、自己的字段、第 1 到 k−1 个视图。原来不算任何假设，于是被这类假设盖住的名字在 `where` 里悄悄读成祖先的：`definition (in group) center` 与 `(in comm_group) center` 都有，`concept 'a X = "'a group" + z: "'a group" where carrier = center + assumes cg: "comm_group \<S>"`，`where` 里 `center` 是 `group.center \<S>`，块里是 `comm_group.center \<S>`。
+   为此 `D \<S>` 假设要在读第一个 `where` 之前认出：D 区"布置 `where` 的 context"的那个函数先在第 1 个视图的 `where` 的 context 里把各条假设的文本 parse 一遍，用 parent 边的判定认出它们；A 区把假设的文本放进它传给类型层的那个闭包里，类型层的接口不变。H1.2 复用这份名单。
+   H1.5 里"假设不算，因为假设在视图之后读，类型不能依赖它们"改为："`D \<S>` 之外的假设不算，因为它们的结构项要用基础的表读，而基础的表要全部视图"。"已知的角落"改为：X 最终的表里取自靠后的视图、说别的结构的假设、拆出来的 fact 的 key 在这里没有；在这里有的 key，最终的表里不会读成别的（后半句在第 10 条取 (a) 时才完全成立）。
+4. **`D \<S>` 假设进任何表之前先单独检查一遍**（补 H1.2）：在 `\<S>` 已 fix 的 context 里检查命题 `D \<S>` 本身，失败就是 Isabelle 自己在那条假设上的报错。否则 `assumes o: "order \<S>"`（order 有自己的 record 类型，对不上）会先让建表出错，或让别的假设先报一个不相干的错。
+5. **concept 的短名同时是某个名字类 key 时，拒绝这种写法**：`abelian` 既是一个 concept、又是 group 里的一个名字时，`assumes ab: "abelian \<S>"` 在 header 里 parse 成触发形状，D 区与 A 区对"它是不是 parent 边"会判得不同。拒绝并让用户写长名。文案待作者批，草稿：`The assumption "ab"⌂ applies "abelian" to "\<S>", but "abelian" is both a concept and a name in concept "group". Write "Lib.abelian \<S>" for the concept`
+6. **代价写全**（改 H1.3 里"结果与此前相同"与只举了 `inv` 的那一句）。成立的是：没有名字被盖住时，此前此后都被接受的 header 读成同一个项。对有 Isabelle 同名常量的继承来的名字，接受与否两个方向都变，与块里一致：
+   只靠这样一个名字给变量定类型的假设，现在要标注一次。涉及的名字不少：`sup`、`inf`、`top`、`bot`、`norm`、`dist`、`less`、`min`、`max`、`inverse`、`uminus`、`abs`、`sgn`，以及借用的 `*`（`inv (x * y) = inv y * inv x`）。没有变量的 `assumes "top ≠ bot"` 要写 `(top :: 'a)` 或 `top⇘\<S>⇙`。
+   反过来，以前是类型错误的写法，现在若只有 Isabelle 的常量对得上，就读成它（``inv f ` carrier = carrier`` 读成 `Hilbert_Choice.inv`）。
+   不受影响的：没有同名常量的名字（`carrier`、`mult`；`zero`、`one` 在 HOL 里被隐藏了），和带 `x ∈ carrier` 这类前提的假设。改法四种：加成员前提、给一个变量标类型、写 `inv⇘\<S>⇙`、写长名。
+7. **报错**：A 区关于 header 假设的报错，要在 D 区那一步返回的 context 里印（那里才带着 X 的表，继承来的名字才印成用户写的样子）。10.1 里 "If … is meant as a variable, fix it first" 在 header 里做不到（header 没有 `fixes`），要一个 header 的变体，待拟、待作者批（裁判的草稿：`…, bind it with ⋀ or use another name`）。
+8. **6.1 里一处写错的函数名**：名字类触发的钩子判"是不是 fix 的变量"应当用 `Variable.lookup_fixed`；6.1 写的 `Proof_Context.lookup_free` 对任何既没 fix、也不是常量的名字都返回"是"，照它做的话继承来的名字永远是自由变量。6.4 与 6.8 的 P1.4 写的是对的。
+9. **X 自己的字段与 qualifier 要不要也经表读**（裁判建议要）。**作者 2026-11-23 02:50 UTC：「建议 (a)」。我把这句读作对这一条的回答，取 (a)：保持是变量，不经表读。** 这句话前面没有引用，同一条消息里他对另一件（第 10 条）是在提问，所以我读作它答的是这一件；**他 02:56 UTC 确认：「对，concept 自己的字段在自己的 header 里保持是变量」。已定。** 所以第 1 条里"另加 X 自己的字段与 qualifier"那一类留着，导出映射也留着。
+   随之要记下的例外（"块里能写的 header 里也能写"不是处处成立）：`sup` 是 lattice 自己的字段时，`assumes "sup x y = sup y x"` 在 lattice 自己的 header 里读得出，在 lattice 的块里、在建在 lattice 上的 concept 的 header 里是歧义；自己的字段 `norm :: 'a ⇒ real`，`norm c`（`c` 是实数）在块里读成 Isabelle 的 `norm`，在自己的 header 里是类型错误。
+   以下是提问时的说明。现在它们是带声明类型的变量，所以 lattice 自己的 header 里 `assumes "sup x y = sup y x"` 读得出，而同样的文字在 lattice 的块里、在每个建在 lattice 上的 concept 的 header 里都是歧义（`sup` 有字段与 `Lattices.sup` 两个候选）。也经表读的话，header 与块对每个名字都读得一样，导出映射整个不需要了；代价是 concept 自己的 header 里，只靠这样一个自己的字段定类型的假设要标注一次。
+10. **说"`\<S>` 满足某个 concept"的合取支也算进基础的表**【已定，作者 2026-11-23 02:56 UTC：「赞同 (a)」；他先问了"别的假设括号里面的东西是什么"，我用 `q: "group (quotient N)"` 的例子答过】。
+    基础的表因此是：major parent；说 `\<S>` 的、靠形状认得出的 concept fact，即整条就是 `D \<S>` 的假设，和别的假设里拆 `∧`、穿过 `∀` 与 `⋀` 走到的、结构项就是 `\<S>` 的 concept fact；自己的字段；全部视图。合取支照旧只带符号、不带名字（它是 6.3"构造"的第 (4) 类）。`where` 的右边用的表（第 3 条）随之也含它们。
+    这些合取支与整条就是 `D \<S>` 的假设是同一份名单，第 3、4、5 条对整条假设说的对它们同样成立【复审 `wf_7532cb38-f70` 第 3 块第 1 条，2026-11-23】：第 3 条那一步用 parent 边的同一个判定，也去认拆 `∧`、穿过 `∀` 与 `⋀` 走到的部分，名单交 H1.2 复用；每一条进任何表之前，照第 4 条在 `\<S>` 已 fix 的 context 里单独检查命题 `D \<S>`（例：`c: "order \<S> ∧ finite carrier"`，order 有自己的 record 类型，报错是 Isabelle 自己在 `c` 上的，不是建表出错）；头是第 5 条那种短名的合取支，照第 5 条拒绝，用同一句文案。
+    对 A 区，这些合取支不是 parent 边（H1.8 的 A-7 不变）：它们只进 D 区的表，不生成 parent 规则。
+    仍不在基础的表里的只有：说别的结构的假设带来的符号，与拆出来的 fact 带来的符号。第 3 条末尾"在这里有的 key，最终的表里不会读成别的"至此完全成立。
+    以下是提问时的说明。（裁判建议要）H1.2 里我写"不用的只剩说别的结构的假设与拆出来的 fact 带来的符号"不全：`c: "comm_monoid \<S> ∧ finite carrier"` 里的 `comm_monoid \<S>` 也没算进去，而别处它算作说 `\<S>` 的来源；若 `comm_monoid` 改绑了 `*`，header 别处的 `*` 是它的，另一条假设括号里面的 `*` 却是 major parent 的，不报任何东西。这类合取支同样靠形状认得出，算进去不成循环。
+11. **归 A 区的一处**：自己的字段与继承来的字段同名时（常量覆盖之后允许），`where` 的路径够不着自己的那个，原型的路径查找返回的是祖先的。已告诉 concept A1。
+
 **H1.3 与 A 区 fix 的变量怎样衔接（取代 6.3"与 A 区的衔接…取哪种由实现定"一段）。**
-- A 区照 A 区文件 2.1 fix：`\<S>`、整条 major chain 的字段、祖先的视图名、自己的 qualifier，带类型、不带 mixfix，最后导出成 `\<S>` 的分量。fix 了的变量的裸名字从不是触发形状；`carrier⇘K⇙` 仍是名字的带下标写法。
+- **【作者 2026-11-22 16:32 UTC 取 (a)：「(a) 不错，你可以自主设计，但建议 run an Opus agent team to verify 以防有你没想到的」；下面是我的设计；核查已回来，fix 哪些名字以本节"核查之后的更正"第 1、2、9 条为准（D 区的文件没加载时，继承来的名字照旧全部 fix），"结果与此前相同"与 `inv` 的例子以第 6 条为准】header 里只 fix `\<S>` 与 X 自己的东西：自己的字段、自己的 qualifier，以及读第 k 个视图的 `where` 时从 k 起的自己的视图。继承来的名字（major chain 的字段、祖先的视图名）一律不 fix。**
+  继承来的名字都是登记过的名字类 key，所以 parse 时成为触发形状，经 X 的表读，与块里完全一样。要 fix 哪些只看 header 的写法，不依赖任何表，本节 (7) 与评审指出的循环（算要 fix 的集合要先有完整的表，建完整的表要先 parse，parse 又要先知道 fix 了哪些）不再存在。
+  没有名字被盖住的地方，结果与此前相同：`carrier` 此前是 fix 的变量、导出成 `monoid.carrier \<S>`，现在经表读成同一个项。导出映射只剩自己的字段与 qualifier。
+  看得见的后果，与块里一致：继承来的名字若与 Isabelle 原有的常量同名（`inv` 与 `Hilbert_Choice.inv`），它在 header 里也成了有两个候选的名字，类型没被别处定下时要标注；此前它是带着声明类型的变量，不需要。例：`assumes "inv (inv x) = x"`、`x` 没有类型，现在报"类型未定"的歧义，写 `x ∈ carrier ⟹ …` 或标 `(x :: 'a)`。
+  这把 A 区 2.1 再收窄一步（作者 2026-11-17、11-18 定的，12:36 UTC 批过一次收窄），由 A 区改它的文件与 `reading_context`；本条是 D 区这边的写法。
+- 【下一句是 16:32 UTC 之前的写法，"整条 major chain 的字段、祖先的视图名"不再 fix】A 区照 A 区文件 2.1 fix：`\<S>`、整条 major chain 的字段、祖先的视图名、自己的 qualifier，带类型、不带 mixfix，最后导出成 `\<S>` 的分量。fix 了的变量的裸名字从不是触发形状；`carrier⇘K⇙` 仍是名字的带下标写法。
 - 读 header 的 context 以 context 数据的形式带着三样"`X` 的块将来有、theory 里现在还没有"的东西，别无其他：`X` 的 static notation table（按这次读取算的：`where` 用的表、基础的表、或完整的表）；concept fact `X \<S>`（给带下标的写法用）；`X` 的 parent（major parent 与各条 `D \<S>` 假设的 concept，用来判"最靠后代"）。
   查某个 concept 的表、查 refinement、查关于某个结构的 concept fact 的那一个入口都先看这份数据，再看 theory。除此之外没有任何 header 专有的东西。
 - notation 凡是要看一个结构项（来源的结构项在复合之前、带下标写法的结构、项列表里要比较或匹配的 fact 的结构项），都先施 A 区的导出映射，把每个 fix 的变量换成它在 `\<S>` 上的分量。
@@ -885,9 +978,9 @@ Sepref 的 `sepref_decl_op` 不写 basename 且操作项是裸的 notation（`(*
 
 **H1.4 自己字段的符号在 header 里读成什么（取代"符号经 notation 读出的项可以是 selector…取哪种由实现定"）。**
 type 层在读任何 header 文本之前就造好类型与 selector（A 区 2.1；原型 `concept_type.ML`），所以不存在"selector 还没有"的时刻。自己字段的符号读成 `X` 的条目，即 selector 作用到 `\<S>` 上（`X.mult \<S>`），与块里相同；裸的字段名是 fix 的变量；A 区导出之后两者是同一个项。
-自己字段的模板（产生式、模板登记表、顶替，6.1）在 parse 任何 header 文本之前登记。自己的字段与视图的 printing table 条目在 type 层返回时就写，使关于假设的报错能印出 `x * y`。
+自己字段的模板（产生式、模板登记表、顶替，6.1）在 parse 任何 header 文本之前登记。【行不在 type 层返回时写，由读 header 的 context 带着的那张表算出，见 6.8"评审之后的更正"第 2 条】自己的字段与视图的 printing table 条目在 type 层返回时就写，使关于假设的报错能印出 `x * y`。
 
-**H1.5 `where` 的右边用哪张表。**
+**H1.5 `where` 的右边用哪张表。**【整条就是 `D \<S>` 的假设也算，见"核查之后的更正"第 3 条；下面"不用任何假设"与"假设不算"两处照那一条改】
 - `where` 子句看得见写在它之前的东西；假设看得见一切。
 - 第 k 个视图的各个右边，各自在自己的一次检查里读（`read_given`），用的表是建表函数对 major parent、自己的字段、第 1 到 k−1 个视图算出的，不用任何假设；表以唯一的来源 `(\<S>, X)` 设置。于是右边能用的 notation 正是 A 区 2.1 允许它提到的东西的 notation。
 - 第 k 个及之后的视图不算，因为它们正是由这些右边定义的；假设不算，因为假设在视图之后读，类型不能依赖它们。
@@ -902,12 +995,12 @@ type 层在读任何 header 文本之前就造好类型与 selector（A 区 2.1�
 例：自己的字段 `mult (infixl "*" 70)` 顶替了 `times`，`assumes comm: "x * y = y * x"` 报 `*` 的歧义，候选是 `M.mult \<S>` 与 `times`；用户写 `x ∈ carrier ⟹ …`、标 `(x :: 'a)`、或写 `x *⇘\<S>⇙ y`。同样的文本在 `X` 的块里读得一样。
 
 **H1.7 concept 命令调什么，使读 header 的表与存下的表是同一张。**
-- 一个 D 区的函数，下文叫"建表函数"，从一个 header 的各部分（major parent、自己的字段、视图及其常量、(2)(4)(5) 三类来源）建一张 static notation table。并表顺序只写在它里面。模板冲突的 warning 只在结果被存下的那一次调用里报。
+- 【2026-11-22：本条末句"模板冲突的 warning 只在结果被存下的那一次调用里报"不再有：6.12 的 (2) 之后 concept 命令并 parent 时不比模板；声明时的 warning 在声明处打】一个 D 区的函数，下文叫"建表函数"，从一个 header 的各部分（major parent、自己的字段、视图及其常量、(2)(4)(5) 三类来源）建一张 static notation table。并表顺序只写在它里面。模板冲突的 warning 只在结果被存下的那一次调用里报。
 - concept 命令依次调：
   (i) 登记自己字段的模板与 `X` 自己的名字类 key；
   (ii) type 层的声明入口，并把 D 区"为第 k 个视图的 `where` 子句布置 context"的函数传给它；
-  (iii) D 区的"读 header"入口：parse 假设，用基础的表读来源（H1.2），调建表函数，用完整的表在一次检查里检查全部假设，返回检查过的假设和它所用的那张表；
-  (iv) A 区对每条假设的封闭、导出、谓词定义、parent 规则、激活列表（激活列表另由定理层面的那一遍来）；
+  【(iii) 由本条末条取代：读入留在 A 区，D 区只插一步】(iii) D 区的"读 header"入口：parse 假设，用基础的表读来源（H1.2），调建表函数，用完整的表在一次检查里检查全部假设，返回检查过的假设和它所用的那张表；
+  【(iv) 里"封闭"不在这一步：每条假设在 parse 之后、交检之前各自封闭，见 H1.6】(iv) A 区对每条假设的封闭、导出、谓词定义、parent 规则、激活列表（激活列表另由定理层面的那一遍来）；
   【6.10 的 (3) 改读：存下的是读 header 时定下的各部分，表由建表函数按需要从各部分与祖先的表算出并缓存】
   (v) 把那张表原样存为 `X` 的 static notation table；交互模式下印一次符号列表。
 - 没有任何东西再从检查过的假设重新算这张表：检查不能把它的 context 交回来，检查过的项也与 parse 出来的不同。体以后再改存下的表（definition、notation、`concept_instance`）。
@@ -922,7 +1015,7 @@ type 层在读任何 header 文本之前就造好类型与 selector（A 区 2.1�
 - A-5 在这样的中间 theory 上，建表函数读得到 `X` 的 major parent、自己的字段、已定义的视图（已如此）。
 - A-6 自己字段的 mixfix 交给 D 区，不给 type 层。
 - A-7 一个 parent 边的判定（整条假设是一个 concept 谓词作用到 `\<S>` 上，去掉 `Trueprop` 与类型约束之后），A 区用在检查过的假设上，D 区用在 parse 出来的假设上。
-- A-8 concept 命令：在 type 层之前经 D 区登记模板与名字类 key；经 D 区的入口读假设；像 stock 的 `locale` 那样对每条假设封闭自由变量（封闭还是拒绝由 A 区定）；存下 D 区返回的表。
+- 【A-8 过时，改读为：concept 命令在 type 层之前经 D 区登记模板与名字类 key；读假设由 A 区做（每条 parse、各自全称封闭、一次交检，H1.6），在封闭之后、交检之前调 D 区的那一步（H1.7 末条）；声明完的钩子里 D 区取出各部分存下。评审 `wf_508e7a28-b15` 第 4 块第 4 条】A-8 concept 命令：在 type 层之前经 D 区登记模板与名字类 key；经 D 区的入口读假设；像 stock 的 `locale` 那样对每条假设封闭自由变量（封闭还是拒绝由 A 区定）；存下 D 区返回的表。
 
 **H1.9 6.3 的例子要改。** `c: "A * B = B * A"` 按已定的规则是歧义的：没有东西定 `A` 的类型，`\<S>` 的 `*`、商群的 `*`、`times` 三个候选都对得上。例子改成 `c: "(A :: 'a set) * B = B * A"`：标了类型之后 `\<S>` 的不再匹配，`times` 要 `'a set :: times`（Main 里没有这个实例），只剩商群的乘法。
 
@@ -938,6 +1031,18 @@ type 层在读任何 header 文本之前就造好类型与 selector（A 区 2.1�
 作者的原话（在 concept C 的会话里，我核过）：「我认为常量覆盖是必须被接受的」「先 definition (in comm_monoid) finprod，后 definition (in group) finprod 这是太正常了，必须被接受」「我建议就直接接受常量覆盖的后果，不报错，可以覆盖祖先的，也可以定义后被后代覆盖」；对"早先写的 lemma 一字未改、再检查时意思变了、又什么都不报"他说「这是自然的」。
 小组的材料（英文，不提交）在 `concept_unary_C_probes/design_teams_2026-11-22/`：三份方案 `Q_override_proposal1..3.md`、合成 `Q_override_synthesis.md`、挑毛病 `Q_override_challenge.md`（结论是"成立，带八处修正"）。没有运行任何东西。
 **本节与 6.2 到 6.6、6.9、10.1 的旧文不一致时以本节为准**，每条写明它改的是哪一处。A 区、C 区的后果（声明时不再查名字、header 里的字段可以与祖先的同名、`where` 路径里用 `super.x`）归各自的文件。
+
+**评审与检查之后的更正**（评审 `wf_508e7a28-b15` 第 5 块，与 (9) 的检查 `wf_4bf893a4-cfb`，2026-11-22；先读这一段，下面 (1) 到 (8) 里与它不一致的句子以它为准）。
+1. **符号的条目算谁声明的**（补"用词"）：符号的条目由 C 声明，指它是 C 的字段的 mixfix、C 体内 definition 或 abbreviation 的 mixfix、或 C 体内的 `notation` 写的。
+2. **"在几个条目里选"只在说同一个结构的来源带来的条目之间做**（收窄 (2)；检查与评审各自查出）。建表时就是 6.6 的 R1 给 `\<S>` 分的那一组：major parent、整条就是 `D \<S>` 的假设、结构项就是 `\<S>` 的其余 concept fact。
+   经视图、说别的结构的假设、拆出来的 fact、`import_concept` 并进来的条目，不盖别的条目、也不被盖；它们与那一组之间仍是先并的赢。
+   原来的写法对所有来源都做，会出错：`semiring = "'a monoid" + add: "'a comm_monoid" …`，`comm_monoid` 改绑过 `*`；视图带来的 `*` 的声明者 `comm_monoid` 是 magma 的后代，于是盖住 major parent 的 `*`，semiring 的 `x * y` 成了它的加法。`concept_entailment` 说的是同一个结构的 concept 之间的关系，拿它去比说不同结构的来源没有道理。
+   建好之后，这些并进来的条目在 C 的表里记作由 C 声明（与视图的 qualifier 是 C 声明的名字一样）。这样 C 的表以后作别的 concept 的"说 `\<S>` 的来源"时，比的仍是说同一个结构的 concept。
+   名字不受这一条影响：名字的来源都说 `\<S>`。
+3. **带下标、结构有 fact 时，符号也先在条目里选**（补 (5) 第二条，原来只写了名字）：逐个 key（名字加 type pattern）在那些最靠后代的 concept 的表的条目里选；去掉被盖住的之后仍打平、项不同，才报已批的 "… satisfies several concepts…"。
+   这让作者 2026-11-15 批的那句歧义在符号上也少报一些，与 (5) 对名字做的相同，在授权之内，已向作者说明。
+4. **(5) 里"`x⇘K⇙`，没有 fact"一条**：先照 (9)；"6.7 最后检查里对应的那一句同样"改为"6.7 的更正第 3 条照此记候选，最后检查的文案不用改"；`pow` 的反例改用两个 refinement（group 自己没有 `pow`，两个 refinement 各有一个，指数一个 `nat` 一个 `int`），因为 group 自己有 `pow` 时 (9) 已经让普通群读它的；末尾"以 E2 为准"指照 (9) 改过的 E2（6.7 的更正）。
+5. **(7) 已由作者 16:32 UTC 的决定改掉**：header fix 哪些名字，以 6.9"核查之后的更正"第 1、2、9 条为准：D 区加载时是 `\<S>`、自己的字段与 qualifier、读 `where` 时尚未定义的自己的视图；没加载时继承来的名字照旧全部 fix（见 (7) 开头与 6.9 的 H1.3）。
 
 **一句话**：一个名字指的是最靠后代的那个 concept 对它的声明，后代的声明盖住祖先的；祖先与后代照 `concept_entailment`（major chain 加 header 里的 `D \<S>`，传递地算；视图不算）。除此之外不排先后：互不相干的两处声明并存，由已有的规则定。
 
@@ -962,15 +1067,21 @@ type 层在读任何 header 文本之前就造好类型与 selector（A 区 2.1�
 - 否则：在 C 的各个名字来源带来的 `x` 的条目里选，来源照已定的先后（major parent，然后是 header 里的 `D \<S>` 假设按书写先后），来源先照 6.6 的 R1 去重。打平时取先并进来的。
 - 例（作者的例子）：`definition (in comm_monoid) finprod`，后 `definition (in group) finprod`；`comm_group = group + assumes cm: "comm_monoid \<S>"`。comm_group 的表里 `group.finprod`（group 声明）与 `comm_monoid.finprod`（comm_monoid 声明）互不相干，取先并进来的 `group.finprod`。两条 definition 换个先后声明，结果相同。
 - 例（经第二个来源来的覆盖）：monoid 声明 `finprod`，comm_monoid 盖住它，group 不声明。comm_group 的表里 major parent 带来 `monoid.finprod`，`cm` 带来 `comm_monoid.finprod`；comm_monoid 是 monoid 的后代，所以是 `comm_monoid.finprod`。只按"先并的赢"会得到 `monoid.finprod`。
-- **符号同样**在条目里先选、再"先并的赢"，逐个 key（名字加 type pattern）地做：上例换成 comm_monoid 用 `notation` 改绑了 `*`，comm_group 的 `*` 是 comm_monoid 的。小组把这一点留给 D 区，我定为同样，理由是每个 comm_group 都是 comm_monoid，且名字与符号应当一致。
+- 【只在说 `\<S>` 的来源之间做，见"评审与检查之后的更正"第 2 条】**符号同样**在条目里先选、再"先并的赢"，逐个 key（名字加 type pattern）地做：上例换成 comm_monoid 用 `notation` 改绑了 `*`，comm_group 的 `*` 是 comm_monoid 的。小组把这一点留给 D 区，我定为同样，理由是每个 comm_group 都是 comm_monoid，且名字与符号应当一致。
 
 **(3) 表跟着当前 theory 里看得见的声明走**（回答 11.2"祖先后来才加的名字进不进已有后代的表"：进）。
 - 祖先后来才声明的名字或符号，进每个已有后代的表，除非后代自己的条目或一条更靠后代的继承来的条目盖住它。整张表如此，符号也在内：后来的 `definition (in group) foo (infixl "⊙" 70)` 同时给已有的 comm_group 带来名字 `foo` 与符号 `⊙`。
 - 例：ordered_group 已存在，之后 `definition (in group) normal`；ordered_group 的块里裸的 `normal` 是 `group.normal`。ordered_group 若已有自己的 `normal`，有序群上读它自己的，普通群上读 group 的，两种声明先后都一样。
 - 结果不依赖声明的先后，也不依赖 import 的形状；唯一的例外在同一个 concept 内部，照 `C.x`。
-- **实现**【我定】：theory 数据里存的是每个 concept 的"各部分"（它自己声明的条目连同 build position、header 定下的来源及其检查过的结构项、视图），theory 合并时取并集；一个 concept 的表是 6.9 的建表函数对这些部分与祖先的表算出来的，按需要算、算了缓存，缓存以 theory 数据的值是否 `pointer_eq` 判有效（与 6.8 的 P1.6 同法）。
+- **实现**【我定】：theory 数据里存的是每个 concept 的"各部分"（它自己声明的条目连同 build position、header 定下的来源及其检查过的结构项、视图、体内 `import_concept` 过的不带参数的体内实例连同各自的 build position），theory 合并时取并集；建表函数在最后一类把这些实例的表复合上实例项并进来，照 6.3 只并符号、撞 key 取左，照本节更正第 2 条不盖也不被盖【最后这半句与括号里的最后一项是复审之后补的，2026-11-23】；一个 concept 的表是 6.9 的建表函数对这些部分与祖先的表算出来的，按需要算、算了缓存，缓存以 theory 数据的值是否 `pointer_eq` 判有效（与 6.8 的 P1.6 同法）。
   这样"表跟着声明走"在声明之后与 theory 合并之后都自动成立，不靠记得去重算。作者 2026-11-20 说的「每个 concept 的 annotation table 还是提前计算好的」的用意（查表时不现算）由缓存满足。
   6.9 的 H1.7 第 (v) 步随之改读为：存下的是读 header 时定下的各部分；读 header 用的那张表就是建表函数当时对这些部分算出的。
+
+**实例 context 里的 `notation` 写实例自己的表**【自决（作者 2026-11-22 授权），2026-11-23 04:09 UTC；concept C 问，起因是 `CONCEPT_INSTANCE_CONTEXT_PLAN.md` 的评审 `wf_c20d5d96-07b` 指出这条命令在实例 context 里的意思没有人定；没有交小组核查】。
+- `context group.sub begin … notation foo (infixl "⊙" 70) … end` 往这个实例的表里写一个符号的条目：key 是符号的 key 名加 type pattern，项以实例的 `for` 变量与宿主 `\<S>` 为参数，与实例 context 里 definition 写的名字的条目同一张表、同样的实例化办法（6.3"实例的表"）。实例 context 里带 mixfix 的 definition 同样。
+- 模板的登记、标注与已生效的模板不同时怎样、声明时的 warning，都与 concept 体内的 `notation` 相同（6.12 的 (2) 与它的更正第 6 条）。printing table 的行由这张表算出（6.8 的 P4 与更正第 2 条）。
+- 查的时候，在一个结构 `K` 上，实例的表里同一个 key 的条目盖住 `K` 的 concept 的表里的那条；type pattern 不同的两条并存、由类型挑（6.6 的 R4，把实例的表与它的 concept 的表在这个结构上的条目看作同一个来源的）。这就是下面 (4) 对名字定的"先看实例自己的"，符号按 key 做。
+- 例：`context group.sub begin notation smul (infixl "*" 70) end`，`smul :: 'a ⇒ 'a ⇒ 'a`。里面的 `x * y` 是 `group.sub.smul \<S> H x y`；宿主的乘法写 `x *⇘\<S>⇙ y`。在别处，看得见子群 `group.sub G K` 作来源时，它的 `*` 同样是 `smul`。
 
 **(4) 实例的表：名字先看实例自己的条目**（改 6.3"查一个 key"第 2 步对名字的先后；此前是先 concept 的表、再实例的表）。
 在一个结构 `K` 上，`K` 匹配的实例的表里 `x` 的条目，按名字盖住 `K` 的 concept 的表里 `x` 的条目，因为实例 context 里的声明只说这个实例。
@@ -978,8 +1089,8 @@ type 层在读任何 header 文本之前就造好类型与 selector（A 区 2.1�
 
 **(5) 在结构 `K` 上读名字 `x`。**
 - 裸写：照 6.3"查一个 key"与 6.6 的 R1、R4。同一个结构在来源列表里有几个互不相干的最靠后代的 concept 时，在它们的条目里选，打平取第一次出现的（R1 的"先到的赢"，不新增报错）。不同结构之间不变。
-- `x⇘K⇙`，`K` 有 concept fact：取这些 fact 里最靠后代的 concept（R1 的去重），在它们的表（以及 `K` 匹配的实例的表）里 `x` 的条目中选。一个项就取它；打平而项不同，报 10.1 已批的 "K satisfies several concepts…"（名字的变体），列出的只是去掉被盖住的之后剩下的条目。这些表里都没有 `x` 时落到按类型查。
-- `x⇘K⇙`，没有 fact：照已定的按类型查（6.4 第一步第 4 条与 6.6 的 R2），不用继承关系，因为没有 fact 就没有东西说 `K` 满足后代。
+- 【符号同样，见"评审与检查之后的更正"第 3 条】`x⇘K⇙`，`K` 有 concept fact：取这些 fact 里最靠后代的 concept（R1 的去重），在它们的表（以及 `K` 匹配的实例的表）里 `x` 的条目中选。一个项就取它；打平而项不同，报 10.1 已批的 "K satisfies several concepts…"（名字的变体），列出的只是去掉被盖住的之后剩下的条目。这些表里都没有 `x` 时落到按类型查。
+- 【先照 (9)；本条的几处改动见"评审与检查之后的更正"第 4 条】`x⇘K⇙`，没有 fact：照已定的按类型查（6.4 第一步第 4 条与 6.6 的 R2），不用继承关系，因为没有 fact 就没有东西说 `K` 满足后代。
   **对名字，6.6 的 R2 (ii) 改为按名字比**：最具体的结构类型上 `x` 的条目，项相同的合并，项不同就报已批的 "… bind … to different terms"，不论 type pattern 是否相同；按 type pattern 分开、由类型挑只留给符号。
   否则 monoid 的 `pow`（`nat` 指数）与 comm_group 的 `pow`（`int` 指数）会让普通群上的 `pow⇘G⇙ x (k::int)` 悄悄读成 comm_group 的。6.7 最后检查里对应的那一句同样。
 - 作者的例子各种写法的结果：comm_group 的块里裸的 `finprod` 是 `group.finprod`；`finprod⇘G⇙`、有 `comm_group G`，是 `group.finprod G`；只有 `comm_monoid G`，是 `comm_monoid.finprod G`；`G` 是群的类型、没有 fact，是 `group.finprod G`（这个类型上的各个 concept 给的都是这一项）；
@@ -991,6 +1102,10 @@ type 层在读任何 header 文本之前就造好类型与 selector（A 区 2.1�
   保留名、`truncate`、fact 名的冲突、family 的检查与覆盖无关，照旧。
 - 不再算错：互不相干的 concept 用同一个名字；后代盖住祖先的名字，祖先声明后代已有的名字；同一个 concept 在后来的 theory 里再声明（盖住先前的，如同 `C.x`）；同一个 concept 在两个互不导入的 theory 里各声明一次而后被合并（不查，裸的 `x` 就是合并后 `C.x` 指的那个）。
 - 10.1 带中间那句 "Concept group inherits this name and cannot define it again" 的三行文案撤掉，连同它在 header 字段上的用法。
+  **【2026-11-23 收回后半句"连同它在 header 字段上的用法"】** concept A1 指出：header 里的字段名、带名字的项的名字不许与 major chain 继承来的名字重合，是 A 区的检查，作者 2026-11-18 对它定的（理由是字段是 record 里的数据，同名时 `where` 的路径、`super`、读右边对"这个名字指谁"不一致），A 区计划 10.1 与类型层的代码都照它在查。
+  后半句不是作者对我说的话，是我采纳 concept C 的讨论小组的合成稿（它把"header 字段可以与祖先的同名、用 `super.x`"列为要给作者看的一个后果）时写进来的；作者关于覆盖的原话说的是 definition（「先 definition (in comm_monoid) finprod，后 definition (in group) finprod」），没有说到 header 的字段。动 A 区已批的检查不在我的授权之内。
+  所以本条只管体内 definition 与体内实例的名字。header 字段那条检查照 A 区的规定留着，那三行文案在 header 字段上照旧用。
+  **已定**：concept A1 把这件事报了作者，转告他 2026-11-23 12:11 UTC 的回答：「赞同 A 区照旧不许同名」「字段不能放开」（原话在 concept A1 的会话里，我没有核转录）。所以 header 的字段不许与继承来的名字同名，"常量覆盖必须接受"只管 definition。6.9"核查之后的更正"第 11 条（自己的字段与继承来的同名时 `where` 的路径够不着）因此不会出现。
 - 声明时、theory 合并时什么都不查，什么都不印。一个名字现在指什么，由 `print_concept_notations!`、每处使用上的实体标记、以及打印来看：被盖住的常量过不了"读回来是自己"的检查，印成限定名（打印的规则不变）。
 - 名字 key 表留着（`decode_term` 的钩子与类型自带的那一条要用），"名字 ↦ 各处声明"的那张表留着、按并集合并。
 - 够到被盖住的常量：项里写长名（`monoid.pow \<S> x n`、`comm_monoid.finprod G A f`）；同一个 concept 被后来的 theory 盖住的旧声明写带 theory 名的全名（`A.group.foo`）。不另加更短的写法。
@@ -998,6 +1113,7 @@ type 层在读任何 header 文本之前就造好类型与 selector（A 区 2.1�
 **(7) header 里 fix 成变量的名字，必须正是这个 concept 的表里该名字所指的那个**（D 区对 A 区的要求；挑毛病的一方的第 1 处）。
 - A 区 2.1 把 major chain 的每个字段与祖先的视图名都 fix 成变量，6.9 的 H1.3 又说 fix 了的变量的裸名字不是触发形状。祖先的字段名被盖住时，header 里读成那个字段、块里读成盖住它的声明，同一段文字两处读法不同，违反作者 08:41 定的"header 用这个 concept 自己的表来读"。
 - 例：`definition (in ordered_group) carrier` 之后，`concept 'a og2 = "'a ordered_group" + assumes a: "𝟭 ∈ carrier"`。header 里 `carrier` 是 fix 的字段，导出成 `monoid.carrier \<S>`；og2 的块里 `carrier` 是 `ordered_group.carrier \<S>`。
+- **【2026-11-22 16:32 UTC 改，作者取 (a) 并交我设计】要求改为：header 里只 fix `\<S>` 与新 concept 自己的字段、自己的 qualifier；继承来的名字一律不 fix、经表读。写法与后果在 6.9 的 H1.3；fix 的集合以 6.9"核查之后的更正"第 1、2、9 条为准，"继承来的名字一律不 fix"只在 D 区的文件加载时成立，没加载时经钩子退回全部 fix。** 下一句（"只 fix 表里这个名字指的正是它的"）是此前的要求，评审查出它算不出来：要 fix 的集合依赖完整的表，而 A 区只能用不含 `D \<S>` 假设的表去算，恰在这类假设盖住字段时算错（`D` 是 monoid 的 refinement 并 `definition (in D) carrier`，`concept 'a X = "'a group" + assumes d: "D \<S>" and a: "𝟭 ∈ carrier"`）。
 - 要求：header 里只 fix "新 concept 的表里这个名字指的正是它"的字段与视图；其余的不 fix，经表读，被盖住的字段写长名。这收窄了 A 区 2.1（作者 2026-11-18），要 A 区改并向作者说明，已转 concept A1。
 
 **(8) 点号写法（只是设计，原型不启用 dot syntax）。** 小组建议 `G.x` 读成与 `x⇘G⇙` 完全相同，不再按 concept 逐个往 dot_syntax 的字段登记表里登记名字（refinement 盖住 parent 的名字时，两条登记的对象类型相同，dot_syntax 在登记时报错，而作者已定覆盖不报错）。
@@ -1012,12 +1128,12 @@ type 层在读任何 header 文本之前就造好类型与 selector（A 区 2.1�
   **没有新叶子的 concept**：不声明 record 层、与拥有类型的那个 concept 共用类型的。有三种：refinement；建在代入了类型的 record 上的 refinement（`natm = "nat monoid" + assumes …`）；non-major parent 的叶子全由 `where` 给出的。
 - **做法：对"按类型查"的候选加三条规则**，写进 6.6 的 R2 与 6.7 的 E2，−200 的读法与引擎用同一个函数。三条都只用每个候选所属的 concept 的 `owner`，不去算 `r` 的类型归谁，所以没有任何一步要等 `r` 的类型。
   (a) **按 concept 排除**：没有新叶子的 concept `C` 的表里 key 名 `k` 的条目，在拥有 `C` 的类型的那个 concept 的表里有 key 名 `k` 时，不作候选。它只依赖 `C` 与 `k`，在"key 名 ↦ 有它的 concept"的索引里就能算，和表一样缓存。
-  (b) **先后**：结构类型严格更具体的候选在前；两个候选的结构类型谁也不严格更具体时，出自拥有自己类型的 concept 的排在出自没有新叶子的 concept 的之前；此外没有先后。
-  (c) **按结构类型排除**：候选的 type pattern 不再能与出现处的类型合一时退出，照旧；另外，结构的类型一旦是排在它前面的某个候选的结构类型的实例，它也退出。这是把 6.4"只取最具体的那个类型上的条目"带进引擎，E2 此前没有这一条。
-- **这三条恰好给出上面的原则**：设类型 `T` 由 `O` 拥有。`O` 的表里有 `k` 时，(a) 去掉了共用类型的各个没有新叶子的 concept 的条目，剩下的都排在 `O` 的之后（(b)，或因为不如它具体），(c) 在 `O` 的 pattern 对不上时也把不如它具体的去掉；所以读到的正是 fact `O r` 会给的。`O` 的表里没有 `k` 时，(a)、(b) 不改变任何东西，照原来的查。
+  (b) **先后**【复审 `wf_7532cb38-f70` 之后改成两级，2026-11-23】：先按结构类型排：结构类型严格更具体的候选在前；两个候选的结构类型谁也不严格更具体时，出自拥有自己类型的 concept 的排在出自没有新叶子的 concept 的之前。同一个结构类型上，两个候选出自同一个 concept 的表、一个的 type pattern 严格更具体时它在前（6.6 的 R4）。此外没有先后。
+  (c) **按结构类型排除**：候选的 type pattern 不再能与出现处的类型合一时退出，照旧；另外，结构的类型一旦是照 (b) 第一句排在它前面的某个候选的结构类型的实例，它也退出（同一张表里因 type pattern 更具体而排在前面的不算，那里仍由类型挑）。这是把 6.4"只取最具体的那个类型上的条目"带进引擎，E2 此前没有这一条。
+- **这三条恰好给出上面的原则**：设类型 `T` 由 `O` 拥有。`O` 的表里有 `k` 时，(a) 去掉了共用类型的各个没有新叶子的 concept 的条目，剩下的都排在 `O` 的之后（(b)，或因为不如它具体），(c) 在 `O` 的 pattern 对不上时也把结构类型不如它具体的去掉；所以读到的正是 fact `O r` 会给的。`O` 的表里没有 `k` 时，(a)、(b) 不改变任何东西，照原来的查。
 - **例。**
-  `(in group) center` 与 `(in comm_group) center` 都有。`definition "foo G = center⇘G⇙"`，`G` 没有 fix：(a) 去掉 `comm_group.center`，剩下的都是 `group.center` 的类型实例，当场定成 `group.center G`（6.6 的 R2 (i)）。第一稿只在 `r` 的类型在 −200 已知时才加这一步，而这个例子里 `G` 的类型到最后也不是完全确定的（more 的位置是推断参数），所以第一稿下它仍然报歧义，这正是检查查出的最要紧的一处。
-  monoid 有 `pow`（`nat` 指数），group 按名字盖成 `int` 指数。`pow⇘G⇙ x (n::nat)`，`G` 由一个类型约束给出群的类型：(c) 把 `monoid.pow` 去掉，结果是 Isabelle 自己的类型错误，与 `fixes G` 时相同。没有 (c) 时引擎会因为 `group.pow` 的 pattern 对不上而悄悄取 `monoid.pow`，这个缺口在本条之前就有。
+  `(in group) center` 与 `(in comm_group) center` 都有。`definition "foo G = center⇘G⇙"`，`G` 没有 fix：(a) 去掉 `comm_group.center`，剩下的都是 `group.center` 的类型实例（库里别的 concept 的表里 `center` 的条目，除了 (a) 去掉的，都指 `group.center` 时如此；例外见下面"道理的范围"），当场定成 `group.center G`（6.6 的 R2 (i)）。第一稿只在 `r` 的类型在 −200 已知时才加这一步，而这个例子里 `G` 的类型到最后也不是完全确定的（more 的位置是推断参数），所以第一稿下它仍然报歧义，这正是检查查出的最要紧的一处。
+  monoid 有 `pow`（`nat` 指数），group 按名字盖成 `int` 指数。`pow⇘G⇙ x (n::nat)`，`G` 由一个类型约束给出群的类型：(c) 把 `monoid.pow` 去掉，结果是 Isabelle 自己的类型错误，与 `fixes G` 时相同。没有 (c)、名字也不按名字比时，引擎会因为 `group.pow` 的 pattern 对不上而悄悄取 `monoid.pow`，这个缺口在本条之前就有；名字按名字比的记法见 6.7 更正第 3 条（有了它，`nat` 不能单独排除 `group.pow`，由结构定下 `group.pow`，再与它自己的类型合一时报 Isabelle 的类型错误）。
   为什么要 (b)：monoid 没有 `foo`，`natm = "nat monoid" + assumes …` 声明了 `foo`，group 也声明了 `foo`；`G :: (nat, 'm) group_scheme`、没有 fact。原则给 `group.foo`；只有 (a) 时 `natm` 与 group 的结构类型互不可比，会报错。
   作者的 `finprod` 的例子不变。group 自己没有 `y`、而 `comm_group` 与 `nilpotent_group` 各声明了 `y` 时，仍报那句歧义。
 - **符号按 key 名，不按 key**（第一稿写的是"符号按 key"，那在 −200 算不了，而且会破坏本条自己的道理）。
@@ -1026,23 +1142,26 @@ type 层在读任何 header 文本之前就造好类型与 selector（A 区 2.1�
 - **建在代入了类型的 record 上的 refinement 也适用**：`definition (in monoid) units`，`natm` 又定义了 `units`；`M :: (nat, 'm) monoid_scheme`、没有 fact，读成 `monoid.units M`。类型 `nat monoid` 并不说 `M` 满足 `natm` 的假设。
   此前 6.7 的 E2 把结构类型更具体的 `natm` 排在前、会读成 `natm.units M`；6.10 的 (5) 末尾"以 E2 为准"改为"以照本条改过的 E2 为准"。
 - **道理的范围**（第一稿说过头了）："不会因为别的库后来在某个 refinement 里再声明一次而变成报错"只在拥有类型的 concept 自己有 `k` 时成立。group 没有 `y`、只有 `comm_group` 声明时 `y⇘G⇙` 读成 `comm_group.y G`，之后再来一个 `(in nilpotent_group) y` 就成了那句歧义。
+  拥有类型的 concept 自己有 `k` 时，这也只在 `r` 的类型到最后是确定的时候成立（fix 了，或标了类型、more 的位置是固定的类型变量）【窄核对 `wf_9557b21e-7a6` 之后补，2026-11-23】。`r` 的类型到最后还含推断参数时（上面的 `foo`），库里多一个结构类型还能与它合一、没被 (a) 去掉、项又不同的条目，就可能让它定不下来，报 "the type of "G" is not determined"（6.6 更正第 4 条：拥有自己类型的后代与不相干的 concept 的条目照旧挡住 (i)）。
+  例如继承了 `comm_group.center` 的 `concept 'a ordered_comm_group = "'a comm_group" + le :: …`：它的条目照 (b) 排在 `group.center` 之前、项不同，(i)、(ii) 与 6.7 更正第 7 条都定不下来；所以库里已有 ordered_comm_group 时，后来加 `(in comm_group) center`，原来读得出的 `foo` 就变成这句报错。`G` 什么类型信息都没有时，别的类型上的 concept（或它们的 refinement）声明的 `center` 也一样。
+  这是 E2 的道理本身（`G` 若是 ordered_comm_group 的结构，读法确实是 `comm_group.center`），不是缺口；给 `G` 标类型或 fix 它，就读成 `group.center G`。
 - **代价**（都接受）。
   用户心里想的若是 refinement 的那个，会悄悄得到拥有类型的 concept 的，到证明里才发现；改法是给出 fact 或写长名。
   拥有类型的 concept 后来才声明 `k` 时，读法从某个 refinement 的条目（或从那句歧义）悄悄变成它的；这是祖先接手，在作者接受的"悄悄变化"之内。
   拥有类型的 concept 的那个名字类型对不上时，用户得到的是 Isabelle 自己的 "Type unification failed"，不是列出 refinement 的常量的候选列表；与有 fact `group G` 时相同。
   用户怎样写类型不起作用：`fixes G :: "'a comm_group"` 展开后就是 group 的类型，读的是 group 的条目。
   类型印出来的名字与读法可以不同：`M` 的类型按 type 层的规定印成 `natm` 的名字，读到的却是 `monoid.units`。
-- **最后检查的文案**（6.7 的 E2 那一条的对应要补）：按类型查时，两个候选的结构类型谁也不严格更具体、pattern 相同而项不同，用已批的 "… bind … to different terms"；pattern 不同而都对得上，用作者 15:15 UTC 批的 "several notations … match … none of them is more specific"。此前这两种情形会落到"类型未定"那句，而类型其实是定了的。
+- 【"pattern 相同"怎样算，见 6.7"评审与检查之后的更正"第 5 条】**最后检查的文案**（6.7 的 E2 那一条的对应要补）：按类型查时，两个候选的结构类型谁也不严格更具体、pattern 相同而项不同，用已批的 "… bind … to different terms"；pattern 不同而都对得上，用作者 15:15 UTC 批的 "several notations … match … none of them is more specific"。此前这两种情形会落到"类型未定"那句，而类型其实是定了的。
 - **没有采纳的第二条**（互不相干的 concept 的声明按类型排）：它会用"有没有自己的 record 类型"这个与蕴含无关的性质，去推翻用户写出来的 concept fact；第一条只在没有任何写出来的 fact 说到 `k` 时才起作用，读的又是拥有类型的那个 concept 的，而它是共用这个类型的每个 concept 的祖先，所以没有多说类型没说的话。
   另外的理由照旧：那句已批的 "satisfies several concepts…" 自己的例子（`cmult` 对 `omult`）会悄悄读成 ordered_group 的；符号也得跟着改。
 - **它改掉的**：作者 2026-11-15 的「同类型的几个 concept 之间不排序，绑的项相同就合并成一个，不同就报错」，现在只在拥有类型的 concept 自己没有这个 key 名时才用。
-- **随之要改的别处**（等正在跑的评审 `wf_508e7a28-b15` 回来后一并改，免得评审中途原文在变；在那之前这几处与本条不一致时以本条为准）：
+- 【2026-11-22 16:38 UTC：下面列的各处已改，改成了各节开头的"评审与检查之后的更正"（6.6 第 4 条，6.7 第 1、2、5 条，6.10 第 2、4 条）加旧句前的指路；6.4 里的各句加了指路；告诉 concept A1 的那一句已告诉】**随之要改的别处**（等正在跑的评审 `wf_508e7a28-b15` 回来后一并改，免得评审中途原文在变；在那之前这几处与本条不一致时以本条为准）：
   6.6 的 R2 (i)、(ii) 与 6.7 的 E2 的先后、排除、最后检查三处，照上面的 (a)(b)(c) 写；
   6.4 第一步第 4 条与"explicit form"一条里"同类型的几个 concept 之间不排序…剩多条就报错"的各句，加"拥有类型的 concept 没有这个 key 名时"；其中 `int.group` 的例子现在读成 group 的 `*`，constant1 对 constant2 的例子现在读成 constant1；
   本节 (5) 里"`x⇘K⇙`，没有 fact"一条指到本条，`pow` 的反例改用两个 refinement（`nat` 与 `int` 指数）；
   A 区文件 2.5 里"refinement 与 parent 类型相同，所以…绑的项不同时报错"一句不再成立，要告诉 concept A1。
 - **10.1 那句已批文案的例子**【作者 2026-11-22 15:37 UTC「你可以自决」】：`Ambiguous notation "*⇘G⇙"⌂: the context has no concept constraint about G, …` 措辞仍然对，但它原来举的例子（`group.mult G` 对 `cmult G`）不再出现。两种换法是仍作符号的例子、用 group 没有的符号，或改用名字 `y`；我取前一种（`⊙`，`comm_group` 绑到 `cmult`、`nilpotent_group` 绑到 `nmult`），因为这句批的是符号的文案，名字另有它的变体。10.1 已照改。
-- **检查顺带查出、不属本条的一处**：本节 (2) 里符号"先在条目里选"写得太宽，会让视图的条目盖住 major parent 的。例：`semiring = "'a monoid" + add: "'a comm_monoid" …`，`comm_monoid` 改绑过 `*`；视图带来的 `*` 的声明者 `comm_monoid` 是 magma 的后代，于是盖住 major parent 的 `*`，semiring 的 `x * y` 成了它的加法。
+- 【已改，见本节"评审与检查之后的更正"第 2 条】**检查顺带查出、不属本条的一处**：本节 (2) 里符号"先在条目里选"写得太宽，会让视图的条目盖住 major parent 的。例：`semiring = "'a monoid" + add: "'a comm_monoid" …`，`comm_monoid` 改绑过 `*`；视图带来的 `*` 的声明者 `comm_monoid` 是 magma 的后代，于是盖住 major parent 的 `*`，semiring 的 `x * y` 成了它的加法。
   `concept_entailment` 说的是同一个结构的 concept 之间的关系，所以"在条目里选"只应在说同一个结构的来源之间做（major parent 与各条 `D \<S>` 假设说的都是 `\<S>`）；说不同结构的来源之间仍是先并的赢。名字不受影响，名字的来源都说 `\<S>`。同样等评审回来后改 (2)。
 
 **(9) 的第一稿**（检查之前的写法，已由上面取代，留作记录）【作者 2026-11-22 14:52 UTC 对下面两条放宽：「你可以自主设计，最好 run Opus agent team 检查一下你的设计，看有没有你没有想到的」；我定为采纳第一条、不采纳第二条，自决；**检查的小组还没有回来，回来之前本条是待检查的设计**】
@@ -1087,9 +1206,14 @@ concept C 定的方向：短写也读作命题；不为它设 `_concept_prop` �
 **这样读出来的命题也作来源**（采纳挑毛病的一方的第 1 处；小组原来不收）。
 - syntactic destruction（6.3）除了本身形如 `C K` 的，也收整项或前提 `Trueprop e`、`e` 的头是这样的常量的，记作 concept fact `C e`；头可以是直接写出来的（长写），也可以是带下标的头照 R3 从里往外解析出来的。
 - 头是裸的触发形状时，表未设置的语句里按下面的先后：先照 R3 读别的 concept fact 的结构项；再用那些 fact 给出的来源读这些头上的裸触发形状（它们彼此不作来源）；读出来若是 `C K`、头是这样的常量，就在它自己在项列表里的位置上收作来源；然后读语句的其余部分。
-- 理由：否则 `lemma assumes "sub H" and "group G" shows "x * y ∈ H"` 的语句里 `*` 是 `G` 的（来源只有 `G`），而证明里的列表是从检查过的项建的、含 `group.sub G H`，`*` 成了子群的；一段正确的文本两处读法不同，长写 `"group.sub G H"` 却没有这个出入。照上面的先后，语句与证明读得一样。
+- 【评审 `wf_508e7a28-b15` 第 4 块第 2 条，2026-11-22：本条末句"语句与证明读得一样"说宽了。照上面的先后，语句的其余部分（如这里的 `*`）与证明读得一样；头上的裸名字本身不在此列，见下面"仍然不同"的第二处】理由：否则 `lemma assumes "sub H" and "group G" shows "x * y ∈ H"` 的语句里 `*` 是 `G` 的（来源只有 `G`），而证明里的列表是从检查过的项建的、含 `group.sub G H`，`*` 成了子群的；一段正确的文本两处读法不同，长写 `"group.sub G H"` 却没有这个出入。照上面的先后，语句与证明读得一样。
 - 头在 −200 有几个候选、定不下来时不收，这与 R3 里"头仍是占位的来源"是同一个已知的角落。
 - 表已设置时这不改变任何东西：语句不添来源。
+- **仍然不同的第二处**（评审查出；是这种读法的代价，要连同本节的方向一起给作者看）：头上的裸名字本身，语句里与证明里可以读得不同。
+  例：theory 顶层 `lemma assumes "sub H" and "sub K" and "group G" shows "sub (H ∩ K)"`。语句里三个 `sub` 都用 `group G` 读，是 `G` 的。证明里的来源列表从检查过的项建，是 `[group.sub G H, group.sub G K, G, …]`；子群也是群、也提供 `sub`，且元素类型相同，于是证明里裸写的 `sub` 读到 `group.sub G H` 上，`show "sub (H ∩ K)"` 照抄结论却对不上目标。
+  只有一条 `assumes "sub H" and "group G"` 时同样：证明里 `sub` 归了子群。
+  改法：把 `group G` 写在这些假设的前面（它就排在来源列表最前），或在证明里把指 `G` 的写成带下标的写法（`show "sub⇘G⇙ (H ∩ K)"`；要照抄结论，结论也这样写）。
+  只给假设写 `sub⇘G⇙ H` 不行【我原来把它列为第二种改法，是错的；复审 `wf_7532cb38-f70` 第 3 块第 2 条查出，2026-11-23】：带下标的头与长写一样在自己的位置上作来源（上面"这样读出来的命题也作来源"第一条），证明里的列表照旧，语句里其余裸写的 `sub` 反而也归了子群，例中的结论成了 `group (group.sub (group.sub G H) (H ∩ K))`，不报任何信息。
 - 仍然不同的一处（接受）：theory 顶层 `assumes "group G" and "group (sub H)"` 里 `sub` 在一条 concept constraint 的结构项里面，照 R3 不用语句自己的来源，报 10.1 的那句并提示写 `sub⇘G⇙`；而 `assumes "group G" and "sub H"` 读得出。
 
 **在 concept 的 header 里**（采纳第 2 处；接 6.9 的 H1.2）。
@@ -1116,13 +1240,24 @@ concept C 定的方向：短写也读作命题；不为它设 `_concept_prop` �
 **用词。** 模板 key 照作者 2026-11-14 的定义（6.1）：展开后产生式的定界符与参数位置，不含优先级与排版。两个模板"相同"指 concept 命令为它们生成的产生式相同（不比标注的写法：种类不同的两个标注可以展开成同一条产生式）。
 一个 theory 里某个模板 key **生效的模板**，是这个 theory 的文法里指向该 key 的 syntax constant 的那些产生式所属的那个模板。
 
+**评审之后的更正**（评审 `wf_508e7a28-b15` 第 6 块，2026-11-22；先读这一段，下面 (1) 到 (7) 里与它不一致的句子以它为准，各句前有指路）。
+1. **重撤按"应当成立的状态"撤，不按清单撤**（改 (1) 里"把登记表没有留下的模板的产生式撤掉"与 (7) 里"撤"一条）。theory 开头的函数与登记时用的是同一次 `Syntax.remove_xprods`，条件是：这条产生式是为某个原常量记下的被撤掉的产生式；或者它的目标是这个模板 key 的 syntax constant、却不是这个 key 生效的模板的产生式。
+   原来的写法"撤掉没留下的模板的全部产生式"会出错：`infixl`、`infixr` 展开出的 section `(⊗)` 是同一条产生式（`mixfix.ML:228-238`），两个库的模板不同、被一起导入时，没留下的那个模板的产生式里就含生效的模板也有的 section，照清单撤会把它一并撤掉。"没留下的模板"的集合此后只供合并时的 warning 用。
+2. **不变式补一句**：每个模板 key 生效的模板的产生式都在文法里。原来的两句只说了"不该有的没有"，对"该有的还在"没有要求，所以上一条的错不违反它。
+3. **模板登记表的合并**（改 (6) 第一条）：没留下的模板、原常量（连同为它们记下的产生式）总是取并集；生效的模板留左边的，右边生效的那个加进"没留下的模板"，再从这个集合里减去左边生效的那个。漏掉"减去"时，`V imports L1 W`（`W` 已合并过 `L1` 与 `L2`）会把 `L1` 生效的模板记成没留下的，整个 `⊗` 被撤掉。
+   每个 key 上"有这个 key 的 concept"的集合不存：表是按需要算的（6.10 的 (3)），这个集合同样按需要算。printing table 也不是 theory 数据，由合并后的表算出（6.8 的 P1.1），不参与合并。
+4. **找原常量的产生式时，分开声明的 section 也要找到**（改 (4) 第 2 步与 (7) 的"找"）。stock 的 `≤` 的 section 是另一条声明 `'(≤')`，它 parse 成单独一个定界符 `(≤)`、没有槽（`syntax_ext.ML:283-305`，`Orderings.thy:180-182`），模板 key 与中缀的那条不同，照原来的条件找不到，`(≤)` 就会一直指着 `Orderings.less_eq`。
+   条件加一种：没有槽、唯一的定界符是 `(d)`，`d` 是这个 key 的定界符，且目标是按这个 key 找到的逻辑常量之一。这样的 section 随它的常量一起分类、记下、撤掉；别的常量的 `(d)` 不动。ASCII 的 `(<=)` 不在内，与"别的输入写法不随之顶替"一致。
+5. **我们自己的 section 产生式里，`(` 与符号是两个定界符**（补 (5)）：写成 `'(' ⊗_')`，不照 stock 把它们并成一个定界符 `(⊗`。并成一个的话，某个 concept 声明了中缀 `-` 之后 `(-` 成了关键字，`(-1)`、`(- x)` 就读不了。原型的测试加一条：导入声明了中缀 `-` 的 concept 之后 `(-1)`、`(- x)` 照常读。
+6. **声明处的规则与 warning 也管 `definition`、`abbreviation` 带的 mixfix**（补 (2) 里"一条声明的标注与生效的模板不同时"的括号与"声明时的 warning"的触发条件）：块里（含 `(in C)`）的 definition 或 abbreviation 带的 mixfix 与字段的 mixfix、体内的 `notation` 同样对待；warning 的主语仍是 `notation "^" of "pow"` 这种写法，指带这个符号的常量。
+
 **(1) 顶替怎样过 theory 合并。**
 - 模板登记表为每个原常量记下被撤掉的那些产生式本身（(7) 定下之后的写法；此前写的是"撤它时用的常量名、syntax mode、mixfix 标注"）。
 - session `Concept` 用 `Theory.at_begin` 装一个函数。Isabelle 在每个 theory 开头、合并完 import 之后、parse 这个 theory 的任何文本之前运行它（`theory.ML:186-205`，我读过；stock 自己就这样补合并后的数据，如 class 关系的传递闭包 `thm.ML:2758`、`Plugin` 的 `plugin.ML:169`）。
   它在两种情形立刻返回：每个 parent 的模板登记表都与合并后的是同一个值（只有一个 parent 时总是如此）；或登记表里"已在这个 theory 里整理过"的一栏已是这个 theory 的名字（否则包装函数的循环停不下来）。
-  否则，对"某个 parent 的条目与合并后的条目不同"的那些模板 key（没有登记表数据的 parent 在每个 key 上都算不同；比的是生效的模板和原常量的集合两样），把记下的原常量的产生式再撤一遍，把登记表没有留下的模板的产生式撤掉（见 (2)），打出合并时的 warning，记下这个 theory 的名字。
+  【撤哪些，见"评审之后的更正"第 1 条】否则，对"某个 parent 的条目与合并后的条目不同"的那些模板 key（没有登记表数据的 parent 在每个 key 上都算不同；比的是生效的模板和原常量的集合两样），把记下的原常量的产生式再撤一遍，把登记表没有留下的模板的产生式撤掉（见 (2)），打出合并时的 warning，记下这个 theory 的名字。
   登记模板时撤产生式走的是同一个函数。
-- **不变式**：每个 theory 里，被登记过的模板顶替掉的产生式都不在文法里；每个模板 key 的 syntax constant 只是生效的那个模板的产生式的目标。theory 之内只有登记能破坏它、登记同时建立它；theory 之间只有合并能破坏它，由上面的函数恢复。
+- 【还要加"生效的模板的产生式都在文法里"，见"评审之后的更正"第 2 条】**不变式**：每个 theory 里，被登记过的模板顶替掉的产生式都不在文法里；每个模板 key 的 syntax constant 只是生效的那个模板的产生式的目标。theory 之内只有登记能破坏它、登记同时建立它；theory 之间只有合并能破坏它，由上面的函数恢复。
 - 这个在 theory 开头修补的做法本身不需要改 Pure：`Theory.at_begin`、`Theory.parents_of` 都是导出的。撤产生式用的是 (7) 加的那个函数。
 - 例：`Ring_Lib` 里 ring 的 `add (infixl "+" 65)` 顶替了 `Groups.plus`；`Other` 只导入 Main；`User imports Ring_Lib Other`。`User` 开头，那个函数把 `Other` 带回来的 stock 的 `+` 的两条产生式再撤掉；`User` 里 `x + y` 只有一棵语法树，ring 的块里是 ring 的加法。没有它，`User` 就是上面实测的 theory C；而且 stock 的打印条目也回来了，ring 的上下文里 `Groups.plus m n` 会印成 `m + n`、读回来是 ring 的加法，打印的保证也破了。
 - **不处理的**：从没有被任何登记顶替过的 stock notation，如某个 import 开着 `lattice_syntax` 带来的 `inf` 的 `⊓`，或写在 concept 库之后的 `notation`。它与我们的并存，就像 stock 里两个库的 notation 相撞，用户用 `no_notation` 处理。
@@ -1131,13 +1266,13 @@ concept C 定的方向：短写也读作命题；不为它设 `_concept_prop` �
 
 **(2) 同一个模板 key 的不同模板：一个 theory 里只有一个生效。**
 - 生效的是最先的那个：一个 theory 及其祖先里，最先登记的；被顶替的 stock notation 的模板算最先登记的（否则一个库写 `add (infixl "+" 70)` 会改变所有导入它的 theory 里 `a + b * c` 的读法）；theory 合并时，是第一个带有这个 key 的 import 的。三个成员一致。
-- **theory 合并时**（两个互不相识的库各用一个模板，第三个 theory 都导入）：登记表留第一个 import 的模板，把没留下的模板连同登记它的 theory 记下；`Theory.at_begin` 的函数撤掉没留下的模板的产生式；在 `theory` 那一行打 warning（某个 parent 已经做过同样的取舍时不再打）。
+- 【"撤掉没留下的模板的产生式"改按"评审之后的更正"第 1 条】**theory 合并时**（两个互不相识的库各用一个模板，第三个 theory 都导入）：登记表留第一个 import 的模板，把没留下的模板连同登记它的 theory 记下；`Theory.at_begin` 的函数撤掉没留下的模板的产生式；在 `theory` 那一行打 warning（某个 parent 已经做过同样的取舍时不再打）。
   两个库已有的 concept 的表改不了也不必改：它们的条目都还够得着（见 (3)），按生效的模板读和印。两条产生式都留是不行的（上面的实测）。这一部分三个成员一致；作者 2026-11-14 的规则管不到已经建好的表，所以不涉及改他的规则。
 - 例：`L1` 里 `mult (infixl "⊗" 70)`，`L2` 里 `meet (infixr "⊗" 65)`，`U imports L1 L2`。`U` 里 `context lattice begin term "a ⊗ b ⊗ c" end` 是 `meet (meet a b) c`；在 `L2` 里是 `meet a (meet b c)`。
 - `import_concept` 不登记模板，条目不带模板，所以对它没有模板的规则。
-- **一条声明的标注与生效的模板不同时**（自己字段的 mixfix、体内的 `notation`、后来的或不相干的 concept 的字段）【作者 2026-11-22 14:28 UTC 对这一件答「这里你可以自主设计」；我定为下面的写法，即本节末的选项 (a)，自决；它改掉作者 2026-11-14 定的"右边那条的项不入表，用户在体内用 `notation` 另给符号"】：
+- **一条声明的标注与生效的模板不同时**【块里（含 `(in C)`）的 definition、abbreviation 带的 mixfix 也算，见"评审之后的更正"第 6 条】（自己字段的 mixfix、体内的 `notation`、后来的或不相干的 concept 的字段）【作者 2026-11-22 14:28 UTC 对这一件答「这里你可以自主设计」；我定为下面的写法，即本节末的选项 (a)，自决；它改掉作者 2026-11-14 定的"右边那条的项不入表，用户在体内用 `notation` 另给符号"】：
   这个运算照样得到这个符号，以同一个 key 名进表，按生效的模板读和印；不加新的产生式。优先级或结合方向与生效的模板不同时打 warning，说明两个标注；只是排版不同不打，印的时候用生效的模板的排版。
-  例：`magma` 有 `mul (infixl "⋅" 70)`，之后 `lattice` 声明 `meet (infixr "⋅" 65)`：`meet` 得到 `⋅`，`a ⋅ b ⋅ c` 读成 `meet (meet a b) c`，打一条 warning。`lattice` 若是 `magma` 的 refinement，它自己的字段按 key 盖住继承来的条目（6.3"构造"），`lattice` 里 `a ⋅ b` 是 `meet`。
+  例：`magma` 有 `mul (infixl "⋅" 70)`，之后 `lattice` 声明 `meet (infixr "⋅" 65)`：`meet` 得到 `⋅`，`a ⋅ b ⋅ c` 读成 `meet (meet a b) c`，打一条 warning。`lattice` 若是 `magma` 的 refinement（没有自己的字段），`meet` 就写成体内的 `definition meet (infixr "⋅" 65)`（本节更正第 6 条），这条 definition 按 key 盖住继承来的条目（6.3"构造"），`lattice` 里 `a ⋅ b` 是 `meet`。
   与被顶替的 stock 模板不同时同样：字段写 `le (infixl "≤" 55)`，`le` 得到 `≤`，按 stock 的 `[51, 51] 50` 读，打 warning。
   theory 合并时的 warning 也只在优先级或结合方向不同时打；只是排版不同时悄悄留第一个 import 的。
   理由：处处一条规则（声明处与合并处的结果相同）；没有运算会丢掉它的符号；条目不必记自己声明时的标注；作者原来的规则在 refinement 给继承来的符号配上自己的运算时会悄悄读成继承来的那个。小组三个成员里两个与裁判主张这样，一个主张维持原规则。
@@ -1152,23 +1287,23 @@ concept C 定的方向：短写也读作命题；不为它设 `_concept_prop` �
 
 **(4) 登记一个模板的步骤**（改 6.1"顶替与拒绝"的第一句；三个成员一致）。
 1. 先查模板登记表里有没有这个模板 key。有且模板相同：直接用，不动文法。有而模板不同：照 (2)。
-2. 登记表里没有这个 key 时，才去找文法里这个 key 的已有产生式。由 (1) 的不变式，这时找到的不会有我们自己的。
+2. 【分开声明的 section 也要找到，见"评审之后的更正"第 4 条】登记表里没有这个 key 时，才去找文法里这个 key 的已有产生式。由 (1) 的不变式，这时找到的不会有我们自己的。
 3. 按目标分：保留集合之外的逻辑常量，顶替，记下撤它用的参数，加进这个 key 的原常量的集合（有几个就都顶替）；保留集合里的常量、或任何 syntax constant（含 binder 与带 `\<index>` 的 notation 的目标），拒绝，报已批的那句。
 - 6.1 原文照字面会把我们自己登记的产生式也算作"目标是 syntax constant"而拒绝：第二个 concept 用同一个模板 `mul (infixl "*" 70)` 会报 "Notation … is reserved"。按上面的先后不会。
 - 第 2、3 步在 Pure 现有的导出下做不干净，所以给 Pure 加一个函数，见 (7)。
 - **原常量是一个集合**（6.1、6.3、6.4 里写成单数的各处）：几条原常量之间按 6.6 的 R4 里"类型自带的几条之间取最具体的"。
 
-**(5) 中缀模板带 section。** 模板 key 是"槽、定界符、槽"的模板总是另含一条 section 的产生式（`(⊗)`，可带下标 `(⊗⇘R⇙)`），目标是同一个 key，读出来是不带参数的触发形状。登记时，原常量另行声明的 section（stock 的 `≤`、`∈` 是分开声明的）照同一条顶替规则处理。否则 `+` 被顶替的地方 `(+)`、`foldr (+) xs 0` 都读不了（实测）。
+**(5) 中缀模板带 section。**【我们的 section 怎样写、stock 的 section 怎样找，见"评审之后的更正"第 4、5 条】 模板 key 是"槽、定界符、槽"的模板总是另含一条 section 的产生式（`(⊗)`，可带下标 `(⊗⇘R⇙)`），目标是同一个 key，读出来是不带参数的触发形状。登记时，原常量另行声明的 section（stock 的 `≤`、`∈` 是分开声明的）照同一条顶替规则处理。否则 `+` 被顶替的地方 `(+)`、`foldr (+) xs 0` 都读不了（实测）。
 **打印随之改**（改 6.8 的 P1.3 里"参数比槽位少"一条）：中缀的运算参数不足时，照 stock 印成 section 作用到已有的参数上，`(*)`、`(*) x`、`(*⇘K⇙)`；uncheck 也对这样的出现处做匹配（结构参数齐、槽位参数不足）。P1.3 原来"把缺的参数补成绑定变量"的做法只留给非中缀的模板在打印器自己 η 收缩之后参数不足的情形。
 
 **(6) D 区各份 theory 数据的合并：都是取并集。** 凡是"拿掉了什么"都存成"多了一条记录"。
-- 模板登记表：逐 key。生效的模板相同，就把没留下的模板、原常量、有这个 key 的 concept 各取并集；不同，留左边的，没留下的模板是两边的并集加右边生效的那个。"已在哪个 theory 里整理过"是单独的一栏。
+- 【本条由"评审之后的更正"第 3 条取代】模板登记表：逐 key。生效的模板相同，就把没留下的模板、原常量、有这个 key 的 concept 各取并集；不同，留左边的，没留下的模板是两边的并集加右边生效的那个。"已在哪个 theory 里整理过"是单独的一栏。
 - 名字 key 表：并集。声明某个名字类 key 时找到的已有同短名常量存在这里，按名字取并集（6.3"查一个 key"第 3 步此前没说存在哪里）。
 - 每个 concept 的各部分（6.10 的 (3)）：按 concept 名对上，值是同一个时直接用。条目的身份是（它被写进这张表时所在 theory 的长名，build position）。按身份取并集。
   符号的条目另有一个"被取代的身份"的集合：表建好之后才写入、从已有条目手里拿走一个 key 的条目（如后来的 theory 里 `context group begin notation cmult (infixl "*" 70) end`），把被它取代的那条的身份加进集合。合并时集合取并集、去掉被取代的条目，剩下同 key 的留左边的，不打 warning。
   例：`Base` 定义 group，`Mine imports Base` 里改绑了 `*`，`Other imports Base`，`U imports Other Mine`：只按"留左"会读成原来的 `mult`，换个 import 顺序又读成 `cmult`；有了这个集合，两种顺序都是 `cmult`。集合是每张表一个，不是每个条目记"我取代了谁"：连着取代两次时后一种会漏掉最早的那条。
   名字的条目不用这个集合，照 6.10 的 (2)（`C.x` 在当前 theory 里指的那一个）。build position 合并后不重排，印的时候位置相同的按身份分先后。
-- 实例的表：同上。printing table：行的并集；过时的行只多费一次读回检查。
+- 【printing table 不是 theory 数据、不参与合并，见"评审之后的更正"第 3 条与 6.8 的更正】实例的表：同上。printing table：行的并集；过时的行只多费一次读回检查。
 - "每个全局实例最靠后代的 concept 是哪些"不存：存的是"断言过这个实例满足哪些 concept"的集合（并集），最靠后代的那些在用的时候算、缓存。两边各自的"最靠后代"并起来不一定还是最靠后代。"key 名 ↦ 表里有它的 concept"的索引同样按需要算。
 - contextual notation table、占位旁表、各种缓存是 proof 数据或自己验有效性的缓存，不参与合并。
 
@@ -1190,19 +1325,21 @@ Notation "⊗" of theory "L2.Lattice" is read with infixl ‹⊗› 70 of theory
 ```
 The following notations of theory "L2.Lattice" are read with the mixfix annotations of theory "L1.Monoid" in this theory, not with their own, because "L1.Monoid" comes through an earlier import:
   "⊗"    infixl ‹⊗› 70, not infixr ‹⊗› 65
-  "∘"    infixr ‹∘› 55, not infixl ‹∘› 60
+  "⊕"    infixr ‹⊕› 55, not infixl ‹⊕› 60
 ```
+
+（第二行的例子 2026-11-22 换过，句子没有动；评审第 7 块第 1 条。原来写的是 `"∘"`，而 `∘` 在 Main 里是 `comp` 的 `infixl ‹∘› 55`，被顶替的 stock 模板算最先登记的，两个库生效的模板因此相同，这一行不会出现。）
 
 只是排版不同时不打（(2) 定下之后）。
 
 **声明时的 warning**（文案，自决；作者 2026-11-22 15:15 UTC 看过，编号 D15：问「是何时显示？」，并定「meet，magma 这些都要加双引号（一般地对所有文案都要这样）」；下面已照加；加过引号的写法他 15:36 UTC「D15 批准」）。
-何时显示：在声明处。一条 concept 命令里字段的 mixfix、或体内的一条 `notation`，它给某个符号写的优先级或结合方向与这个 theory 里这个符号已经生效的不同，就在这条命令上打一次；批构建和交互模式都印。`⌂` 标这条声明自己的标注。
+【块里（含 `(in C)`）的 definition、abbreviation 带的 mixfix 也触发这条 warning，主语照 `notation "^" of "pow"` 的写法，见"评审之后的更正"第 6 条】何时显示：在声明处。一条 concept 命令里字段的 mixfix、或体内的一条 `notation`，它给某个符号写的优先级或结合方向与这个 theory 里这个符号已经生效的不同，就在这条命令上打一次；批构建和交互模式都印。`⌂` 标这条声明自己的标注。
 
 ```
 Concept "lattice": notation "⋅" of field "meet" is read with infixl ‹⋅› 70 of concept "magma", not with its own mixfix annotation infixr ‹⋅› 65⌂
 ```
 
-体内的 `notation` 时主语是 `notation "⋅" of "join"`。生效的模板来自被顶替的 stock notation 时，`of concept "magma"` 换成那个常量（`of "less_eq"`），它的标注按定界符与优先级重写出来，能写成 `infix`、`infixl`、`infixr` 的就写成那样（`infix ‹≤› 50`）。一条命令里有几条时：
+体内的 `notation` 时主语是 `notation "⋅" of "join"`。生效的模板来自被顶替的 stock notation 时，`of concept "magma"` 换成那个常量（`of "less_eq"`），它的标注按定界符与优先级重写出来，能写成 `infix`、`infixl`、`infixr` 的就写成那样（`infix ‹≤› 50`）。一条命令里有几条时，每行末尾的括号写单条时 `of` 后面的那部分：字段是 `(field "meet")`，带这个符号的常量是 `("join")`（几条只来自 concept 命令的字段，或一条用 `and` 连着几个常量的 `notation`）【常量那种行尾是复审 `wf_7532cb38-f70` 查出没有规定的；作者 2026-11-23 04:35 UTC「你可以自决」，我取 `("join")`，与单条的 `of "join"` 对应，不取 `(constant "join")`】：
 
 ```
 Concept "lattice": the following notations are read with the mixfix annotations their symbols already have, not with their own:
@@ -1251,10 +1388,10 @@ Concept "lattice": the following notations are read with the mixfix annotations 
 - 依据：`Syntax_Ext.xprod` 与 `xsymb` 两个 datatype 连同构造子是导出的（`syntax_ext.ML:14-21`），所以条件可以在 Pure 之外看一条产生式的定界符、槽位、目标与优先级；`Printer.remove_prtabs` 是导出的（`printer.ML:33`）；产生式不带源码位置，可以用 `op =` 比（stock 自己就这样比）。
 - 先例：dot_syntax 这个 feature 已经在同一个文件里加了一个导出的通用函数 `Syntax.has_notation`（它的树里 `syntax.ML` 的 signature 第 86 行与第 502 行起的函数体）。本函数放在 `remove_syntax` 之后，与那两处不相邻，补丁不会相撞。concept 的树现在还没有动过 `syntax.ML`、`sign.ML`、`printer.ML`（我比过文件）。
 - **concept 这边怎样用**（都在 `concept_notation.ML`）：
-  - 找：`#1 (Syntax.remove_xprods (这条产生式的模板 key 是 k) (Sign.syntax_of thy))`，结果只拿列表、不用返回的文法。只看项一级的产生式；类型文法里的 `'a × 'b` 之类不算。
+  - 【找与撤的条件见"评审之后的更正"第 1、4 条】找：`#1 (Syntax.remove_xprods (这条产生式的模板 key 是 k) (Sign.syntax_of thy))`，结果只拿列表、不用返回的文法。只看项一级的产生式；类型文法里的 `'a × 'b` 之类不算。
   - 分类：看每条的目标。带逻辑常量标记的是逻辑常量；其余（syntax constant、binder 与带 `\<index>` 的 notation 的目标、没有目标的产生式）照 (4) 第 3 步拒绝。
   - 撤：`Sign.map_syn (#2 o Syntax.remove_xprods (member (op =) 这些产生式))`。
-  - **模板登记表为每个原常量记下的，就是被撤掉的那些产生式本身**（(1) 里"撤掉它的产生式时用的那组参数"改为这个）。theory 合并之后重撤、以及撤掉没留下的模板的产生式，是同一个函数的一次调用，文法只重建一次。
+  - **模板登记表为每个原常量记下的，就是被撤掉的那些产生式本身**（(1) 里"撤掉它的产生式时用的那组参数"改为这个）。【"撤掉没留下的模板的产生式"改按"评审之后的更正"第 1 条】theory 合并之后重撤、以及撤掉没留下的模板的产生式，是同一个函数的一次调用，文法只重建一次。
   - 加我们自己的产生式仍用 stock 的 `Sign.syntax_global`，不需要"按产生式的值加"的入口：标注由 concept 自己造，定界符与槽位取自模板 key，下标的槽插在第一个定界符之后，优先级取生效的模板的，排版取这个 concept 自己的标注的。
 - **与被顶替的 stock 模板怎样比**：只比模板 key 与优先级（各个槽的和整体的），不比排版。stock 的 `≤` 是 `("(‹notation=‹infix ≤››_/ ≤ _)" [51, 51] 50)`，排版没法要求用户照抄；字段写 `infix "≤" 50` 就接手 `≤`，因为它的优先级正是 `[51, 51] 50`。字段写 `infixl "≤" 55` 时优先级不同，归下面留给作者的那一件。
   被撤掉的产生式里有优先级，所以"被顶替的 stock notation 的模板算最先登记的"现在可以照字面做。
@@ -1276,6 +1413,56 @@ Concept "lattice": the following notations are read with the mixfix annotations 
    (b) 之下有一种悄悄读错的情形：`lattice` 是 `magma` 的 refinement、写 `meet (infixr "⋅" 65)`，则 `lattice` 里 `a ⋅ b` 仍是继承来的 `mul`。
    10.1 里并 parent 时的模板冲突 warning（T1.3）在 (a)、(b) 之下都不会再出现，只在 (c) 之下有用；它的去留随这个回答。
 
+### 6.13 syntactic destruction 怎样走、怎样停 【自决（作者 2026-11-22 08:41 UTC 授权）；设计小组 `wf_9557b21e-7a6`（3 个提示词相同的 Opus agent 加 1 个裁判），2026-11-23】
+
+裁定（英文，不提交）：`concept_D_term_destruction_termination_report_2026-11-23.md`，含例子、被否的做法、要在原型里跑的实验；三份答卷在同名的 members 目录。起因：作者 2026-11-22 14:16 UTC 撤掉了 assumption destruction 的两个总量上限，在项上拆的那一遍怎样停归本会话定（concept B 知会，11.2）。没有实现。
+**本节与 6.3"syntactic destruction"、6.6 的 R3、R7.2、R7.7、6.9 的 H1.1 里说到这一遍的句子不一致时以本节为准。**
+
+**【2026-11-23 05:30 UTC：本节"什么都不数、不设上限"的依据变了，这一点待重定，已问作者】** concept B 知会：作者 2026-11-23 05:27 UTC 在它那边把 assumption destruction 的计数改成「两遍都计数」「默认值是 300」，取代 2026-11-22 16:15 的"第一遍不计数"。起因是它那边的评审查出：第一遍不计数时，四条形状合格的 extraction rule 能让一次拆跑约 10^41 步，沿链的检查保证会停，但不给出实际的界（`concept_destruction_plan_review_2026-11-23.md` 的 C1；我没有读这份报告，也没有核 concept B 的转录）。
+本节的这一遍同样只靠那个检查停，所以在那种规则集上同样没有实际的界。本节下面"它不数任何东西"一句与第 10 条里否掉"按上限数"的理由，都建立在"第一遍本来就不数"上，现在要重定：不设上限（可能跑不完）、按上限数并悄悄截断（读法取决于上限的值）、还是按上限数、碰到上限就报错。其余各条（每条写出来的命题单独走、一步怎样数、让检查在项上成立的四条、处处同一个函数）不受影响。
+**作者 2026-11-23 06:33 UTC 定**（我讲了背景、列了三个选项之后）：「要的，跟 assumption destruction 的算法是一样的，同样受到一个宽度上限，且默认值要更小，建议 50」。
+所以已定的是：这一遍受上限管；算法与 assumption destruction 相同；它有自己的宽度上限，默认 50（assumption destruction 的是 300）。下面"它不数任何东西""`concept_extraction_limit` 从不被读""没有什么会被截断"与第 10 条里否掉"按上限数"的话作废。
+"算法一样"我读作两点，请作者确认：两遍都跑（下面写的是只跑第一遍）；碰到上限悄悄停、不报错、不出 warning（与 assumption destruction 相同，不是我建议过的"报错"）。
+**作者 2026-11-27 01:59 UTC 确认了第二点**：「没错，碰到上限（默认 50）悄悄停，不报错、不出 warning」。已定。第一点（两遍都跑还是只跑第一遍）他问了"放到一边、第二遍才拆的那类 fact 是什么"，我答了，**仍待他定**；我的建议是两遍都跑（上限已定、悄悄停已定之后，小组否掉第二遍的两条理由都不在了，而且这样与 assumption destruction 是同一个函数、不带"只跑第一遍"的开关）。
+**同一时刻作者问并定下：这一遍只管不带条件的 concept fact**（「assumption destruction 现在在讨论带条件的 concept facts 的拆解。但我想你这里必须限定为不带条件的对吗？」，我答对）。写明：
+- 作来源的只有不带条件的 concept fact：语句里的整项或前提（拆开 `∧`、穿过 `∀` 与 `⋀` 之后，下面第 1 条），和从它们一步步拆出来的、同样不带条件的 concept fact。
+- 写成 `P ⟹ group K`（或 `P ⟶ group K`）的假设，`group K` 是带条件的结论，不是来源；`P` 若是 concept fact，照 6.3 只在它管的那一段里作前提。
+- 走的过程中，某一步的产物若是带条件的（`A ⟹ B`、`A ⟶ B`），不往 `B` 里走，停在那里。B 区的 assumption destruction 以后若拆带条件的 concept fact，这一遍不跟。
+- 理由：这一遍只在项上走，手里没有 fact、也不证任何东西，条件成不成立它无从知道；而一条来源的意思是"这个结构在这里成立，裸写的符号可以指它的运算"，只在某个条件下才成立的结构不能悄悄提供 notation。
+
+**定稿（2026-11-27 02:03 UTC，作者：「赞同两遍都跑」；连同上面他定的上限 50、悄悄停、只管不带条件的）。下面第 1 到 10 条里与这一段不一致的句子以这一段为准，各句前有指路。**
+- **本质**：syntactic destruction 对每一条"写出来的命题"，用与 assumption destruction 完全相同的算法把它拆开（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 4、4A 节）：同一个遍历，同一个沿链的检查（4A.1），两遍都跑（4A.2：参数里套着链上更早的两条参数不同的关系 fact 的那种，第一遍放到一边、第二遍再拆；套着三条及以上的不通过）。不同的只有两样：它在项上走，不产生定理、不激活；它有自己的上限。
+- **上限**：一个单独的 option，默认 50（assumption destruction 的 `concept_extraction_limit` 默认 300）。名字我定为 `concept_notation_extraction_limit`【名字自决】。数法与 4A.3 相同，每条写出来的命题各自从零数。
+- **碰到上限**：悄悄停，不报错、不出 warning。没走到的结构不是来源，它们上的运算不带下标读不到。这一遍每次都是从头算的纯函数，没有"以后接着做"。
+- **后果（作者接受）**：一条假设要拆到超过上限才找到某个结构时，同一个裸写的符号读成什么取决于上限的值，不报任何东西。语句、它的证明体、打印三处用同一个函数、同一个上限，所以三处读得一样（第 9 条的角落除外）。改法：写下标，把那条 fact 写成假设，或调高上限。
+- **只管不带条件的 concept fact**（见上面）。
+- **concept 的 header 里**（H1.1 的第 (5) 类）：照 B 区对"定义 concept 时"拆假设的规定办，它那边不设上限就不设、设就用同一个数【这一句是我的读法：作者说的是"算法一样"，没有单独说 header】。
+- 随之作废的：下面"本质（旧）"里"只跑第一遍""不数任何东西"；第 4 条末句"没有第二遍"；第 6 条末句"读法从不取决于某个配置的值"；第 7 条里"只能经放到一边的 relation fact 才到得了的走不到"（现在第二遍会拆它们，走不到的是检查拦下的与上限截掉的）；第 8 条的代价（现在由上限管住）；第 10 条里否掉"第二遍并按上限数"的理由。小组当初否掉第二遍，是因为不设上限太慢、设了上限会悄悄截断；作者定了有上限、悄悄停之后，这两条理由都不在了。
+
+**本质（旧，2026-11-23 小组裁定时的写法）**：syntactic destruction 对每一条"写出来的命题"，用它与 assumption destruction 共用的那个遍历（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 4 节）的**第一遍**把它拆开，就是那边内部调用时用的方式。在项上没有激活，所以第一遍就是整个过程：一次广度优先的搜索，受 4A.1 沿链的检查管，即 4A 说的"较严的检查"。它靠这个检查停（4A.7 的论证原样适用）。
+它不数任何东西：第一遍里规则的产物与拆实例项，作者定过都不数（2026-11-22 16:15 UTC，在 concept B 的会话里，我没有核它的转录）。所以 `concept_extraction_limit` 从不被读，没有什么会被截断，也就没有 warning 可言。
+
+1. **写出来的命题**：6.3 第 1 步收的每一项，即一个整项或一个前提，拆开 `∧` 之后。第 1 步收三种：concept fact `C K`；头是实例常量或视图常量的 `Trueprop e`（6.11）；relation fact（4A 的定义：β-η 并去掉 `Trueprop` 之后，不是 concept fact，头不是 `∧`、`∀`、`⋀`，头是常量）。
+   relation fact 自己不是 notation 的来源，从它走到的 concept fact 才是。每条写出来的命题单独走：空的记录，自己的一张"拆过的命题"的表，彼此不共用；不查 context 里"走过第一阶段的命题"的集合，也不查 intro table。
+2. **走之前**：每条写出来的命题里的触发形状，包括 relation fact 的参数里的，先照 6.6 的 R3 解析。写出来的命题里面，带下标的写法认结构时看得到：上下文的 fact、全局的 fact、实例与视图常量声明的结果 concept、这条语句里结构项已解析完的写出来的 concept fact 连同它们的实例项的宿主；看不到只由某条 `if` 子句或 extraction rule 得出的 fact。
+   先后：解析全部写出来的命题；各自走一遍；用找到的来源读 6.11 的头上的裸触发形状，读成 `C e` 的也各走一遍；再读语句的其余部分（那里带下标的写法看得到找到的每一条 fact，6.6 的 R7.3）。
+3. **一步**是下面两种之一；拆 `∧`、`∀`、`⋀` 不算一步（这回答了 6.6 的 R7.2 里"一步怎样数随 B 区"）。
+   拆一个实例项：`C K` 的 `K`（去掉紧贴在 `C` 下面的 truncate 之后）的头是实例常量时，给出各个宿主（按参数的先后），再给出这个实例的各条 `if` 子句（实例按声明的 key，子句按书写先后），用代入实例化。
+   用一条 extraction rule：抹去类型之后匹配它的前提，实例化它的结论；规则按声明的 key 排，不按 Net 返回的先后。
+   不用定理、不化简、不加强、不激活。−200 造出的项不带类型；在检查过的项上，造出的项靠带类型地再匹配一次同一条规则来定类型。
+4. **检查**：4A.1 原样，加四条让它在项上成立的规定。(i) 每个 `Free` 按名字各是一个 label、各是一个头；每个 `Var`（占位也在内）与每个 `Bound` 用共用的那个 label。(ii) 不是 concept 名的参数（去掉视图常量之后）都算同一个类别。(iii) key 与 label 树在 `Type.strip_constraints`、抹去类型、β-η、去掉谓词下面的 truncate 之后取，不用 selector 的 Simpset。(iv) 占位的应用是一个头为变量的应用，不对它拆实例（R3）。
+   【作废，见"定稿"：两组的放到一边、第二遍再拆，三组及以上不通过】一条 relation fact，它的 4A.1 的来源带着两组或更多不同的参数时，不再往下走（没有第二遍）。没过检查的 concept fact 仍然是 notation 的来源。
+5. **结果**：走到的每条 concept fact 都是来源，深度按它第一次到达时算。一个位置上的来源，是看得见的各条写出来的命题各自走出的结果，先按深度，再按写出来的命题的先后，再按一次走动内部的先后；然后照 6.6 的 R1 分组。
+6. **处处是同一个函数**：−200 时在没检查过的项上；钩子里在检查过的项上（R7.7）；concept 的 header 里（H1.1 的第 (5) 类，结构项照 H1.2 先检查）；被印的项上（P1.7）。【"不取决于某个配置的值"作废：读法可以取决于上限的值，见"定稿"】所以一个读法从不取决于某个配置的值、不相干的工作的先后、或合取是写成一条假设还是两条。
+7. 【走不到的现在是：检查拦下的、上限截掉的；"只能经放到一边的 relation fact 才到得了的"第二遍会拆，见"定稿"】**走不到的（接受）**：检查拦下的节点之后的 concept fact；只能经"来源带两组不同参数"的 relation fact 才到得了的 concept fact（总在深度 3 或更深；它们也不在 concept 的 static notation table 里，虽然在它的激活列表里）。它们上的运算不带下标读不到；改法是写下标，或把那条 fact 写成假设。
+   这时用户看到的，在语句、证明、打印三处相同：裸的符号经更浅的来源读、或读成类型自带的那一条、或报"没有候选""类型未定"；打印在裸的写法会读成别的东西的地方印 `x *⇘S⇙ y`。
+8. 【代价现在由上限管住：每条写出来的命题至多数到上限，见"定稿"】**代价**：与同一条 fact 上 assumption destruction 的第一遍相同，少了化简。一套规则若第一遍本身是指数的（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.3 记的已知代价），提到它的每次检查与每次顶层打印都要付这个代价。走动是纯函数，可以缓存（有效性照 6.8 的 P1.6）。
+9. **已知的角落**（语句与证明体可能不同，有没有上限都一样）：写出来的命题里 −200 时还留着的占位（R3 的那个角落，扩到 relation fact）；abbreviation（stage 0 才展开，所以经 abbreviation 写的关系或实例常量在 −200 与打印时匹配不上规则，在钩子里匹配得上；要不要在走之前先展开，等原型的实验）；stage −100 插进来的 coercion；类型比它的关系窄的规则。
+10. 【本条头两项作废：作者定了两遍都跑、按自己的上限数、碰到上限悄悄停。新增没有取的两项：只跑第一遍（小组原来的结论）；碰到上限报错（我建议过）。见"定稿"】**没有取的**：第二遍并按 `concept_extraction_limit` 数（一旦被截断，读法就取决于上限的值，而且更深的来源可能留下、更浅的反而没有，读法悄悄改变）；第二遍不设上限（开销随最常走的路上构造个数的平方涨，多出的每个结构还要复制进每个占位）；按类型或声明的类型分类别；只给 fix 的变量 label；整条语句或拆 `∧` 之前的一个前提共用一张表。
+
+**随之读作本节的别处**：6.3"syntactic destruction"第 1 步"只收本身形如 `C K`"改为收上面三种，第 3 步改为"对每条写出来的命题照本节走"；6.6 的 R3 扩到 relation fact 的参数，并照第 2 条收窄带下标的写法看得到的 fact；R7.7 的 W 改为"是写出来的命题的整项（concept fact 或 relation fact）"，交给证明体的列表含它们走出的 concept fact；6.8 的 P1.7 里被印的项的写出来的命题照本节走；6.9 的 H1.1 第 (5) 类只跑第一遍、没有上限。
+**给 concept B 的**：它的专题文件第 4 节、4A.3 的表、4A.7、4A.10 里说到这一遍的几处该怎样写，裁定第 8.3 节给了稿子；那份文件里与 notation 有关的文字它不能自己动，在作者点头之前以本节为准。
+
 ---
 
 ## 10. 用户可见文案（本文件只收 D 区的）
@@ -1288,14 +1475,14 @@ Concept "lattice": the following notations are read with the mixfix annotations 
 notation 解析的三条【已定，作者 2026-11-09 批准】。`⌂` 表示附位置（`Position.here`）：PIDE 里是红线，批构建里渲染成 `(line N of "file")`；不手写行号，不复述操作数。多个未决占位各报一条。
 
 ```
-Ambiguous notation "+"⌂: the type ?'a of its operands is not determined
+Ambiguous notation "+"⌂: the type "?'a" of its operands is not determined
 Candidates:
   ring.add R  : 'a ⇒ 'a ⇒ 'a            (from "ring R"⌂)
   plus        : ?'a::plus ⇒ ?'a ⇒ ?'a    (the original "+")
-Annotate an operand with 'a, or write the structure: "+⇘R⇙"
+Annotate an operand with "'a", or write the structure: "+⇘R⇙"
 ```
 
-【2026-11-22 15:36 UTC 作者：「更早批准的句子要补引号」。照当日定的规则"句子里提到的名字一律加双引号"，本节 2026-11-22 之前批准的各句里嵌在句子里的结构、常量、concept 名都补了双引号，别的字没有动；类型（如 `('a, 'm) group_scheme`）与候选列表里单独成行的项没有加，这是我对规则范围的读法，作者没有单独表态。补过的各处：本句与它的两个变体里的 `G`、`G.sub H`；下面带下标的四句里的 `G`、`magma`、`lattice`；"already bound" 那句里的 `group.inv`、`group`】
+【2026-11-22 15:36 UTC 作者：「更早批准的句子要补引号」。照当日定的规则"句子里提到的名字一律加双引号"，本节 2026-11-22 之前批准的各句里嵌在句子里的结构、常量、concept 名都补了双引号，别的字没有动；类型（如 `('a, 'm) group_scheme`）与候选列表里单独成行的项没有加，这是我对规则范围的读法，作者没有单独表态【2026-11-23 作者定句子里的类型也加引号、候选列表的行不加，本节各句的类型已照补，见"自决的文案"里"句子里提到的名字一律加双引号"一条】。补过的各处：本句与它的两个变体里的 `G`、`G.sub H`；下面带下标的四句里的 `G`、`magma`、`lattice`；"already bound" 那句里的 `group.inv`、`group`】
 
 ```
 The structure "G" in the premise "group G"⌂ has no determined type:
@@ -1304,7 +1491,7 @@ Write "group (G :: ('a, 'm) group_scheme) ⟹ …", or fix it first:
   fixes G :: "('a, 'm) group_scheme"
 ```
 
-compound 情形首行换成 `The structure "G.sub H" in the premise "group (G.sub H)"⌂ has type (?'a, ?'m) group_scheme, which is not determined`，改法换成对整个项标注。类型变量名取不与语句已有的冲突者。
+compound 情形首行换成 `The structure "G.sub H" in the premise "group (G.sub H)"⌂ has type "(?'a, ?'m) group_scheme", which is not determined`，改法换成对整个项标注。类型变量名取不与语句已有的冲突者。
 
 结构所在的不是 `⟹` 的前提、而是项列表里单独的一项时（`assumes "group G"`，即语句自己的假设，6.3）用下面的变体【作者 2026-11-16「批准」】：
 
@@ -1329,7 +1516,7 @@ Notation "'_" is reserved and cannot be used for user constants
 
 ```
 Ambiguous notation "⊙⇘G⇙"⌂: the context has no concept constraint about "G",
-and the concepts with the type ('a, 'm) group_scheme of "G" bind "⊙" to different terms
+and the concepts with the type "('a, 'm) group_scheme" of "G" bind "⊙" to different terms
 Candidates:
   comm_group.cmult G        if "comm_group G"
   nilpotent_group.nmult G   if "nilpotent_group G"
@@ -1366,7 +1553,7 @@ Annotate "G" with its type
 explicit form，没有 concept constraint，结构的类型是确定的，但这个类型上没有这个符号：
 
 ```
-Notation "⊑⇘G⇙"⌂ cannot be resolved: no concept with the type ('a, 'm) group_scheme of "G" provides "⊑"
+Notation "⊑⇘G⇙"⌂ cannot be resolved: no concept with the type "('a, 'm) group_scheme" of "G" provides "⊑"
 ```
 
 explicit form，结构有好几条 concept constraint，最靠后代的 concept 不止一个、互不相干，绑的项又不同：
@@ -1374,10 +1561,12 @@ explicit form，结构有好几条 concept constraint，最靠后代的 concept 
 ```
 Ambiguous notation "*⇘G⇙"⌂: "G" satisfies several concepts that bind "*" to different terms, and none of these concepts refines the others
 Candidates:
-  cmult G    from "comm_group G"⌂
-  omult G    from "ordered_group G"⌂
+  comm_group.cmult G       from "comm_group G"⌂
+  ordered_group.omult G    from "ordered_group G"⌂
 Write the intended term directly instead of the notation
 ```
+
+【例子里候选的项 2026-11-23 改成限定名，措辞未动：`cmult`、`omult` 是体内 definition，是名字类 key，候选的项按 stock 的形式印时印成限定名（"自决的文案"的通用规则第二条）。复审 `wf_7532cb38-f70` 第 5 块第 3 条】
 
 体内 definition 的名字与本 concept 的 static notation table 里已有的标识符重合（6.5）。撞到的可以是字段、体内 definition、视图或实例，文案相同：
 
@@ -1396,7 +1585,7 @@ Use a different name
 
 header 里的字段名、parent 的 qualifier 与 major chain 继承来的名字重合时也用上面这句（带中间那句），那一条在 A 区文件第 10 节。
 （上面两句 "The name … is already bound …" 因作者 2026-11-22 09:11 起关于常量覆盖的表态而待定，见 6.4"名字的带下标写法"与 11.2。）
-**2026-11-22 定（6.10 的 (6)）**：三行的那句（带 "Concept group inherits this name and cannot define it again"）撤掉，连同"header 里的字段名…与 major chain 继承来的名字重合时也用上面这句"那一条用法；两行的那句保留，范围限于同一个 concept 在同一个 theory 里把同一个名字声明两次。
+**2026-11-22 定（6.10 的 (6)）**：三行的那句（带 "Concept group inherits this name and cannot define it again"）撤掉，连同"header 里的字段名…与 major chain 继承来的名字重合时也用上面这句"那一条用法【2026-11-23 更正：后半句收回。三行的那句只是不再用于体内 definition 与体内实例；它在 header 字段上的用法是 A 区的检查（作者 2026-11-18 对 concept A1 定的），照旧，见 6.10 的 (6) 的更正】；两行的那句保留，范围限于同一个 concept 在同一个 theory 里把同一个名字声明两次。
 
 #### 自决的文案 【自决（作者 2026-11-22 08:41 UTC 授权）；讨论 `wf_10bfad0f-fd5` 的 T 包；作者 2026-11-22 15:15 UTC 逐条看过，结果见下一段，各条已照改】
 
@@ -1420,21 +1609,30 @@ header 里的字段名、parent 的 qualifier 与 major chain 继承来的名字
 - 给用户的说法是 "write the structure: "…""，以及 "written without a structure"；文案里不出现 index、subscript 这两个词。
 - 列举带引号的几项：两项 `"a" or "b"`（作主语时 `"a"⌂ and "b"⌂`），三项及以上 `"a", "b" or "c"`（`"a"⌂, "b"⌂ and "c"⌂`）；单复数与 is/are 按个数算。
 - "if G is a …" 的冠词按 concept 名的首字母算（a、e、i、o 开头用 an）。
+- **`(from "…")` 引哪一条 constraint，在"一个结构只占一个位置"（6.6 的 R1）之后的定法**（评审 `wf_508e7a28-b15` 第 7 块第 3 条，2026-11-22）：候选的一行，引这个结构上第一条"concept 是留下来的、提供了这个条目的那个最靠后代的 concept"的 constraint，不是声明这个条目的 concept 的那一条；宿主引它被拆出来的那条 constraint；concept 只来自头常量声明的结果 concept 时，引这个结构第一次出现的那条 constraint。
+  例：`assumes "group G" and "comm_group G"`，`*` 的候选行是 `(from "comm_group G"⌂)`，即使这个条目是 monoid 声明的。
+  6.3 里"一条来源记一个 concept 和一个名字表达式"随之读作：R1 归并之后，对它留下的每个 concept 各记一条。
+- **不是中缀的 notation 在句子里怎样引**（从已不再用的 T1.3 那条挪到这里）：infix、prefix、postfix、零元的模板引符号本身；其余引定界符、参数位置写 `_`（`"[_, _]"`）。mixfix 标注的印法与符号列表相同（6.8）。
 - **句子里提到的名字一律加双引号**【已定，作者 2026-11-22 15:15 UTC，看 D15 时说：「meet，magma 这些都要加双引号（一般地对所有文案都要这样）」】：concept 名、字段名、常量名、theory 名、结构，嵌在句子里时都加双引号。候选列表里单独成行的项与类型、mixfix 标注不属于这一条。
   本节今天拟的各条已照此改。更早批准的文案里没加引号的，我把清单列给了作者，他 15:36 UTC：「更早批准的句子要补引号」；已补，见本节开头"notation 解析的三条"第二句上面的注。这条规则适用于所有区，已写进公共文件第 10 节。
+  **2026-11-23 02:39 UTC 作者在会话 concept C 里对这条规则又定了细则**（concept C 知会，已写进公共文件第 10 节，我核过那里的原话）：「值与项也要加，任何 Isabelle term 都要加，因为中间可能会有空格」「本来就在引号里的当然不用加」；哪些算名字、单独成行的行怎样处理，由各会话自定。
+  这与我上面"类型与候选列表里单独成行的项没有加"的读法有出入：句子里的项照他的话一定要加；句子里的类型（`its type int ⇒ int ⇒ int`、`with the type ('a, 'm) group_scheme of "G"`、`Annotate an operand with 'a`）他没有说到，但同一个理由（中间有空格）也适用。我向作者提了两点：句子里的类型也加引号；候选列表的行写成 `"项" : "类型"`。
+  **作者 2026-11-23 02:50 UTC 定：「句子里的类型也加引号 要加引号，候选列表的行 不要」。** 所以：句子里的类型一律加双引号（`its type "int ⇒ int ⇒ int"`、`with the type "('a, 'm) group_scheme" of "G"`、`Annotate an operand with "'a"`、`the type "?'a" of its operands`）；候选列表里单独成行的项与类型照原样不加；mixfix 标注不加。
+  作者 02:52 UTC 在会话 concept C 里又更正了一句（concept C 知会，写在公共文件第 10 节）：「让我更正一下，没有断句歧义的地方不需要加引号。」这与上面他对我定的不冲突：句子里中间有空格的类型有断句歧义，要加；`"'a"` 这种单个的类型变量可加可不加，我照他 02:50 的话加了，不再去掉；候选列表里单独成行的项不加。
+  下面各句已照此改的在代码块里看得出；本节正文里转述这些句子的地方（不在代码块里的）没有逐处改，以代码块为准。
   还有两处没有补，因为它们已不再用，留作记录的原文不动：带 "Concept group inherits this name and cannot define it again" 的三行那句，与并 parent 时的模板冲突 warning（T1.3）。
 
 **T1.1 类型已定、但没有候选对得上**【作者 2026-11-22 15:15 UTC 批准（编号 A1）】（了结 10.2 的同名一项）。只对占位（有两个及以上候选的出现处）有这句；只有一个候选时 −200 当场代入，对不上是 Isabelle 自己的 "Type unification failed"。
 
 ```
-Notation "⊗"⌂ cannot be resolved: no candidate fits its type int ⇒ int ⇒ int
+Notation "⊗"⌂ cannot be resolved: no candidate fits its type "int ⇒ int ⇒ int"
 Candidates:
   magma.mul R  : 'a ⇒ 'a ⇒ 'a    (from "ring R"⌂)
   magma.mul S  : 'b ⇒ 'b ⇒ 'b    (from "ring S"⌂)
 ```
 
 ```
-The name "inv"⌂ cannot be resolved: no candidate fits its type int ⇒ ?'c
+The name "inv"⌂ cannot be resolved: no candidate fits its type "int ⇒ ?'c"
 Candidates:
   group.inv G         : 'a ⇒ 'a                    (from "group G"⌂)
   Hilbert_Choice.inv  : (?'a ⇒ ?'b) ⇒ ?'b ⇒ ?'a    (the original "inv")
@@ -1445,24 +1643,26 @@ If "inv" is meant as a variable, fix it first
 这一行原来是两行（先说 `"group K"⌂ is not used for notation written without a structure here`）；作者把"没有被用作来源"那一条（T2.5）简化成只给提示之后，这里随之只留提示那一行，是我照他的改法顺带改的，他没有单独看过这一处。例：`lemma (in ring) assumes "group K" shows "(x::'b) * y = y * x"`：
 
 ```
-Notation "*"⌂ cannot be resolved: no candidate fits its type 'b ⇒ 'b ⇒ 'b
+Notation "*"⌂ cannot be resolved: no candidate fits its type "'b ⇒ 'b ⇒ 'b"
 Candidates:
   magma.mul \<S>  : 'a ⇒ 'a ⇒ 'a              (from "ring \<S>")
   times           : ?'a::times ⇒ ?'a ⇒ ?'a    (the original "*")
 Write the structure: "*⇘K⇙"
 ```
 
-列表列出这个占位的全部候选，按候选的先后；类型是报错那一刻出现处的类型。带下标按类型查的占位：没有任何候选的结构类型对得上 `r` 的类型时用已批的 "no concept with the type … of G provides"，否则用本句，首行引用户写的形式（`Notation "*⇘G⇙"⌂ …`、`The name "inv⇘G⇙"⌂ …`），每行候选末尾是 `(if G is a magma)`。
+【照 6.10 的 (9) 的 (c) 退出的候选不列，见 6.7 更正第 5 条】列表列出这个占位的全部候选，按候选的先后；类型是报错那一刻出现处的类型。带下标按类型查的占位：没有任何候选的结构类型对得上 `r` 的类型时用已批的 "no concept with the type … of G provides"，否则用本句，首行引用户写的形式（`Notation "*⇘G⇙"⌂ …`、`The name "inv⇘G⇙"⌂ …`），每行候选末尾是 `(if "G" is a "magma")`。
 
 **类型同时对得上同一个来源里的几条、没有一条更具体**【作者 2026-11-22 15:15 UTC 批准（编号 A2）】（6.6 的 R4；裁判 R 包拟）：
 
 ```
-Ambiguous notation "⊗"⌂: several notations "⊗" match the type 'a ⇒ 'a ⇒ 'a of this occurrence, and none of them is more specific
+Ambiguous notation "⊗"⌂: several notations "⊗" match the type "'a ⇒ 'a ⇒ 'a" of this occurrence, and none of them is more specific
 Candidates:
-  X.mult \<S>  : 'a ⇒ 'a ⇒ 'a      (from "X \<S>")
-  X.act \<S>   : ?'r ⇒ 'a ⇒ 'a    (from "X \<S>")
+  X.lact \<S>  : ?'b ⇒ 'a ⇒ 'a    (from "X \<S>")
+  X.ract \<S>  : 'a ⇒ ?'c ⇒ 'a    (from "X \<S>")
 Write the intended term directly instead of the notation
 ```
+
+（例子 2026-11-22 换过，句子没有动；评审 `wf_508e7a28-b15` 第 7 块第 1 条。原来的两个候选是 `X.mult : 'a ⇒ 'a ⇒ 'a` 与 `X.act : ?'r ⇒ 'a ⇒ 'a`，前一个是后一个的实例，照 6.6 的 R4 读成 `X.mult`、不报这句。现在的输入是：X 体内两条 `notation`，`X.lact :: 'b ⇒ 'a ⇒ 'a` 与 `X.ract :: 'a ⇒ 'c ⇒ 'a`，用同一个符号 `⊗`；`x ⊗ y = z`，`x y z :: 'a`。两个 pattern 都对得上、互不为实例。这句作者 15:15 UTC 批过，换例子已向他说明。）
 
 名字的变体：`Ambiguous name "foo"⌂: several names "foo" match the type … of this occurrence, and none of them is more specific`，末行 `Write the intended term directly instead of the name`。
 
@@ -1487,8 +1687,14 @@ concept 的 header 里的情形（规则在 6.9 的 H1.2）。例：`concept 'a 
 The name "units"⌂ cannot be resolved: inside "group units"⌂, the other assumptions of the concept are not used. Write the term directly: "comm_monoid.units \<S>"
 ```
 
+【2026-11-22 16:32 UTC 之后：这个例子不再报错。作者定了整条就是 `D \<S>` 的假设也算进基础的表（6.9 的 H1.2），`cm: "comm_monoid \<S>"` 带来的 `units` 在 `u` 的括号里读得出。这句此后只对"只由说别的结构的假设带来的符号"出现，名字不会再遇到（名字只从 major parent 与 `D \<S>` 假设来）。所以名字的这一句不再用，留下面符号的那一句；它的例子（复审 `wf_7532cb38-f70` 第 5 块第 1 条查出我原来写的例子出不了这句，2026-11-23 改；**这一句连同补的半句仍待作者过目**）：
+`concept 'a X = "'a group" + N A B :: "'a set" + assumes q: "comm_group (quotient N)" and c: "group (sub (A ⊙ B))"`。`⊙` 是 comm_group 有、group 没有的符号（同上面 `Ambiguous notation "⊙⇘G⇙"` 那句的例子），只由 `q` 带来。
+`A`、`B` 是字段，所以 `c` 是来源（结构项提到没 fix 的自由变量的不是来源，6.9 的 H1.1）；它的结构项在单独检查里用基础的表读，`⊙` 没有任何候选，而完整的表里有 `q` 的 `⊙`。
+写 `⊙⇘quotient N⇙` 不一定读得出（单独检查里 `quotient N` 只有 `quotient` 声明的结果 concept group，group 没有 `⊙`，于是按类型查；共用 group 的类型的几个 concept 把 `⊙` 绑到不同的项时是那句歧义），所以提示给总能用的那种：直接写出项。印出来的项是提供者在 X 的完整的表里的条目（已与它的结构项复合，H1.1 的 (4)、(5)），代入 `\<S>`。
+补的半句只说"说别的结构的假设"：整条就是 `D \<S>` 的假设与说 `\<S>` 的合取支在括号里是用的（H1.2、"核查之后的更正"第 10 条），所以原来的 "the other assumptions of the concept are not used" 不真，改成下面的说法】
+
 ```
-Notation "⊗"⌂ cannot be resolved: inside "group (A ⊗ B)"⌂, the other assumptions of the concept are not used. Write the term directly: "magma.mul \<S>"
+Notation "⊙"⌂ cannot be resolved: inside "group (sub (A ⊙ B))"⌂, the assumptions of the concept about other structures are not used. Write the term directly: "comm_group.cmult (group.quotient \<S> N)"
 ```
 
 （作者「A4 同理」；补的半句同样是我拟的英文。）
@@ -1556,19 +1762,19 @@ The name "f"⌂ cannot be written with a structure "G": no concept has a field, 
 - 每种提示之后都接 `, or write the structure: "k⇘K⇙"`，`K` 是第一个有结构的候选的结构；名字现在同样可以。
 
 ```
-Ambiguous notation "𝟭"⌂: its type ?'a is not determined
+Ambiguous notation "𝟭"⌂: its type "?'a" is not determined
 Candidates:
   monoid.one G  : 'a    (from "group G"⌂)
   monoid.one K  : 'b    (from "group K"⌂)
-Annotate it with 'a, or write the structure: "𝟭⇘G⇙"
+Annotate it with "'a", or write the structure: "𝟭⇘G⇙"
 ```
 
 ```
-Ambiguous name "inv"⌂: the type ?'c of its argument is not determined
+Ambiguous name "inv"⌂: the type "?'c" of its argument is not determined
 Candidates:
   group.inv G         : 'a ⇒ 'a                    (from "group G"⌂)
   Hilbert_Choice.inv  : (?'a ⇒ ?'b) ⇒ ?'b ⇒ ?'a    (the original "inv")
-Annotate the argument with 'a, or write the structure: "inv⇘G⇙"
+Annotate the argument with "'a", or write the structure: "inv⇘G⇙"
 ```
 
 **T2.2 "The structure G … has no determined type" 的变体**【作者 2026-11-22 15:15 UTC「可以」，编号 B8；句子里的 `G` 照它所仿的已批原文没有加引号，是否按新定的引号规则一并加，随那批更早的文案一起问作者】。已批的三句对没有 fix 的 `G` 不变。它们现在在最后检查时报、条件见 6.6 的 R6；在 header 里见 6.9 的 H1.2。`G` fix 了但没有类型时（`Variable.def_type` 给 `dummyT`），已批的第二行 "G is not fixed in this context" 不真，用下面的变体；−200 不知道是 `fixes`、`for` 还是 `fix` 引入的 `G`，所以不给照抄的 `fixes` 行：
@@ -1598,7 +1804,7 @@ Write "group (G :: ('a, 'm) group_scheme) ⟹ …", or give "G" this type where 
 - "no concept with the type … provides" 那句，对名字、且被查的 concept 有一个视图的 concept 提供这个 key 时，加第二行（视图的名字不并进表，`le⇘K⇙` 因此报错）；只显示第一个这样的视图，只在报错的路上算：
 
   ```
-  The name "le⇘G⇙"⌂ cannot be resolved: no concept with the type ('a, 'm) ordered_group_scheme of "G" provides "le"
+  The name "le⇘G⇙"⌂ cannot be resolved: no concept with the type "('a, 'm) ordered_group_scheme" of "G" provides "le"
   "le" is a name of the field "ord" of "G"; write the structure: "le⇘ord⇘G⇙⇙"
   ```
 
@@ -1646,6 +1852,9 @@ The name "carrier"⌂ cannot be resolved. Write the structure: "carrier⇘K⇙";
 - 已由 6.8 定下："我可以自己改"里的下标、缓存、uncheck 的 stage、参数多于槽位、名字的 print translation、λ 条目；"打印一个项时它自己的前提算不算"；符号列表的版式与"并进来的条目怎样打印"；`show_concepts` 与回显。
 - 已由 6.9 定下：A 区评审 A5 留给 D 区的一条（读 header）。
 - 已由 10.1 拟出：三条待提的文案、`f⇘G⇙` 的报错、`print_concept_notations` 没有可列的时的那一行，以及已批文案在新情形下的变体。
+- 【2026-11-23 已定，写在 6.13：与 assumption destruction 共用同一个遍历的第一遍与同一个沿链的检查，什么都不数，不设上限。下面"我的打算"里"用同一个 `concept_extraction_limit`"没有采纳：这一遍只是第一遍，没有东西可数】**2026-11-23 新开的一条：在项上拆（syntactic destruction）的那一遍怎样停。** concept B 知会：作者 2026-11-22 14:16 UTC 把 assumption destruction 的两个总量上限撤了（「都撤掉，只留 100 个的宽度限制」），15:19 UTC「确认上限停下工作时完全不出 warning」；拆定理的那一遍定在 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 4A 节：停机靠运行时沿链的检查（4A.1），一个上限 `concept_extraction_limit`（默认 100，每条进来的 fact 各算，4A.3）。在项上拆的那一遍怎样停、有没有上限，归本会话定。
+  不定的话它会不停：`M1 x ⟹ M2 (f x)` 与 `M2 x ⟹ M1 x` 这样两条 extraction rule，在项上拆没有检查也没有上限时一直走下去。
+  我的打算（还没有定，也还没有交小组核查）：在项上拆与拆定理本来共用同一个遍历，所以用同一个沿链的检查和同一个 `concept_extraction_limit`，碰到上限同样不出 warning。6.3、6.6 的 R7.2、6.9 的 H1.1 里说到"共用的遍历""深度"的地方随它。
 - **仍然开着的**：
   - 【2026-11-22 约 11:30 UTC 已定，写在 6.10；留给作者的只有 6.10 末尾的两条放宽与启用 dot syntax 时点号写法怎样读】常量覆盖怎样做（等 concept C 的讨论小组 `wf_69f6f583-b0a`）：6.5"体内 definition 的名字不得重合"、10.1 两句 "already bound"、6.3"构造"里的覆盖、祖先后来才加的名字进不进已有后代的表。
   - 【2026-11-22 11:49 UTC：小组 `wf_d1050a93-971` 的结果已到，定下的写在 6.12；留给作者的两件在 6.12 末尾（给 Pure 加一个通用函数；标注与已生效的模板不同时运算还得不得到符号）。14:22 UTC 作者把前一件交我设计（「这个你可以自主设计」），已定在 6.12 的 (7)；14:28 UTC 作者把后一件也交我设计（「这里你可以自主设计」），取"运算照样得到符号、按已生效的模板读"，定在 6.12 的 (2)】模板登记对我们自己的产生式的规则（T 包的裁判指出、没有裁定）：同一个定界符序列、不同模板，出现在自己字段的 mixfix、体内 `notation`、互不相干的两个 concept、theory merge、`import_concept` 时各怎样；连带 6.1 与 6.2 对"key 由什么构成"两处说法不一。
@@ -1824,6 +2033,9 @@ The name "carrier"⌂ cannot be resolved. Write the structure: "carrier⇘K⇙";
 2026-11-14/15 那批 notation 的实现名（trigger head `Pure.concept_notation`，占位 `_concept_placeholder`、`_concept_prop`，非终结符 `concept_index` 等）登记在 `CONCEPT_PLAN_INDEX.md` 的 11.3。
 
 <!-- 冻结主计划 CONCEPT_UNARY_PLAN.md 第 2202–2202 行 -->
+- **"parent"与"字段（field）"两个词的分工**（2026-11-23，concept A1 转告并已写进公共文件第 0 节术语表的表前；作者的原话在它的会话里，我没有核转录）："parent"只指 major parent；header 里带名字的项一律叫字段，此前叫"non-major parent""带 qualifier 的 parent"的，是"类型是 concept 的字段"；"视图"仍是内部的词，用户可见的文字里不出现。
+  同日 11:17 UTC 又定（同样是 concept A1 转告）：类型是 concept 的字段的那条规则叫"字段 `ord` 的规则"（the rule of the field `ord`），如 `ordered_group ?S ⟹ order (ordered_group.ord ?S)`；"parent rule"只指 major parent 的那条，如 `ordered_group ?S ⟹ group ?S`。
+  本文件里已有的旧说法照新的意思读，不逐处改；此后新写的用新的说法。本文件第 10 节的英文文案里没有把带名字的那一种叫 parent 的（说的本来就是 `field`），所以没有要请作者批改的句子。
 - 英文写法："顶替"用 **displace**【自决（作者 2026-11-22 授权），`wf_10bfad0f-fd5` 的 T 包；此前是我提、未批】：一个模板顶替原常量的 notation（`+` 之于 `Groups.plus`）。rebind 留给"改绑"，即后代 concept 把继承来的 key 绑到另一个项；作者当时说的「解绑」再绑指的是撤掉原产生式这个动作，不另立词。
 - 2026-11-22 自决的实现名（同一讨论的 T 包、P 包）：
   - context 数据 `structure Contextual_Notation_Table = Proof_Data (type T = source list; fun init _ = [])`，是 `Concept_Notation`（`concept_notation.ML`）私有的，空列表就是未设置。
