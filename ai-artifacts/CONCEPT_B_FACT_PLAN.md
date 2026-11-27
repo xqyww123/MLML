@@ -234,7 +234,11 @@ B1 的五步照裁定重写了，写之前先照改后的步骤重做了探针�
    - 一次搜索自己做化简时、化简中途起的另一次搜索，叫嵌套的搜索；它怎样停、与外层的搜索怎样打交道，见 `CONCEPT_FACT_SEARCH_PLAN.md` 3.1、4.3（嵌套的搜索接着外层的数往下数）。
    - `simp_depth_limit` 管不到这条互相调用【读源码，B 区评审 B2】：深度可以带进嵌套化简（`clear_simpset` 保留深度，`merge_ss` 取最大；现行做法不带，见下文注意 3），但带进去也拦不住，因为 simplifier 调 simproc 时不查深度（`raw_simplifier.ML:1099-1119`），只在用带条件的 simp 规则时查（`:1065`）。经过带条件的 simp 规则的循环是另一回事，见下文"验证"一条的注意 3。
    上下文部分的条目带来源假设的 hyps，**用前不查**它们是否仍在 `Assumption` 里（第 1 节原则；`global_form` 取走假设期间若包内 simp 用了它，结果带 hyps、note 时由内核报错，可信的调用者不会这样写）。
-   **simp 的本地假设：`concept_fact` 的 simproc 看得到**【已定，作者 2026-11-17】。先记两件源码上的事实：
+   **simp 的本地假设：`concept_fact` 的 simproc 看得到**【已定，作者 2026-11-17】。
+   【2026-11-27：这些前提怎样进表改了：一条命题的条目里各条前提的定理并存，mask 原样；一条前提拆自己的各部分时自己算在场；
+   同一次 simp 里被上限拦下的工作不接着做。现行写法在 `CONCEPT_FACT_ENTRY_PLAN.md` 4.2，
+   本段与 7.3 讲"同一作用域每条前提只收一次、只拆一次""一条条目一个 mask"的句子以它为准；代码还没有改。】
+   先记两件源码上的事实：
    `if`、`assumes` 写出的前提是上下文的假设、经过 `note_thmss`（`Pure.thy:563-567` 的 `short_statement`、`element.ML:457-462`、`proof_context.ML:1359-1371`，我读的源码），所以进 intro table。
    stock 的 simp 自己会用本地假设消掉与它一模一样的条件（本地假设 `group K`、条件 `group K`；`raw_simplifier.ML:1319-1330`，我读的源码，未实测），这不经过 `concept_fact`，我们不拦也不依赖。
    子目标里写在 `⟹` 左边、由 simp 收成本地假设的前提，靠下面的机制进 intro table：
@@ -468,6 +472,9 @@ B1 的五步照裁定重写了，写之前先照改后的步骤重做了探针�
    simproc 返回带条件的改写、由 simplifier 自己消条件，让 simp 的本地假设和 `simp_depth_limit`（Isabelle2026 默认 40，`raw_simplifier.ML:433`、`:1065`、`:1468`）自然生效。
    simproc 先跑搜索，失败直接返回 `NONE`。
    剩余条件可以带"或"【已定，作者 2026-11-20，`CONCEPT_FACT_SEARCH_PLAN.md` 4.2"取到什么"】：生效距离大于 0 而有几个打平的方案时才会。
+   【2026-11-27：作者 03:34 UTC 定了生效距离最小是 0 时也取"或"（有不留条件的方案就提前结束），所以距离 0 上也会有"或"；
+   搜索还没有改（`CONCEPT_FACT_ENTRY_PLAN.md` 3.2）。本段上面"针对 `concept _` 的 simproc 只接受没有剩余条件的推导"
+   说的是现在的代码，作者同日定了要改，见本段末尾 2026-11-27 的注。】
    这时 proof method 交给用户的子目标里会有"或"（样子见 `CONCEPT_FACT_SEARCH_PLAN.md` 4.2）；trigger 照样交带"或"的结果，见下文 trigger 一条；`concept_instance` 的义务里也可能出现带"或"的子目标（`CONCEPT_FACT_SEARCH_PLAN.md` 第 5 节，C 区）；
    simproc 交回的带条件的改写 `R₁ ⟹ … ⟹ Rᵣ ⟹ (C t ≡ True)` 里，那个"或"就是其中一个 `Rᵢ`，由外层的 simp 去证（`CONCEPT_FACT_SEARCH_PLAN.md` 4.4）。
    只接受没有剩余条件的推导的调用方，跑的是同一个搜索、但从不展开带非 concept 条件的规则【实现，concept A1；`CONCEPT_FACT_SEARCH_PLAN.md` 4.4】。
@@ -856,6 +863,8 @@ end
   经过：作者 04:08 UTC 先赞同过用一个配置项管出不出（「> 照你说的用一个配置项 / 赞同，名字建议 concept_fact_trace」），04:16 UTC 改成参数；所以没有这个配置项。
 - **proof method 上最大生效距离的写法**【已定，作者 2026-11-24 04:04 UTC：「1. 赞同带名字的」】：`by (concept_fact distance: 0)`。
 - **生效距离 0、化简第一个方案的条件时碰到 `concept_fact_user_limit`，不发 warning**【已定，作者 2026-11-24 04:04 UTC：「3. 不发」】；那时 `cut_short` 为假。
+  【2026-11-27：作者 03:34 UTC 定了距离 0 也取"或"，距离 0 上于是也可能碰到上限、停止收集；
+  这一条要作者再定（`CONCEPT_FACT_ENTRY_PLAN.md` 3.2）。】
 - **`prove_proposition`** 是 attribute `concept_fact` 与 E 区 `r[of_concept "P"]` 共用的入口：读出 P、证它、交回 `条件 ⟹ P`（上文"后备：attribute `concept_fact`"的 2026-11-24 一条）；
   报错与 warning 都由它自己出，两处调用方因此从构造上相同【提案】。
 - **`host_premise`**【提案】给 concept C：从 theory 另建上下文，把用户写的各条条件交给 `destruct_assms … Host_Premise`，对宿主跑 `search_unconditional`；

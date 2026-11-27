@@ -24,7 +24,7 @@ concept（一元的结构定义）的设计计划从 2026-11-19 起分成几个�
 | `CONCEPT_INSTANCE_CONTEXT_PLAN.md` | 文中叫"分册"。第 1 节（实例上下文）与第 3 节（结构项写在命题位置）属 C 区，第 2 节（assumption destruction）属 B 区 |
 | `NAMED_CONTEXT_IN_BLOCK_PLAN.md` | B 区。在块里再开一个有名字的 context，独立的计划 |
 | `CONCEPT_DEFINING_CONTEXT_PLAN.md` | B 区，concept B 维护（2026-11-20 新写，2026-11-21 重写）。一条 concept fact 进入上下文时发生什么（assumption destruction 的两个阶段：拆，激活）；打开 concept 的块与实例上下文怎样统一到它上面；extraction rule；header 假设带来的 notation。它取代 B 区文件 11.2 里 B14 一条的内容。本文件各处说的"B14"现在指它 |
-| `CONCEPT_FACT_ENTRY_PLAN.md` | B 区，concept B 维护（2026-11-27 新写）。fact 怎样进 intro table 的现行写法与没有定的问题：证明里的 fact 交给 assumption destruction（钩子，TAT 的 `auto_concept_extraction`）；往 intro table 的 theory 部分写只经一个函数；带前提的 fact；simp 的本地假设。取代上一行的文件第 2.1 节讲钩子的各条与第 8 节第 3、5、19 项 |
+| `CONCEPT_FACT_ENTRY_PLAN.md` | B 区，concept B 维护（2026-11-27 新写）。fact 怎样进 intro table 的现行写法与没有定的问题：证明里的 fact 交给 assumption destruction（钩子，TAT 的 `auto_concept_extraction`）；往 intro table 的 theory 部分写只经一个函数；带前提的 fact；针对 `concept _` 的 simproc 允许条件；simp 的本地假设。取代上一行的文件第 2.1 节讲钩子与 mask 细则的各条、第 8 节第 3、5、19 项，分册第 2 节的"机制""对象"，B 区文件 7.1 的 `instance_entries`、`system_entry`、旧的 `add_system_entries` |
 | `CONCEPT_FACT_SEARCH_PLAN.md` | concept A1 维护（2026-11-19 至 11-20 新写）。`concept_fact` 怎样找证明；取代 B 区文件 7.1、7.3 的一部分。2026-11-26 起冻结，已实现的搜索仍以它为准 |
 | `CONCEPT_FACT_CACHE_PLAN.md` | concept A1 维护（2026-11-26 新写，接着上一行的文件）。证出的 concept fact 的缓存；嵌套的搜索碰到外面正在证的目标时怎么改；之后的 trace |
 | `CONCEPT_ROW_VARIABLE_PROPOSAL.md` | 3.7 的来由与提案原文，已被 3.7 取代 |

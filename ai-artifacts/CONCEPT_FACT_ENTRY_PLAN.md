@@ -12,7 +12,7 @@
 - 旧文件里说的"`note_thmss` 的钩子"一律读作 1.2 的钩子；"经过 `note_thmss`"读作"建了索引"。
 
 术语只用旧文件已有的：concept fact、intro table（它的 theory 部分与上下文部分）、assumption destruction、
-激活、激活列表、selector Simpset、simp 的本地假设。"副本"只指导入做出的副本。
+激活、激活列表、selector Simpset、simp 的本地假设、concept 前提。"副本"只指导入做出的副本。
 
 本文件引的讨论报告都是读代码推出来的，没有人跑过程序；实测的地方都写明"实测"。
 
@@ -27,11 +27,11 @@
 - 交给 assumption destruction 的，是上下文按命题建了索引的 fact。
 - Isabelle 只在陈述或证明里给记下的 fact 建索引；`by fact`、`‹…›` 就是靠这个索引找 fact 的。
 - 管这件事的是 Isabelle 自带的配置项 `inner_stmt`（`Proof_Context.is_stmt`）。
-- theory 层与各层 local theory 的定理不建索引，所以不收；它们只有写了 `[concept_intro]` 才进表。
+- theory 层与各层 local theory 上证的、记下的定理（`lemma`、`lemmas`、`declare` 等）不建索引，所以不收；
+  它们只有写了 `[concept_intro]` 才进表。`context … begin` 的 `assumes`、`notes` 除外（见下面"收的"）。
 
 收的（实测，探针见第 6 节）：
-- `assume`；`have`、`show` 的结果；`have … if` 的前提；`obtain`；`note`；
-- `{ … }` 的结果（块内一次，出口一次）；
+- `assume`；`have`、`show` 的结果；`have … if` 的前提；`obtain`；`note`；`{ … }` 的结果；
 - 陈述的 `assumes`、`if`、`notes`，`obtains` 的 `that`；`subgoal premises`；`case`；
 - 带 attribute 的假设：收的是 attribute 作用之后的形式；
 - 无名 `context assumes … begin` 的假设与它的 `notes`；声明 locale 时它的假设；
@@ -42,13 +42,13 @@
   作者没有单独答，也没有反对。】
 
 收的（由别的测量推出，没有单独测）：
-- concept 的块的 `C_axiom`：它在 `inner_stmt` 打开的状态下加（1.2）。
+- concept 的块的 `C_axiom`（1.2）。
   concept A1 2026-11-27 02:06 UTC 来信说它的测试量过这条 fact 建了索引（`by fact` 找得到它，`a4a860d`）；到钩子是由此推出的。
 
 不收的（实测）：
 - theory 层的 `lemma`、`lemmas`、`declare`、`definition`；`context … begin` 里证的 lemma；
 - `interpretation`；证明里 `interpret` 带来的 locale fact；
-- stock 的 locale 的假设（`context L begin` 里）：用户要用就写 `note s` 或 `using s`；
+- stock 的 locale 的假设（`context L begin` 里）：用户要用，就在证明里写 `note s` 或 `using s`；
 - `also` 之后的 `calculation`；它被 `note`、`finally have` 记下时才收（这半句由 `note`、`have` 推出，没有单独测）；
 - `include`、`includes` 的 bundle 带来的 fact。
 
@@ -57,18 +57,22 @@
 - Pure 里一个钩子 `Proof_Context.Indexed_Facts`（`Hooks` 的实例），在 `add_facts` 里建索引时调用。
   交给它的是这条 fact 的各条定理（attribute 作用之后的），与已经记下它的上下文。
   它盖住 `note_thms`、`add_thms_lazy` 与 `{ … }` 出口的 `put_thms`。
-- 同一条 fact 可以到钩子不止一次（实测：`have … if` 的前提两次，`{ … }` 的结果两次）；
-  第二次碰到表里一模一样的条目，什么都不做。
+- 同一条 fact 可以到钩子不止一次（实测）。
+  - `have … if` 的前提在同一个上下文里到两次；第二次碰到表里一模一样的条目，什么都不做。
+  - `{ … }` 的结果在块里到一次，`}` 之后在外层的上下文里再到一次。
+    块里放进表的条目随块的上下文丢掉，外层的表里没有它，所以这一次照常拆、照常激活。
+    块里有 `assume` 时，出口到钩子的是另一条带前提的命题（实测 `R 66 ⟹ R 67`）。
 - Pure 另改一行【已定】：`Proof.global_goal` 的 after_qed 除了恢复命名方式，也恢复 `inner_stmt`。
   - 原版在证明开始时打开 `inner_stmt`、把命名方式换成局部的；after_qed 只恢复了命名方式。
   - 原版里那一刻读 `inner_stmt` 的只有建索引那一处，建出的索引随命令结束丢掉，所以看不出毛病。
   - 我们的 attribute 与钩子都读它，所以要补上：否则 `interpretation` 时 `[concept_extraction]` 误报"在证明里"，
-    钩子也会把 `interpretation` 在最内层记下的 locale fact 当作证明里的 fact 收进来。
+    钩子也会把 `interpretation` 在最内层记下的 locale fact 当作证明里的 fact 收进来
+    （后一半由 2026-11-24 的探针量到那些 fact 建了索引推出；探针只在加了这一行之后跑过）。
 - concept 的块的 `C_axiom` 在 `inner_stmt` 打开的状态下加，与 Isabelle 加无名 context 假设的做法相同。
 - concept 一侧挂在钩子上的函数：带 tag 的放过；从命题上看得出 assumption destruction 拿不出东西的放过；
   其余交 `destruct_assms … In_Context`；出错的那一条跳过，不让错误传进用户的证明。
 
-### 1.3 陈述了而不马上证的 lemma（TAT）【已定，作者 2026-11-27】
+### 1.3 陈述了而不马上证的 lemma（TAT）【做法与两个名字作者 2026-11-27 定；管到哪里由 concept B 定；一处没有定】
 
 - 起因：TAT 对节点求值时只跑陈述、用 `sorry` 收下，从不跑证明；证明由 AoA 在求值存下的目标状态上另外构造。
   陈述里的假设若一进来就拆，每求值一次就白拆一次。
@@ -92,7 +96,8 @@
   `context assumes … begin` 的假设；这种 context 里的 lemma 的 `if`。
 - 它是"是"的：证明里的 `note`、`using` 等点名的定理、`have` 的结果、`have … if` 的前提、
   `{ assume … }`、`obtain`、`subgoal premises`、`case`，与 `notepad` 里的。
-- `context assumes … begin` 的假设与 lemma 的假设在这个配置项上分不开。
+- `context assumes … begin` 的假设与 lemma 的假设在 `inner_body` 上分不开；
+  所以 `auto_concept_extraction` 关着时打开这样的 context，它的假设也存着不拆。
 - 实测两次：2026-11-24 用一个 attribute 在原版上；2026-11-27 在钩子被调用的那一刻、在 concept 的私有树上。
 
 实现时要核的：
@@ -107,8 +112,10 @@ concept B 2026-11-27 02:43 UTC 向作者说过打算照普通配置项的惯例�
 
 ## 2. 往 intro table 的 theory 部分写：只经一个函数
 
-**本质**：先在"还没有这条 fact"的 theory 上把激活算完，再把 fact 与结果一次写进去。
+**本质**：先在"还没有这条 fact"的 theory 上把活算完，再把 fact 与结果一次写进去。
 "先登记还是先激活"的问题因此不存在。
+
+这一个函数是下层私有的（登记的讨论报告 6.2 里叫 `register_theory`）；2.2 的三个对外的函数都经它写。
 
 ### 2.1 为什么
 
@@ -136,24 +143,29 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   - 每种实例恰好给出一条规则；命令不需要从这次调用拿回任何东西。
   - 第 7 步的完整次序在 `CONCEPT_C_INSTANCE_PLAN.md` 5.1。
 - `add_system_entries`：concept E 每次导入调用它一次；声明 concept 时视图的 fact `concept (C.q ?c)` 也经它进表。
-  一次调用的各条规则都在同一个 theory 上算，结果不随它们的先后变。
-  激活不激活由它按每条规则判断：有 concept 条件的不激活（作者 2026-11-22 03:57），其余激活；没有 `activate` 标志。
+  一次调用的各条规则都在同一个 theory 上算，结果不随它们的先后变。没有 `activate` 标志：
+  没有 concept 前提的规则拆、激活；有 concept 前提的现在只进表（3.1）。
   `safety` 给 `NONE` 时，安全标记由声明时的判断定。
 - `fact_context ctxt th`：从给的上下文建临时上下文，固定定理的变量；
   实例的隐藏字段字面是 `True` 时消掉前提 `concept t`，其余前提假设。
-- theory 层的 `[concept_intro]` 也经这个函数写。
-- 导出什么照旧（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.2 节"导出什么"）：
-  临时上下文什么都不假设时导出这次拆放进表的全部，否则只导出直接的激活结果。
-  第 3 节的问题定下之后，带前提的这一半可能要改。
+- theory 层的 `[concept_intro]` 也只经那一个函数写，算法与 `add_system_entries` 相同。
+- 导出什么【已定，作者 2026-11-27 04:06 UTC：「A：挡，并且登记时全存。可以」】：
+  凡是拆了、激活了的，都导出这次拆放进临时上下文的 intro table 的全部条目，带着规则的前提；
+  临时上下文假设不假设东西都一样。
+  - 它取代 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 2.2 节"导出什么"里带前提的那一半
+    （"只导出结论自己那一两条表项的激活结果"，concept B 2026-11-23 定的）。
+  - 为什么：一条规则进 theory 时把它的活做全、结果存全，之后任何地方再碰到一模一样的条目都挡，不丢东西（3.1）。
+  - concept B 的读法：带条件的实例声明时导出的也照此全存。
 
 ### 2.3 没有定的
 
-- 一条 fact 已经在 theory 部分里，后来的声明要不要重做它的激活。
+- 一条 fact 已经在 intro table 的 theory 部分里，后来的声明要不要重做它的激活。
   例：`comm_monoid int.monoid` 已由更早的实例放进表；
   后来 `concept_instance int: comm_monoid rewrites e: "Units int.monoid = int_units"` 的激活被跳过，
   `group int_units` 进不了表。concept C 在等这一问。
-  已向作者提出（2026-11-27 01:59、02:19 UTC；concept B 建议先接受并写明，在原型上看它多常出现），他还没有答。
-  带前提的条目照 3.3 第 5 项的规则办之后，这一问只涉及不带前提的条目。
+  带前提的条目全存之后有同样的毛病：登记之后，后来的 theory 又加了 extraction rule 或实例，早先存下的不更新。
+  作者 2026-11-27 04:07 UTC：「接受存下的东西会过时」。
+  concept B 读作它也答了这一问（后来的声明不重做），04:10 UTC 向作者说了这个读法并请他读错了就指出；他还没有回应。
 - 导入的副本带哪个安全标记：只定了接口（`safety option`），带原件的标记还是交 `NONE`，由 concept E 选，还没有选。
   副本要不要记位置也没有定。
   concept E 的初步倾向（2026-11-26，不是定论）：带原件的标记；位置记做出这条副本的那条命令的位置。
@@ -162,13 +174,28 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
 
 ## 3. 带前提而结论是 concept fact 的 fact
 
-例：`⋀i. i ∈ I ⟹ X (G i)`。
+分两种，看前提里有没有 concept 前提（什么算 concept 前提，照作者 2026-11-23 定的，旧文件第 2.2 节）：
+- 没有的，如 `P x ⟹ X (f x)`、`⋀i. i ∈ I ⟹ X (G i)`：一条带条件的 concept fact。
+- 有的，如 `group ?G ⟹ comm_group (center ?G)`、`Y ?S ⟹ X (g ?S)`：一条规则，由一个结构造另一个结构。
+  在 concept 的块里证的每条 `[concept_intro]` lemma（带着前提 `C ?S`）、带宿主前提的导入副本都是这一种。
 
 ### 3.1 方向
 
-- 它与不带前提的 fact 同样对待：也拆、也激活、也计数。
-  【作者 2026-11-26 11:41:38 UTC 的意见，同一句话里他要讨论小组讨论（原话在第 5 节）；
-  讨论小组判在遍历这一层可行；他此后没有单独说"定了"，接着问的是细则。】
+- **没有 concept 前提的**：始终拆、始终激活，证明里、theory 里登记、导入都一样，与不带前提的 fact 同样对待，也计数。
+  【已定，作者 2026-11-27 04:12 UTC：「对于条件中不带有 concept facts 的 concept facts 我们始终可以安全地拆解与激活」。】
+- **有 concept 前提的**：现在处处只进表、不激活（作者 2026-11-22 03:57 的线，对登记与导入；实例声明时的激活是例外，不变）。
+  要不要也拆、也激活，没有定，见 3.3 第 1 项。
+- 碰到表里一模一样的条目就挡，带前提的条目也一样；规则进 theory 时把活做全、结果存全（2.2），所以挡了不丢东西。
+  【已定，作者 2026-11-27 04:06 UTC：「A：挡，并且登记时全存。可以」。作者 2026-11-21 09:33 的规矩因此照字面不变。】
+  例：theory 有 `lemma r [concept_intro]: "r0 x ⟹ kc (mk x)"`；证明里 `assume "⋀x. r0 x ⟹ kc (mk x)"` 碰到 `r`，什么都不做，
+  它要的 `r0 ?x ⟹ grp (kk ?x)` 等已经随 `r` 的登记存在 theory 部分里。
+- 全存的代价【作者 2026-11-27 04:07 UTC：「接受表的大小」「接受构建时间」「接受存下的东西会过时」】：
+  - theory 部分变大：评审团队的 Python 模型里，一条登记存全之后从 1 条变成约 87 条或 141 条；
+  - 每条登记多做一次拆和激活；
+  - 存下的东西会过时（2.3 第一条）。
+  这些代价都只关于 intro table：登记时的拆不起名字、不挂 `[intro!]`、不作 notation 的来源；
+  间接受影响的只有读这张表的搜索。真实的库上都没有量过，原型里量。
+  讨论小组还推过一条、concept B 没有核：目标的写法化简不动、而存的是化简过的写法时，对不上存下的条目。
 - 带前提的不挂 `[intro!]`【已定，作者 2026-11-26 11:40:49 UTC】。
 - 做法【讨论小组的结论】：每一步只读结论，前提跟在后面带着走；停机的设计（旧文件第 4A 节）不用重做。
   步子是"在结论上做匹配，再复合"，不是直接的 `RS`：`RS` 做合一，会把 fact 自己的变量也实例化。
@@ -176,32 +203,31 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   这与作者说的"直接用 RS"不同；concept B 2026-11-26 16:17 UTC 向他说过，他没有单独答。
 - "是不是同一条"按整条命题认：`P ⟹ C t`、`Q ⟹ C t`、`C t` 是三条。【讨论小组的结论】
 
-现在的代码还是此前的最低限度：带前提的只作为一条不安全的规则进表，不拆、不激活。
-作者 2026-11-26 11:30:43 UTC 对 concept B 提的"进表当一条不安全的规则，别的不做"答的是：
-「1. 赞同 进表当一条不安全的规则。但“别的”是什么？」；随后他要的是拆、激活、计数也都做（上面第一条）。
+现在的代码：带前提的不分两种，都只作为一条不安全的规则进表，不拆、不激活。
 
 ### 3.2 针对 `concept _` 的 simproc 允许条件【已定，作者 2026-11-27 03:20 UTC】
 
 **本质**：selector Simpset 里针对 `concept _` 的 simproc（`condition_proc`）与别的 concept 目标同样处理。
 它跑同一个搜索、用同样的上限；推导留条件时交回带条件的改写 `R₁ ⟹ … ⟹ (concept t ≡ True)`，条件由化简器去证。
-不另设"生效距离为 0"的限制。
+不另设限制（此前它只接受不留条件的推导；作者说的"生效距离限制为 0"指的就是那一条）。
 
-- 此前它只接受不留条件的推导。那条限制作者没有单独定过：
-  它是会话 concept A1 2026-11-17 约 15:03 UTC 写进主计划 `CONCEPT_UNARY_PLAN.md` 5.3 的"实现上的三点（……我定）"之一；
-  当初的理由是 selector Simpset 证不了实例 intro rule 里的普通条件（如 `closed`）。
 - 起因的例子：`assume "⋀G H. P G H ⟹ W (sub.group G H)"` 激活出的条目停在 `monoid.truncate (sub.group ?G ?H)`，
   因为截断等式的条件 `concept (sub.group ?G ?H)` 只在 `P ?G ?H` 之下成立；目标 `Q (h (sub.monoid G H))` 对不上它。
 - 搜索一侧【concept A1 2026-11-27 答复，它的地方】：`condition_proc` 改调普通的入口
   `Concept_Search.search {max_distance = NONE}`，上下文就是化简器交来的那个，外面不加任何 handler；
   再 `prove` 得到 `R₁ ⟹ … ⟹ concept t`。
-  它的新设计（`CONCEPT_FACT_CACHE_PLAN.md` 4.2、4.4）已经管到"一个搜索里面的、留条件的搜索"。
-  入口随 concept A1 这一批改动提交后可用；在那之前 `condition_proc` 不动。
+  这个入口现在就有；在化简里、在一个搜索之内带条件地调它，要等 concept A1 手头这一批改动
+  （`CONCEPT_FACT_CACHE_PLAN.md` 4.2、4.4）提交后才对。在那之前 `condition_proc` 不动。
   `concept_instance` 判断宿主前提的那一步仍要不留条件的推导，`search_unconditional` 为它留着。
-- 还要改的一处（没有写进做法，也没有实现）：要化简器证得出条件 `P ?G ?H`，带前提的条目得在假设着自己前提的上下文里化简。
-  现在 `Form.of_thm` 只固定变量、不假设前提；要改成像 `Concept_Type.selector_simplify` 那样把前提加进化简器的前提。
+- 它帮得上的只是"条件正好是化简器手里假设着的前提"的情形。
+  留下的若是实例的普通 `if` 条件（如 `closed`），selector Simpset 从空的 simpset 起建，仍证不出，等式照样用不上。
 
 搜索的距离上作者同日另定的与在讨论的（搜索归 concept A1，原话已转给它）：
 - 【已定，03:34 UTC】生效距离最小是 0 时也取"或"；有不留条件的方案就提前结束、只取它；队列里不留条件的分支优先。
+- 【要作者再定】距离 0 也取"或"之后，搜索要把距离 0 的分支都走完才停；现在能正常结束的调用，有的会碰到
+  `concept_fact_user_limit`，在距离 0 上出"停止收集"的 warning。这与作者 2026-11-24 04:04 UTC 定的
+  "生效距离 0 上不发 warning"（`CONCEPT_B_FACT_PLAN.md` 7.1）相抵。
+  concept A1 2026-11-27 03:40 UTC 指出；concept B 03:43 UTC 向作者提过；下一条的讨论小组一并在查。
 - 【在讨论】不安全的规则还加不加 1。作者 03:30 UTC：「也许我们不应该惩罚不安全规则」；
   03:34 UTC 令开讨论小组查别的代价与问题（Workflow `wf_f1f99220-a4b`，
   报告将在 `ai-artifacts/concept_unsafe_penalty_discussion_2026-11-27.md`）。
@@ -210,47 +236,40 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
 - 起因的例子里，经这条 fact 的推导生效距离是 1：它按不安全的规则进表，不安全加 1；`W` 是 `group` 或其祖先时 concept 距离是 0。
   `sub.group` 自己的规则另要 `group ?G`，例子里没有东西证它，所以不成推导。
   交回的就是经这条 fact 的推导，条件 `P ?G ?H` 交给化简器。
-- 仍化不开的一种：上下文另外知道 `group G`（`G` 固定）。这时 `sub.group` 自己的规则给出生效距离 0 的推导，
-  只有它被交回，留下的是 `sub.group` 的各条 `if` 条件，在前提 `P G H` 之下证不出。
-  去掉"不安全加 1"并且距离 0 也取"或"之后，交回的是 `(各条 if 条件) ∨ P G H`，这一种就通了。
+- 仍化不开的一种：fact 里的 `G` 是上下文固定的变量，不在 `⋀` 之下，
+  如先有 `assume "group G"`，再 `assume "⋀H. P G H ⟹ W (sub.group G H)"`。
+  这时 `sub.group` 自己的规则给出生效距离 0 的推导，只有它被交回，留下的是 `sub.group` 的各条 `if` 条件，
+  在前提 `P G H` 之下证不出。
+  去掉"不安全加 1"并且距离 0 也取"或"之后，交回的是 `(各条 if 条件) ∨ P G H`；
+  化简器要证这个"或"，selector Simpset 证不证得出没有核过。
 - 仍化不开的另一种（带前提的讨论报告 3.4）：视图被整块填成别的结构时，如 `assume "⋀K. P K ⟹ Z (z K)"`，
   条件 `concept ?K` 没有可用的条目：关于 `?K` 的只有 `P ?K ⟹ group ?K`，它的结构项是 schematic 变量，不进表。
 
 ### 3.3 没有定的
 
-1. 前提本身是 concept fact 的 fact（`⋀H. group H ⟹ X (g H)`）被 assumption destruction 碰到时激活不激活。
-   这样的规则在 theory 里登记时不激活，是已定的（作者 2026-11-22 03:57）。
-   已向作者报（2026-11-27 03:10、03:18 UTC），他还没有答。选项：
-   - 处处只放进表、不激活；
-   - 各处的遍历都照常激活，但在 theory 里登记或导入这样一条规则时仍不为它起一次激活（讨论小组推荐，concept B 也这样看）。
-     它在一处收窄 03:57：证明里用 `[concept_intro]` 登记这样的规则会激活；
-   - 处处激活、登记时也激活（推翻 03:57）。
-   讨论小组补的一点：不管怎样答，各处的遍历要答得一样（证明里、内部调用、声明与登记时的遍历），
+1. 有 concept 前提的 fact 要不要也拆、也激活。
+   作者 2026-11-27 04:12 UTC 令讨论小组查这样做安不安全：「若安全，且代价可接受，建议统一拆解与激活」。
+   Workflow `wf_26720849-7c4`，报告将在 `ai-artifacts/concept_concept_premise_activation_discussion_2026-11-27.md`。
+   旧文件里与它有关的：第 2.2 节"用户登记的、导入进来的有 concept 条件的规则登记时不激活：后果与补救"、第 8 节第 18 项。
+   讨论小组早先补的一点：不管怎样定，各处的遍历要一样（证明里、内部调用、声明与登记时的遍历），
    否则同样两句话先后不同会得出不同的 fact。
 2. 只出现在前提里的变量怎样筛。
    例：`⋀i. i ∈ I ⟹ sub group (H i) K` 拆一步得到 `?i ∈ I ⟹ group K`。
+   各处的遍历要筛得一样，theory 里存下的才等于证明里拆出来的。
 3. 结论头上的 `⟶` 要不要像 `∧`、`∀` 一样打开。例：`assume "∀i∈I. group (G i)"` 现在什么都拆不出。
 4. simp 的处理器对带前提的本地假设拆不拆。现行是不拆（作者 2026-11-18 定的）。
-5. 证明里带前提的 fact 碰到 theory 部分里一模一样的带前提的条目时挡不挡。
-   已向作者报（2026-11-27 03:10、03:18 UTC；报告 `ai-artifacts/concept_identical_premised_entry_discussion_2026-11-27.md`），他还没有答。
-   - 例：theory 有 `lemma r [concept_intro]: "r0 x ⟹ kc (mk x)"`，表里存着 `r` 与它直接的激活结果。
-     证明里 `assume "⋀x. r0 x ⟹ kc (mk x)"` 碰到 `r`，什么都不做，
-     拿不到没有 `r` 时拿得到的 `r0 ?x ⟹ grp (kk ?x)`：多了一条 lemma，反而少了 fact。
-   - 讨论小组推荐的规则（concept B 也这样看）：只有 assumption destruction 自己做出的条目才挡，
-     即上下文部分的每一条，加上 theory 部分里不带前提的。
-     theory 部分里带前提的条目从不挡；这条 fact 在上下文部分放一条同样的条目、激活一次，此后由这条条目挡。
-   - 这条规则收窄作者 2026-11-21 09:33 定的"表里已有一模一样的，就不重复放、不再激活"
-     （连同 16:11"已经被激活过的不再激活"的字面）：对 theory 部分里带前提的条目不再适用。
-     其余三个选项见报告第 11 节。
-   - theory 层各条路导出多少，照 2026-11-23 的线不变。
+5. 带前提的条目化简时假设不假设自己的前提。
+   要化简器证得出 3.2 例子里的条件 `P ?G ?H`，带前提的条目得在假设着自己前提的上下文里化简。
+   现在 `Form.of_thm` 只固定变量、不假设前提；要改成像 `Concept_Type.selector_simplify` 那样把前提加进化简器的前提。
+   作者没有单独定过；concept B 2026-11-27 03:23 UTC 只向他说过它是那个例子化得开的前提。
 6. 3.2 末尾两种仍化不开的情形要不要管。
-   对第一种 concept B 提过一个补法：条件字面上就是化简器假设着的前提时，在搜索里算已关掉（2026-11-27 03:18 UTC）。
+   对第一种 concept B 提过一个补法：条件字面上就是化简器假设着的前提时，在搜索里算已关掉（2026-11-27 03:17 UTC）。
 
 ---
 
 ## 4. simp 的本地假设
 
-现行的做法（处理器、mask）在 `CONCEPT_B_FACT_PLAN.md` 7.1"simp 的本地假设"。这里只写要改的。
+现行的做法（处理器、mask）在 `CONCEPT_B_FACT_PLAN.md` 7.1"simp 的本地假设"。这里写要改成什么。
 
 ### 4.1 毛病
 
@@ -262,17 +281,46 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
 - 一条前提后面的部分用不上它自己前面的部分。
   例：`grp G ∧ cgrp (subg G (core G))`，第二部分里的 `core G` 要靠第一部分的 `grp G` 才化得开。
 
-### 4.2 方向【作者说是实现上的事，由 concept B 定】
+### 4.2 做法【concept B 定；作者 2026-11-27 01:49 UTC 说是实现上的事，04:06 UTC 准许写入】
 
-- intro table 的上下文部分仍只有一张。不给每条前提另开一套记录。
-- 几条前提给出同一条命题的，不跳过，并进这条命题的条目；它此刻可不可用，是各条前提的 mask 的"或"。
-- 条目的定理自己带着它出自的那条前提作假设，所以只对 mask 取"或"不够。
-  讨论小组（Workflow `wf_28197bb0-c19`）选的做法：各条前提的定理并存在同一条命题的条目里，mask 原样，
-  交出此刻能用的那一条。没选的是"在这条 fact 自己作假设之下只拆一次，查表时换接"。
-  报告 `ai-artifacts/concept_simp_premises_one_table_discussion_2026-11-27.md`，里面有查表的规则、要改的代码与测试。
-- 已向作者报（2026-11-27 03:30 UTC）。等他定一件并准许写入，做法的全文那时再写进这一节：
-  同一次 simp 里被上限拦下的工作，后一条前提碰到时接不接着做。
-  旧文件 4A.5 现在写的是接着做；小组的做法与现在的代码都不接着做；小组与 concept B 都建议不接着做。
+取讨论小组（Workflow `wf_28197bb0-c19`）选的做法；报告
+`ai-artifacts/concept_simp_premises_one_table_discussion_2026-11-27.md`，要改的代码在它第 6 节，测试在第 7 节。
+
+- intro table 的上下文部分仍只有一张。不给每条前提另开一套记录，也没有第二张表。
+- 一条命题的条目里放的是下面两种之一，不会两种并存：
+  - 一条不带 mask 的定理：来自 theory、证明上下文自己的 fact、证明里的登记；
+  - 每条给出这条命题的前提各一条定理，照前提给出的先后排，各带那条前提的 mask。
+    mask 就是作者定的那个闭包，原样不动。
+- 条目只有一个安全标记：各次放进来的里最强的。
+- 条目此刻可不可用，是各条 mask 的"或"；交出去的是此刻在场的那条前提的定理。
+  每个析取支各带一条定理，因为假设着第一条前提的定理不能在只有第二条前提在场的地方交出去。
+- "拆过了"的记录照同样的形状：一条到处能用的，或每条前提各一条。
+- 处理器拆一条前提的各部分时，这条前提自己算在场（那次调用里加进化简器的前提，之后拿掉）。
+  这样一条前提后面的部分用得上它前面的部分。
+- 一条定理或一条记录，只在"表里已有的没有一条在这次调用里用得上"时才加。
+  所以同一条前提收两次什么都不多；两条前提说同一条 fact 时，第二条不跳过，照常拆，定理并进同一条条目。
+  mask 之间从不比较。
+- 一次遍历只有一个 mask，它写的东西都带这个 mask。
+- 同一次 simp 里，被上限拦下的工作，后一条前提碰到时不接着做。
+  【concept B 定；作者 2026-11-27 04:06 UTC 对这一处：「交给你自决了。准许写入计划」。】
+  带 mask 的调用开始时没有被拦下的工作，结束后把上下文里原有的原样放回；现在的代码也是这样。
+  它改掉 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 4A.5 里"这次调用的后一条前提碰到它时，接着做前一条前提记在它名下的工作"
+  对 simp 的那一半。理由：默认上限 300，simp 里碰到的时候少；碰到了只是少 fact；
+  接着做要让被拦下的工作带着两条前提的 mask，两轮讨论都在这种记账里找出过毛病。
+
+查表时交出哪一条：
+1. 只有此刻能用的定理参加：theory 的、证明上下文自己的，以及前提在场的那些。
+2. 不带 mask 的先于带 mask 的；theory 的与证明上下文自己的之间照现在的次序。
+3. 只有前提的定理能用时，取前提给出的先后里的第一条。
+4. 安全标记取 theory 条目与上下文条目里较强的；上下文条目的标记只在它有能用的定理时算数。
+
+例：`⟦grp K ∧ x ∈ A; grp K ∧ y ∈ B⟧ ⟹ C` 用 simp。
+化简第一条前提时交出第二条的定理；化简第二条时交出第一条的；到结论处两条都在场，交第一条的。
+
+已知的：
+- 两条前提说同一条 fact 时，它被拆两次。合成一次是以后量过再说的优化。
+- 仍然漏的一种：一条前提的结构项要靠另一条前提才化得开时，它的条目停在收进来那一刻的写法上。
+  例：`⟦grp G; cgrp (subg G (core G)) ∧ x ∈ A⟧`，第二条前提的条目里留着 `core G`。
 - 要照着做的 simplifier 的行为（concept B 读过 `raw_simplifier.ML` 的 `mut_impc0`、`mut_impc`）：
   `simp`、`auto`、`clarsimp` 用的 mutual 方式下，这一层的前提先按原样全收进来，每收一条调一次处理器，
   然后才逐条化简；某条被改写了，改写后的形式再收一次。
@@ -303,6 +351,17 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
 - 2026-11-26 11:41:38 UTC【要求与意见】：「你启动 Opus agent team 讨论一下吧，我认为带有 condition 的 assumption destruction
   与激活等是非常自然的呀，因为我们始终只看 the conclusion 呀，直接用 RS 应该一切就都能解决了」
 - 2026-11-27 01:20 UTC，对两个讨论小组的不同补法【要求】：「那请你把两个小组的意见结合起来进一步 Opus agent team 讨论一下」
+- 2026-11-27 04:06 UTC【决定】：「1. A：挡，并且登记时全存。可以」
+- 同一条，对有 concept 前提的规则登记时也激活：「2. B：带 concept 条件的规则登记或导入时也拆、也激活，
+  推翻我 2026-11-22 03:57 的线。可以」。【这一句被他 04:08 至 04:12 的三条取代，见下。】
+- 2026-11-27 04:07 UTC【决定】：「接受表的大小」「接受构建时间」「接受存下的东西会过时」；
+  「代价始终是关于 the intro table 对吗？」（concept B 答：是）
+- 2026-11-27 04:08 UTC【问题】：「等一下我记得激活 user intro rule 的话会带来不停机问题，你查一下我们当时的讨论」
+- 2026-11-27 04:10 UTC【意见】：「我感觉我们不应该再大改设计了。我建议始终只激活条件中不带有 concept facts 的 concept facts；
+  而带有 concept facts 的实际构成了 user rule 是吗？那么此时是否激活我们讨论一下，先看一下我们以前的讨论结果是怎样的」
+- 2026-11-27 04:12 UTC【决定与要求】：「这样吧，对于条件中不带有 concept facts 的 concept facts 我们始终可以安全地拆解与激活；
+  而对于条件中带有 concept facts 的那些，run an Opus agent team 讨论一下此时拆解 + 激活安全吗，
+  若安全，且代价可接受，建议统一拆解与激活」
 
 针对 `concept _` 的 simproc 与搜索的距离：
 - 2026-11-27 03:14 UTC【意见】：「我认为问题的根本是对于 concept _ 的特殊处理」
@@ -323,6 +382,8 @@ simp 的本地假设：
 - 2026-11-27 01:49 UTC【交给 concept B】：「这是实现上的事情，你自己决定吧，最好跑 Opus agent team」；
   对"每条含 concept fact 的前提一小份"【否掉】：
   「我觉得太笨。你搞这么多表出来，最后查表的时候要怎么搞？冲突的时候谁优先等等，这些全都是问题啊，是很大的一块儿设计啊」
+- 2026-11-27 04:06 UTC，对"同一次 simp 里被上限拦下的工作接不接着做"【交给 concept B，并准许写入】：
+  「交给你自决了。准许写入计划」
 
 ---
 
@@ -331,8 +392,8 @@ simp 的本地假设：
 - 已做：Pure 的钩子与那一行（concept 私有树 `66b51ce`）；`C_axiom` 的加法（`contrib/concept` `a4a860d`）；
   `concept_intro_table.ML`（含 assumption destruction）与 `concept_fact.ML`（`contrib/concept` `4e7b7e6`）。
 - 没有做：挂在钩子上的函数，连同 `auto_concept_extraction`、`concept_extract`；
-  `fact_context`、`add_instance_entries`、`add_system_entries` 与 theory 层 `[concept_intro]` 经它们写；
-  带前提的 fact 照 3.1 改；`condition_proc` 照 3.2 改；simp 的处理器。
+  `fact_context`、`add_instance_entries`、`add_system_entries`，以及 theory 层 `[concept_intro]` 改经那一个函数写；
+  带前提的 fact 照 3.1 改；`condition_proc` 照 3.2 改；simp 的处理器与 4.2 的条目。
 - 探针（不提交）：`ai-artifacts/concept_unary_B_probes/entry_hook/`。
   哪些 fact 建索引（`index_probe.out`）；哪些到钩子（`domain_probe.out`）；
   到钩子时 `inner_body` 与 `inner_stmt` 的值（`body_probe.out`）；
