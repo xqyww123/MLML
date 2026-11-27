@@ -263,6 +263,8 @@ B1 的五步照裁定重写了，写之前先照改后的步骤重做了探针�
    **只登记一个**，pattern `Trueprop ?P`，优先级取负数（让 HOL 默认的四个处理器先拆 `∧`、`∀`、`⟶`、`If`），`kept_by_clear_simpset = false`；Concept_Package 加载时一步同时加进 theory 的 simpset 与 selector Simpset 所在的 `Generic_Data`，之后声明 concept 时不用再加。
    原因（B3）：selector Simpset 的初值在类型层加载时就算好（`Generic_Data` 的 `empty` 是值），那时还没有任何 concept，`clear_simpset` 留不下它；selector Simpset 的入口函数 `put_simpset` 换上存好的 selector Simpset 时整个处理器表被换掉；所以靠 `clear_simpset` 把处理器留在 selector Simpset 里是做不到的，那样 selector Simpset 自己收进来的前提从不进 intro table（5.6 的流程因此消不掉 `concept (sub.monoid G H)`）。`false` 还让 `simp only:` 与带定理参数的 `simplified` 保持"只有用户列出的规则"的本意（`clear_simpset` 也清掉 `concept_fact` 的 simproc，那里本来就没有谁查 intro table）。
    处理器做的事：头不是 concept 谓词就返回 `NONE`；带前提的定理返回 `NONE`；**不带假设的定理返回 `NONE`**；其余（不带前提、带假设，可以含 schematic 变量，如收进来的 `∀i. group (G i)` 去掉 `∀` 后的 `group (G ?x)`）按分册第 2 节"接口"里 simp 那一行调 `destruct_assms`，再调 `Simplifier.get_mksimps_context` 取默认规则、返回 `SOME`。
+   【2026-11-27 05:05 UTC 作者定：上面"带前提的定理返回 `NONE`"改掉，带前提的本地假设处理器也拆，
+   与证明里的 fact 同样对待。现行写法在 `CONCEPT_FACT_ENTRY_PLAN.md` 4.2 末条。】
    【2026-11-21 14:18、14:20 UTC 作者定；专题文件 `CONCEPT_DEFINING_CONTEXT_PLAN.md` 第 8 节第 13 项】上面"处理器做的事"里的第一个判断（"头不是 concept 谓词就返回 `NONE`"）改成：
    头不是 concept 谓词、也没有 extraction rule 的前提对得上，就返回 `NONE`；对得上的（如 `sub group H G`）照样交 `destruct_assms`，由它照 extraction rule 拆。
    作者 14:20 UTC：「那我建议接受所有 patterns，然后看是否有 extraction rule 覆盖，没有的话就直接短路退出」
@@ -1420,6 +1422,10 @@ concept extraction stopped after getting 50 ordinary facts (increase it by "decl
 引号里填用户的规则或其中的一部分；不带引号的 `?G`、`?P` 之类填相应的变量。
 第 8 组里的关系名 `"sub"` 与段名 `"A"` 也带双引号【2026-11-23 改，此前这一句写的是"不带引号的 `?G`、`sub`、`A` 之类填相应的变量、关系名、段名"；见第 8 组的标注】。
 【2026-11-23 下午：第 8 组作废，段名去掉了，见那一组末尾的标注。】
+
+【2026-11-27 05:05 UTC：作者放宽了规则的形状，两个以上前提不再报错，下面第 0 组的第二句作废；
+第一句（没有前提）仍报，它的后半句 "must have exactly one premise" 要改，
+concept B 05:08 UTC 拟了 "must have at least one premise" 报作者，他还没有批。见 `CONCEPT_FACT_ENTRY_PLAN.md` 3.4。】
 
 0. 前提不是恰好一个（没有前提；两个或更多，数字填前提的个数，总是复数）：
 
