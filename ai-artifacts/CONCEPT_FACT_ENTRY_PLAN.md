@@ -389,6 +389,27 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
     两个以上前提不再报错，没有前提仍报」。】
   - 没有前提时的文案【作者 05:13 UTC 批准，逐字】：
     `Users are not allowed to declare a concept_extraction rule without a premise. Your "<rule>" must have at least one premise`
+  - 规则恰好一个前提时，别的各句照 2026-11-21 批的原文，一字不改。规则有两个以上前提时（concept B 拟）：
+    - 【作者 2026-11-27 06:34 UTC 批准】结论里有哪个前提都没有的变量（现在查所有前提）：
+      `… whose conclusion has a variable that its premises do not have. The ?K in your "<rule>" must occur in a premise`；
+      多个变量时 `… whose conclusion has variables that its premises do not have. The ?K and ?L in your "<rule>" must occur in a premise`。
+    - 【没有批】五句讲"拿来匹配的那个前提"的，`premise` 换成 `first premise`
+      （`whose first premise is a concept fact`、`is a conjunction`、`is a universal quantification`、
+      `fits any proposition`、`applies a variable to a term`，与 `… must occur in the first premise`）。
+      作者 06:34 UTC 说其中 `The "grp ?G" in your "…" is taken apart by concept instances, not by concept_extraction rules`
+      这一句没看懂；concept B discussion 讲了，并拟了一个换的说法
+      （`A concept fact such as "grp ?G" is taken apart by the instance that makes its structure, not by a concept_extraction rule`），等他定。
+    每句都以 `Users are not allowed to declare a concept_extraction rule ` 开头。
+- 【没有定】规则的结论以它自己的变量为头时，产物不是 concept fact 就丢掉的旧规矩（旧文件第 4 节：
+  「用的时候只认它被代成 concept 谓词的情形；代成别的，结果丢掉，即使有规则能接着拆」）把 `mp`、`bspec` 截短了。
+  concept B 在开发副本上实测：`assume "∀i∈I. grp (F i)"` 拆得出；`assume "∀i∈I. ∀j∈J. grp (F3 i j)"` 与
+  `assume "∀i∈I. sub cgrp K (F4 i)"` 什么都拆不出（第一步的产物不是 concept fact，被丢了）。
+  旧规矩的出处：2026-11-21 那套"声明时检查停机"的设计里的一项（`concept_extraction_termination_analysis_2026-11-21.md` 第 3 节 (a)）；
+  那套声明时的检查作者 2026-11-22 02:58 撤掉了，换成运行时的检查（旧文件 4A.1）。计划里这一句没有带作者的原话。
+  concept B 与 concept B discussion 建议：产物有 extraction rule 能接着拆时也留着，什么都接不上才丢。
+  作者 2026-11-27 06:33 UTC：「这里要小心停机问题，建议 run an Opus agent 去验证」。
+  验证的 agent 在跑（只读；报告将在 `ai-artifacts/concept_extraction_product_termination_check_2026-11-27.md`），
+  它给出的对抗性例子由 concept B 实际去跑。在它回来、作者定之前，旧规矩不动。
 - 用一条 extraction rule 时，规则的 schematic 变量的编号要与 fact 的错开。
   【作者 05:13 UTC：「注意作用 extraction rule 的时候要设置 the schematic index，防止 schematic variables 重叠」。】
   现在用规则的函数 `elim_first` 已经先把规则的编号抬到 fact 的最大编号之上再匹配；

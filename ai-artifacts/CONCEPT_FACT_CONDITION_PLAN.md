@@ -207,4 +207,13 @@ selector Simpset 里针对 `concept _` 的 simproc、`concept_instance` 的阶�
 - Opus 讨论小组在查它会不会出问题、第三档的 tactic 怎样设计（作者令；Workflow `wf_c23c1d31-2e9`，05:55 UTC 起）。
   题目 `ai-artifacts/concept_condition_closing_discussion_brief_2026-11-27.md`，
   报告将在 `ai-artifacts/concept_condition_closing_discussion_2026-11-27.md`（都不提交）。
+- 作者 2026-11-27 06:15 UTC：「…并允许 the discussion-condition-closing agent 使用 cslh19 上的环境去实际测试」。
+  三个讨论者与合并是只读做完的；06:35 UTC 起两个核对者与裁判可以在 cslh19 上实测
+  （规矩在题目的补充 `concept_condition_closing_discussion_brief_addendum_cslh19_2026-11-27.md`）。
+  cslh19 上的环境（concept B discussion 备的，作者 06:19 UTC 对做法说「可以」）：concept 的私有树快进到 `66b51ce`、重建了 Pure 与 HOL；
+  本机源码的快照在 `/home/xero/Current/MLML/ai-artifacts/concept_test_2026-11-27/`
+  （已提交的 `contrib/concept`、concept A1 的搜索开发副本、concept B 的开发副本、`Performant_Isabelle_ML`）；
+  各 agent 的探针在 `…/ai-artifacts/condition_closing_probes/` 下各自的目录里。cslh19 上 MLML 与 `contrib/concept` 的检出没有动。
+- 备环境时顺带量到的一条（cslh19，`setup_check/`）：`put_simpset HOL_ss` 加上假设 `A`（`Simplifier.add_simps`），
+  在 `Simp_Steps.limited 100` 之内把 `(B ∧ C) ∨ A` 化成 `True`。
 - 没有代码。
