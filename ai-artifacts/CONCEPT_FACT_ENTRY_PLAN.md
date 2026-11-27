@@ -408,8 +408,20 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   那套声明时的检查作者 2026-11-22 02:58 撤掉了，换成运行时的检查（旧文件 4A.1）。计划里这一句没有带作者的原话。
   concept B 与 concept B discussion 建议：产物有 extraction rule 能接着拆时也留着，什么都接不上才丢。
   作者 2026-11-27 06:33 UTC：「这里要小心停机问题，建议 run an Opus agent 去验证」。
-  验证的 agent 在跑（只读；报告将在 `ai-artifacts/concept_extraction_product_termination_check_2026-11-27.md`），
-  它给出的对抗性例子由 concept B 实际去跑。在它回来、作者定之前，旧规矩不动。
+  验证的结果（等作者定；旧规矩在他定之前不动）：
+  - 只读的 Opus agent（报告 `ai-artifacts/concept_extraction_product_termination_check_2026-11-27.md`）：去掉之后各处仍然会停，
+    不设上限的几处也是，不需要加限制。理由：旧文件 4A.7 的论证没有用到这条旧规矩；规则只拿第一个前提匹配，后继有限；
+    每一步接着拆之前节点都先过了检查（`visit_relation`：没有规则对得上就什么都不做，对得上的先过检查再用规则）；
+    规则只匹配结论、检查也只比结论，前提越堆越多带不动一条链；无限的链上必有两次同一种的变大。
+    "有规则能接着拆才留"与"去掉 `apply_rules` 里那一行过滤"走出的遍历相同。
+    它提醒：会停不等于很快停，4A.3 那种很久的有限工作现在有更多规则集够得着。
+  - concept B 实测（2026-11-27 07:08 UTC，开发副本，改动没有留在副本里）：报告的 17 组例子各在三处跑
+    （上限 300 的上下文、内部调用、不设上限的地方），共 51 次。
+    不改时：全部结束，190 条检查通过、77 条不通过（第 7、14 组之外各组都有不通过的）。
+    改了之后：全部结束，267 条检查全部通过，整个 session 25 秒；该停的链都是被 4A.1 的检查停下的，不是被上限。
+    `∀i∈I. ∀j∈J. grp (F3 i j)` 与 `∀i∈I. sub cgrp K (F4 i)` 改后拆得出。随机世界的计数改前改后相同。
+  - 报告顺带指出旧文件两处措辞与代码不符，待维护：4A.1 写"比整条命题"，代码比的是结论；
+    写"用户的 extraction rule"，而 `mp`、`bspec` 同样受检查。
 - 用一条 extraction rule 时，规则的 schematic 变量的编号要与 fact 的错开。
   【作者 05:13 UTC：「注意作用 extraction rule 的时候要设置 the schematic index，防止 schematic variables 重叠」。】
   现在用规则的函数 `elim_first` 已经先把规则的编号抬到 fact 的最大编号之上再匹配；
