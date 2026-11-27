@@ -671,6 +671,10 @@ simp 的本地假设：
   评审小组由作者下令才开；concept B discussion 07:12 UTC 向他提了。
   作者 07:15 UTC：「1. 开，但是交给 concept B 来做」「2. 可以」（第 2 点：评审的 agent 可以在 cslh19 上实际跑测试）。
   所以评审由会话 concept B（现名 concept B1）自己开、自己跟；07:16 UTC 已把原话与 cslh19 上的环境转给它。
+  评审 07:18 UTC 开跑：Workflow `wf_8e49c5eb-692`（三个评审者同一份题目、合并至多留五条意见、每条一个新的辩护者、裁判；Opus xhigh）。
+  题目 `ai-artifacts/concept_B1_batch_code_review_brief_2026-11-27.md`，报告将在 `ai-artifacts/concept_B1_batch_code_review_2026-11-27.md`。
+  评审的对象是第 97 次构建时的开发副本；它的副本在 cslh19 的 `…/ai-artifacts/concept_B1_review_2026-11-27/`，
+  三套测试 07:17 UTC 在那里跑过一遍，都通过。评审期间 concept B1 不改 `hook/concept/`。
 - 量到的一处设计上的事，concept B 建议先不管，等真有这种陈述再说【没有报作者定】：
   陈述的假设上写了 `[concept_intro]` 时，attribute 当场就把它拆了，`auto_concept_extraction` 关着也一样
   （attribute 在钩子上的函数之前跑；它不先拆，自己放的那条条目就会把这条 fact 挡住、激活丢掉）。
