@@ -850,6 +850,12 @@ concept B2 12:22 UTC 的回答：
   建议：先起一个 Opus 讨论小组对着 `concept_search.ML` 与 `concept_intro_table.ML` 读一遍，回答"搜索层从下层要的到底是哪几个函数、
   一张只做普通匹配的表能不能自然地提供它们"，两种做法各写出接口来比；接口是十个左右含义清楚的函数就重用，否则退到只重用内核。
   时机：等 concept A1 消条件那一批落地再动搜索层。问了他要不要现在起这个小组。
+  作者 2026-11-28 12:41 UTC：「1. 要」。小组 12:43 UTC 起跑：Workflow `wf_2e1f1797-f2c`（三个任务相同的讨论者、一个合并者、两个核对者、一个裁判；
+  Opus xhigh；只读，谁都不跑程序）。brief `ai-artifacts/concept_general_core_discussion_brief_2026-11-28.md`；
+  各人的文件在 `ai-artifacts/concept_general_core_discussion_2026-11-28/`；报告将是 `ai-artifacts/concept_general_core_discussion_2026-11-28.md`。
+  它读的是 `contrib/concept` 已提交的 `e5d9ef6`（concept A1 消条件那一批还没有进去）。
+  要它交的：搜索层依赖 concept 的每一处（核对 concept A1 的清单）；"抽出通用核心"的接口写成一个 ML 签名、连同 concept 的表与关系的表两个实例；
+  "只重用内核"的那一层薄的要写些什么；两种做法在八个例子上各走一遍；裁决；只有作者能答的问题。
 - **concept A1 核实的结果**（2026-11-28，读代码并用探针 `ai-artifacts/concept_A_prototype/closing_step/Truncate_Probe.thy` 实测，
   `contrib/concept` `8fd0e3c`，concept `'a mon = carrier + mult + one`、`'a grp = "'a mon" + inv`）：
   - 每个叶子只有一个 selector 常量，对 scheme 类型多态：`mon.mult :: (?'a, ?'e) mon_scheme ⇒ …`。group 对继承来的叶子没有自己的 selector：
