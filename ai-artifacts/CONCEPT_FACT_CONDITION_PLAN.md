@@ -281,7 +281,7 @@ fact 那一边也有两种样子：每条 fact 进来时就把它原样与化简
   【实测，当时的数法】1000 步放得过平常的条件，撞到上限花 1.3 至 2.0 毫秒（第 9 节）。
   改成只数起作用的之后同一个数放过的工作更多，要重新量了再请他定。
   作者 2026-11-28 04:19 UTC 问 400 时超限要多少时间；【实测，新数法，第 9 节】七种不停的规则 0.63 至 5.9 毫秒，带条件的那一种 25.7 毫秒。
-  concept B discussion 04:27 UTC 建议 400：量过的平常条件与中等大小的条件（到 `{十个} ⊆ {二十个}` 的 306 步）都过得去；
+  concept B discussion 04:26 UTC 建议 400：量过的平常条件与中等大小的条件（到 `{十个} ⊆ {二十个}` 的 306 步）都过得去；
   150 会截掉 `distinct [1..8]`（208）、`{八个} ⊆ {十二个}`（173）这一类；1000 撞上限要 21 至 132 毫秒，太慢。等他定。
   【concept A1 量的，2026-11-28，它两套测试里 selector Simpset 的每一次调用；旧 = 每次尝试算一步，新 = 只数起作用的】
   类型层的测试 4085 次调用：旧的中位数 1、九成以内 3、百分之九十九以内 29、最大 703；新的中位数 0、九成以内 0、
@@ -492,7 +492,7 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
     `generic_mksimps` 的 feature 仓库 `7b0e285`（测试：每一种改动各核对恰好数几步；README；计划）；
     concept 的私有树 `b7ad005`（合并 `efe13d7`）；`contrib/concept` `ac512c9`（selector Simpset 的一次调用至多 150 步）。
     没有做的：往 Pure 里装错误实现来核对新测试的变异检查（每个要重建一次 Pure 与 HOL）；评审改为逐例手推。
-  - 指针【concept B discussion 2026-11-28 04:28 UTC 查的】：MLML 并不跟踪 `contrib/concept`（HEAD 里没有它的 gitlink，
+  - 指针【concept B discussion 2026-11-28 04:23 UTC 查的】：MLML 并不跟踪 `contrib/concept`（HEAD 里没有它的 gitlink，
     `.gitmodules` 里也没有它），所以没有指针可移；早先各处说的"移 MLML 里 `contrib/concept` 的指针"是错的。
     `contrib/generic_mksimps` 在 MLML 里记的是 `a8d1c47`，检出在 `7b0e285`，中间隔着别的会话的五个提交；
     那个指针不是这个会话的事，没有动。
