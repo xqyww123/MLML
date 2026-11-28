@@ -450,6 +450,8 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
     3. `A concept_extraction rule cannot have a conjunction as its conclusion. Split your rule into one rule for each conjunct`
     4. `A concept_extraction rule cannot have a concept fact as its premise. The "grp ?G" in your rule is taken apart by concept instances`
        后半句【没有定】：作者 09:15:34 UTC「The "grp ?G" in your rule is taken apart by concept instances 我还是看不懂你想说什么」。
+       作者 09:24:55 UTC 问「所以这句话是关系到我们现在正在讨论的，"自动添加到激活列表"是吗？」，
+       09:25:19 UTC：「那这件先搁置」（等 forward rule 的讨论有结果）。
        concept B1 拟的换法（没有答）：
        `A concept_extraction rule cannot have a concept fact as its premise: "grp ?G". Such a rule would never be used, because concept_extraction rules are tried only on facts that are not concept facts`
     5. `A concept_extraction rule cannot have a conjunction as its premise. The "A ∧ B" in your rule is split before any concept_extraction rule is tried`
@@ -466,7 +468,7 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
     `A concept_intro rule cannot have a conclusion about an arbitrary "grp" structure. The ?S in your "grp ?S" must not be a variable`。
     状态【concept B1 09:18 UTC】：这一套在它的工作副本里，测试随之改了，三套测试通过；还没有进 `contrib/concept`
     （两个小组的 agent 正在读那个文件，等它们结束再提交）。
-- 【没有定】规则的结论以它自己的变量为头时，产物不是 concept fact 就丢掉的旧规矩（旧文件第 4 节：
+- 【已定，2026-11-28：旧规矩去掉；经过与依据在本项末尾"评审的结论"】规则的结论以它自己的变量为头时，产物不是 concept fact 就丢掉的旧规矩（旧文件第 4 节：
   「用的时候只认它被代成 concept 谓词的情形；代成别的，结果丢掉，即使有规则能接着拆」）把 `mp`、`bspec` 截短了。
   concept B 在开发副本上实测：`assume "∀i∈I. grp (F i)"` 拆得出；`assume "∀i∈I. ∀j∈J. grp (F3 i j)"` 与
   `assume "∀i∈I. sub cgrp K (F4 i)"` 什么都拆不出（第一步的产物不是 concept fact，被丢了）。
@@ -474,7 +476,7 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   那套声明时的检查作者 2026-11-22 02:58 撤掉了，换成运行时的检查（旧文件 4A.1）。计划里这一句没有带作者的原话。
   concept B 与 concept B discussion 建议：产物有 extraction rule 能接着拆时也留着，什么都接不上才丢。
   作者 2026-11-27 06:33 UTC：「这里要小心停机问题，建议 run an Opus agent 去验证」。
-  验证的结果（等作者定；旧规矩在他定之前不动）：
+  验证的结果（2026-11-27 的第一轮，那时等作者定）：
   - 只读的 Opus agent（报告 `ai-artifacts/concept_extraction_product_termination_check_2026-11-27.md`）：去掉之后各处仍然会停，
     不设上限的几处也是，不需要加限制。理由：旧文件 4A.7 的论证没有用到这条旧规矩；规则只拿第一个前提匹配，后继有限；
     每一步接着拆之前节点都先过了检查（`visit_relation`：没有规则对得上就什么都不做，对得上的先过检查再用规则）；
@@ -493,11 +495,28 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
     concept B1 照办：起一个评审小组（Workflow，Opus，只读，agent 不跑程序）判"去掉之后 assumption destruction 在每一处是否仍然会停"；
     同时在已提交的 `7588d05` 上带着那一行改动重跑 2026-11-27 的 17 组例子。
     裁判判通过，就算他接受了：concept B1 做这处改动，把 `Hook_Test` 里的三个探针改成检查，把 17 组例子加进测试，提交。
-    结论与报告的路径它会发来；在那之前这一项仍是"没有定"。
+    结论与报告的路径它会发来（来了，见下面"评审的结论"）。
     评审小组约 08:22 UTC 起跑：Workflow `wf_a8a84cdc-a66`，brief `ai-artifacts/concept_extraction_product_termination_review_brief_2026-11-28.md`，
     裁判的报告将是 `ai-artifacts/concept_extraction_product_termination_review_2026-11-28.md`。
     起跑前【concept B1 实测，`contrib/concept` `7588d05`】：17 组例子带不带改动都全部结束；带改动时 267 条检查全部通过
     （不带时 190 条通过、77 条不通过）；它的三套测试带改动都通过，随机世界的计数不变。
+  - **评审的结论**【concept B1 2026-11-28 09:27 UTC 转来；作者的两句 concept B discussion 在它的 transcript 里核对过】：
+    裁判判**通过**（报告 `ai-artifacts/concept_extraction_product_termination_review_2026-11-28.md`；评审里没有人跑程序）：
+    不靠上限，每一处都会停；去掉的那一行过滤在停机的论证里不起作用。
+    代码里另有一处靠着那行过滤：便宜判断（`has_work`）只在 β 化简之后读"一条规则拆出什么"，对一个刻意造的 fact
+    它会说"没有活"而遍历现在有活。修补：改用 `Envir.beta_eta_contract`。
+    作者 09:24:04 UTC：「便宜判断的那一个词的修补可以并入」。连同他 08:16:12 UTC 的「若通过，我接受」，这处改动与修补都算他接受了。
+    【concept B1 结论出来之后实测】裁判的 13 组例子加先前的 17 组（448 条检查，每组在三处跑）：全部结束；
+    不带修补时 446 条通过、裁判预言的 2 条不通过；带修补时 448 条全部通过。它的三套测试在候选代码上通过；
+    两个变异都被抓到（把过滤放回去；把修补撤掉）。
+    还没有提交：讨论 forward rule 的小组在读已提交的那个文件，等它结束再连同新的拒绝文案一起提交进 `contrib/concept`。
+  - 裁判的报告（它的第 6 节）留给计划的三件：
+    - 【要作者定；concept B1 已问他，裁判与 concept B1 都建议接受】一个要记下的效果：`mp` 拆开的蕴含式进了它那条链的记录，
+      所以之后一个更大的蕴含式会用掉这条链"只许变大一次"的那一次。`∀i∈I. P i ⟶ R i` 比 `R t` 少拆得出一层【concept B1 实测，与裁判推的一致】。
+      本节下面"每打开一层少一个常量，命题不变大，所以……检查……不受影响"那一句对 `mp`、`bspec` 自己的那一步是对的，漏了这一点。
+    - 与代码不再相符的文字，待维护：旧文件 4A.7"每条规则恰好一个前提"；4A.1"整条命题"（代码比的是结论）。
+    - 没有人查过的：在刻意造的规则集里，这处改动会不会丢掉已提交的代码做得出的一条推导（经"已经拆过"那条路）。
+      这是完备性的事，不是停机的事。
 - 用一条 extraction rule 时，规则的 schematic 变量的编号要与 fact 的错开。
   【作者 05:13 UTC：「注意作用 extraction rule 的时候要设置 the schematic index，防止 schematic variables 重叠」。】
   现在用规则的函数 `elim_first` 已经先把规则的编号抬到 fact 的最大编号之上再匹配；
@@ -516,6 +535,8 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   这只是写代码的先后；执行时是同一趟遍历，规则的结果由这趟遍历接着拆。【作者 05:13 UTC：「可接受」。】
 - concept B 读规矩推的、没有跑过：每打开一层少一个常量，命题不变大，
   所以"一条链上只许变大一次"的检查（旧文件 4A.1）不受影响。
+  【2026-11-28 补：这对 `mp`、`bspec` 自己的那一步是对的；但 `mp` 拆开的蕴含式进了链的记录，
+  之后更大的蕴含式会用掉那一次变大，见上面"裁判的报告留给计划的三件"第一件。】
 - 在项上拆的那一遍（notation 一侧）怎样对待多出来的前提，归 concept D 定。
 
 ---
