@@ -1321,6 +1321,10 @@ val name_of: Proof.context -> derivation -> string option (* OF 链或后备 att
 
 ### 10.1 已定
 
+【2026-11-28：`[concept_intro]` 与 `[concept_extraction]` 的拒绝文案整套换了措辞：不再以 `Users are not allowed to declare …` 开头，
+不再印整条规则（写 `your rule`）。作者同日 09:15 UTC 对 concept B1 批准。现行的各句在 `CONCEPT_FACT_ENTRY_PLAN.md` 3.4 的"现行的拒绝文案"；
+本节下面这两类文案的旧句留作出处与填法的说明，措辞以那里为准。】
+
 对所有文案都适用的规则在 `CONCEPT_PLAN_INDEX.md` 第 10 节：例句里印出的类型、句末不带句号，2026-11-22 起还有句子里提到的名字加双引号。`⌂` 表示附位置（`Position.here`）。
 
 <!-- 冻结主计划 CONCEPT_UNARY_PLAN.md 第 1943–1960 行 -->

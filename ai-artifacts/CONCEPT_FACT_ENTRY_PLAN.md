@@ -437,6 +437,35 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
     concept B1 拟的文案（08:33 UTC 给他看过，他没有要求改）：
     `… whose conclusion is not a proposition of HOL. The conclusion "?x ≡ ?y" of your "RR ?x ?y ⟹ ?x ≡ ?y" must be a proposition of HOL`。
     例：`RR x y ⟹ x ≡ y`。这样"每条 extraction rule 的结论都是 HOL 命题"由构造保证，`apply_rules` 里为不带 `Trueprop` 的结论留的兜底去掉了。
+  - **现行的拒绝文案**【concept B1 2026-11-28 09:19 UTC 转来，作者直接对它批的；concept B discussion 在它的 transcript 里核对过他的原话】。
+    它取代本节上面各句与 `CONCEPT_B_FACT_PLAN.md` 10.1 里 `[concept_intro]` 的拒绝文案的措辞；上面留着的是各句批的经过。
+    作者 08:26:23 UTC：「建议别把 the rule 全都答应出来，可能会很长」（规则本身不再印，写 `your rule`；
+    范围他 09:14:37 UTC 对 concept B1 说「交给你自决了」）。
+    09:13:24 UTC：「报错乙建议直接说 concept_extraction rule cannot have a conlusion containing variables unconstrained in the premise」
+    「"Users are not allowed to declare a concept_extraction rule" 这个太长了，建议直接 "concept_extraction rule cannot..." 你觉得如何？」
+    concept B1 把整套照此重写给他看；09:15:34 UTC：「1. 批准」。
+    规则恰好一个前提时的各句。两个以上前提时，讲被匹配的那个前提的句子里 `premise` 读作 `first premise`，`in the premise` 读作 `in the premises`：
+    1. `A concept_extraction rule must have at least one premise`
+    2. `A concept_extraction rule cannot have a conclusion that is not a proposition of HOL: "?x ≡ ?y"`
+    3. `A concept_extraction rule cannot have a conjunction as its conclusion. Split your rule into one rule for each conjunct`
+    4. `A concept_extraction rule cannot have a concept fact as its premise. The "grp ?G" in your rule is taken apart by concept instances`
+       后半句【没有定】：作者 09:15:34 UTC「The "grp ?G" in your rule is taken apart by concept instances 我还是看不懂你想说什么」。
+       concept B1 拟的换法（没有答）：
+       `A concept_extraction rule cannot have a concept fact as its premise: "grp ?G". Such a rule would never be used, because concept_extraction rules are tried only on facts that are not concept facts`
+    5. `A concept_extraction rule cannot have a conjunction as its premise. The "A ∧ B" in your rule is split before any concept_extraction rule is tried`
+       （全称量词的一句同此，写 `a universal quantification`。）
+    6. `A concept_extraction rule cannot have a premise that fits any proposition. The ?P in your rule must not be a variable`
+    7. `A concept_extraction rule cannot have a premise that applies a variable to a term. The ?f in your rule must not be applied to "?g x"`
+    8. `A concept_extraction rule cannot have a conclusion containing a variable unconstrained in the premise: ?K`；
+       多个变量时 `… containing variables unconstrained in the premise: ?K and ?L`。
+       这一句同时取代 "whose conclusion can never be a concept fact" 与 "whose conclusion has a variable that its premise does not have"。
+    9. 只在两个以上前提时：`A concept_extraction rule cannot have a conclusion starting with a variable unconstrained in the first premise: ?D`
+
+    `[concept_intro]` 的两句：
+    `A concept_intro rule cannot have a conclusion that is not a concept fact. The conclusion of your rule must have the form "concept_predicate structure"`；
+    `A concept_intro rule cannot have a conclusion about an arbitrary "grp" structure. The ?S in your "grp ?S" must not be a variable`。
+    状态【concept B1 09:18 UTC】：这一套在它的工作副本里，测试随之改了，三套测试通过；还没有进 `contrib/concept`
+    （两个小组的 agent 正在读那个文件，等它们结束再提交）。
 - 【没有定】规则的结论以它自己的变量为头时，产物不是 concept fact 就丢掉的旧规矩（旧文件第 4 节：
   「用的时候只认它被代成 concept 谓词的情形；代成别的，结果丢掉，即使有规则能接着拆」）把 `mp`、`bspec` 截短了。
   concept B 在开发副本上实测：`assume "∀i∈I. grp (F i)"` 拆得出；`assume "∀i∈I. ∀j∈J. grp (F3 i j)"` 与
