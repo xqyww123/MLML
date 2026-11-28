@@ -607,7 +607,7 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 16. concept A1 的设计评审另找出的一件，由 concept A1 自己报给作者（它改的是冻结的搜索计划里的算法）：
     最外层的搜索在第一个方案的条件全都读作 `True` 时仍接着收别的方案，白花带条件的用户规则，还可能印出不实的 "may not be the weakest"；
     修法是第一个方案留下的条件为空时也停。读结果时再消一遍使这种情形更常见。
-13. trace 的六句文案【concept A1 拟，2026-11-28；只在 `concept_fact_trace` 开着时印，只印结果里的条件，每个条件一条】：
+13. trace 的六句文案【**已批**，作者 2026-11-28 13:04 UTC：「全部批准」；concept A1 拟，只在 `concept_fact_trace` 开着时印，只印结果里的条件，每个条件一条】：
     - `a condition was closed by a premise of the simplifier:\n  condition: C`
     - `a condition was closed by a fact of the context:\n  condition: C`
     - `a condition was closed by the simplifier:\n  condition: C`（化简成了 `True`）
