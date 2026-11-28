@@ -623,6 +623,11 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 
 ## 11. 做到哪里
 
+- **2026-11-28 约 12:58 UTC 起会话分成了两个**【作者 12:53 UTC 令准备，13:01 UTC 对本会话：「好的你继续做 B2 的工作，请把我还没回答的问题列出」】：
+  本文件（第 1 至 11 节）与 fact 进表等三份计划归仍叫 concept B2 的这个会话（新的 transcript `206bd1d6-b66e-4c3f-9e74-fe93159b4a34`）；
+  关系蕴含的求解器归会话 relation entailment（原来的 transcript），它的计划是 `RELATION_ENTAILMENT_SOLVER_PLAN.md`，本会话不改那份文件。
+  交接说明：`ai-artifacts/concept_B2_fork_handover_2026-11-28.md`。13:03 UTC 把还没有答的问题列给了作者（十八条，第 10 节与 fact 进表计划里开着的各项）。
+
 - 2026-11-27：方案写成本文件；讨论小组（Workflow `wf_c23c1d31-2e9`）回来；concept B discussion 在 cslh19 上补跑了实测；
   作者 07:41 至 09:20 UTC 逐步定成现在的样子（第 2 节）。
 - **计数器**：作者 09:06 UTC 令现在就改，约 09:19 UTC 定由 concept A1 改、改计数器本身，09:20 UTC 定代码评审也由 concept A1 做。
@@ -694,6 +699,11 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
     里面任何一步出错（中断除外）就不再进别的样子、不印东西，用户的证明照常往下走。所以出错的一步会把两种后续的样子都丢掉，
     包括只是后面的化简出错时 selector Simpset 改写后的那一种。撞到 400 步的化简照旧：之前的样子进。
     它在第二份副本里改这三处，代码评审还在读第一份；都没有提交。
+    【concept B1 2026-11-28 13:03 UTC】三处已在第二份副本里做好（`ai-artifacts/concept_B_prototype/hook/lookup2/concept/`，
+    = `contrib/concept` `e5d9ef6` 加查找表）；更新过的 `Lookup_Test`、表与 fact 两个 session 在它上面通过；
+    `Hook_Test`（64 条检查）与变异检查还没有在它上面重跑，等代码评审之后做。
+    它约 13:01 UTC 对作者说了：出错时连 selector Simpset 改写后的那一种也丢，要留住它得用两层保护；作者没有答。
+    代码评审（`wf_b6057bc1-dda`）还在跑，读的是三处决定之前的第一份。
   - 它留给作者定的（当时的清单；（一）至（三）已如上定了）：
     （一）fact 头上 HOL 的全称量词不打开（4.3 只说了合取）：fact `∀i. finite (K i)` 消不掉 `finite (K a)`，而 `⋀i. finite (K i)` 消得掉。
     它的文件里已有 `open_fact`（assumption destruction 用的，两种都打开），换上只要一个词；它建议打开，这是对 4.3 字面的偏离。
