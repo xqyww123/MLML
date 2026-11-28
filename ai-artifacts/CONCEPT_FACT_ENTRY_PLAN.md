@@ -222,6 +222,15 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   brief `ai-artifacts/concept_forward_rule_activation_discussion_brief_2026-11-28.md`；
   报告将是 `ai-artifacts/concept_forward_rule_activation_discussion_2026-11-28.md`。
   它若被采纳，会连带回答上一项（后来新增的要不要补做激活）。
+  **讨论回来了**【concept B1 2026-11-28 10:07 UTC 转来；讨论里没有人跑程序；什么都没有定】：
+  报告 `ai-artifacts/concept_forward_rule_activation_discussion_2026-11-28.md`（设计与审查在 `ai-artifacts/concept_forward_rule_discussion_2026-11-28/`）。
+  它的回答：可以支持，但有限制。它建议的形状：
+  - 第一个前提是 concept fact 的 `[concept_extraction]` 规则，成为 assumption destruction 在一条 concept fact 上的一步，与实例的 destruction lemma 并列；
+  - 激活列表**不动**（算列表时这类规则关着）；
+  - 新加一条运行时的检查"一条链上这类规则至多用一步"（记录里一个标记；一个审查者提的，没有人审过）；
+  - 声明这样一条规则时，把已经存下的条目用它补全（每条存下的条目加一个布尔字段）；合并进来的 theory 由 `Theory.at_begin` 补全。
+  它说声明时的检查与按 size 的度量都行不通：`grp G ⟹ cgrp (center G)` 与 `grp G ⟹ grp (center G)` 的递归形状相同（`cgrp` 在 `grp` 之下）。
+  它的 7.1 节列了 14 项要作者定的；concept B1 在向他报。
 
 ### 2.4 没有定的
 
@@ -466,8 +475,7 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
     `[concept_intro]` 的两句：
     `A concept_intro rule cannot have a conclusion that is not a concept fact. The conclusion of your rule must have the form "concept_predicate structure"`；
     `A concept_intro rule cannot have a conclusion about an arbitrary "grp" structure. The ?S in your "grp ?S" must not be a variable`。
-    状态【concept B1 09:18 UTC】：这一套在它的工作副本里，测试随之改了，三套测试通过；还没有进 `contrib/concept`
-    （两个小组的 agent 正在读那个文件，等它们结束再提交）。
+    状态：已提交，`contrib/concept` `b588dfe`【concept B1 2026-11-28 10:07 UTC】；第 4 句的后半句照上面印的样子进了代码，它的措辞搁置着。
 - 【已定，2026-11-28：旧规矩去掉；经过与依据在本项末尾"评审的结论"】规则的结论以它自己的变量为头时，产物不是 concept fact 就丢掉的旧规矩（旧文件第 4 节：
   「用的时候只认它被代成 concept 谓词的情形；代成别的，结果丢掉，即使有规则能接着拆」）把 `mp`、`bspec` 截短了。
   concept B 在开发副本上实测：`assume "∀i∈I. grp (F i)"` 拆得出；`assume "∀i∈I. ∀j∈J. grp (F3 i j)"` 与
@@ -509,7 +517,11 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
     【concept B1 结论出来之后实测】裁判的 13 组例子加先前的 17 组（448 条检查，每组在三处跑）：全部结束；
     不带修补时 446 条通过、裁判预言的 2 条不通过；带修补时 448 条全部通过。它的三套测试在候选代码上通过；
     两个变异都被抓到（把过滤放回去；把修补撤掉）。
-    还没有提交：讨论 forward rule 的小组在读已提交的那个文件，等它结束再连同新的拒绝文案一起提交进 `contrib/concept`。
+    **已提交并推送**【concept B1 2026-11-28 10:07 UTC】：`contrib/concept` `b588dfe`（在 `7588d05` 之上，只动 `concept_intro_table.ML`）：
+    新的拒绝文案；extraction rule 的每个产物都留着；便宜判断按 β-η 范式读；
+    另应 concept A1 的要求导出 `canonical`，给它一次调用之内的表用（`CONCEPT_FACT_CACHE_PLAN.md` 3.11）。
+    随它的测试（照例不提交）：`Hook_Test` 64 条检查（三个探针已改成检查）、带 17 加 13 组停机例子的 `Intro_Table_Test`、`Fact_Test`；
+    两个变异都被抓到。
   - 裁判的报告（它的第 6 节）留给计划的三件：
     - 【要作者定；concept B1 已问他，裁判与 concept B1 都建议接受】一个要记下的效果：`mp` 拆开的蕴含式进了它那条链的记录，
       所以之后一个更大的蕴含式会用掉这条链"只许变大一次"的那一次。`∀i∈I. P i ⟶ R i` 比 `R t` 少拆得出一层【concept B1 实测，与裁判推的一致】。
