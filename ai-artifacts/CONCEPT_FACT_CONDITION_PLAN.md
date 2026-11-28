@@ -96,6 +96,12 @@
   惰性：选「钩子上立刻化简」。选项里写明了：它与惰性的结果完全相同（都是记下那一刻的 simpset），
   每条记下的 fact 都立刻付一次化简，含 selector 项的 fact 还可能当场启动一次搜索。这一项取代 09:01 UTC 的两句"惰性"。
 - 2026-11-27 09:20 UTC【决定】：「代码评审也交给 concept A1」
+- 2026-11-28 04:04 UTC【决定三处，问一处】：
+  对"selector Simpset 的 1000 留不留"：「selector Simpset 的上限要留，但降低到 150」；
+  对那两句提示的草稿：「你直接改成 Tactic concept_fact gave up after using conditional concept_intro rules 30 times 不就好了吗？」；
+  对"`auto_concept_extraction` 关着时陈述里的 fact 何时进查找表"【问题，concept B discussion 讲了，仍等他定】：
+  「"TAT 每求值一条陈述" 是什么意思？是 note_thm 吗？」；
+  「一条 fact 被 selector Simpset 改写了的话，改写前的原样要也进表」
 
 concept B discussion 在他 07:42 UTC 交来的那一件上定：06:04 UTC 的话取代 05:13 UTC 的那一句，消条件是设计的一部分，
 起因的例子靠它修好，不另记成已知的限制。
@@ -172,8 +178,9 @@ fact 那一边也有两种样子：每条 fact 进来时就把它原样与化简
 2. 再在系统的 simpset 里化简一次：钩子运行那一刻上下文里的那一份，删掉本包的 simproc（同 4.4），受同一个步数上限管。
    撞到上限的 fact 只按没化简的样子进表。
 3. 进表：没化简的样子与化简后的样子，不同才各记一条。是合取的拆成各支分别进；化简成 `True` 的不进。
-   【concept B discussion 的细化，第 10 节第 9 项】第 1 步改写前后不同的话，改写前的原样也进，
+   第 1 步改写前后不同的话，改写前的原样也进【作者 2026-11-28 04:04 UTC：「改写前的原样要也进表」】，
    这样走一步时规则留下的、还没经 selector Simpset 改写的条件也对得上写法相同的 fact。
+   所以一条 fact 进表的是：原样、selector Simpset 改写后的样子、后者化简后的样子，各自与前面的不同才记。
 
 - 表是本包自己的，放在证明上下文里，不当成 Isabelle 的 fact 再记一遍【作者 09:01 UTC「赞同」】。
   【concept B1】当成 Isabelle 的 fact 记下的话，钩子会把它再看见一次。
@@ -257,9 +264,12 @@ fact 那一边也有两种样子：每条 fact 进来时就把它原样与化简
      selector Simpset 里贵的是条件的那个过程：一次什么都没找到的搜索花一整次搜索、不计步（那次搜索有它自己的上限）。
   所以新数法完全管得住"改写不停"，对一次运行的时间只管到这两种为止。记成已知的限制。
   【concept A1 2026-11-28 补】同样不受它管的还有：子目标什么都没变的 looper（不会停，发行版也一样）；不返回的 ML 过程（一向如此）。
-- 上限的数【没有定，第 10 节第 1 项】：作者 09:01 UTC 提的 1000 是对当时的数法（每次尝试算一步）说的；
+- **selector Simpset 的上限是 150**【作者 2026-11-28 04:04 UTC：「selector Simpset 的上限要留，但降低到 150」】。
+  由 concept A1 改它的常数（`concept_type.ML` 的 `step_bound`）；trace 那句话字不变，印出的数随常数变。
+  下面量到的最大值 9 是在"同余规则改动项也算一步"之前量的；已请 concept A1 按最终的数法重量，有接近 150 的就报来、不自己调数。
+- 消条件的上限的数【没有定，第 10 节第 1 项】：作者 09:01 UTC 提的 1000 是对当时的数法（每次尝试算一步）说的；
   【实测，当时的数法】1000 步放得过平常的条件，撞到上限花 1.3 至 2.0 毫秒（第 9 节）。
-  改成只数起作用的之后同一个数放过的工作更多，要重新量了再请他定；selector Simpset 的 1000 留不留也是他定。
+  改成只数起作用的之后同一个数放过的工作更多，要重新量了再请他定。
   【concept A1 量的，2026-11-28，它两套测试里 selector Simpset 的每一次调用；旧 = 每次尝试算一步，新 = 只数起作用的】
   类型层的测试 4085 次调用：旧的中位数 1、九成以内 3、百分之九十九以内 29、最大 703；新的中位数 0、九成以内 0、
   百分之九十九以内 2、最大 9。搜索的测试 380 次调用：旧的最大 47，新的最大 7。
@@ -401,7 +411,8 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 ## 10. 没有定的
 
 要作者定的：
-1. 上限的数：计数器改完、concept A1 量出新旧两种数法下的步数之后，消条件的上限是多少；selector Simpset 的 1000 留不留。
+1. 消条件的上限的数：计数器合并进来、cslh19 上的树有了它之后，concept B discussion 按新数法量过再请他定。
+   （selector Simpset 的上限已定为 150。）
 2. theory 层的内部计算是否也用系统的 simpset（concept B discussion 倾向统一；07:49 UTC 问过，没有答）。
 3. 留下的那一份 simpset 把化简器手里前提的清单清空（4.4；07:53 UTC 连同别的一句话报过，没有单独答）。
 4. 查的来源再加三个：上下文的假设（`Assumption.all_prems_of`，locale 的假设只在这里）；
@@ -411,7 +422,7 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 6. `auto_concept_extraction` 关着时，陈述里的 fact 进不进查找表。
 7. 条件全被消掉的用户规则的步不计入 `concept_fact_user_limit`（第 6 节；concept B discussion 对他另一句话的读法）。
 8. fact 可否给只出现在条件里的 schematic 变量取值（规则 `?i ∈ I ⟹ group K` 碰到 fact `a ∈ I`）；不急。
-9. 一条 fact 被 selector Simpset 改写了的话，改写前的原样也进查找表（4.3 第 3 步；concept B discussion 的细化）。
+9. （定了，作者 2026-11-28 04:04 UTC：改写前的原样也进查找表，4.3 第 3 步。）
 10. 上限做不做成配置项与它的名字；trace 里印"哪个条件被什么消掉"的文案。
 
 已经定了、不再问的：都直接启用；原先中间的一档删掉；先查再化简再查；fact 的两种样子进本包自己的查找表、合取拆开、
@@ -435,8 +446,10 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
   - 要作者定文案的一处（出自 concept A1"上限只数留条件的用户规则的步"那一批的代码评审）：`concept_fact.ML` 第 140 至 155 行
     （concept B1 的）仍写着 "gave up after using concept_intro rules n times" 与 "stopped collecting … after using concept_intro rules n times"；
     现在只数留条件的步，这两句要换说法。
-    两个草稿（2026-11-28 02:59 UTC 报给了作者，等他批）：concept B1 的 `… after using concept_intro rules that leave conditions 30 times …`；
-    concept B discussion 的 `… that leave a condition …`，只差单复数，建议用 concept B1 的。只换被数的东西，其余不动；
+    **文案定了**【作者 2026-11-28 04:04 UTC：「你直接改成 Tactic concept_fact gave up after using conditional concept_intro rules 30 times
+    不就好了吗？」】：被数的东西写成 `conditional concept_intro rules`。他只写了第一句；第二句在代码里与它共用这段措辞
+    （函数 `uses`），concept B discussion 向他说了两句一起换、他若只要换第一句请说。
+    没有采用的两个草稿：concept B1 的 `… that leave conditions …`，concept B discussion 的 `… that leave a condition …`。只换被数的东西，其余不动；
     attribute 里第二句的 "the proof obligations it outputs" 读作 "the premises of the theorem it returns"；次数是 1 时说 "1 time"。
     concept B1 在 concept A1 那一批进 `contrib/concept` 的同一步里改这两句，批之前它的文件不动。
   - 【concept B1 实测，2026-11-28 02:58 UTC】在按新数法重建的 heap 上，它的三套测试在已提交的 `contrib/concept` `8086e4c` 上都通过，
