@@ -476,6 +476,10 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 - 嵌套的计数（`judge/j1_nesting.out`、`j3_unit.out`）：外面的计数已到 990/1000 时，里面一次要 20 步的运行使外面那次停下、不给结果；
   真的 selector Simpset 的一次调用里，一次没消掉的尝试之后这次调用计了 103 步。每次运行都一样，从不出错。
 - 起因的例子：第 1 节与 4.2 末。索引里有什么：4.2。
+- 算术前提更多时（`discussion/arith2.out`，2026-11-28 10:47 UTC；新数法；每个是一个消不掉的条件化简一次的时间，各计 0 或 1 步）：
+  `0 < n`：40 条前提 30 毫秒，80 条 0.43 秒，160 条 6.8 秒；`x div y ≤ z + 1`：115 毫秒、1.7 秒、27 秒；
+  `n mod 2 = 1`：81 毫秒、1.3 秒、21 秒。`finite A`、`k dvd n` 三档都是十几微秒（不是算术 simproc 管的式子）；
+  `0 < 4` 三档都是 33 微秒（直接算出来，不读前提）。
 - Main 的 simpset 对消不掉的算术条件（`discussion/arith.out`；三列是化简器手里有 0、10、40 条无关的算术前提时每次的时间）：
   `0 < n` 38 微秒 / 0.2 毫秒 / 27 毫秒；`a + b < c * d` 99 微秒 / 0.3 毫秒 / 28 毫秒；
   `x div y ≤ z + 1` 0.3 毫秒 / 1.1 毫秒 / 108 毫秒；`n mod 2 = 1` 0.4 毫秒 / 0.9 毫秒 / 81 毫秒；
@@ -493,6 +497,14 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
    作者 2026-11-28 10:31 UTC 问「"前提的清单" 是什么？这个问题我没看懂，请讲一下」；concept B2 讲了，并把两种做法摆给他：
    不管它（能靠前提做算术推理，不改 Pure，算术前提多时慢），或清空（时间不随前提的多少变，少一类推理，要改 Pure）。
    concept B2 重新权衡后倾向先不清空。等他定；在他定之前 concept A1 不做这一项。
+   作者 10:36 UTC 问：「是 simproc 吗？这个 simproc 有可能会不停机吗？」。concept B2 读源码答：是两个 simproc
+   （`fast_arith_nat`，`HOL/Fields.thy`；`fast_arith`，`HOL/Int.thy`；都是 `Lin_Arith.simproc`，即 `fast_lin_arith.ML` 的 `lin_arith_simproc`），
+   另有一个同名的 solver；核心是逐个消去变量，一定会停；内置的限制只有 `linarith_neq_limit` 与 `linarith_split_limit`（都是 9），
+   对前提的条数没有限制。【实测，第 9 节】前提每翻一倍时间约为 15 倍：160 条时一个条件 7 至 27 秒，只计 0 或 1 步。
+   concept B2 据此改回倾向清空（约 10:51 UTC 对他说了）。
+   作者 10:40 UTC：「run an Opus agent 查一下，AFP 中会有任何不停机的 simproc 吗？占比多少？可以使用 cslh19 上的 ALL-AFP」。
+   一个只读的 Opus agent 约 10:52 UTC 起跑（读 `contrib/afp-2026-10-26/thys` 与发行版里 Main 的 simproc，逐个判它会不会不停）；
+   报告将是 `ai-artifacts/afp_simproc_termination_survey_2026-11-28.md`。cslh19 上没有找到名字就叫 ALL-AFP 的 session。
 4. 查的来源再加三个：上下文的假设（`Assumption.all_prems_of`，locale 的假设只在这里）；
    proof method 与 attribute 的子目标前提；判断宿主前提时用户写的各条条件（它会改变实例声明出的规则）。
 5. 不经过钩子的来源（化简器手里的前提、locale 的假设、上一项的另两个）要不要也有化简后的样子；
