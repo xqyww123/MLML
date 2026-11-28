@@ -117,6 +117,7 @@
   对"怎样消条件"的三个取值：「建议 "查，再用上下文的 simplifier 化简" 可以允许用户指定 which simpset，若为 NONE 则用 the contextual system 的」；
   对消条件的上限：「赞同 400」；
   对"要不要现在让 concept B1 写查找表那一段、concept A1 写搜索一侧"：「可以让 A1 开始了，B1 跟我还有些问题要讨论在做别的事」
+- 2026-11-28 10:31 UTC【问题，concept B2 讲了】：「1. "前提的清单" 是什么？这个问题我没看懂，请讲一下」
 
 concept B discussion 在他 07:42 UTC 交来的那一件上定：06:04 UTC 的话取代 05:13 UTC 的那一句，消条件是设计的一部分，
 起因的例子靠它修好，不另记成已知的限制。
@@ -174,6 +175,8 @@ fact 那一边也有两种样子：每条 fact 进来时就把它原样与化简
 - **查找表**（4.3）：上下文的 fact 的各种样子。
 - 化简器手里假设着的前提：`Simplifier.prems_of` 里"假设的就是它自己的命题"的那些定理
   （搜索的开发副本里已有它们的命题的表 `local_prems`）；是合取的拆开。它们不经过钩子，每次搜索开始时取。
+  这一个来源只比写法是否相同（`aconv`），不做单向匹配【concept A1 2026-11-28】：假设下来的前提带 `?x` 时不能实例化，
+  一实例化它的假设也跟着变，化简器就消不掉那条假设了。
 - 【没有定，第 10 节第 4 项】上下文的假设（`Assumption.all_prems_of`）。
   【实测】上下文的索引里有 lemma 的假设、证明里的 fact、无名 context 块的假设，**没有 locale 的假设**；locale 的假设只在这一个来源里。
 - 【没有定，第 10 节第 4 项】proof method 与 attribute 的子目标前提；`concept_instance` 判断宿主前提时用户写的各条条件。
@@ -245,6 +248,10 @@ fact 那一边也有两种样子：每条 fact 进来时就把它原样与化简
   这样"消条件时绝不启动搜索"（第 5 节第 2 条）由 simpset 的内容保证，不用任何标记。
   删掉 selector 的 simproc 不损失结果：读结果时消的是给用户看的样子，selector Simpset 已经改写过。
   它管不到的：用户自己写的、里面调 `concept_fact` 的 simproc；ML 层的用户按约定可信。
+  具体删哪些【concept A1 2026-11-28 提，concept B2 同意】：各个 selector simproc（`Concept_Type.add_selector_simproc` 把每一个也放进了系统的
+  simpset，每个各有自己的身份；类型层记下本包放进 simpset 的每一个 simproc，照这份记录全删）；`concept_condition`；
+  还有本包处理 simp 前提的那个 mksimps handler（名字 `concept`；它不是 simproc，也不启动搜索，但在消条件里是白做的工夫）。
+  准备这一份 simpset 的是一个函数，钩子上化简 fact 时（4.3）用同一个。
 - **留下的那一份把"前提的清单"清空**【concept B discussion 加的，依据下面的实测；第 10 节第 3 项】：
   算术的判定过程读的是这张清单（`Simplifier.prems_of`），清空之后它们读不到前提。
   最外层那次化简由它的前提做成的改写规则照留在 simpset 里：它们是普通的改写规则，对整次调用都成立。
@@ -336,7 +343,16 @@ fact 那一边也有两种样子：每条 fact 进来时就把它原样与化简
   给的那一份同样先按身份删掉本包的 simproc（约束第 2 条不靠调用方记得；concept B discussion 的细化）。
 - 证明里的调用（proof method、attribute、用户 simp 里的 simproc、trigger）取第三个、不给 simpset。
   他举的那一次调用也是第三个，配上"不留条件"与最大生效距离 0。
-  theory 层的内部调用（判断宿主前提、登记与导入时存条目）在第 10 节第 2 项定下来之前取"不消"，行为与今天相同。
+- 【没有定，第 10 节第 12 项；concept B2 2026-11-28 10:36 UTC 请作者定】别的调用取**只查**：
+  theory 层的内部调用（判断宿主前提、登记与导入时存条目），与 selector Simpset 在没有搜索包着的时候启动的搜索
+  （类型层在钩子上、登记时、导入时改写一个项；系统 simpset 里的 selector simproc 在用户的 simp 里起作用）。
+  理由：起因的例子正走这条路（一条带前提的条目在自己的前提之下被 selector Simpset 化简，`concept_condition` 启动搜索，
+  规则的条件就是假设下来的前提之一）；取"不消"的话它修不好。只查用的是化简器手里的前提（与查找表），从不动用系统的 simpset，
+  所以第 10 节第 2 项担心的"theory 层的结果随 `[simp]` 声明变"碰不到；`concept_condition` 也不必分辨 theory 层与证明。
+  （concept B2 10:25 UTC 先写的是这些调用取"不消"；concept A1 提出 selector Simpset 启动的搜索也取"不消"之后，才看出那样修不好起因的例子。）
+- 一次搜索里面的搜索不看自己的参数，跟最外层的那一次：同一种消法、同一份 simpset【concept A1 提，concept B2 同意】。
+  取"查再化简"的最外层搜索总是从带着系统 simpset 的上下文启动的；它把 `NONE` 定成自己上下文的那一份，准备一次，
+  留在一次调用共用的数据里（`Around`）。`put_selector_simpset` 不用留任何东西。
 - 可换的是"化简"那一环；"先查、化简、再查"这个次序与查找表是推理器自己的，不随参数变。
 - 要知道的一点：查找表里 fact 化简后的样子是用系统的 simpset 化的（4.3）。调用方若给另一份 simpset，
   它化出的范式未必对得上表里化简后的那些样子，只对得上原样。用上下文的 simplifier 时两边一致。
@@ -473,7 +489,10 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 要作者定的：
 1. （定了：消条件的上限 400，作者 2026-11-28 10:23 UTC；selector Simpset 的上限 150，04:04 UTC。）
 2. theory 层的内部计算是否也用系统的 simpset（concept B discussion 倾向统一；07:49 UTC 问过，没有答）。
-3. 留下的那一份 simpset 把化简器手里前提的清单清空（4.4；07:53 UTC 连同别的一句话报过，没有单独答）。
+3. 留下的那一份 simpset 把化简器手里前提的清单清空（4.4）。它要给 Pure 加一个导出函数。
+   作者 2026-11-28 10:31 UTC 问「"前提的清单" 是什么？这个问题我没看懂，请讲一下」；concept B2 讲了，并把两种做法摆给他：
+   不管它（能靠前提做算术推理，不改 Pure，算术前提多时慢），或清空（时间不随前提的多少变，少一类推理，要改 Pure）。
+   concept B2 重新权衡后倾向先不清空。等他定；在他定之前 concept A1 不做这一项。
 4. 查的来源再加三个：上下文的假设（`Assumption.all_prems_of`，locale 的假设只在这里）；
    proof method 与 attribute 的子目标前提；判断宿主前提时用户写的各条条件（它会改变实例声明出的规则）。
 5. 不经过钩子的来源（化简器手里的前提、locale 的假设、上一项的另两个）要不要也有化简后的样子；
@@ -484,6 +503,16 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 9. （定了，作者 2026-11-28 04:04 UTC：改写前的原样也进查找表，4.3 第 3 步。）
 10. 上限做不做成配置项与它的名字；trace 里印"哪个条件被什么消掉"的文案。
 11. （定了，作者 2026-11-28 10:23 UTC：三个取值，第三个可以给一份 simpset，不给就用上下文的系统 simpset，4.6。）
+12. theory 层的内部调用与 selector Simpset 在没有搜索包着时启动的搜索取"只查"（4.6）。
+13. trace 的六句文案【concept A1 拟，2026-11-28；只在 `concept_fact_trace` 开着时印，只印结果里的条件，每个条件一条】：
+    - `a condition was closed by a premise of the simplifier:\n  condition: C`
+    - `a condition was closed by a fact of the context:\n  condition: C`
+    - `a condition was closed by the simplifier:\n  condition: C`（化简成了 `True`）
+    - `a condition was closed by the simplifier and a premise of the simplifier:\n  condition: C\n  simplified: C'`
+    - `a condition was closed by the simplifier and a fact of the context:\n  condition: C\n  simplified: C'`
+    - `the simplification of a condition stopped: it reached its bound of 400 simplifier steps.\n  simplifying: C`
+    仿的是批过的 `the selector Simpset stopped: it reached its bound of 150 simplifier steps.\n  simplifying: t`。
+    400 是常数，所以没有单数的形式；将来做成配置项的话，第六句要有 `… its bound of 1 simplifier step.`。
 
 已经定了、不再问的：都直接启用；原先中间的一档删掉；先查再化简再查；fact 的两种样子进本包自己的查找表、合取拆开、
 `True` 不进、先过 selector Simpset、立刻做；系统的 simpset、删掉本包的 simproc；步数只数起作用的、改计数器本身；
@@ -531,7 +560,14 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 - **消条件本身**：作者 2026-11-28 10:23 UTC：「可以让 A1 开始了，B1 跟我还有些问题要讨论在做别的事」。
   搜索一侧（"怎样消"这个参数、走一步时消、读结果时消、留下最外层的 simpset、400 步的化简）归 concept A1，10:26 UTC 转给了它。
   查找表与钩子上的那一段归 concept B1，现在不开工；在它写出来之前，"查"只查得到化简器手里的前提，查找表那一个来源是空的。
-  两边之间的接口（在查找表里查一条命题）由 concept A1 先提出来，concept B discussion 转给 concept B1。
+  两边之间的接口【concept A1 提，2026-11-28 10:34 UTC 转给了 concept B1】：`val lookup_fact: Proof.context -> term -> thm option`，
+  在 concept B1 的下层文件里。参数是一条 β-η 范式的命题；结果是命题恰好是它的一个定理，来自表里与它单向匹配上的一个条目
+  （条目当模式，只实例化条目自己的 schematic 项变量与类型变量，条目先改名错开）；纯查表，不化简、不启动搜索；定理只带上下文的假设。
+  它存在之前 concept A1 用一个什么都查不到的替身。
+- concept A1 的施工次序（它 2026-11-28 报）：先对这份实现做一次短的设计评审（Opus agent），同时做完作者要它在同几个文件里做的
+  36 处不改行为的复用修改；然后写消条件、测试、变异检查、代码评审，带着量到的数报来。
+  签名的改动 `Concept_Search.search {max_distance, closing}` 要动 concept B1 的 `concept_fact.ML` 里三处调用各一行；
+  它直接问 concept B1 可不可以由它改，没有 concept B1 的话不往那个文件里提交。
 - concept A1 同意讨论报告点到它代码的四处（一步里碰到第一个消不掉的条件就停；记录按每次搜索；读结果时再消给用户看的样子；
   消掉的条件表示成读作真的条件），并说这些不动内核的排序；它读过第 3 节，说各点都写对了。
   本文件与讨论报告里 `concept_search.ML` 的行号是它 `2a28212` 那次提交之前的文件的。
