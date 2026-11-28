@@ -438,6 +438,12 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
     `∀i∈I. ∀j∈J. grp (F3 i j)` 与 `∀i∈I. sub cgrp K (F4 i)` 改后拆得出。随机世界的计数改前改后相同。
   - 报告顺带指出旧文件两处措辞与代码不符，待维护：4A.1 写"比整条命题"，代码比的是结论；
     写"用户的 extraction rule"，而 `mp`、`bspec` 同样受检查。
+  - **作者的条件式决定**【concept B1 2026-11-28 08:20 UTC 转来；他 08:16:12 UTC 直接对 concept B1 说的】：
+    「1. 去掉这条规则后依旧能保持停机吗？run an Opus agent (team) to verify，若通过，我接受」。
+    concept B1 照办：起一个评审小组（Workflow，Opus，只读，agent 不跑程序）判"去掉之后 assumption destruction 在每一处是否仍然会停"；
+    同时在已提交的 `7588d05` 上带着那一行改动重跑 2026-11-27 的 17 组例子。
+    裁判判通过，就算他接受了：concept B1 做这处改动，把 `Hook_Test` 里的三个探针改成检查，把 17 组例子加进测试，提交。
+    结论与报告的路径它会发来；在那之前这一项仍是"没有定"。
 - 用一条 extraction rule 时，规则的 schematic 变量的编号要与 fact 的错开。
   【作者 05:13 UTC：「注意作用 extraction rule 的时候要设置 the schematic index，防止 schematic variables 重叠」。】
   现在用规则的函数 `elim_first` 已经先把规则的编号抬到 fact 的最大编号之上再匹配；
