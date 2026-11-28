@@ -428,6 +428,12 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
   - 要作者定文案的一处（出自 concept A1"上限只数留条件的用户规则的步"那一批的代码评审）：`concept_fact.ML` 第 140 至 155 行
     （concept B1 的）仍写着 "gave up after using concept_intro rules n times" 与 "stopped collecting … after using concept_intro rules n times"；
     现在只数留条件的步，这两句要换说法。
+    两个草稿（2026-11-28 02:59 UTC 报给了作者，等他批）：concept B1 的 `… after using concept_intro rules that leave conditions 30 times …`；
+    concept B discussion 的 `… that leave a condition …`，只差单复数，建议用 concept B1 的。只换被数的东西，其余不动；
+    attribute 里第二句的 "the proof obligations it outputs" 读作 "the premises of the theorem it returns"；次数是 1 时说 "1 time"。
+    concept B1 在 concept A1 那一批进 `contrib/concept` 的同一步里改这两句，批之前它的文件不动。
+  - 【concept B1 实测，2026-11-28 02:58 UTC】在按新数法重建的 heap 上，它的三套测试在已提交的 `contrib/concept` `8086e4c` 上都通过，
+    随机世界的计数与之前相同；它没有测试依赖旧的数法。
   concept A1 评审回来之后把提交与评审的结论发来，concept B discussion 报给作者并移一次 MLML 里 `contrib/concept` 的指针。
 - **消条件本身**没有代码。作者还没有说开始写。写的时候：查找表与钩子上的那一段归 concept B1；搜索一侧（走一步时消、读结果时消、
   留下最外层的 simpset）归 concept A1。
