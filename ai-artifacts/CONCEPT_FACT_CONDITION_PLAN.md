@@ -253,6 +253,12 @@ fact 那一边也有两种样子：每条 fact 进来时就把它原样与化简
 - 上限的数【没有定，第 10 节第 1 项】：作者 09:01 UTC 提的 1000 是对当时的数法（每次尝试算一步）说的；
   【实测，当时的数法】1000 步放得过平常的条件，撞到上限花 1.3 至 2.0 毫秒（第 9 节）。
   改成只数起作用的之后同一个数放过的工作更多，要重新量了再请他定；selector Simpset 的 1000 留不留也是他定。
+  【concept A1 量的，2026-11-28，它两套测试里 selector Simpset 的每一次调用；旧 = 每次尝试算一步，新 = 只数起作用的】
+  类型层的测试 4085 次调用：旧的中位数 1、九成以内 3、百分之九十九以内 29、最大 703；新的中位数 0、九成以内 0、
+  百分之九十九以内 2、最大 9。搜索的测试 380 次调用：旧的最大 47，新的最大 7。
+  至少起过一次作用的调用里，旧数与新数之比：类型层中位数 5、最大 37；搜索中位数 3、最大 23。
+  撞到上限的调用在两种数法下是同一批（不停地改写的规则，它们每步都起作用）。
+  所以 1000 不变的话，一次调用在撞上限之前能做的尝试大约是原来的 5 至 37 倍；测试里没有一次调用接近上限（最大 9 步）。
 - 嵌套：一次消条件若发生在 selector Simpset 的一次调用里面，它的步照常记在每个开着的计数器上，不另开不相干的计数器。
 
 ### 4.5 删掉的与没有选的
@@ -410,10 +416,19 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 - 2026-11-27：方案写成本文件；讨论小组（Workflow `wf_c23c1d31-2e9`）回来；concept B discussion 在 cslh19 上补跑了实测；
   作者 07:41 至 09:20 UTC 逐步定成现在的样子（第 2 节）。
 - **计数器**：作者 09:06 UTC 令现在就改，约 09:19 UTC 定由 concept A1 改、改计数器本身，09:20 UTC 定代码评审也由 concept A1 做。
-  09:21 UTC 转给了 concept A1。改动在 concept 私有树的 `src/Pure/simp_steps.ML` 与 `raw_simplifier.ML`，
-  要重建那棵树的 Pure 与 HOL（concept A1 估 15 至 25 分钟，期间 concept B1 的构建等着）；
-  类型层钉着步数的测试 `Step_Bound_Test.thy` 要重量重写；那句 trace 文案一字不改。
-  concept A1 改完、评审回来之后把提交、量到的数与评审的结论发来，concept B discussion 报给作者并移一次 MLML 里 `contrib/concept` 的指针。
+  09:21 UTC 转给了 concept A1。类型层钉着步数的测试 `Step_Bound_Test.thy` 要重量重写；那句 trace 文案一字不改；1000 不动。
+  concept A1 2026-11-28 02:57 UTC 报：
+  - 改好了、在它的工作副本里构建过：一步 = 一条规则的实例用上了，数在 `rewritec` 里 `rews` 交回 SOME 的地方，用上之后才记；
+    三个 trace 包装恢复成发行版的原样；`simp_steps.ML` 的文件头写明一步是什么，和它管不住的两种运行（4.4）。
+  - 计数器不是 concept 的代码：它在基础 feature `generic_mksimps` 里（2026-11-23 由会话"simplifier 限步数"写在那里；
+    本文件早先写的"concept 私有树的 Pure"与 concept A1 说的"我的补丁"都不对）。
+    concept A1 问了作者，作者选：提交进 `generic_mksimps`，再合并进 concept【concept A1 转述，原话在它的会话里】。
+  - 现在 `generic_mksimps` 的树在构建（Pure、HOL、它的测试 session `Generic_Mksimps_Test`，其中 `Simp_Steps_Test` 钉着的步数会变）；
+    之后评审、在那里提交并推送、合并进 concept。
+  - 要作者定文案的一处（出自 concept A1"上限只数留条件的用户规则的步"那一批的代码评审）：`concept_fact.ML` 第 140 至 155 行
+    （concept B1 的）仍写着 "gave up after using concept_intro rules n times" 与 "stopped collecting … after using concept_intro rules n times"；
+    现在只数留条件的步，这两句要换说法。
+  concept A1 评审回来之后把提交与评审的结论发来，concept B discussion 报给作者并移一次 MLML 里 `contrib/concept` 的指针。
 - **消条件本身**没有代码。作者还没有说开始写。写的时候：查找表与钩子上的那一段归 concept B1；搜索一侧（走一步时消、读结果时消、
   留下最外层的 simpset）归 concept A1。
 - concept A1 同意讨论报告点到它代码的四处（一步里碰到第一个消不掉的条件就停；记录按每次搜索；读结果时再消给用户看的样子；
