@@ -274,7 +274,7 @@ fact 那一边也有两种样子：每条 fact 进来时就把它原样与化简
   一次调用之内的表随每条证出的 fact 记着证它的那个搜索的前提，靠留下的前提消掉条件的定理只在那些前提成立的地方被取用；
   化简的记录按每个搜索记，里层多出来的前提到不了外层。
 - theory 层的内部计算（`concept_instance` 判断宿主前提、登记与导入时存进 theory 的条目）也用这一种，
-  取声明那一刻 theory 的 simpset【没有定，第 10 节第 2 项；concept B discussion 倾向统一】。
+  取声明那一刻 theory 的 simpset【作者 2026-11-28 11:15 UTC「点头」】。
   后果：某条 lemma 在声明之前有没有标 `[simp]`，可能使实例的规则长得不一样；同样的 theory 文本得出同样的规则。
   （作者 07:48 UTC，对"结果随用户的 simp 声明变"：「我认为这是好事？」）
 - 作者要知道的：`by concept_fact` 的证明像 `by simp` 的证明一样随 simp 规则的增减而变。
@@ -354,7 +354,15 @@ fact 那一边也有两种样子：每条 fact 进来时就把它原样与化简
   给的那一份同样先按身份删掉本包的 simproc（约束第 2 条不靠调用方记得；concept B discussion 的细化）。
 - 证明里的调用（proof method、attribute、用户 simp 里的 simproc、trigger）取第三个、不给 simpset。
   他举的那一次调用也是第三个，配上"不留条件"与最大生效距离 0。
-- 【没有定，第 10 节第 12 项】系统内部的调用点（theory 层的内部调用；selector Simpset 在没有搜索包着时启动的搜索）填什么参数值。
+- **我们自己的每个调用点都填同一个值：查再化简，simpset 填 `NONE`（用上下文的 simplifier）**
+  【作者 2026-11-28 11:15 UTC，对"theory 层也用 theory 的 simpset 消条件，存进 theory 的规则可能随此前的 `[simp]` 声明而不同"：「点头」】。
+  包括证明里的（proof method、attribute、用户 simp 里的 simproc、trigger）与系统内部的
+  （`concept_instance` 判断宿主前提、登记与导入时存条目、selector Simpset 自己发起的搜索）。
+  这个参数是 ML 接口上的参数，每个调用点明写一个值，接口没有默认值；`NONE` 只是 simpset 那一格的含义
+  （作者同一条里问「默认值是什么？为什么这个参数有默认值？你是在说某种特定调用下的默认值吗？」，concept B2 照此答了）。
+  别人的代码调用时填它自己要的值。selector Simpset 里面的搜索用启动这次改写的那个调用带进来的参数，经上下文传进去（做法由 concept A1 定）。
+  下面是这一项的经过。
+- 【已由上一条定了；经过】系统内部的调用点（theory 层的内部调用；selector Simpset 在没有搜索包着时启动的搜索）填什么参数值。
   作者 2026-11-28 11:12 UTC，对 concept B2 把它说成"不在证明里发起的调用取只查"：
   「为什么要这样做？难道如何证明这些条件不是用户提供的参数吗？」
   concept B2 11:13 UTC 答：是参数；"只查"只是替这些内部调用点填的值，说成按场合分的规矩是说错了。并改提：
@@ -487,6 +495,20 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
     上限 1000：七种 1.4 至 21.7 毫秒，带条件的那一种 132 毫秒。
     带条件的那一种与 `h ?n = h (Suc ?n)` 的时间随上限涨得比线性快（项越长越大，每一步连带的尝试越来越多）。
   - 新旧数法之比（同一次运行里两种都数）：平常的条件 10 至 28 次尝试对一步；不停的规则 1 至 88 次尝试对一步。
+- **AFP 与 `Main` 里的 simproc 会不会不停**（作者 2026-11-28 10:40 UTC 令查的；一个只读的 Opus agent 读源码得出，
+  报告 `ai-artifacts/afp_simproc_termination_survey_2026-11-28.md`，笔记在 `ai-artifacts/afp_simproc_survey_notes_2026-11-28/`；
+  concept B2 抽查了 `let_simp` 与 `size_of_bound` 两处，属实。它只跑过一次：在 cslh19 上数出 `Main` 的 simpset 里是 76 个 simproc）：
+  - AFP（`contrib/afp-2026-10-26/thys`，1048 个条目里 34 个定义了 simproc）共 124 个定义：一定会停且便宜 66；一定会停但可能很慢 9；
+    会不会停取决于用户的规则 49（39.5%）；单凭自己的代码就可能不停 0。默认启用的 71 个里：38、5、28（39.4%）、0。
+    `Main` 的 76 个：66、7、3（3.9%）、0。
+  - "取决于用户的规则"：它在自己内部再调 `simp`、`auto`、代码求值等，用的是用户的 simpset 或规则。`Main` 里的例子是 `let_simp`
+    （`HOL/HOL.thy`，对 `let` 的内容再跑 `Simplifier.rewrite ctxt`）。49 个里 24 个出自 AutoCorres2。
+  - 最接近"自己就不停"的：AutoCorres2 的 `size_of_bound`（`c-parser/CTranslationSetup.thy:823`，默认启用）：它对自己的 redex 再调化简、
+    而自己还在 simpset 里；对 `size_simps` 里没有规则的 ground C 类型会无穷地调自己。agent 从代码推的，没有跑。
+  - 没有一个 simproc 给自己设时间上限；`simp_depth_limit` 只拦带条件的改写规则，拦不住在 simproc 里再调化简器。
+  - 【concept B2 按机制推的，没有逐个核对】步数的计数器在上下文里：simproc 拿传给它的上下文再调化简器时，里面的改写照样计步，
+    仍受上限管；自己另造上下文的不受管。
+  - cslh19 上没有找到名叫 ALL-AFP 的 session 或 heap。
 - fact 当改写规则：`f x = g (f x)`、`a = b` 与 `b = a` 都跑到上限。
   `finite (K ?i)` 作规则消得掉 `finite (K a)`；fact 作规则时 `c ∨ d`、`True ∧ c`、`A ⟶ B` 都消得掉。
 - fact 的各种给法（100 条无关的 fact）：当目标的前提交 `asm_full_simp_tac` 331 毫秒；交 `asm_lr_rewrite` 1.2 毫秒；
@@ -510,7 +532,7 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 
 要作者定的：
 1. （定了：消条件的上限 400，作者 2026-11-28 10:23 UTC；selector Simpset 的上限 150，04:04 UTC。）
-2. theory 层的内部计算是否也用系统的 simpset（concept B discussion 倾向统一；07:49 UTC 问过，没有答）。
+2. （定了，作者 2026-11-28 约 11:15 UTC「点头」：theory 层的内部计算也用 theory 的 simpset 消条件，4.6。）
 3. （定了，作者 2026-11-28 11:00 UTC：前提的清单不清空，4.4；Pure 不改。下面是这一项的经过。）
    原先的提议：留下的那一份 simpset 把化简器手里前提的清单清空。它要给 Pure 加一个导出函数。
    作者 2026-11-28 10:31 UTC 问「"前提的清单" 是什么？这个问题我没看懂，请讲一下」；concept B2 讲了，并把两种做法摆给他：
@@ -534,7 +556,7 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 9. （定了，作者 2026-11-28 04:04 UTC：改写前的原样也进查找表，4.3 第 3 步。）
 10. 上限做不做成配置项与它的名字；trace 里印"哪个条件被什么消掉"的文案。
 11. （定了，作者 2026-11-28 10:23 UTC：三个取值，第三个可以给一份 simpset，不给就用上下文的系统 simpset，4.6。）
-12. 系统内部的调用点填什么参数值（4.6）：concept B2 现在提的是与别处一样取默认值，连带第 2 项；先前提的是"只查"。
+12. （定了，同第 2 项：我们自己的每个调用点都填"查再化简、用上下文的 simplifier"，4.6。）
 13. trace 的六句文案【concept A1 拟，2026-11-28；只在 `concept_fact_trace` 开着时印，只印结果里的条件，每个条件一条】：
     - `a condition was closed by a premise of the simplifier:\n  condition: C`
     - `a condition was closed by a fact of the context:\n  condition: C`
@@ -660,3 +682,13 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 - 它的看法：一个推理器，下层在一个接口后面提供"几种 fact"；两个推理器只共用内核的话，约 600 行的搜索层要重复，也不能在一次搜索里混用两种。
 
 **由此要作者定的**（concept B2 11:15 UTC 报）：这个扩展现在还要不要做、为了什么用处。按关系改写的 simplifier 照它现在的设计已经不需要它。
+
+**作者的回答**（2026-11-28 11:16 UTC）：「为什么？关系是有蕴含的，我还指望用 concept_fact 来做蕴含关系的求解器呢，不是吗？」
+所以扩展是要做的；会话 extended cong 现在的设计（"S 蕴含 W"是 simplifier 自己在 `[trans]` 数据里查出的一条定理，
+推理器只证它的 concept fact 条件）在这一点上与他的期望不一致，要告诉那个会话。
+concept B2 11:18 UTC 把对要求的理解用一个例子报给他，等他确认：
+- 某个位置可接受的关系是 `=⇘M⇙`（`M` 是 monoid），手上的改写规则是 `a =⇘G⇙ b`（`G` 是 group，`M` 是它底下的 monoid）；
+  simplifier 问推理器"`=⇘G⇙` 蕴含 `=⇘M⇙` 吗"；推理器交回 `x =⇘G⇙ y ⟹ x =⇘M⇙ y`，不留条件，证不出交回"没有"。
+- 即目标从"`C t`"扩展成"带结构项的关系之间的蕴含"；关系里的结构项照样用 selector Simpset 化简、靠截断转换。
+- 问他的两处：这是不是他要的查询；"哪些关系蕴含哪些关系"由谁声明
+  （用户声明的规则、concept 的声明自动生成、系统的 `[trans]` 数据；concept B2 倾向前两种作推理器的规则来源，`[trans]` 留给 simplifier 接步）。
