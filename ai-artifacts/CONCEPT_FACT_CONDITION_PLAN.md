@@ -702,7 +702,12 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
     【concept B1 2026-11-28 13:03 UTC】三处已在第二份副本里做好（`ai-artifacts/concept_B_prototype/hook/lookup2/concept/`，
     = `contrib/concept` `e5d9ef6` 加查找表）；更新过的 `Lookup_Test`、表与 fact 两个 session 在它上面通过；
     `Hook_Test`（64 条检查）与变异检查还没有在它上面重跑，等代码评审之后做。
-    它约 13:01 UTC 对作者说了：出错时连 selector Simpset 改写后的那一种也丢，要留住它得用两层保护；作者没有答。
+    它约 13:01 UTC 对作者说了：出错时连 selector Simpset 改写后的那一种也丢，要留住它得用两层保护。
+    **作者定了留住**【2026-11-28 13:06:01 UTC 直接对 concept B1，它 13:08 UTC 转来】：他先问「我以为化简是一个整体，但难道你能保留部分结果？」，
+    concept B1 讲了进一条 fact 是两次各自完整的化简（先 selector Simpset，再上下文的 simpset），"留住"是第二次出错时留第一次做完的结果；
+    他答：「好的，那么赞同保留第一次的结果」。
+    现在的做法（细节是 concept B1 的设计，函数 `further_forms`，更新过的 `Lookup_Test` 通过）：两步各自一层保护，出错的那一步不给出样子、不印东西。
+    原样总是进；化简出错时留原样与 selector Simpset 改写后的；selector Simpset 出错时留原样与"原样化简后的"。中断从不拦。
     代码评审（`wf_b6057bc1-dda`）还在跑，读的是三处决定之前的第一份。
   - 它留给作者定的（当时的清单；（一）至（三）已如上定了）：
     （一）fact 头上 HOL 的全称量词不打开（4.3 只说了合取）：fact `∀i. finite (K i)` 消不掉 `finite (K a)`，而 `⋀i. finite (K i)` 消得掉。
