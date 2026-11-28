@@ -663,6 +663,34 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
   要它与 concept A1 商定的：准备 simpset 的那个函数（4.4）谁先提交、放在 `concept_type.ML`。
   要它报的：提交、测试、钩子上每条 fact 现在花多少。
   在它写出来之前，"查"只查得到化简器手里的前提，查找表那一个来源是空的。
+  **查找表写好了、测过了、量过了，在工作副本里；代码评审在跑；还没有提交**【concept B1 2026-11-28 12:35 UTC 报】：
+  - 工作副本 `ai-artifacts/concept_B_prototype/hook/lookup/concept/concept_intro_table.ML`（`contrib/concept` `8fd0e3c` 加上查找表，diff 250 行）。
+    concept A1 11:54 UTC 先提交了准备 simpset 的那一小步：`8fd0e3c`（`closing_simpset`、`closing_rewrite`、`closing_bound = 400`；
+    concept B1 的 handler `concept` 经 `Concept_Type.add_mksimps_handler` 登记）。
+  - 做法照 4.3。钩子上的函数对每一批定理做两件事：assumption destruction（照旧只对没标"已处理"、有活可干的），然后全部进表。
+    进一条 fact：化成范式（HHF，外层参数变成 schematic，β-η）；不是 `Trueprop _` 的（带元层前提的也在内）不进；
+    `may_rewrite` 之后用 selector Simpset 改写；再用 `Concept_Type.closing_rewrite` 化简一次（400 步，撞上限时只进之前的样子）；
+    三种样子各按合取拆开进表，`True` 不进，表里已有的命题不动（只差 schematic 变量名字的两条算一条）。
+    `auto_concept_extraction` 关着时陈述的定理全部存着，两件事都在 `concept_extract` 时做。接口是 `lookup_fact`。
+  - 测试：它的三套测试通过；新的 `Lookup_Test.thy`；变异检查 19 个错误实现都在指名的检查上失败
+    （第一轮漏了 3 个：一个暴露出代码里一处多余的条件，已删；两个是测试的缺口，已补）。
+  - 【实测，它的三套测试：进表 214 条、不进 48 条、钩子被调 257 次】进一条 fact：中位数 107 微秒，九成以内 234 微秒。
+    各段的中位数：固定 schematic 变量 11，selector Simpset 1（九成以内 29，最多 578），化简 42（九成以内 164），其余各不到 5。
+    撞到 400 步的 fact：约 8.5 毫秒。连同 assumption destruction 的一次钩子调用：中位数 173 微秒。
+    进表之前钩子在三套测试上总共花约 30 毫秒，进表多出约 55 毫秒。
+    准备 simpset（逐个删本包的 simproc）随 concept 的个数涨：没有 concept 时 5 微秒，10 个 36，20 个 50，40 个 135；
+    所以代码把准备好的那一份连同它出自的 simpset 存在证明上下文里，上下文的 simpset 换了才重做。
+  - 代码评审：Workflow `wf_b6057bc1-dda`，12:33 UTC 起跑（三个评审者、合并、每条意见一个辩护、裁判；Opus xhigh；只读）；
+    报告将是 `ai-artifacts/concept_lookup_table_code_review_2026-11-28.md`。作者 11:26:42 UTC 直接对它令的：「查找表可以开始写了，写完后 run 代码评审」。
+  - 它留给作者定的（它会连同评审的结果一起报给他；这里记成没有定）：
+    （一）fact 头上 HOL 的全称量词不打开（4.3 只说了合取）：fact `∀i. finite (K i)` 消不掉 `finite (K a)`，而 `⋀i. finite (K i)` 消得掉。
+    它的文件里已有 `open_fact`（assumption destruction 用的，两种都打开），换上只要一个词；它建议打开，这是对 4.3 字面的偏离。
+    （二）新的文案，只在 `concept_fact_trace` 之下：进表出错时（例如用户的一个 simproc 失败）印
+    `concept: the fact <theorem> does not enter the lookup table:` 后接错误。仿的是已有的 `concept: the fact <theorem> is not taken apart:`。
+    （三）一条 fact 的化简出错时，这条 fact 什么都不进，连原样也不进（整个进表动作外面一层保护）；用户的证明照常往下走。
+    （四）它照 4.3 的字面或其含义做的几处读法：合取只按各支进，不另外整条进；带元层前提的不进；
+    化简后的样子是从 selector Simpset 给出的样子化的，所以 selector Simpset 改动了一条 fact 时，"原样化简后的样子"不在表里。
+    （五）一次钩子调用里先做 assumption destruction、后进表（这样 selector Simpset 改写一条 fact 时，同一批里的 concept fact 已经知道）。
   两边之间的接口【concept A1 提，2026-11-28 10:34 UTC 转给了 concept B1】：`val lookup_fact: Proof.context -> term -> thm option`，
   在 concept B1 的下层文件里。参数是一条 β-η 范式的命题；结果是命题恰好是它的一个定理，来自表里与它单向匹配上的一个条目
   （条目当模式，只实例化条目自己的 schematic 项变量与类型变量，条目先改名错开）；纯查表，不化简、不启动搜索；定理只带上下文的假设。
