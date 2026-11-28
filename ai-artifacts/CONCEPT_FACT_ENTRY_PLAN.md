@@ -720,7 +720,7 @@ simp 的本地假设：
     改两处小的之后通过，两处都改了。实在的一处：到上限后调高上限再拆，加进去的 safe introduction rule 太多
     （连激活出来的结果也加了，与已定的"激活出来的 fact 不加 `[intro!]`"相违；上下文已有的规则也重加，会印重复的警告）；
     现在那次遍历在一个不可见的私有上下文里跑，再把它的 claset 接过来。其余两处是注释。
-  - 这一批已进仓库：`contrib/concept` `8086e4c`，已推送，在 concept A1 的 `2a28212` 之上。MLML 里 `contrib/concept` 的指针还没有动。
+  - 这一批已进仓库：`contrib/concept` `8086e4c`，已推送，在 concept A1 的 `2a28212` 之上。MLML 并不跟踪 `contrib/concept`，没有指针要动。
     随代码的测试是 `ai-artifacts/concept_B_prototype/hook/` 下的三个（照例不提交）。
   - concept A1 的三个搜索测试 theory 在这一批上通过过（在最后一处小修改之前的文件上）；concept C 没有代码可跑。
   - concept B1 那边还没有写的：带条件的 `condition_proc`、给用户 simp 用的 `concept_fact` simproc、Sledgehammer trigger 的登记、

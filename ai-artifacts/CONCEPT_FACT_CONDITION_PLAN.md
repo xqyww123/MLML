@@ -102,6 +102,9 @@
   对"`auto_concept_extraction` 关着时陈述里的 fact 何时进查找表"【问题，concept B discussion 讲了，仍等他定】：
   「"TAT 每求值一条陈述" 是什么意思？是 note_thm 吗？」；
   「一条 fact 被 selector Simpset 改写了的话，改写前的原样要也进表」
+- 2026-11-28 04:10 UTC【问题，concept B discussion 用一条 lemma 的例子从头讲了】：「不是，我还是没懂你的问题，请你讲得稍微详细一点」
+- 2026-11-28 04:19 UTC【决定与问题】：「赞同做法一」（做法一：配置项关着时陈述里的假设先存着，`concept_extract` 时才进查找表）；
+  对"消条件时系统 simplifier 的一次化简"的上限：「你建议 step limit 为多少？400 的话要超限要多少时间？请衡量一下」
 
 concept B discussion 在他 07:42 UTC 交来的那一件上定：06:04 UTC 的话取代 05:13 UTC 的那一句，消条件是设计的一部分，
 起因的例子靠它修好，不另记成已知的限制。
@@ -193,8 +196,10 @@ fact 那一边也有两种样子：每条 fact 进来时就把它原样与化简
   【实测，Main 的 simpset】平常的命题每条约 0.1 至 0.4 毫秒；撞上限的见第 9 节。
 - 一次调用里面没有 fact 被记下：【concept A1】类型层只引入、固定变量，搜索不记，化简器用 `add_prems` 假设前提、不经 `note_thmss`；
   【concept B1，读它的两个文件】它的代码不调 `note_thmss` 及同类函数。所以一次调用用到的表就是最外层那一刻上下文里的表。
-- 【没有定，第 10 节第 6 项】`auto_concept_extraction` 关着时（TAT 的情形），陈述里的 fact 进不进表。
-  【concept B1】立刻进的话，TAT 每求值一条陈述就为它的每条假设付一次化简，正是那个配置项要省掉的钱。
+- `auto_concept_extraction` 关着时（TAT 的情形），陈述里的 fact 先存着，不化简、不进表；
+  调 `concept_extract` 时，拆（assumption destruction）与进表一起做【作者 2026-11-28 04:19 UTC：「赞同做法一」】。
+  规矩只有一条：配置项关着时，陈述里的假设在 `concept_extract` 之前什么都不做。证明里出现的 fact 不受它影响，一律立刻进表。
+  理由【concept B1】：立刻进的话，TAT 每求值一条陈述就为它的每条假设付一次化简，正是那个配置项要省掉的钱。
 - 【concept B1，2026-11-27 09:22 UTC，凭它当天写的代码说的，没有为此重读】钩子上的函数（`contrib/concept` `8086e4c`）的事实：
   - 钩子交来的是每条被索引的 fact 的全部定理；便宜判断与"已处理"的标记只决定哪些去 assumption destruction。
     进表是对同一批定理的第二个动作，或同一个钩子上的第二个函数（钩子按优先级收多个函数）。
@@ -424,7 +429,7 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
    proof method 与 attribute 的子目标前提；判断宿主前提时用户写的各条条件（它会改变实例声明出的规则）。
 5. 不经过钩子的来源（化简器手里的前提、locale 的假设、上一项的另两个）要不要也有化简后的样子；
    有的话在哪里算（它们没有钩子，只能每次最外层调用现算，或记在一次调用之内的表里）。
-6. `auto_concept_extraction` 关着时，陈述里的 fact 进不进查找表。
+6. （定了，作者 2026-11-28 04:19 UTC：`auto_concept_extraction` 关着时陈述里的 fact 等 `concept_extract` 才进查找表，4.3。）
 7. 条件全被消掉的用户规则的步不计入 `concept_fact_user_limit`（第 6 节；concept B discussion 对他另一句话的读法）。
 8. fact 可否给只出现在条件里的 schematic 变量取值（规则 `?i ∈ I ⟹ group K` 碰到 fact `a ∈ I`）；不急。
 9. （定了，作者 2026-11-28 04:04 UTC：改写前的原样也进查找表，4.3 第 3 步。）
@@ -456,10 +461,23 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
     （函数 `uses`），concept B discussion 向他说了两句一起换、他若只要换第一句请说。
     没有采用的两个草稿：concept B1 的 `… that leave conditions …`，concept B discussion 的 `… that leave a condition …`。只换被数的东西，其余不动；
     attribute 里第二句的 "the proof obligations it outputs" 读作 "the premises of the theorem it returns"；次数是 1 时说 "1 time"。
-    concept B1 在 concept A1 那一批进 `contrib/concept` 的同一步里改这两句，批之前它的文件不动。
+    **改好了**【concept B1 2026-11-28 04:22 UTC】：`contrib/concept` `7588d05`，已推送，在 concept A1 的 `ac512c9` 之上；两句共用一个函数，
+    都写成 `… after using conditional concept_intro rules 30 times …`。提交前在新的 heap 上它的三套测试都通过；
+    上限的测试按新的数法重写了（上限为 1 时，两次用不带条件的规则证得出；两次用留条件的规则给出
+    `gave up after using conditional concept_intro rules 1 time (increase it by "declare [[concept_fact_user_limit = 2]]")`）。
+    它另报：约 03:12 UTC 它的一次构建被自己设的时限掐断在 HOL 重建的中途（Pure 的一处注释改动触发的重建）；
+    没有留下进程，没有写出 heap；之后 concept A1 重建了。
   - 【concept B1 实测，2026-11-28 02:58 UTC】在按新数法重建的 heap 上，它的三套测试在已提交的 `contrib/concept` `8086e4c` 上都通过，
     随机世界的计数与之前相同；它没有测试依赖旧的数法。
-  concept A1 评审回来之后把提交与评审的结论发来，concept B discussion 报给作者并移一次 MLML 里 `contrib/concept` 的指针。
+  - **已提交并推送**【concept A1 2026-11-28 04:20 UTC 报】：代码评审（一个 Opus agent，两轮）在最后的修改之后通过。
+    `generic_mksimps` 的私有树 `efe13d7`（一步数在 `rewritec` 里 `rews` 交回改写的地方，和 `congc` 里同余规则或同余过程改动了项的地方）；
+    `generic_mksimps` 的 feature 仓库 `7b0e285`（测试：每一种改动各核对恰好数几步；README；计划）；
+    concept 的私有树 `b7ad005`（合并 `efe13d7`）；`contrib/concept` `ac512c9`（selector Simpset 的一次调用至多 150 步）。
+    没有做的：往 Pure 里装错误实现来核对新测试的变异检查（每个要重建一次 Pure 与 HOL）；评审改为逐例手推。
+  - 指针【concept B discussion 2026-11-28 04:28 UTC 查的】：MLML 并不跟踪 `contrib/concept`（HEAD 里没有它的 gitlink，
+    `.gitmodules` 里也没有它），所以没有指针可移；早先各处说的"移 MLML 里 `contrib/concept` 的指针"是错的。
+    `contrib/generic_mksimps` 在 MLML 里记的是 `a8d1c47`，检出在 `7b0e285`，中间隔着别的会话的五个提交；
+    那个指针不是这个会话的事，没有动。
 - **消条件本身**没有代码。作者还没有说开始写。写的时候：查找表与钩子上的那一段归 concept B1；搜索一侧（走一步时消、读结果时消、
   留下最外层的 simpset）归 concept A1。
 - concept A1 同意讨论报告点到它代码的四处（一步里碰到第一个消不掉的条件就停；记录按每次搜索；读结果时再消给用户看的样子；
