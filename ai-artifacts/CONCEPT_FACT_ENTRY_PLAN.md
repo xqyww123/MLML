@@ -124,8 +124,10 @@ Minilang 与 AoA 记下的 fact 进不进索引【concept B discussion 读代码
   与"AoA 只在开头调一次 `concept_extract`"对不上。那七处是什么场合、会不会真的出问题，没有查、没有测。
 - AoA 与 Minilang 的代码里现在没有任何地方调 `concept_extract`（搜过 `contrib/Isa-Mini`）；AoA 那一侧还没有做。
 
-没有定的：在 theory 层写 `declare [[auto_concept_extraction = false]]` 时，之后这个 theory 里每条 lemma 的陈述都不拆。
-concept B 2026-11-27 02:43 UTC 向作者说过打算照普通配置项的惯例允许这样写、不特别拦；他没有答。
+已定【作者 2026-11-28 10:54:59 UTC 直接对 concept B1：「同意 theory 层 declare [[auto_concept_extraction = false]] 允许」；
+concept B2 在它的 transcript 里核对过】：在 theory 层写 `declare [[auto_concept_extraction = false]]` 照普通配置项的惯例允许，不特别拦；
+之后这个 theory 里每条 lemma 的陈述都不拆。代码本来就是这样，不用改。
+（concept B 2026-11-27 02:43 UTC 向作者说过这个打算，当时他没有答。）
 与它有关的一条实测（同上）：写在 `context begin … end`（不带 `fixes`、`assumes`）里面的这句 `declare` 是 theory 的声明，
 `end` 之后配置项仍是关的。
 
@@ -231,6 +233,16 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   - 声明这样一条规则时，把已经存下的条目用它补全（每条存下的条目加一个布尔字段）；合并进来的 theory 由 `Theory.at_begin` 补全。
   它说声明时的检查与按 size 的度量都行不通：`grp G ⟹ cgrp (center G)` 与 `grp G ⟹ grp (center G)` 的递归形状相同（`cgrp` 在 `grp` 之下）。
   它的 7.1 节列了 14 项要作者定的；concept B1 在向他报。
+  **作者定了两件**【2026-11-28 10:54:46 UTC 直接对 concept B1；concept B2 在它的 transcript 里核对过】：
+  - 「"向前用规则"要推进」。讨论报告里的这个功能要做。它只在报告的意义上重开他 2026-11-21 16:53 的「赞同」：
+    向前用是每条规则用一个 attribute 各自选的；单是一条 `[concept_intro]` 规则仍然不向前用【后半是 concept B1 的读法】。
+  - 「为这类规则放宽 11-27 04:25 的「后来的声明不重做早先 fact 的激活」」。所以对这类规则，声明时把已经存下的条目补全
+    （报告的 2.6 节，它 7.1 节的第 10 项）。别的东西仍照本节上面的规矩：存下的不重做。
+  还没有定的：这类规则向前能接多远（报告第 7 项"一条链上这类规则至多用一步"，他 10:54 UTC 问「是什么意思？这里"链"是什么？」，
+  concept B1 在答；还是允许不同的规则接起来）；报告的其余各项（前提与结论的形状、向前不意味着向后、算列表时这类规则关着、
+  用 `Theory.at_begin` 加一份记录来合并、两处写明的缺口、对用户说什么）。
+  施工：concept B1 先在开发副本里做原型；运行时的那条检查与存下条目的布尔字段两处没有人审过，作者下令的话它起评审小组。
+  写进哪一份计划还没有安排；在安排之前，这个功能定下来的各项记在本项。
 
 ### 2.4 没有定的
 
