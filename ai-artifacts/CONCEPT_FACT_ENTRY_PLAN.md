@@ -209,6 +209,19 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
   concept 声明之后才声明的 extraction rule 不补进它的列表（旧文件第 2.3 节的"限制"）。
   【没有定】作者 2026-11-27 05:16 UTC 问后来新增的要不要补做激活；
   concept B 05:17 UTC 建议不补做（与上一条同一类；补救是库里把 extraction rule 声明在用到它的 concept 之前），等他定。
+- 【没有定，在讨论；concept B1 2026-11-28 08:57 UTC 转来，作者直接对它说的】第一个前提是 concept fact 的 `[concept_extraction]` 规则：
+  作者 08:28:44 UTC：「此时直接把此 rule 的结论加入到 the concept 的激活列表中可以吗？有意义吗？会好吗？」
+  concept B1 提醒他 2026-11-21 16:31、16:53 的决定（`CONCEPT_DEFINING_CONTEXT_PLAN.md` 2.3 末项：
+  带一个 concept 前提的 `[concept_intro]` 规则不进激活；他当时「赞同」），并建议不做。
+  作者 08:51:53 UTC：「具体的代价是什么呢？我们可以对 concept intro table 中的已有条目进行补充激活。请顺着这个思路启动
+  an Opus agent team 讨论一下看看是否有望支持，`grp G ⟹ grp (center G)` 之类会导致停机的必须被考虑。我感觉这个功能还是很强大的，
+  也许还是可以讨论一下？也许用已有的 assumption destruction 策略还是可以保持停机的？也许我们需要一个检查这种朴素递归的方法？
+  也许是用 size？或者别的更有效的方法？当然我们现在有宽度限制，停机本身应该是不难的，但我希望还是能阻止一些类似于
+  `grp G ⟹ grp (center G)` 的无意义的循环？」
+  讨论小组 08:55 UTC 起跑（concept B1 起的）：Workflow `wf_0b9cb20a-d46`（三个任务相同的设计者、三个审查者、一个报告者；Opus，只读）。
+  brief `ai-artifacts/concept_forward_rule_activation_discussion_brief_2026-11-28.md`；
+  报告将是 `ai-artifacts/concept_forward_rule_activation_discussion_2026-11-28.md`。
+  它若被采纳，会连带回答上一项（后来新增的要不要补做激活）。
 
 ### 2.4 没有定的
 
@@ -414,6 +427,10 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
       这一句没看懂；concept B discussion 讲了，并拟了一个换的说法
       （`A concept fact such as "grp ?G" is taken apart by the instance that makes its structure, not by a concept_extraction rule`），等他定。
       他 2026-11-28 08:22 UTC 对 concept B1 又问了这半句；换不换仍没有定。
+      他 08:26:23 UTC 对 concept B1（不是定稿，范围 concept B1 还在问他）：「建议别把 the rule 全都答应出来，可能会很长。
+      建议直接"The "grp ?G" in your rule is taken apart by concept instances" 就好了」；
+      对第六句 `whose conclusion can never be a concept fact`：「太绕了」。
+      concept B1 为第六句另拟了说法，并问"in your rule"是否在 `check_extraction` 的所有文案里都取代印出的整条规则；没有答。
     每句都以 `Users are not allowed to declare a concept_extraction rule ` 开头。
   - 结论不是 HOL 命题的规则，声明时拒绝【已定，作者 2026-11-27 08:31 UTC 直接对 concept B1 说：
     「check_extraction 可以直接拒绝结论不是 HOL 命题的规则，文案你来拟」】。
