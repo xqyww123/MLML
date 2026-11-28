@@ -354,7 +354,14 @@ fact 那一边也有两种样子：每条 fact 进来时就把它原样与化简
   给的那一份同样先按身份删掉本包的 simproc（约束第 2 条不靠调用方记得；concept B discussion 的细化）。
 - 证明里的调用（proof method、attribute、用户 simp 里的 simproc、trigger）取第三个、不给 simpset。
   他举的那一次调用也是第三个，配上"不留条件"与最大生效距离 0。
-- 【没有定，第 10 节第 12 项；concept B2 2026-11-28 10:36 UTC 请作者定】别的调用取**只查**：
+- 【没有定，第 10 节第 12 项】系统内部的调用点（theory 层的内部调用；selector Simpset 在没有搜索包着时启动的搜索）填什么参数值。
+  作者 2026-11-28 11:12 UTC，对 concept B2 把它说成"不在证明里发起的调用取只查"：
+  「为什么要这样做？难道如何证明这些条件不是用户提供的参数吗？」
+  concept B2 11:13 UTC 答：是参数；"只查"只是替这些内部调用点填的值，说成按场合分的规矩是说错了。并改提：
+  内部调用点不做特殊处理，与别处一样取默认值（查再化简，用上下文的 simplifier）；想要别的值的调用方在调用时传；
+  selector Simpset 里面的搜索用启动这次改写的那个调用带进来的参数，参数经上下文传进去（要与 concept A1 核对做法）。
+  它唯一要作者点头的后果：theory 层也用 theory 的 simpset 消条件，存进 theory 的规则可能随此前的 `[simp]` 声明而不同（即第 10 节第 2 项）。等他答。
+  下面是先前的提议（10:36 UTC），留作经过：别的调用取**只查**：
   theory 层的内部调用（判断宿主前提、登记与导入时存条目），与 selector Simpset 在没有搜索包着的时候启动的搜索
   （类型层在钩子上、登记时、导入时改写一个项；系统 simpset 里的 selector simproc 在用户的 simp 里起作用）。
   理由：起因的例子正走这条路（一条带前提的条目在自己的前提之下被 selector Simpset 化简，`concept_condition` 启动搜索，
@@ -527,7 +534,7 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
 9. （定了，作者 2026-11-28 04:04 UTC：改写前的原样也进查找表，4.3 第 3 步。）
 10. 上限做不做成配置项与它的名字；trace 里印"哪个条件被什么消掉"的文案。
 11. （定了，作者 2026-11-28 10:23 UTC：三个取值，第三个可以给一份 simpset，不给就用上下文的系统 simpset，4.6。）
-12. theory 层的内部调用与 selector Simpset 在没有搜索包着时启动的搜索取"只查"（4.6）。
+12. 系统内部的调用点填什么参数值（4.6）：concept B2 现在提的是与别处一样取默认值，连带第 2 项；先前提的是"只查"。
 13. trace 的六句文案【concept A1 拟，2026-11-28；只在 `concept_fact_trace` 开着时印，只印结果里的条件，每个条件一条】：
     - `a condition was closed by a premise of the simplifier:\n  condition: C`
     - `a condition was closed by a fact of the context:\n  condition: C`
@@ -625,3 +632,31 @@ concept B discussion 早先提过这个延伸；讨论小组建议不做，conce
     内核对"一种目标"抽象地要什么；任意元数的谓词、由规则 `P1 ?xs ⟹ P2 ?xs` 声明蕴含时，什么没有对应物、什么会坏；
     一个推理器两种 fact，还是两个推理器共用内核。
 - 之后：带着方案与要作者定的清单回来。方案写在哪一份文件里还没有定。
+
+两边的回音（2026-11-28 11:14 UTC 之前到的）：
+
+**会话 extended cong 的事实**（它的计划 `ai-artifacts/EXTENDED_CONG_PLAN.md`，第 2 节是作者到 09:31 UTC 为止的决定；其余在重做）：
+- 照它那边现在的设计，按关系改写的 simplifier 向推理器问的**只有平常的 concept fact `C t`**，从不问关系本身。
+- 08:44 UTC 之后变了的：作者那句话里是由推理器判"一个关系蕴含另一个"。之后他在那个会话里：
+  09:23:45 UTC「为什么不重用 `[trans]` 的数据？」——"S 蕴含 W"就是系统 `[trans]` 数据里把一步 S 与一步 W 接成一步 W 的定理，simplifier 自己找；
+  09:31:44 UTC「建议 [trans] 规则只接受 concept fact 条件，否则在 `lemma [cong "R"]` 时报错…」；
+  10:01:01 UTC「给 simpset 多一个槽，流程可配置的 cong/trans/refl rules' condition solver 如何？」（采纳）。
+- 所以到推理器的只有一处：那个槽里的 solver 拿到的是自反、传递、同余规则的条件，照 09:31 的决定它们都是 concept fact，目标是 `C t`、`t` 是一个结构项，
+  变量在提出目标时都已定下；要的是不留条件的定理 `C t` 或"没有"。调用就是他 08:44 说的那一种（不允许输出条件，最大生效距离 0，
+  用上下文的 simplifier 消条件）；上下文是一次化简进行到一半的上下文，带着化简器假设下来的前提。
+- 没有问的：两个项之间的 `R a b`；"R1 蕴含 R2"；交回 `R1 x y ⟹ R2 x y` 的任何东西。
+- 关系作为 concept：作者 08:44 UTC 对那个会话说「我认为这里你别管。我们只是做 simplifier…concept 只是我们的用户」，并设想
+  `concept relation = hom ...`、其上的对称、传递、等价关系的 concept。那个会话的读法：传递规则可以带一个 concept fact 作条件
+  （`transitive_relation ?S ⟹ …`），关系 concept 之间的蕴含在推理器里照今天的目标形状就做得到；推理器不必把关系当二元谓词。
+- 作者 08:44 之后没有再对那个会话说过要推理器直接判"S 蕴含 W"。若他现在要，那边要的查询是：给两个关系实例，交回 `S ?x ?y ⟹ W ?x ?y` 或"没有"。
+
+**concept A1 的事实与看法**（`contrib/concept` `b588dfe`）：
+- 搜索的内核（`Concept_Search_Kernel`）完全不依赖 concept：它对目标、规则、条件都是多态的，只经一个 `problem` 接口知道它们。
+- 搜索那一层依赖 `C t` 的地方有四处：入口的检查；把目标拆成（谓词，参数）与"前提保持距离"的判断（参数相同、谓词被目标的谓词蕴含）；
+  靠截断转换的那种匹配；读条件时用 selector Simpset。其余（嵌套、一次调用之内的表、消条件、用户规则的上限、整理与证明）不需要知道。
+- 任意元数的谓词、由规则 `P1 ?xs ⟹ P2 ?xs` 声明蕴含时：截断、family、实例、激活、selector Simpset 都没有对应物，可以不存在；
+  `concept_entailment` 换成声明出来的蕴含次序里的距离；要改的大头在 concept B1 的下层文件（形式、键、条目、匹配、`goal_thm`）。
+  它提出的未决问题：混合的规则（关系规则带 concept 前提，或反过来）要一个统一的前提分类；两种 fact 之间的距离怎么算。
+- 它的看法：一个推理器，下层在一个接口后面提供"几种 fact"；两个推理器只共用内核的话，约 600 行的搜索层要重复，也不能在一次搜索里混用两种。
+
+**由此要作者定的**（concept B2 11:15 UTC 报）：这个扩展现在还要不要做、为了什么用处。按关系改写的 simplifier 照它现在的设计已经不需要它。
