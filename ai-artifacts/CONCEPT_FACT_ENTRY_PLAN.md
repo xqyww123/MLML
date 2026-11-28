@@ -404,12 +404,16 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
     - 【作者 2026-11-27 06:34 UTC 批准】结论里有哪个前提都没有的变量（现在查所有前提）：
       `… whose conclusion has a variable that its premises do not have. The ?K in your "<rule>" must occur in a premise`；
       多个变量时 `… whose conclusion has variables that its premises do not have. The ?K and ?L in your "<rule>" must occur in a premise`。
-    - 【没有批】五句讲"拿来匹配的那个前提"的，`premise` 换成 `first premise`
-      （`whose first premise is a concept fact`、`is a conjunction`、`is a universal quantification`、
-      `fits any proposition`、`applies a variable to a term`，与 `… must occur in the first premise`）。
+    - 讲"拿来匹配的那个前提"的六句，`premise` 换成 `first premise`。
+      前五句批了【concept B1 2026-11-28 08:23 UTC 转来；作者 08:22:37 UTC 直接对它说：「前五句可以」】：
+      `whose first premise is a concept fact`、`is a conjunction`、`is a universal quantification`、
+      `fits any proposition`、`applies a variable to a term`。代码里（`8086e4c`）已经是这五句，不用改。
+      第六句【没有批】：`whose conclusion can never be a concept fact. The ?D in your "<rule>" must occur in the first premise`。
+      作者问：「为什么不能？conclusion 是一个 concept fact 这不是正好吗？」；concept B1 在答他。
       作者 06:34 UTC 说其中 `The "grp ?G" in your "…" is taken apart by concept instances, not by concept_extraction rules`
       这一句没看懂；concept B discussion 讲了，并拟了一个换的说法
       （`A concept fact such as "grp ?G" is taken apart by the instance that makes its structure, not by a concept_extraction rule`），等他定。
+      他 2026-11-28 08:22 UTC 对 concept B1 又问了这半句；换不换仍没有定。
     每句都以 `Users are not allowed to declare a concept_extraction rule ` 开头。
   - 结论不是 HOL 命题的规则，声明时拒绝【已定，作者 2026-11-27 08:31 UTC 直接对 concept B1 说：
     「check_extraction 可以直接拒绝结论不是 HOL 命题的规则，文案你来拟」】。
@@ -438,12 +442,16 @@ val add_system_entries: {rule: thm, safety: safety option} list -> theory -> the
     `∀i∈I. ∀j∈J. grp (F3 i j)` 与 `∀i∈I. sub cgrp K (F4 i)` 改后拆得出。随机世界的计数改前改后相同。
   - 报告顺带指出旧文件两处措辞与代码不符，待维护：4A.1 写"比整条命题"，代码比的是结论；
     写"用户的 extraction rule"，而 `mp`、`bspec` 同样受检查。
-  - **作者的条件式决定**【concept B1 2026-11-28 08:20 UTC 转来；他 08:16:12 UTC 直接对 concept B1 说的】：
+  - **作者的条件式决定**【concept B1 2026-11-28 约 08:18 UTC 转来；他 08:16:12 UTC 直接对 concept B1 说的】：
     「1. 去掉这条规则后依旧能保持停机吗？run an Opus agent (team) to verify，若通过，我接受」。
     concept B1 照办：起一个评审小组（Workflow，Opus，只读，agent 不跑程序）判"去掉之后 assumption destruction 在每一处是否仍然会停"；
     同时在已提交的 `7588d05` 上带着那一行改动重跑 2026-11-27 的 17 组例子。
     裁判判通过，就算他接受了：concept B1 做这处改动，把 `Hook_Test` 里的三个探针改成检查，把 17 组例子加进测试，提交。
     结论与报告的路径它会发来；在那之前这一项仍是"没有定"。
+    评审小组约 08:22 UTC 起跑：Workflow `wf_a8a84cdc-a66`，brief `ai-artifacts/concept_extraction_product_termination_review_brief_2026-11-28.md`，
+    裁判的报告将是 `ai-artifacts/concept_extraction_product_termination_review_2026-11-28.md`。
+    起跑前【concept B1 实测，`contrib/concept` `7588d05`】：17 组例子带不带改动都全部结束；带改动时 267 条检查全部通过
+    （不带时 190 条通过、77 条不通过）；它的三套测试带改动都通过，随机世界的计数不变。
 - 用一条 extraction rule 时，规则的 schematic 变量的编号要与 fact 的错开。
   【作者 05:13 UTC：「注意作用 extraction rule 的时候要设置 the schematic index，防止 schematic variables 重叠」。】
   现在用规则的函数 `elim_first` 已经先把规则的编号抬到 fact 的最大编号之上再匹配；
